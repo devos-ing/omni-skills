@@ -35,8 +35,33 @@ export async function runWorkflow(
 		return;
 	}
 
-	for (const project of projects) {
-		await runProjectWorkflow(project, options);
+	const projectContexts = projects.map((project) => ({
+		config: project,
+		linear: new LinearClient(project),
+		polling: resolvePollingSettings(project, options),
+	}));
+	const globalPolling = resolveGlobalPollingSettings(projectContexts);
+	let cycle = 0;
+
+	while (true) {
+		cycle += 1;
+		let totalIssues = 0;
+
+		for (const context of projectContexts) {
+			totalIssues += await runProjectCycle(
+				context.config,
+				options,
+				context.linear,
+				cycle,
+				context.polling,
+			);
+		}
+
+		if (shouldStopPolling(globalPolling, options, cycle, totalIssues)) {
+			return;
+		}
+
+		await sleep(globalPolling.intervalMs);
 	}
 }
 
@@ -57,48 +82,61 @@ function pickProjects(
 	return config.projects.slice(0, 1);
 }
 
-async function runProjectWorkflow(
+function resolveGlobalPollingSettings(
+	projects: Array<{ config: ResolvedProjectConfig; polling: PollingSettings }>,
+): PollingSettings {
+	const first = projects[0];
+	if (!first) {
+		return {
+			enabled: false,
+			intervalMs: 30000,
+			exitWhenIdle: true,
+		};
+	}
+	return first.polling;
+}
+
+export function shouldStopPolling(
+	polling: PollingSettings,
+	options: RunOptions,
+	cycle: number,
+	totalIssues: number,
+): boolean {
+	if (!polling.enabled || options.issueArg) {
+		return true;
+	}
+	if (polling.maxCycles !== undefined && cycle >= polling.maxCycles) {
+		return true;
+	}
+	if (totalIssues === 0 && polling.exitWhenIdle) {
+		return true;
+	}
+	return false;
+}
+
+async function runProjectCycle(
 	config: ResolvedProjectConfig,
 	options: RunOptions,
-): Promise<void> {
-	const linear = new LinearClient(config);
+	linear: LinearClient,
+	cycle: number,
+	polling: PollingSettings,
+): Promise<number> {
 	const projectLogger = logger.child({ projectId: config.id });
-	const polling = resolvePollingSettings(config, options);
-	let cycle = 0;
+	const issues = await linear.fetchWork(options.issueArg);
+	projectLogger.info(
+		{ cycle, issueCount: issues.length, pollingEnabled: polling.enabled },
+		"Fetched eligible Linear issues",
+	);
 
-	while (true) {
-		cycle += 1;
-		const issues = await linear.fetchWork(options.issueArg);
-		projectLogger.info(
-			{ cycle, issueCount: issues.length, pollingEnabled: polling.enabled },
-			"Fetched eligible Linear issues",
-		);
-
-		if (issues.length === 0) {
-			projectLogger.info({ cycle }, "No eligible Linear issues found.");
-		}
-
-		for (const issue of issues) {
-			await processIssue(config, linear, issue);
-		}
-
-		if (!polling.enabled || options.issueArg) {
-			return;
-		}
-		if (polling.maxCycles !== undefined && cycle >= polling.maxCycles) {
-			projectLogger.info(
-				{ cycle, maxCycles: polling.maxCycles },
-				"Polling stopped after reaching configured max cycles",
-			);
-			return;
-		}
-		if (issues.length === 0 && polling.exitWhenIdle) {
-			projectLogger.info({ cycle }, "Polling exited after idle cycle.");
-			return;
-		}
-
-		await sleep(polling.intervalMs);
+	if (issues.length === 0) {
+		projectLogger.info({ cycle }, "No eligible Linear issues found.");
 	}
+
+	for (const issue of issues) {
+		await processIssue(config, linear, issue);
+	}
+
+	return issues.length;
 }
 
 async function processIssue(

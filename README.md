@@ -42,6 +42,7 @@ bun run src/index.ts run --all-projects
 bun run src/index.ts run --project default --issue ENG-123
 bun run src/index.ts run --project default --poll
 bun run src/index.ts run --project default --poll --poll-interval-ms 15000 --max-poll-cycles 20
+bun run src/index.ts run --all-projects --poll --no-exit-when-idle
 bun run src/index.ts status --project default --issue ENG-123
 bun run src/index.ts projects
 ```

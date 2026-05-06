@@ -5,6 +5,7 @@ import {
 	buildPlanComment,
 	parseReviewOutcome,
 	resolvePollingSettings,
+	shouldStopPolling,
 } from "../src/workflow";
 
 describe("parseReviewOutcome", () => {
@@ -119,6 +120,58 @@ describe("resolvePollingSettings", () => {
 			maxCycles: 2,
 			exitWhenIdle: false,
 		});
+	});
+});
+
+describe("shouldStopPolling", () => {
+	it("stops immediately when polling is disabled", () => {
+		const stop = shouldStopPolling(
+			{ enabled: false, intervalMs: 30000, exitWhenIdle: true },
+			{},
+			1,
+			2,
+		);
+		expect(stop).toBe(true);
+	});
+
+	it("stops immediately when issue is explicitly targeted", () => {
+		const stop = shouldStopPolling(
+			{ enabled: true, intervalMs: 30000, exitWhenIdle: false },
+			{ poll: true, issueArg: "ENG-1" },
+			1,
+			1,
+		);
+		expect(stop).toBe(true);
+	});
+
+	it("stops after max polling cycles", () => {
+		const stop = shouldStopPolling(
+			{ enabled: true, intervalMs: 30000, maxCycles: 2, exitWhenIdle: false },
+			{ poll: true },
+			2,
+			3,
+		);
+		expect(stop).toBe(true);
+	});
+
+	it("stops on global idle cycle only when enabled", () => {
+		const stop = shouldStopPolling(
+			{ enabled: true, intervalMs: 30000, exitWhenIdle: true },
+			{ poll: true },
+			1,
+			0,
+		);
+		expect(stop).toBe(true);
+	});
+
+	it("continues when any project has work in the cycle", () => {
+		const stop = shouldStopPolling(
+			{ enabled: true, intervalMs: 30000, exitWhenIdle: true },
+			{ poll: true },
+			1,
+			1,
+		);
+		expect(stop).toBe(false);
 	});
 });
 

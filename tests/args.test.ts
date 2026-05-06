@@ -11,6 +11,7 @@ describe("parseArgs", () => {
 				projectId: undefined,
 				allProjects: false,
 				poll: false,
+				exitWhenIdle: undefined,
 				pollIntervalMs: undefined,
 				maxPollCycles: undefined,
 			},
@@ -25,6 +26,7 @@ describe("parseArgs", () => {
 				projectId: "api",
 				allProjects: false,
 				poll: false,
+				exitWhenIdle: undefined,
 				pollIntervalMs: undefined,
 				maxPollCycles: undefined,
 			},
@@ -49,8 +51,31 @@ describe("parseArgs", () => {
 				projectId: undefined,
 				allProjects: false,
 				poll: true,
+				exitWhenIdle: undefined,
 				pollIntervalMs: 15000,
 				maxPollCycles: 20,
+			},
+		});
+	});
+
+	it("parses no-exit-when-idle flag", () => {
+		const parsed = parseArgs([
+			"bun",
+			"piv-loop",
+			"run",
+			"--poll",
+			"--no-exit-when-idle",
+		]);
+		expect(parsed).toEqual({
+			kind: "run",
+			options: {
+				issueArg: undefined,
+				projectId: undefined,
+				allProjects: false,
+				poll: true,
+				exitWhenIdle: false,
+				pollIntervalMs: undefined,
+				maxPollCycles: undefined,
 			},
 		});
 	});
