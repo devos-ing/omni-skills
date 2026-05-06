@@ -139,6 +139,14 @@ export interface BugRecord {
 	issueUrl?: string;
 }
 
+export interface CodexUsageRecord {
+	stage: "planning" | "implementing" | "testing";
+	inputTokens?: number;
+	outputTokens?: number;
+	totalTokens?: number;
+	recordedAt: string;
+}
+
 export interface RunState {
 	projectId: string;
 	projectName: string;
@@ -158,6 +166,7 @@ export interface RunState {
 	testingSummary?: string;
 	pullRequest?: PullRequestRef;
 	bugs: BugRecord[];
+	codexUsage?: CodexUsageRecord[];
 	startedAt: string;
 	updatedAt: string;
 	lastError?: string;

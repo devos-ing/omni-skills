@@ -7,6 +7,11 @@ export interface CodexResult {
 	sessionId?: string;
 	finalMessage: string;
 	stdout: string;
+	usage?: {
+		inputTokens?: number;
+		outputTokens?: number;
+		totalTokens?: number;
+	};
 }
 
 export function buildCodexExecArgs(
@@ -123,10 +128,12 @@ async function runCodex(
 	assertCommandOk(config.codex.binary, args, result);
 	const sessionId = extractSessionId(result.stdout);
 	const finalMessage = await readOutputFile(outputFile);
+	const usage = extractUsage(result.stdout);
 	return {
 		sessionId,
 		finalMessage,
 		stdout: result.stdout,
+		usage,
 	};
 }
 
@@ -164,6 +171,90 @@ export function extractSessionId(jsonlOutput: string): string | undefined {
 				return id;
 			}
 		} catch {}
+	}
+	return undefined;
+}
+
+export function extractUsage(
+	jsonlOutput: string,
+): CodexResult["usage"] | undefined {
+	const lines = jsonlOutput.split("\n").filter(Boolean);
+	let latestUsage: CodexResult["usage"] | undefined;
+	for (const line of lines) {
+		try {
+			const parsed = JSON.parse(line) as unknown;
+			const usage = findUsageObject(parsed);
+			if (usage) {
+				latestUsage = usage;
+			}
+		} catch {}
+	}
+	return latestUsage;
+}
+
+function findUsageObject(value: unknown): CodexResult["usage"] | undefined {
+	if (!value || typeof value !== "object") {
+		return undefined;
+	}
+	const asRecord = value as Record<string, unknown>;
+	const usage = buildUsageFromRecord(asRecord);
+	if (usage) {
+		return usage;
+	}
+	for (const nested of Object.values(asRecord)) {
+		const found = findUsageObject(nested);
+		if (found) {
+			return found;
+		}
+	}
+	return undefined;
+}
+
+function buildUsageFromRecord(
+	record: Record<string, unknown>,
+): CodexResult["usage"] | undefined {
+	const inputTokens = findNumberByKey(record, [
+		"input_tokens",
+		"inputTokens",
+		"prompt_tokens",
+		"promptTokens",
+	]);
+	const outputTokens = findNumberByKey(record, [
+		"output_tokens",
+		"outputTokens",
+		"completion_tokens",
+		"completionTokens",
+	]);
+	const totalTokens = findNumberByKey(record, ["total_tokens", "totalTokens"]);
+
+	if (
+		inputTokens === undefined &&
+		outputTokens === undefined &&
+		totalTokens === undefined
+	) {
+		return undefined;
+	}
+
+	return {
+		inputTokens,
+		outputTokens,
+		totalTokens:
+			totalTokens ??
+			(inputTokens !== undefined || outputTokens !== undefined
+				? (inputTokens ?? 0) + (outputTokens ?? 0)
+				: undefined),
+	};
+}
+
+function findNumberByKey(
+	record: Record<string, unknown>,
+	keys: string[],
+): number | undefined {
+	for (const key of keys) {
+		const candidate = record[key];
+		if (typeof candidate === "number" && Number.isFinite(candidate)) {
+			return candidate;
+		}
 	}
 	return undefined;
 }

@@ -3,6 +3,7 @@ import {
 	buildCodexExecArgs,
 	buildCodexResumeArgs,
 	extractSessionId,
+	extractUsage,
 } from "../src/codex";
 import type { ResolvedProjectConfig } from "../src/types";
 
@@ -117,5 +118,36 @@ describe("codex args", () => {
 	it("extracts session id from jsonl", () => {
 		const jsonl = `{"type":"thread.started","thread_id":"abc-123"}\n{"type":"turn.completed"}`;
 		expect(extractSessionId(jsonl)).toBe("abc-123");
+	});
+
+	it("extracts usage from nested usage object", () => {
+		const jsonl = `{"type":"turn.completed","usage":{"input_tokens":120,"output_tokens":30,"total_tokens":150}}`;
+		expect(extractUsage(jsonl)).toEqual({
+			inputTokens: 120,
+			outputTokens: 30,
+			totalTokens: 150,
+		});
+	});
+
+	it("extracts usage from camelCase keys", () => {
+		const jsonl = `{"type":"turn.completed","metrics":{"inputTokens":9,"outputTokens":4}}`;
+		expect(extractUsage(jsonl)).toEqual({
+			inputTokens: 9,
+			outputTokens: 4,
+			totalTokens: 13,
+		});
+	});
+
+	it("uses latest usage across multiple events and ignores bad lines", () => {
+		const jsonl = [
+			`{"type":"turn.progress","usage":{"prompt_tokens":10,"completion_tokens":2}}`,
+			"not json",
+			`{"type":"turn.completed","usage":{"prompt_tokens":20,"completion_tokens":5}}`,
+		].join("\n");
+		expect(extractUsage(jsonl)).toEqual({
+			inputTokens: 20,
+			outputTokens: 5,
+			totalTokens: 25,
+		});
 	});
 });

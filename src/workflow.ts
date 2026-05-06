@@ -20,6 +20,7 @@ import {
 } from "./state";
 import type {
 	BugRecord,
+	CodexUsageRecord,
 	ResolvedProjectConfig,
 	RunOptions,
 	RunState,
@@ -286,6 +287,7 @@ async function executeIssue(
 		const result = await runPlanSession(config, prompt);
 		state.codexSessionId = result.sessionId ?? state.codexSessionId;
 		state.planSummary = result.finalMessage || result.stdout;
+		appendCodexUsage(state, "planning", result.usage);
 		Object.assign(state, transitionStage(state, "implementing"));
 		await saveRunState(config.workspacePath, state);
 		await linear.markStage(state.issue.id, "implementing");
@@ -311,6 +313,7 @@ async function executeIssue(
 		);
 		const result = await runResumeSession(config, state.codexSessionId, prompt);
 		state.implementationSummary = result.finalMessage || result.stdout;
+		appendCodexUsage(state, "implementing", result.usage);
 
 		if (config.dryRun) {
 			state.pullRequest = {
@@ -361,6 +364,7 @@ async function executeIssue(
 		);
 		const review = await runReviewSession(config, prompt);
 		const outcome = parseReviewOutcome(review.finalMessage || review.stdout);
+		appendCodexUsage(state, "testing", review.usage);
 
 		state.reviewSummary = outcome.summary;
 		state.testingSummary = outcome.summary;
@@ -420,6 +424,28 @@ async function executeIssue(
 			"Review/testing completed",
 		);
 	}
+}
+
+export function appendCodexUsage(
+	state: RunState,
+	stage: CodexUsageRecord["stage"],
+	usage:
+		| { inputTokens?: number; outputTokens?: number; totalTokens?: number }
+		| undefined,
+): void {
+	if (!usage) {
+		return;
+	}
+	state.codexUsage = [
+		...(state.codexUsage ?? []),
+		{
+			stage,
+			inputTokens: usage.inputTokens,
+			outputTokens: usage.outputTokens,
+			totalTokens: usage.totalTokens,
+			recordedAt: new Date().toISOString(),
+		},
+	];
 }
 
 export interface ReviewOutcome {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/types";
+import type { ResolvedProjectConfig, RunState } from "../src/types";
 import {
+	appendCodexUsage,
 	buildIssueJobLogFields,
 	buildPlanComment,
 	parseReviewOutcome,
@@ -246,5 +247,74 @@ describe("buildIssueJobLogFields", () => {
 			stage: "implementing",
 			resumed: true,
 		});
+	});
+});
+
+describe("appendCodexUsage", () => {
+	it("appends usage when run state has no existing usage array", () => {
+		const now = new Date().toISOString();
+		const state: RunState = {
+			projectId: "default",
+			projectName: "Default",
+			workspacePath: "/tmp/work",
+			repository: {
+				owner: "acme",
+				name: "repo",
+				baseBranch: "main",
+			},
+			issue: {
+				id: "lin_123",
+				key: "ENG-1",
+				title: "Improve logging",
+				url: "https://linear.app/acme/issue/ENG-1/improve-logging",
+			},
+			stage: "planning",
+			bugs: [],
+			startedAt: now,
+			updatedAt: now,
+		};
+
+		appendCodexUsage(state, "planning", {
+			inputTokens: 12,
+			outputTokens: 8,
+			totalTokens: 20,
+		});
+
+		expect(state.codexUsage).toHaveLength(1);
+		expect(state.codexUsage?.[0]).toMatchObject({
+			stage: "planning",
+			inputTokens: 12,
+			outputTokens: 8,
+			totalTokens: 20,
+		});
+		expect(typeof state.codexUsage?.[0]?.recordedAt).toBe("string");
+	});
+
+	it("does nothing when usage is undefined", () => {
+		const now = new Date().toISOString();
+		const state: RunState = {
+			projectId: "default",
+			projectName: "Default",
+			workspacePath: "/tmp/work",
+			repository: {
+				owner: "acme",
+				name: "repo",
+				baseBranch: "main",
+			},
+			issue: {
+				id: "lin_123",
+				key: "ENG-1",
+				title: "Improve logging",
+				url: "https://linear.app/acme/issue/ENG-1/improve-logging",
+			},
+			stage: "planning",
+			bugs: [],
+			codexUsage: [],
+			startedAt: now,
+			updatedAt: now,
+		};
+
+		appendCodexUsage(state, "planning", undefined);
+		expect(state.codexUsage).toHaveLength(0);
 	});
 });
