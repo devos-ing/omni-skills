@@ -16,6 +16,7 @@ PIV Loop is a Bun + TypeScript CLI that automates a Linear-to-Codex-to-GitHub wo
 Configuration is loaded from `piv-loop.config.ts` and resolved into project-specific runtime settings.
 
 - Root defaults can define shared repo, linear, codex, skills, and dry-run behavior.
+- Polling is a single global config at the root `polling` key (`intervalMs`, `maxCycles`, `exitWhenIdle`) and applies to all selected projects in a run.
 - `projects` contains one or more project entries, each with:
   - `id` (required)
   - `name` (optional)
@@ -75,6 +76,7 @@ Optional:
 - `PIV_POLL_INTERVAL_MS` (default `30000`; polling sleep between cycles)
 - `PIV_MAX_POLL_CYCLES` (optional; stop polling after this many cycles)
 - `PIV_EXIT_WHEN_IDLE` (optional; default `1`, set `0` to keep polling when no issues are found)
+  - these environment variables configure the single global polling loop
 - `PIV_DRY_RUN=1` to avoid Linear/GitHub mutations
 - `PIV_DEV_MODE=1` to stream Codex stdout/stderr logs during runs
 - `CODEX_SANDBOX` (optional; leave empty to disable sandbox, or set `read-only`, `workspace-write`, `danger-full-access`)

@@ -21,6 +21,7 @@ import {
 import type {
 	BugRecord,
 	CodexUsageRecord,
+	PollingConfig,
 	ResolvedProjectConfig,
 	RunOptions,
 	RunState,
@@ -39,9 +40,8 @@ export async function runWorkflow(
 	const projectContexts = projects.map((project) => ({
 		config: project,
 		linear: new LinearClient(project),
-		polling: resolvePollingSettings(project, options),
 	}));
-	const globalPolling = resolveGlobalPollingSettings(projectContexts);
+	const globalPolling = resolvePollingSettings(config.polling, options);
 	let cycle = 0;
 
 	while (true) {
@@ -54,7 +54,7 @@ export async function runWorkflow(
 				options,
 				context.linear,
 				cycle,
-				context.polling,
+				globalPolling,
 			);
 		}
 
@@ -81,20 +81,6 @@ function pickProjects(
 		return config.projects;
 	}
 	return config.projects.slice(0, 1);
-}
-
-function resolveGlobalPollingSettings(
-	projects: Array<{ config: ResolvedProjectConfig; polling: PollingSettings }>,
-): PollingSettings {
-	const first = projects[0];
-	if (!first) {
-		return {
-			enabled: false,
-			intervalMs: 30000,
-			exitWhenIdle: true,
-		};
-	}
-	return first.polling;
 }
 
 export function shouldStopPolling(
@@ -226,14 +212,14 @@ export interface PollingSettings {
 }
 
 export function resolvePollingSettings(
-	config: ResolvedProjectConfig,
+	pollingConfig: PollingConfig,
 	options: RunOptions,
 ): PollingSettings {
 	return {
 		enabled: options.poll === true,
-		intervalMs: options.pollIntervalMs ?? config.polling.intervalMs,
-		maxCycles: options.maxPollCycles ?? config.polling.maxCycles,
-		exitWhenIdle: options.exitWhenIdle ?? config.polling.exitWhenIdle,
+		intervalMs: options.pollIntervalMs ?? pollingConfig.intervalMs,
+		maxCycles: options.maxPollCycles ?? pollingConfig.maxCycles,
+		exitWhenIdle: options.exitWhenIdle ?? pollingConfig.exitWhenIdle,
 	};
 }
 

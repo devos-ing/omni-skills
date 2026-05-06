@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig, RunState } from "../src/types";
+import type { PollingConfig, RunState } from "../src/types";
 import {
 	appendCodexUsage,
 	buildIssueJobLogFields,
@@ -85,55 +85,14 @@ describe("formatCodexUsageLine", () => {
 });
 
 describe("resolvePollingSettings", () => {
-	const project = {
-		id: "default",
-		name: "Default",
-		workspacePath: "/tmp/state",
-		executionPath: "/tmp/repo",
-		repo: {
-			owner: "acme",
-			name: "repo",
-			baseBranch: "main",
-		},
-		linear: {
-			apiKey: "key",
-			apiUrl: "https://api.linear.app/graphql",
-			pollLimit: 10,
-			statusMap: {
-				assigned: "Todo",
-				planning: "In Progress",
-				implementing: "In Progress",
-				pr_created: "In Review",
-				reviewing: "In Review",
-				testing: "In Review",
-				blocked: "Canceled",
-				done: "Done",
-			},
-			labelMap: {},
-			autoCreateLabels: true,
-		},
-		polling: {
-			intervalMs: 30000,
-			maxCycles: 12,
-			exitWhenIdle: true,
-		},
-		github: {
-			useGhCli: true,
-			defaultBugLabel: "bug",
-		},
-		codex: {
-			binary: "codex",
-		},
-		skills: {
-			plan: "plan.md",
-			implement: "implement.md",
-			reviewTest: "review.md",
-		},
-		dryRun: true,
-	} satisfies ResolvedProjectConfig;
+	const polling: PollingConfig = {
+		intervalMs: 30000,
+		maxCycles: 12,
+		exitWhenIdle: true,
+	};
 
 	it("uses project defaults when options are unset", () => {
-		const settings = resolvePollingSettings(project, {});
+		const settings = resolvePollingSettings(polling, {});
 		expect(settings).toEqual({
 			enabled: false,
 			intervalMs: 30000,
@@ -143,7 +102,7 @@ describe("resolvePollingSettings", () => {
 	});
 
 	it("applies cli overrides", () => {
-		const settings = resolvePollingSettings(project, {
+		const settings = resolvePollingSettings(polling, {
 			poll: true,
 			pollIntervalMs: 15000,
 			maxPollCycles: 2,

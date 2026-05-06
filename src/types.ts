@@ -58,11 +58,6 @@ export interface ProjectRuntimeConfig {
 		labelMap: LinearLabelMap;
 		autoCreateLabels: boolean;
 	};
-	polling: {
-		intervalMs: number;
-		maxCycles?: number;
-		exitWhenIdle: boolean;
-	};
 	github: {
 		useGhCli: boolean;
 		defaultBugLabel: string;
@@ -96,7 +91,14 @@ export interface ResolvedProjectConfig extends ProjectRuntimeConfig {
 	name: string;
 }
 
+export interface PollingConfig {
+	intervalMs: number;
+	maxCycles?: number;
+	exitWhenIdle: boolean;
+}
+
 export type PivLoopRootConfig = DeepPartial<ProjectRuntimeConfig> & {
+	polling?: DeepPartial<PollingConfig>;
 	projects: ProjectConfig[];
 };
 

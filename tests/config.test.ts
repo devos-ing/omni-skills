@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { loadConfig } from "../src/config";
 
 const envKeys = [
@@ -57,9 +59,9 @@ describe("loadConfig", () => {
 			"linear_status_assigned",
 		);
 		expect(config.projects[0]?.executionPath).toBe("piv_execution_path");
-		expect(config.projects[0]?.polling.intervalMs).toBe(30000);
-		expect(config.projects[0]?.polling.maxCycles).toBeUndefined();
-		expect(config.projects[0]?.polling.exitWhenIdle).toBe(true);
+		expect(config.polling.intervalMs).toBe(30000);
+		expect(config.polling.maxCycles).toBeUndefined();
+		expect(config.polling.exitWhenIdle).toBe(true);
 	});
 
 	it("loads polling values from env", async () => {
@@ -67,9 +69,37 @@ describe("loadConfig", () => {
 		process.env.PIV_MAX_POLL_CYCLES = "20";
 		process.env.PIV_EXIT_WHEN_IDLE = "0";
 		const config = await loadConfig(process.cwd());
-		expect(config.projects[0]?.polling.intervalMs).toBe(15000);
-		expect(config.projects[0]?.polling.maxCycles).toBe(20);
-		expect(config.projects[0]?.polling.exitWhenIdle).toBe(false);
+		expect(config.polling.intervalMs).toBe(15000);
+		expect(config.polling.maxCycles).toBe(20);
+		expect(config.polling.exitWhenIdle).toBe(false);
+	});
+
+	it("rejects project-level polling overrides", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "piv-loop.config.ts"),
+			[
+				"export default {",
+				"  projects: [",
+				"    {",
+				"      id: 'default',",
+				"      polling: { intervalMs: 12345 }",
+				"    }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow(
+				"Project-level polling config is not supported",
+			);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
 	});
 
 	it("disables codex sandbox by default", async () => {

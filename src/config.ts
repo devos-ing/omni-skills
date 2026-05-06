@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import type {
 	DeepPartial,
 	PivLoopRootConfig,
+	PollingConfig,
 	ProjectConfig,
 	ProjectRuntimeConfig,
 	ResolvedProjectConfig,
@@ -17,15 +18,20 @@ type AnyOverride = RootOverride | LegacyOverride;
 
 export interface LoadedConfig {
 	projects: ResolvedProjectConfig[];
+	polling: PollingConfig;
 }
 
 export async function loadConfig(cwd: string): Promise<LoadedConfig> {
 	const envBase = buildEnvBase(cwd);
+	const envPolling = buildEnvPolling();
 	const loadedOverride = await loadConfigOverride(cwd);
 	const root = normalizeOverrideToRoot(loadedOverride);
+	assertNoProjectPolling(root.projects);
 	const projects = resolveProjects(envBase, root);
+	const polling = resolvePolling(envPolling, root.polling);
 	validateProjects(projects);
-	return { projects };
+	validatePolling(polling);
+	return { projects, polling };
 }
 
 export function getProjectById(
@@ -71,11 +77,6 @@ function buildEnvBase(cwd: string): ProjectRuntimeConfig {
 			},
 			autoCreateLabels: env.LINEAR_AUTO_CREATE_LABELS !== "0",
 		},
-		polling: {
-			intervalMs: Number(env.PIV_POLL_INTERVAL_MS ?? "30000"),
-			maxCycles: parseOptionalPositiveInt(env.PIV_MAX_POLL_CYCLES),
-			exitWhenIdle: env.PIV_EXIT_WHEN_IDLE !== "0",
-		},
 		github: {
 			useGhCli: true,
 			defaultBugLabel: env.GITHUB_BUG_LABEL ?? "bug",
@@ -97,6 +98,15 @@ function buildEnvBase(cwd: string): ProjectRuntimeConfig {
 			reviewTest: path.join(cwd, "skills", "piv-review-test", "SKILL.md"),
 		},
 		dryRun: env.PIV_DRY_RUN === "1",
+	};
+}
+
+function buildEnvPolling(): PollingConfig {
+	const env = process.env;
+	return {
+		intervalMs: Number(env.PIV_POLL_INTERVAL_MS ?? "30000"),
+		maxCycles: parseOptionalPositiveInt(env.PIV_MAX_POLL_CYCLES),
+		exitWhenIdle: env.PIV_EXIT_WHEN_IDLE !== "0",
 	};
 }
 
@@ -145,8 +155,18 @@ function resolveProjects(
 function stripProjects(
 	root: PivLoopRootConfig,
 ): DeepPartial<ProjectRuntimeConfig> {
-	const { projects: _, ...rest } = root;
+	const { projects: _, polling: __, ...rest } = root;
 	return rest;
+}
+
+function resolvePolling(
+	base: PollingConfig,
+	override: DeepPartial<PollingConfig> | undefined,
+): PollingConfig {
+	return {
+		...base,
+		...(override ?? {}),
+	};
 }
 
 function resolveProject(
@@ -206,11 +226,6 @@ function mergeRuntime(
 			...base.github,
 			...(rootDefaults.github ?? {}),
 			...(project.github ?? {}),
-		},
-		polling: {
-			...base.polling,
-			...(rootDefaults.polling ?? {}),
-			...(project.polling ?? {}),
 		},
 		codex: {
 			...base.codex,
@@ -310,21 +325,26 @@ function validateProject(project: ResolvedProjectConfig): void {
 				.join(", ")}`,
 		);
 	}
-	if (
-		!Number.isInteger(project.polling.intervalMs) ||
-		project.polling.intervalMs <= 0
-	) {
-		throw new Error(
-			`Polling interval must be a positive integer for project '${project.id}'`,
-		);
+}
+
+function validatePolling(polling: PollingConfig): void {
+	if (!Number.isInteger(polling.intervalMs) || polling.intervalMs <= 0) {
+		throw new Error("Polling interval must be a positive integer");
 	}
 	if (
-		project.polling.maxCycles !== undefined &&
-		(!Number.isInteger(project.polling.maxCycles) ||
-			project.polling.maxCycles <= 0)
+		polling.maxCycles !== undefined &&
+		(!Number.isInteger(polling.maxCycles) || polling.maxCycles <= 0)
 	) {
-		throw new Error(
-			`Polling max cycles must be a positive integer for project '${project.id}'`,
-		);
+		throw new Error("Polling max cycles must be a positive integer");
+	}
+}
+
+function assertNoProjectPolling(projects: ProjectConfig[]): void {
+	for (const project of projects) {
+		if ("polling" in (project as unknown as Record<string, unknown>)) {
+			throw new Error(
+				`Project-level polling config is not supported for project '${project.id}'. Configure polling once at root level.`,
+			);
+		}
 	}
 }
