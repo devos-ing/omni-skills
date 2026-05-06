@@ -58,6 +58,11 @@ export interface ProjectRuntimeConfig {
 		labelMap: LinearLabelMap;
 		autoCreateLabels: boolean;
 	};
+	polling: {
+		intervalMs: number;
+		maxCycles?: number;
+		exitWhenIdle: boolean;
+	};
 	github: {
 		useGhCli: boolean;
 		defaultBugLabel: string;
@@ -162,4 +167,8 @@ export interface RunOptions {
 	issueArg?: string;
 	projectId?: string;
 	allProjects?: boolean;
+	poll?: boolean;
+	pollIntervalMs?: number;
+	maxPollCycles?: number;
+	exitWhenIdle?: boolean;
 }

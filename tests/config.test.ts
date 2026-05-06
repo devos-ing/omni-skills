@@ -18,6 +18,9 @@ const envKeys = [
 	"CODEX_MODEL_PLAN",
 	"CODEX_MODEL_IMPLEMENT",
 	"CODEX_MODEL_REVIEW_TEST",
+	"PIV_POLL_INTERVAL_MS",
+	"PIV_MAX_POLL_CYCLES",
+	"PIV_EXIT_WHEN_IDLE",
 ] as const;
 
 const previousEnv: Record<string, string | undefined> = {};
@@ -31,7 +34,13 @@ describe("loadConfig", () => {
 					? "workspace-write"
 					: key === "CODEX_HOME"
 						? ""
-						: key.toLowerCase();
+						: key === "PIV_POLL_INTERVAL_MS"
+							? "30000"
+							: key === "PIV_MAX_POLL_CYCLES"
+								? ""
+								: key === "PIV_EXIT_WHEN_IDLE"
+									? "1"
+									: key.toLowerCase();
 		}
 	});
 
@@ -48,6 +57,19 @@ describe("loadConfig", () => {
 			"linear_status_assigned",
 		);
 		expect(config.projects[0]?.executionPath).toBe("piv_execution_path");
+		expect(config.projects[0]?.polling.intervalMs).toBe(30000);
+		expect(config.projects[0]?.polling.maxCycles).toBeUndefined();
+		expect(config.projects[0]?.polling.exitWhenIdle).toBe(true);
+	});
+
+	it("loads polling values from env", async () => {
+		process.env.PIV_POLL_INTERVAL_MS = "15000";
+		process.env.PIV_MAX_POLL_CYCLES = "20";
+		process.env.PIV_EXIT_WHEN_IDLE = "0";
+		const config = await loadConfig(process.cwd());
+		expect(config.projects[0]?.polling.intervalMs).toBe(15000);
+		expect(config.projects[0]?.polling.maxCycles).toBe(20);
+		expect(config.projects[0]?.polling.exitWhenIdle).toBe(false);
 	});
 
 	it("disables codex sandbox by default", async () => {

@@ -71,6 +71,11 @@ function buildEnvBase(cwd: string): ProjectRuntimeConfig {
 			},
 			autoCreateLabels: env.LINEAR_AUTO_CREATE_LABELS !== "0",
 		},
+		polling: {
+			intervalMs: Number(env.PIV_POLL_INTERVAL_MS ?? "30000"),
+			maxCycles: parseOptionalPositiveInt(env.PIV_MAX_POLL_CYCLES),
+			exitWhenIdle: env.PIV_EXIT_WHEN_IDLE !== "0",
+		},
 		github: {
 			useGhCli: true,
 			defaultBugLabel: env.GITHUB_BUG_LABEL ?? "bug",
@@ -202,6 +207,11 @@ function mergeRuntime(
 			...(rootDefaults.github ?? {}),
 			...(project.github ?? {}),
 		},
+		polling: {
+			...base.polling,
+			...(rootDefaults.polling ?? {}),
+			...(project.polling ?? {}),
+		},
 		codex: {
 			...base.codex,
 			...(rootDefaults.codex ?? {}),
@@ -214,6 +224,19 @@ function mergeRuntime(
 		},
 		dryRun: project.dryRun ?? rootDefaults.dryRun ?? base.dryRun,
 	};
+}
+
+function parseOptionalPositiveInt(
+	value: string | undefined,
+): number | undefined {
+	if (!value) {
+		return undefined;
+	}
+	const parsed = Number(value);
+	if (!Number.isInteger(parsed) || parsed <= 0) {
+		return undefined;
+	}
+	return parsed;
 }
 
 function validateProjects(projects: ResolvedProjectConfig[]): void {
@@ -285,6 +308,23 @@ function validateProject(project: ResolvedProjectConfig): void {
 			`Missing Linear status ids for project '${project.id}': ${requiredStateIds
 				.map(([key]) => key)
 				.join(", ")}`,
+		);
+	}
+	if (
+		!Number.isInteger(project.polling.intervalMs) ||
+		project.polling.intervalMs <= 0
+	) {
+		throw new Error(
+			`Polling interval must be a positive integer for project '${project.id}'`,
+		);
+	}
+	if (
+		project.polling.maxCycles !== undefined &&
+		(!Number.isInteger(project.polling.maxCycles) ||
+			project.polling.maxCycles <= 0)
+	) {
+		throw new Error(
+			`Polling max cycles must be a positive integer for project '${project.id}'`,
 		);
 	}
 }

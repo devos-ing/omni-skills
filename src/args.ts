@@ -24,10 +24,23 @@ export function parseArgs(argv: string[]): CliCommand {
 		const issueArg = readFlagValue(args, "--issue");
 		const projectId = readFlagValue(args, "--project");
 		const allProjects = args.includes("--all-projects");
+		const poll = args.includes("--poll");
+		const pollIntervalMs = readOptionalPositiveInt(args, "--poll-interval-ms");
+		const maxPollCycles = readOptionalPositiveInt(args, "--max-poll-cycles");
 		if (projectId && allProjects) {
 			throw new Error("run command cannot use --project with --all-projects");
 		}
-		return { kind: "run", options: { issueArg, projectId, allProjects } };
+		return {
+			kind: "run",
+			options: {
+				issueArg,
+				projectId,
+				allProjects,
+				poll,
+				pollIntervalMs,
+				maxPollCycles,
+			},
+		};
 	}
 
 	if (command === "status") {
@@ -55,4 +68,19 @@ function readFlagValue(args: string[], flag: string): string | undefined {
 		return undefined;
 	}
 	return args[index + 1];
+}
+
+function readOptionalPositiveInt(
+	args: string[],
+	flag: string,
+): number | undefined {
+	const raw = readFlagValue(args, flag);
+	if (raw === undefined) {
+		return undefined;
+	}
+	const value = Number(raw);
+	if (!Number.isInteger(value) || value <= 0) {
+		throw new Error(`${flag} must be a positive integer`);
+	}
+	return value;
 }

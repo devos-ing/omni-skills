@@ -40,6 +40,8 @@ Legacy fallback for default project:
 bun run src/index.ts run --project default
 bun run src/index.ts run --all-projects
 bun run src/index.ts run --project default --issue ENG-123
+bun run src/index.ts run --project default --poll
+bun run src/index.ts run --project default --poll --poll-interval-ms 15000 --max-poll-cycles 20
 bun run src/index.ts status --project default --issue ENG-123
 bun run src/index.ts projects
 ```
@@ -69,6 +71,9 @@ Optional:
 - `GITHUB_BASE_BRANCH` (default `main`)
 - `PIV_WORKSPACE_PATH` (default current directory; state root)
 - `PIV_EXECUTION_PATH` (default `PIV_WORKSPACE_PATH`; command execution path)
+- `PIV_POLL_INTERVAL_MS` (default `30000`; polling sleep between cycles)
+- `PIV_MAX_POLL_CYCLES` (optional; stop polling after this many cycles)
+- `PIV_EXIT_WHEN_IDLE` (optional; default `1`, set `0` to keep polling when no issues are found)
 - `PIV_DRY_RUN=1` to avoid Linear/GitHub mutations
 - `PIV_DEV_MODE=1` to stream Codex stdout/stderr logs during runs
 - `CODEX_SANDBOX` (optional; leave empty to disable sandbox, or set `read-only`, `workspace-write`, `danger-full-access`)

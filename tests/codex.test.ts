@@ -33,6 +33,11 @@ const config: ResolvedProjectConfig = {
 		},
 		autoCreateLabels: true,
 	},
+	polling: {
+		intervalMs: 30000,
+		maxCycles: 10,
+		exitWhenIdle: true,
+	},
 	github: { useGhCli: true, defaultBugLabel: "bug" },
 	codex: {
 		binary: "codex",

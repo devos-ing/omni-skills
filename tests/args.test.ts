@@ -6,7 +6,14 @@ describe("parseArgs", () => {
 		const parsed = parseArgs(["bun", "piv-loop", "run", "--issue", "ABC-1"]);
 		expect(parsed).toEqual({
 			kind: "run",
-			options: { issueArg: "ABC-1", projectId: undefined, allProjects: false },
+			options: {
+				issueArg: "ABC-1",
+				projectId: undefined,
+				allProjects: false,
+				poll: false,
+				pollIntervalMs: undefined,
+				maxPollCycles: undefined,
+			},
 		});
 	});
 
@@ -14,8 +21,50 @@ describe("parseArgs", () => {
 		const parsed = parseArgs(["bun", "piv-loop", "run", "--project", "api"]);
 		expect(parsed).toEqual({
 			kind: "run",
-			options: { projectId: "api", allProjects: false },
+			options: {
+				projectId: "api",
+				allProjects: false,
+				poll: false,
+				pollIntervalMs: undefined,
+				maxPollCycles: undefined,
+			},
 		});
+	});
+
+	it("parses run polling flags", () => {
+		const parsed = parseArgs([
+			"bun",
+			"piv-loop",
+			"run",
+			"--poll",
+			"--poll-interval-ms",
+			"15000",
+			"--max-poll-cycles",
+			"20",
+		]);
+		expect(parsed).toEqual({
+			kind: "run",
+			options: {
+				issueArg: undefined,
+				projectId: undefined,
+				allProjects: false,
+				poll: true,
+				pollIntervalMs: 15000,
+				maxPollCycles: 20,
+			},
+		});
+	});
+
+	it("rejects invalid poll-interval-ms", () => {
+		expect(() =>
+			parseArgs(["bun", "piv-loop", "run", "--poll-interval-ms", "0"]),
+		).toThrow("--poll-interval-ms must be a positive integer");
+	});
+
+	it("rejects invalid max-poll-cycles", () => {
+		expect(() =>
+			parseArgs(["bun", "piv-loop", "run", "--max-poll-cycles", "-1"]),
+		).toThrow("--max-poll-cycles must be a positive integer");
 	});
 
 	it("parses status command", () => {
@@ -33,5 +82,18 @@ describe("parseArgs", () => {
 			issueKey: "ABC-1",
 			projectId: "api",
 		});
+	});
+
+	it("rejects project with all-projects", () => {
+		expect(() =>
+			parseArgs([
+				"bun",
+				"piv-loop",
+				"run",
+				"--project",
+				"api",
+				"--all-projects",
+			]),
+		).toThrow("run command cannot use --project with --all-projects");
 	});
 });

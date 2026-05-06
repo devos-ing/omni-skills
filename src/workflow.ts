@@ -63,62 +63,120 @@ async function runProjectWorkflow(
 ): Promise<void> {
 	const linear = new LinearClient(config);
 	const projectLogger = logger.child({ projectId: config.id });
-	const issues = await linear.fetchWork(options.issueArg);
-	if (issues.length === 0) {
-		projectLogger.info("No eligible Linear issues found.");
-		return;
-	}
+	const polling = resolvePollingSettings(config, options);
+	let cycle = 0;
 
-	for (const issue of issues) {
-		const key = normalizeIssueKey(issue.identifier);
-		const issueLogger = projectLogger.child({ issueKey: key });
-		const existing = await loadRunState(config.workspacePath, config.id, key);
-		const runState: RunState =
-			existing ??
-			({
-				projectId: config.id,
-				projectName: config.name,
-				workspacePath: config.executionPath,
-				repository: {
-					owner: config.repo.owner,
-					name: config.repo.name,
-					baseBranch: config.repo.baseBranch,
-				},
-				issue: {
-					id: issue.id,
-					key,
-					title: issue.title,
-					url: issue.url,
-				},
-				stage: "received",
-				bugs: [],
-				startedAt: new Date().toISOString(),
-				updatedAt: new Date().toISOString(),
-			} satisfies RunState);
+	while (true) {
+		cycle += 1;
+		const issues = await linear.fetchWork(options.issueArg);
+		projectLogger.info(
+			{ cycle, issueCount: issues.length, pollingEnabled: polling.enabled },
+			"Fetched eligible Linear issues",
+		);
 
-		try {
-			await executeIssue(config, linear, runState);
-			issueLogger.info({ stage: runState.stage }, "Issue workflow finished");
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			runState.lastError = message;
-			runState.stage = "blocked";
-			await saveRunState(config.workspacePath, runState);
-			await safeLinearStageUpdate(linear, runState.issue.id, "blocked");
-			await safeLinearComment(
-				linear,
-				runState.issue.id,
-				`PIV loop failed and marked blocked.\n\nError:\n${message}`,
-			);
-			issueLogger.error(
-				{
-					err: normalizeError(error),
-					stage: runState.stage,
-				},
-				"Issue workflow failed",
-			);
+		if (issues.length === 0) {
+			projectLogger.info({ cycle }, "No eligible Linear issues found.");
 		}
+
+		for (const issue of issues) {
+			await processIssue(config, linear, issue);
+		}
+
+		if (!polling.enabled || options.issueArg) {
+			return;
+		}
+		if (polling.maxCycles !== undefined && cycle >= polling.maxCycles) {
+			projectLogger.info(
+				{ cycle, maxCycles: polling.maxCycles },
+				"Polling stopped after reaching configured max cycles",
+			);
+			return;
+		}
+		if (issues.length === 0 && polling.exitWhenIdle) {
+			projectLogger.info({ cycle }, "Polling exited after idle cycle.");
+			return;
+		}
+
+		await sleep(polling.intervalMs);
 	}
+}
+
+async function processIssue(
+	config: ResolvedProjectConfig,
+	linear: LinearClient,
+	issue: { id: string; identifier: string; title: string; url: string },
+): Promise<void> {
+	const key = normalizeIssueKey(issue.identifier);
+	const issueLogger = logger.child({ projectId: config.id, issueKey: key });
+	const existing = await loadRunState(config.workspacePath, config.id, key);
+	const runState: RunState =
+		existing ??
+		({
+			projectId: config.id,
+			projectName: config.name,
+			workspacePath: config.executionPath,
+			repository: {
+				owner: config.repo.owner,
+				name: config.repo.name,
+				baseBranch: config.repo.baseBranch,
+			},
+			issue: {
+				id: issue.id,
+				key,
+				title: issue.title,
+				url: issue.url,
+			},
+			stage: "received",
+			bugs: [],
+			startedAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		} satisfies RunState);
+
+	try {
+		await executeIssue(config, linear, runState);
+		issueLogger.info({ stage: runState.stage }, "Issue workflow finished");
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		runState.lastError = message;
+		runState.stage = "blocked";
+		await saveRunState(config.workspacePath, runState);
+		await safeLinearStageUpdate(linear, runState.issue.id, "blocked");
+		await safeLinearComment(
+			linear,
+			runState.issue.id,
+			`PIV loop failed and marked blocked.\n\nError:\n${message}`,
+		);
+		issueLogger.error(
+			{
+				err: normalizeError(error),
+				stage: runState.stage,
+			},
+			"Issue workflow failed",
+		);
+	}
+}
+
+export interface PollingSettings {
+	enabled: boolean;
+	intervalMs: number;
+	maxCycles?: number;
+	exitWhenIdle: boolean;
+}
+
+export function resolvePollingSettings(
+	config: ResolvedProjectConfig,
+	options: RunOptions,
+): PollingSettings {
+	return {
+		enabled: options.poll === true,
+		intervalMs: options.pollIntervalMs ?? config.polling.intervalMs,
+		maxCycles: options.maxPollCycles ?? config.polling.maxCycles,
+		exitWhenIdle: options.exitWhenIdle ?? config.polling.exitWhenIdle,
+	};
+}
+
+export async function sleep(ms: number): Promise<void> {
+	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function executeIssue(
