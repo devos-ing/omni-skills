@@ -19,7 +19,12 @@ Configuration is loaded from `piv-loop.config.ts` and resolved into project-spec
 - `projects` contains one or more project entries, each with:
   - `id` (required)
   - `name` (optional)
-  - overrides such as `workspacePath`, `repo`, `linear`, `codex`, `skills`, `dryRun`
+  - overrides such as `workspacePath`, `executionPath`, `repo`, `linear`, `codex`, `skills`, `dryRun`
+
+Path behavior:
+
+- `workspacePath`: where PIV loop stores state and temp artifacts.
+- `executionPath`: local repo path where `codex`, `git`, and `gh` commands run.
 
 Run state is namespaced per project at:
 
@@ -62,9 +67,14 @@ Optional:
 - `GITHUB_REPO_OWNER`
 - `GITHUB_REPO_NAME`
 - `GITHUB_BASE_BRANCH` (default `main`)
-- `PIV_WORKSPACE_PATH` (default current directory)
+- `PIV_WORKSPACE_PATH` (default current directory; state root)
+- `PIV_EXECUTION_PATH` (default `PIV_WORKSPACE_PATH`; command execution path)
 - `PIV_DRY_RUN=1` to avoid Linear/GitHub mutations
+- `PIV_DEV_MODE=1` to stream Codex stdout/stderr logs during runs
+- `CODEX_SANDBOX` (optional; leave empty to disable sandbox, or set `read-only`, `workspace-write`, `danger-full-access`)
 - `CODEX_HOME` to override Codex runtime state directory
+- `PIV_LOG_LEVEL` (optional; default `info`)
+- `PIV_LOG_PRETTY` (optional; default `1` in TTY, `0` otherwise)
 
 `LINEAR_STATUS_*` values may be either Linear workflow state IDs or exact state names (for example `Todo`, `In Progress`, `Done`). Names are resolved to IDs at runtime.
 
@@ -96,4 +106,4 @@ bun test
 ## Notes
 
 - Run with authenticated `gh` (`gh auth status`).
-- Codex sessions default to a local writable `CODEX_HOME` at `.piv-loop/codex-home/<project-id>`.
+- Codex uses the default CLI home unless you explicitly set `CODEX_HOME`.

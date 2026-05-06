@@ -9,6 +9,8 @@ const config: DeepPartial<PivLoopRootConfig> = {
 			id: "piv-47ea7f022b5d",
 			name: "Default Project",
 			workspacePath: process.env.PIV_WORKSPACE_PATH ?? cwd,
+			executionPath:
+				process.env.PIV_EXECUTION_PATH ?? process.env.PIV_WORKSPACE_PATH ?? cwd,
 		},
 	],
 	repo: {

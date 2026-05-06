@@ -23,7 +23,7 @@ export async function loadConfig(cwd: string): Promise<LoadedConfig> {
 	const envBase = buildEnvBase(cwd);
 	const loadedOverride = await loadConfigOverride(cwd);
 	const root = normalizeOverrideToRoot(loadedOverride);
-	const projects = resolveProjects(envBase, root, cwd);
+	const projects = resolveProjects(envBase, root);
 	validateProjects(projects);
 	return { projects };
 }
@@ -37,8 +37,12 @@ export function getProjectById(
 
 function buildEnvBase(cwd: string): ProjectRuntimeConfig {
 	const env = process.env;
+	const workspacePath = env.PIV_WORKSPACE_PATH ?? cwd;
+	const sandbox = normalizeSandboxValue(env.CODEX_SANDBOX);
+	const codexHome = normalizeOptionalValue(env.CODEX_HOME);
 	return {
-		workspacePath: env.PIV_WORKSPACE_PATH ?? cwd,
+		workspacePath,
+		executionPath: env.PIV_EXECUTION_PATH ?? workspacePath,
 		repo: {
 			owner: env.GITHUB_REPO_OWNER ?? "",
 			name: env.GITHUB_REPO_NAME ?? "",
@@ -74,10 +78,8 @@ function buildEnvBase(cwd: string): ProjectRuntimeConfig {
 		codex: {
 			binary: env.CODEX_BINARY ?? "codex",
 			model: env.CODEX_MODEL,
-			sandbox:
-				(env.CODEX_SANDBOX as ProjectRuntimeConfig["codex"]["sandbox"]) ??
-				"workspace-write",
-			codexHome: env.CODEX_HOME ?? path.join(cwd, ".piv-loop", "codex-home"),
+			sandbox,
+			codexHome,
 		},
 		skills: {
 			plan: path.join(cwd, "skills", "piv-plan", "SKILL.md"),
@@ -120,13 +122,12 @@ function normalizeOverrideToRoot(override: AnyOverride): PivLoopRootConfig {
 function resolveProjects(
 	base: ProjectRuntimeConfig,
 	root: PivLoopRootConfig,
-	cwd: string,
 ): ResolvedProjectConfig[] {
 	const projectSpecs =
 		root.projects.length > 0 ? root.projects : [{ id: "default" }];
 	const rootDefaults = stripProjects(root);
 	const resolved = projectSpecs.map((project) =>
-		resolveProject(base, rootDefaults, project, cwd),
+		resolveProject(base, rootDefaults, project),
 	);
 	return resolved;
 }
@@ -142,7 +143,6 @@ function resolveProject(
 	base: ProjectRuntimeConfig,
 	rootDefaults: DeepPartial<ProjectRuntimeConfig>,
 	project: ProjectConfig,
-	cwd: string,
 ): ResolvedProjectConfig {
 	const mergedRuntime = mergeRuntime(base, rootDefaults, project);
 	const id = project.id.trim();
@@ -152,13 +152,6 @@ function resolveProject(
 		...mergedRuntime,
 		id,
 		name,
-		codex: {
-			...mergedRuntime.codex,
-			codexHome:
-				project.codex?.codexHome ??
-				rootDefaults.codex?.codexHome ??
-				path.join(cwd, ".piv-loop", "codex-home", id),
-		},
 	};
 }
 
@@ -167,9 +160,18 @@ function mergeRuntime(
 	rootDefaults: DeepPartial<ProjectRuntimeConfig>,
 	project: ProjectConfig,
 ): ProjectRuntimeConfig {
+	const workspacePath =
+		project.workspacePath ?? rootDefaults.workspacePath ?? base.workspacePath;
+	const executionPath =
+		project.executionPath ??
+		rootDefaults.executionPath ??
+		project.workspacePath ??
+		rootDefaults.workspacePath ??
+		base.executionPath;
+
 	return {
-		workspacePath:
-			project.workspacePath ?? rootDefaults.workspacePath ?? base.workspacePath,
+		workspacePath,
+		executionPath,
 		repo: {
 			...base.repo,
 			...(rootDefaults.repo ?? {}),
@@ -227,9 +229,47 @@ function validateProjects(projects: ResolvedProjectConfig[]): void {
 	}
 }
 
+function normalizeOptionalValue(input: string | undefined): string | undefined {
+	if (!input) {
+		return undefined;
+	}
+	const value = input.trim();
+	return value ? value : undefined;
+}
+
+function normalizeSandboxValue(
+	input: string | undefined,
+): ProjectRuntimeConfig["codex"]["sandbox"] | undefined {
+	if (!input) {
+		return undefined;
+	}
+
+	const value = input.trim().toLowerCase();
+	if (!value || value === "off" || value === "none" || value === "0") {
+		return undefined;
+	}
+
+	if (value === "read-only") {
+		return "read-only";
+	}
+	if (value === "workspace-write") {
+		return "workspace-write";
+	}
+	if (value === "danger-full-access") {
+		return "danger-full-access";
+	}
+
+	throw new Error(
+		`Invalid CODEX_SANDBOX value '${input}'. Use read-only, workspace-write, danger-full-access, or leave empty.`,
+	);
+}
+
 function validateProject(project: ResolvedProjectConfig): void {
 	if (!project.linear.apiKey) {
 		throw new Error(`LINEAR_API_KEY is required for project '${project.id}'`);
+	}
+	if (!project.executionPath) {
+		throw new Error(`Execution path is required for project '${project.id}'`);
 	}
 
 	const requiredStateIds = Object.entries(project.linear.statusMap).filter(

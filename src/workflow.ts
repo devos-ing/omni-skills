@@ -6,6 +6,7 @@ import {
 	createDraftPrFromWorktree,
 } from "./github";
 import { LinearClient } from "./linear";
+import { logger, normalizeError } from "./logger";
 import {
 	buildImplementPrompt,
 	buildPlanPrompt,
@@ -30,7 +31,7 @@ export async function runWorkflow(
 ): Promise<void> {
 	const projects = pickProjects(config, options);
 	if (projects.length === 0) {
-		console.log("No project selected.");
+		logger.info("No project selected.");
 		return;
 	}
 
@@ -61,21 +62,23 @@ async function runProjectWorkflow(
 	options: RunOptions,
 ): Promise<void> {
 	const linear = new LinearClient(config);
+	const projectLogger = logger.child({ projectId: config.id });
 	const issues = await linear.fetchWork(options.issueArg);
 	if (issues.length === 0) {
-		console.log(`[${config.id}] No eligible Linear issues found.`);
+		projectLogger.info("No eligible Linear issues found.");
 		return;
 	}
 
 	for (const issue of issues) {
 		const key = normalizeIssueKey(issue.identifier);
+		const issueLogger = projectLogger.child({ issueKey: key });
 		const existing = await loadRunState(config.workspacePath, config.id, key);
 		const runState: RunState =
 			existing ??
 			({
 				projectId: config.id,
 				projectName: config.name,
-				workspacePath: config.workspacePath,
+				workspacePath: config.executionPath,
 				repository: {
 					owner: config.repo.owner,
 					name: config.repo.name,
@@ -95,9 +98,7 @@ async function runProjectWorkflow(
 
 		try {
 			await executeIssue(config, linear, runState);
-			console.log(
-				`[${config.id}] Finished ${runState.issue.key} at stage ${runState.stage}`,
-			);
+			issueLogger.info({ stage: runState.stage }, "Issue workflow finished");
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			runState.lastError = message;
@@ -109,8 +110,12 @@ async function runProjectWorkflow(
 				runState.issue.id,
 				`PIV loop failed and marked blocked.\n\nError:\n${message}`,
 			);
-			console.error(
-				`[${config.id}] Issue ${runState.issue.key} failed: ${message}`,
+			issueLogger.error(
+				{
+					err: normalizeError(error),
+					stage: runState.stage,
+				},
+				"Issue workflow failed",
 			);
 		}
 	}
@@ -337,11 +342,14 @@ async function safeLinearComment(
 	issueId: string,
 	body: string,
 ): Promise<void> {
+	const runLogger = logger.child({ issueId });
 	try {
 		await linear.comment(issueId, body);
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Failed to add Linear comment: ${message}`);
+		runLogger.error(
+			{ err: normalizeError(error) },
+			"Failed to add Linear comment",
+		);
 	}
 }
 
@@ -350,10 +358,13 @@ async function safeLinearStageUpdate(
 	issueId: string,
 	stage: keyof ResolvedProjectConfig["linear"]["statusMap"],
 ): Promise<void> {
+	const runLogger = logger.child({ issueId, stage });
 	try {
 		await linear.markStage(issueId, stage);
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Failed to update Linear stage to ${stage}: ${message}`);
+		runLogger.error(
+			{ err: normalizeError(error) },
+			"Failed to update Linear stage",
+		);
 	}
 }

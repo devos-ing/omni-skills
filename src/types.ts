@@ -35,7 +35,14 @@ export type DeepPartial<T> = {
 };
 
 export interface ProjectRuntimeConfig {
+	/**
+	 * Root path used by piv-loop to persist run state and transient workflow files.
+	 */
 	workspacePath: string;
+	/**
+	 * Local repository path where codex/git/gh commands are executed.
+	 */
+	executionPath: string;
 	repo: {
 		owner: string;
 		name: string;
@@ -59,7 +66,7 @@ export interface ProjectRuntimeConfig {
 		binary: string;
 		model?: string;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
-		codexHome: string;
+		codexHome?: string;
 	};
 	skills: {
 		plan: string;

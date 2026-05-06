@@ -19,7 +19,7 @@ export function buildCodexExecArgs(
 		"--json",
 		"--skip-git-repo-check",
 		"--cd",
-		config.workspacePath,
+		config.executionPath,
 		"--output-last-message",
 		outputFile,
 	];
@@ -45,15 +45,12 @@ export function buildCodexResumeArgs(
 		"--json",
 		"--skip-git-repo-check",
 		"--cd",
-		config.workspacePath,
+		config.executionPath,
 		"--output-last-message",
 		outputFile,
 	];
 	if (config.codex.model) {
 		args.push("--model", config.codex.model);
-	}
-	if (config.codex.sandbox) {
-		args.push("--sandbox", config.codex.sandbox);
 	}
 	args.push(sessionId, prompt);
 	return args;
@@ -96,13 +93,19 @@ async function runCodex(
 	config: ResolvedProjectConfig,
 	args: string[],
 ): Promise<CodexResult> {
-	await mkdir(config.codex.codexHome, { recursive: true });
+	const isDevMode =
+		process.env.PIV_DEV_MODE === "1" ||
+		process.env.PIV_PRINT_CODEX_LOGS === "1";
 	const outputFile = args[args.indexOf("--output-last-message") + 1] ?? "";
+	const envOverrides = config.codex.codexHome
+		? { CODEX_HOME: config.codex.codexHome }
+		: {};
 	const result = await runCommand(config.codex.binary, args, {
-		cwd: config.workspacePath,
-		env: {
-			CODEX_HOME: config.codex.codexHome,
-		},
+		cwd: config.executionPath,
+		env: envOverrides,
+		streamStdout: isDevMode,
+		streamStderr: isDevMode,
+		stdinMode: "ignore",
 	});
 
 	assertCommandOk(config.codex.binary, args, result);

@@ -10,6 +10,7 @@ const config: ResolvedProjectConfig = {
 	id: "default",
 	name: "Default",
 	workspacePath: "/tmp/work",
+	executionPath: "/tmp/work/repo",
 	repo: { owner: "o", name: "n", baseBranch: "main" },
 	linear: {
 		apiKey: "x",
@@ -50,6 +51,16 @@ describe("codex args", () => {
 		expect(args).toContain("--json");
 		expect(args).toContain("--output-last-message");
 		expect(args).toContain("/tmp/out.txt");
+		expect(args).toContain("--sandbox");
+	});
+
+	it("omits sandbox when not configured", () => {
+		const args = buildCodexExecArgs(
+			{ ...config, codex: { ...config.codex, sandbox: undefined } },
+			"hello",
+			"/tmp/out.txt",
+		);
+		expect(args).not.toContain("--sandbox");
 	});
 
 	it("builds resume args with session", () => {
@@ -68,6 +79,7 @@ describe("codex args", () => {
 				"--json",
 			]),
 		);
+		expect(args).not.toContain("--sandbox");
 	});
 
 	it("extracts session id from jsonl", () => {

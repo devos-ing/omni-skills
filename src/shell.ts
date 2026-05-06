@@ -12,22 +12,34 @@ export async function runCommand(
 	options: {
 		cwd: string;
 		env?: Record<string, string | undefined>;
+		streamStdout?: boolean;
+		streamStderr?: boolean;
+		stdinMode?: "ignore" | "pipe";
 	},
 ): Promise<CommandResult> {
 	return new Promise((resolve, reject) => {
 		const child = spawn(command, args, {
 			cwd: options.cwd,
 			env: { ...process.env, ...options.env },
+			stdio: [options.stdinMode ?? "ignore", "pipe", "pipe"],
 		});
 
 		let stdout = "";
 		let stderr = "";
 
-		child.stdout.on("data", (chunk) => {
-			stdout += chunk.toString();
+		child.stdout?.on("data", (chunk) => {
+			const text = chunk.toString();
+			stdout += text;
+			if (options.streamStdout) {
+				process.stdout.write(text);
+			}
 		});
-		child.stderr.on("data", (chunk) => {
-			stderr += chunk.toString();
+		child.stderr?.on("data", (chunk) => {
+			const text = chunk.toString();
+			stderr += text;
+			if (options.streamStderr) {
+				process.stderr.write(text);
+			}
 		});
 		child.on("error", reject);
 		child.on("close", (code) => {

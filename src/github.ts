@@ -5,7 +5,7 @@ export async function ensureGhAuth(
 	config: ResolvedProjectConfig,
 ): Promise<void> {
 	const result = await runCommand("gh", ["auth", "status"], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("gh", ["auth", "status"], result);
 }
@@ -21,7 +21,7 @@ export async function createDraftPrFromWorktree(
 	await checkoutBranch(config, branch);
 
 	const addResult = await runCommand("git", ["add", "-A"], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("git", ["add", "-A"], addResult);
 
@@ -34,12 +34,12 @@ export async function createDraftPrFromWorktree(
 
 	const commitTitle = `[piv-loop] ${issueKey}: ${issueTitle}`;
 	const commit = await runCommand("git", ["commit", "-m", commitTitle], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("git", ["commit", "-m", commitTitle], commit);
 
 	const push = await runCommand("git", ["push", "-u", "origin", branch], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("git", ["push", "-u", "origin", branch], push);
 
@@ -70,7 +70,7 @@ export async function createDraftPrFromWorktree(
 			"--head",
 			branch,
 		],
-		{ cwd: config.workspacePath },
+		{ cwd: config.executionPath },
 	);
 	assertCommandOk("gh", ["pr", "create"], create);
 
@@ -97,7 +97,7 @@ export async function commentOnPr(
 		"gh",
 		["pr", "comment", target, "--body", body],
 		{
-			cwd: config.workspacePath,
+			cwd: config.executionPath,
 		},
 	);
 	assertCommandOk("gh", ["pr", "comment", target], result);
@@ -142,7 +142,7 @@ export async function createBugIssue(
 			"--label",
 			config.github.defaultBugLabel,
 		],
-		{ cwd: config.workspacePath },
+		{ cwd: config.executionPath },
 	);
 	assertCommandOk("gh", ["issue", "create"], result);
 	return result.stdout.trim().split("\n").filter(Boolean).at(-1);
@@ -175,7 +175,7 @@ async function ensureGitRepository(
 		"git",
 		["rev-parse", "--is-inside-work-tree"],
 		{
-			cwd: config.workspacePath,
+			cwd: config.executionPath,
 		},
 	);
 	assertCommandOk("git", ["rev-parse", "--is-inside-work-tree"], result);
@@ -186,20 +186,20 @@ async function checkoutBranch(
 	branch: string,
 ): Promise<void> {
 	const existing = await runCommand("git", ["branch", "--list", branch], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("git", ["branch", "--list", branch], existing);
 
 	if (existing.stdout.trim()) {
 		const checkout = await runCommand("git", ["checkout", branch], {
-			cwd: config.workspacePath,
+			cwd: config.executionPath,
 		});
 		assertCommandOk("git", ["checkout", branch], checkout);
 		return;
 	}
 
 	const create = await runCommand("git", ["checkout", "-b", branch], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	assertCommandOk("git", ["checkout", "-b", branch], create);
 }
@@ -208,7 +208,7 @@ async function stagedChangesExist(
 	config: ResolvedProjectConfig,
 ): Promise<boolean> {
 	const diff = await runCommand("git", ["diff", "--cached", "--quiet"], {
-		cwd: config.workspacePath,
+		cwd: config.executionPath,
 	});
 	if (diff.code === 0) {
 		return false;
