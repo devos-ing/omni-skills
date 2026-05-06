@@ -101,8 +101,14 @@ export class LinearClient {
 		const removedLabelIds = this.workflowLabelIds.filter(
 			(labelId) => labelId !== nextLabelId && currentLabelSet.has(labelId),
 		);
+		const addedLabelIds = currentLabelSet.has(nextLabelId) ? [] : [nextLabelId];
+
+		if (addedLabelIds.length === 0 && removedLabelIds.length === 0) {
+			return;
+		}
+
 		await this.client.updateIssue(issueId, {
-			addedLabelIds: [nextLabelId],
+			addedLabelIds,
 			removedLabelIds,
 		});
 	}
@@ -111,10 +117,7 @@ export class LinearClient {
 		if (this.config.dryRun) {
 			return;
 		}
-		await this.client.createComment({
-			issueId,
-			body,
-		});
+		await this.client.createComment({ issueId, body });
 	}
 
 	private async findIssueByIdentifier(
