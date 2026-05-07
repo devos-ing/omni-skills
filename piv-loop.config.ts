@@ -42,6 +42,11 @@ const config: DeepPartial<PivLoopRootConfig> = {
 			implement: "gpt-5.3-codex",
 			reviewTest: "gpt-5.3-codex",
 		},
+		plugins: ["github@openai-curated", "linear@openai-curated"],
+		skillsets: ["piv-loop"],
+		configOverrides: {
+			"features.codex_hooks": "true",
+		},
 	},
 	skills: {
 		plan: path.join(cwd, "skills", "piv-plan", "SKILL.md"),

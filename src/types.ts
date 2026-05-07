@@ -72,6 +72,13 @@ export interface ProjectRuntimeConfig {
 			implement?: string;
 			reviewTest?: string;
 		};
+		plugins?: string[];
+		skillsets?: string[];
+		/**
+		 * Raw Codex CLI -c overrides in key -> TOML value format, e.g.
+		 * { "features.experimental": "true", "foo.bar": "\"baz\"" }.
+		 */
+		configOverrides?: Record<string, string>;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
 		codexHome?: string;
 	};

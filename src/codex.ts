@@ -36,6 +36,7 @@ export function buildCodexExecArgs(
 	if (config.codex.sandbox) {
 		args.push("--sandbox", config.codex.sandbox);
 	}
+	appendCodexConfigArgs(args, config);
 	args.push(prompt);
 	return args;
 }
@@ -59,6 +60,7 @@ export function buildCodexResumeArgs(
 	if (model) {
 		args.push("--model", model);
 	}
+	appendCodexConfigArgs(args, config);
 	args.push(sessionId, prompt);
 	return args;
 }
@@ -274,4 +276,50 @@ function findStringByKey(value: unknown, keys: string[]): string | undefined {
 		}
 	}
 	return undefined;
+}
+
+function appendCodexConfigArgs(
+	args: string[],
+	config: ResolvedProjectConfig,
+): void {
+	for (const override of buildCodexConfigOverrides(config)) {
+		args.push("--config", override);
+	}
+}
+
+function buildCodexConfigOverrides(config: ResolvedProjectConfig): string[] {
+	const overrides: string[] = [];
+	const plugins = normalizeList(config.codex.plugins);
+	const skillsets = normalizeList(config.codex.skillsets);
+
+	for (const plugin of plugins) {
+		const pluginKey = JSON.stringify(plugin);
+		overrides.push(`plugins.${pluginKey}.enabled=true`);
+	}
+	if (skillsets.length > 0) {
+		overrides.push(`skillsets=${toTomlStringArray(skillsets)}`);
+	}
+	for (const [rawKey, rawValue] of Object.entries(
+		config.codex.configOverrides ?? {},
+	)) {
+		const key = rawKey.trim();
+		const value = rawValue.trim();
+		if (!key || !value) {
+			continue;
+		}
+		overrides.push(`${key}=${value}`);
+	}
+
+	return overrides;
+}
+
+function normalizeList(values: string[] | undefined): string[] {
+	if (!values) {
+		return [];
+	}
+	return values.map((value) => value.trim()).filter(Boolean);
+}
+
+function toTomlStringArray(values: string[]): string {
+	return `[${values.map((value) => JSON.stringify(value)).join(", ")}]`;
 }

@@ -44,6 +44,11 @@ const config: ResolvedProjectConfig = {
 			implement: "gpt-5.3-codex",
 			reviewTest: "gpt-5.3-codex",
 		},
+		plugins: ["github@openai-curated", "linear@openai-curated"],
+		skillsets: ["piv-loop", "repo-defaults"],
+		configOverrides: {
+			"features.experimental_tools": "true",
+		},
 		sandbox: "workspace-write",
 		codexHome: "/tmp/codex",
 	},
@@ -59,6 +64,21 @@ describe("codex args", () => {
 		expect(args).toContain("--output-last-message");
 		expect(args).toContain("/tmp/out.txt");
 		expect(args).toContain("--sandbox");
+		expect(args).toEqual(
+			expect.arrayContaining([
+				"--config",
+				'plugins."github@openai-curated".enabled=true',
+			]),
+		);
+		expect(args).toEqual(
+			expect.arrayContaining([
+				"--config",
+				'skillsets=["piv-loop", "repo-defaults"]',
+			]),
+		);
+		expect(args).toEqual(
+			expect.arrayContaining(["--config", "features.experimental_tools=true"]),
+		);
 	});
 
 	it("supports stage model overrides", () => {
@@ -109,6 +129,12 @@ describe("codex args", () => {
 		);
 		expect(args).not.toContain("--sandbox");
 		expect(args).not.toContain("--cd");
+		expect(args).toEqual(
+			expect.arrayContaining([
+				"--config",
+				'plugins."linear@openai-curated".enabled=true',
+			]),
+		);
 	});
 
 	it("extracts session id from jsonl", () => {

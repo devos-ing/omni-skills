@@ -172,4 +172,49 @@ describe("loadConfig", () => {
 		const configFromLegacyFlag = await loadConfig(process.cwd());
 		expect(configFromLegacyFlag.projects[0]?.codex.streamLogs).toBe(true);
 	});
+
+	it("supports codex plugins and skillsets in project config", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "piv-loop.config.ts"),
+			[
+				"export default {",
+				"  codex: {",
+				"    plugins: ['github@openai-curated'],",
+				"    skillsets: ['default-skillset'],",
+				"    configOverrides: {",
+				"      'features.root': 'true'",
+				"    }",
+				"  },",
+				"  projects: [",
+				"    {",
+				"      id: 'default',",
+				"      codex: {",
+				"        plugins: ['linear@openai-curated'],",
+				"        configOverrides: {",
+				"          'features.project': 'false'",
+				"        }",
+				"      }",
+				"    }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.codex.plugins).toEqual([
+				"linear@openai-curated",
+			]);
+			expect(config.projects[0]?.codex.skillsets).toEqual(["default-skillset"]);
+			expect(config.projects[0]?.codex.configOverrides).toEqual({
+				"features.project": "false",
+			});
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
 });

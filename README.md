@@ -25,6 +25,12 @@ Configuration is loaded from `piv-loop.config.ts` and resolved into project-spec
   - `name` (optional)
   - overrides such as `workspacePath`, `executionPath`, `repo`, `linear`, `codex`, `skills`, `dryRun`
 
+Codex capability configuration can be set at root or per project:
+
+- `codex.plugins`: plugin IDs to enable for spawned Codex sessions (translated to `--config plugins."<id>".enabled=true`)
+- `codex.skillsets`: skillset names passed to Codex as a `skillsets=[...]` config override
+- `codex.configOverrides`: raw `key -> TOML literal` map forwarded as repeated `--config key=value`
+
 Path behavior:
 
 - `workspacePath`: where PIV loop stores state and temp artifacts.
