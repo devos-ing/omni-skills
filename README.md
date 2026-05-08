@@ -18,7 +18,7 @@ bun run src/index.ts setup --check
 bun run src/index.ts run --project <PROJECT_ID>
 ```
 
-If you have only one configured project, `<PROJECT_ID>` is usually `default`.
+Use `bun run src/index.ts projects` to list available project IDs, then pass one of those values as `<PROJECT_ID>`.
 
 ## Common Commands
 
