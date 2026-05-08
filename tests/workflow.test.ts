@@ -8,6 +8,7 @@ import {
 	appendCodexUsage,
 	buildIssueJobLogFields,
 	buildRunLeaseOwnerId,
+	fixedBugsForImplementationComment,
 	isRunStateStaleForRetry,
 	normalizeFailedReviewBugs,
 	parsePlannerDecision,
@@ -393,6 +394,33 @@ describe("normalizeFailedReviewBugs", () => {
 		expect(bugs).toHaveLength(1);
 		expect(bugs[0]?.title).toContain("failed without structured bug details");
 		expect(bugs[0]?.body).toContain("Result failed with malformed output.");
+	});
+});
+
+describe("fixedBugsForImplementationComment", () => {
+	it("returns a copy of bugs for fix rounds", () => {
+		const source = [
+			{
+				title: "Bug A",
+				body: "Details",
+				issueUrl: "https://linear.app/roy/issue/ROY-1/bug-a",
+			},
+		];
+		const fixed = fixedBugsForImplementationComment(true, source);
+		expect(fixed).toEqual(source);
+		expect(fixed).not.toBe(source);
+	});
+
+	it("returns empty when no existing PR is present", () => {
+		const fixed = fixedBugsForImplementationComment(false, [
+			{ title: "Bug A", body: "Details" },
+		]);
+		expect(fixed).toEqual([]);
+	});
+
+	it("returns empty when bug list is empty", () => {
+		const fixed = fixedBugsForImplementationComment(true, []);
+		expect(fixed).toEqual([]);
 	});
 });
 

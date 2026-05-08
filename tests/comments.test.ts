@@ -76,6 +76,27 @@ describe("buildImplementationComment", () => {
 		expect(comment).toContain("Implementation updated existing PR branch:");
 		expect(comment).toContain("https://example.com/pr/1");
 	});
+
+	it("includes fixed bug titles for feedback pass resolution", () => {
+		const comment = buildImplementationComment(
+			"https://example.com/pr/1",
+			{ inputTokens: 2, outputTokens: 3 },
+			{
+				updated: true,
+				fixedBugs: [
+					{ title: "Bug A", body: "Details A" },
+					{ title: "Bug B", body: "Details B" },
+				],
+			},
+		);
+		expect(comment).toContain(
+			"Review/testing bugs fixed; returning to review/testing.",
+		);
+		expect(comment).toContain("Fixed bugs:");
+		expect(comment).toContain("- Bug A");
+		expect(comment).toContain("- Bug B");
+		expect(comment).toContain("Token usage: input 2, output 3, total 5");
+	});
 });
 
 describe("buildReviewComment", () => {

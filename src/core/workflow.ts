@@ -740,6 +740,10 @@ async function handleImplementingStage(
 
 	const hasExistingPr = Boolean(state.pullRequest?.url);
 	const fixRound = hasExistingPr && state.bugs.length > 0;
+	const fixedBugs = fixedBugsForImplementationComment(
+		hasExistingPr,
+		state.bugs,
+	);
 	const prompt = fixRound
 		? await buildFixPrompt(
 				config.skills.implement,
@@ -799,6 +803,7 @@ async function handleImplementingStage(
 		state.issue.id,
 		buildImplementationComment(state.pullRequest?.url, result.usage, {
 			updated: hasExistingPr,
+			fixedBugs,
 		}),
 	);
 	logger.info(
@@ -923,6 +928,20 @@ export function appendCodexUsage(
 			recordedAt: new Date().toISOString(),
 		},
 	];
+}
+
+export function fixedBugsForImplementationComment(
+	hasExistingPr: boolean,
+	bugs: RunState["bugs"],
+): RunState["bugs"] {
+	if (!hasExistingPr || bugs.length === 0) {
+		return [];
+	}
+	return bugs.map((bug) => ({
+		title: bug.title,
+		body: bug.body,
+		issueUrl: bug.issueUrl,
+	}));
 }
 
 export interface PlannerDecision {

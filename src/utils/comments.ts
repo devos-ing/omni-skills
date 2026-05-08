@@ -84,12 +84,20 @@ export function buildPlanSplitComment(
 export function buildImplementationComment(
 	draftPrUrl: string | undefined,
 	usage?: TokenUsage,
-	options?: { updated?: boolean },
+	options?: { updated?: boolean; fixedBugs?: BugRecord[] },
 ): string {
 	const statusLine = options?.updated
 		? `Implementation updated existing PR branch: ${draftPrUrl ?? "(updated)"}`
 		: `Implementation completed. Draft PR: ${draftPrUrl ?? "(created)"}`;
-	return [statusLine, formatCodexUsageLine(usage)].join("\n");
+	const fixedBugLines =
+		options?.updated && options.fixedBugs && options.fixedBugs.length > 0
+			? [
+					"Review/testing bugs fixed; returning to review/testing.",
+					"Fixed bugs:",
+					...options.fixedBugs.map((bug) => `- ${bug.title}`),
+				]
+			: [];
+	return [statusLine, ...fixedBugLines, formatCodexUsageLine(usage)].join("\n");
 }
 
 export function buildReviewComment(input: {
