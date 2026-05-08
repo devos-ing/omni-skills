@@ -5,6 +5,7 @@
 1. Treat API keys and tokens as environment-provided secrets.
 2. Do not hardcode credentials in repository files.
 3. Keep environment resolution centralized in `src/config.ts`.
+4. Local secret storage uses `.piv-loop/config/env.sqlite`; keep `.piv-loop/` ignored and never commit this database.
 
 ## Command Safety
 

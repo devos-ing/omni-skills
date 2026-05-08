@@ -124,10 +124,13 @@ adhd-ai setup
 
 Run `adhd-ai setup` to answer plain-language prompts and generate local setup files:
 
-- `.env` stores secrets such as `LINEAR_API_KEY`.
+- `.piv-loop/config/env.sqlite` stores local secrets such as `LINEAR_API_KEY`.
+- `.env` is still written as a compatibility fallback for existing local workflows.
 - `adhd-ai.local.config.ts` stores local project, GitHub, Linear routing, and Codex settings.
 
 `adhd-ai.local.config.ts` is loaded before the tracked `adhd-ai.config.ts` and is ignored by git. Existing `adhd-ai.config.ts` and legacy `piv-loop.config.ts` files continue to work.
+
+At runtime, config resolution uses this precedence for env-like values: process environment -> SQLite env store -> built-in defaults.
 
 Run `adhd-ai setup --check` to validate that config loads, the execution path exists, `gh` is authenticated, Codex is available, and configured secrets are not present in tracked config files.
 

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import path from "node:path";
 import type { LoadedConfig } from "../src/core/config";
+import { loadSqliteEnv } from "../src/core/config";
 import {
 	DEFAULT_LABEL_MAP,
 	DEFAULT_STATUS_MAP,
@@ -10,6 +13,7 @@ import {
 	normalizeProjectId,
 	renderEnvFile,
 	renderLocalConfig,
+	writeSetupFiles,
 } from "../src/core/setup";
 import type { CommandResult } from "../src/utils/shell";
 
@@ -62,6 +66,21 @@ describe("setup helpers", () => {
 		expect(merged).toContain("KEEP_ME=yes");
 		expect(merged).toContain('LINEAR_API_KEY="new secret"');
 		expect(merged).not.toContain("LINEAR_API_KEY=old");
+	});
+
+	it("writes setup secrets to sqlite and preserves env fallback", async () => {
+		const tempDir = await mkdtemp(path.join(process.cwd(), ".tmp-setup-test-"));
+		try {
+			await writeSetupFiles(tempDir, draft);
+			const sqliteEnv = await loadSqliteEnv(tempDir);
+			expect(sqliteEnv?.LINEAR_API_KEY).toBe("lin_secret_123");
+
+			const envPath = path.join(tempDir, ".env");
+			const envContent = await readFile(envPath, "utf8");
+			expect(envContent).toContain("LINEAR_API_KEY=lin_secret_123");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
 	});
 
 	it("formats setup checks", () => {

@@ -1,7 +1,8 @@
+import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { loadConfig } from "../src/core/config";
+import { loadConfig, saveSqliteEnv, sqliteEnvDbPath } from "../src/core/config";
 
 const envKeys = [
 	"LINEAR_API_KEY",
@@ -101,6 +102,93 @@ describe("loadConfig", () => {
 		expect(config.projects[0]?.skills.reviewTest).toBe(
 			path.join(process.cwd(), "skills", "piv-review-test", "SKILL.md"),
 		);
+	});
+
+	it("loads env values from sqlite when process env is unset", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await saveSqliteEnv(tempDir, {
+			LINEAR_API_KEY: "lin_sqlite_key",
+			PIV_POLL_INTERVAL_MS: "45000",
+			RESEND_API_KEY: "re_sqlite",
+			RESEND_FROM: "ADHD.ai <ops@example.com>",
+			RESEND_TO: "a@example.com,b@example.com",
+		});
+		process.env.LINEAR_API_KEY = undefined;
+		process.env.PIV_POLL_INTERVAL_MS = undefined;
+		process.env.RESEND_API_KEY = undefined;
+		process.env.RESEND_FROM = undefined;
+		process.env.RESEND_TO = undefined;
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.linear.apiKey).toBe("lin_sqlite_key");
+			expect(config.polling.intervalMs).toBe(45000);
+			expect(config.notifications.email.enabled).toBe(true);
+			expect(config.notifications.email.resendApiKey).toBe("re_sqlite");
+			expect(config.notifications.email.to).toEqual([
+				"a@example.com",
+				"b@example.com",
+			]);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("prefers process env over sqlite values", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await saveSqliteEnv(tempDir, {
+			LINEAR_API_KEY: "lin_sqlite_key",
+		});
+		process.env.LINEAR_API_KEY = "lin_env_key";
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.linear.apiKey).toBe("lin_env_key");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("falls back to process env when sqlite db is missing", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		process.env.LINEAR_API_KEY = "lin_env_key";
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.linear.apiKey).toBe("lin_env_key");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("throws when sqlite db exists but env_config schema is invalid", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await saveSqliteEnv(tempDir, {
+			LINEAR_API_KEY: "lin_sqlite_key",
+		});
+		const dbPath = sqliteEnvDbPath(tempDir);
+		process.env.LINEAR_API_KEY = undefined;
+		const db = new Database(dbPath, { create: true });
+		try {
+			db.run("DROP TABLE env_config");
+			db.run("CREATE TABLE broken (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+		} finally {
+			db.close(false);
+		}
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow("env_config");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
 	});
 
 	it("loads default daily codebase maintenance cron job", async () => {

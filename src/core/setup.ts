@@ -6,7 +6,7 @@ import { findClaudeBinary } from "../utils/claude-path";
 import type { CommandResult } from "../utils/shell";
 import { runCommand } from "../utils/shell";
 import type { LoadedConfig } from "./config";
-import { loadConfig } from "./config";
+import { loadConfig, saveSqliteEnv } from "./config";
 
 const ENV_FILE = ".env";
 const LOCAL_CONFIG_FILE = "adhd-ai.local.config.ts";
@@ -479,14 +479,17 @@ export async function runSetupWizard(cwd: string): Promise<void> {
 
 		await writeSetupFiles(cwd, draft);
 		process.stdout.write(
-			`Setup files written: ${ENV_FILE}, ${LOCAL_CONFIG_FILE}\nRun 'adhd-ai setup --check' to validate this machine.\n`,
+			`Setup files written: ${ENV_FILE}, ${LOCAL_CONFIG_FILE}; secrets saved to .piv-loop/config/env.sqlite\nRun 'adhd-ai setup --check' to validate this machine.\n`,
 		);
 	} finally {
 		io.close();
 	}
 }
 
-async function writeSetupFiles(cwd: string, draft: SetupDraft): Promise<void> {
+export async function writeSetupFiles(
+	cwd: string,
+	draft: SetupDraft,
+): Promise<void> {
 	const envPath = path.join(cwd, ENV_FILE);
 	const configPath = path.join(cwd, LOCAL_CONFIG_FILE);
 	const existingEnv = await readExistingFile(envPath);
@@ -494,6 +497,7 @@ async function writeSetupFiles(cwd: string, draft: SetupDraft): Promise<void> {
 		envPath,
 		mergeEnvFile(existingEnv, { LINEAR_API_KEY: draft.linearApiKey }),
 	);
+	await saveSqliteEnv(cwd, { LINEAR_API_KEY: draft.linearApiKey });
 	await writeFile(configPath, renderLocalConfig(draft));
 }
 
