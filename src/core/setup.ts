@@ -12,6 +12,7 @@ const ENV_FILE = ".env";
 const LOCAL_CONFIG_FILE = "adhd-ai.local.config.ts";
 const DEFAULT_PROJECT_NAME = "Default Project";
 const DEFAULT_BASE_BRANCH = "main";
+const RTK_INSTALL_URL = "https://github.com/rtk-ai/rtk";
 
 export interface SetupDraft {
 	projectId: string;
@@ -340,6 +341,21 @@ export async function collectSetupChecks(
 				},
 	);
 
+	const rtk = await safeRun(commandRunner, "rtk", ["--version"], commandCwd);
+	checks.push(
+		rtk.code === 0
+			? {
+					name: "RTK binary",
+					status: "pass",
+					message: "rtk is available",
+				}
+			: {
+					name: "RTK binary",
+					status: "fail",
+					message: formatMissingRtkMessage(),
+				},
+	);
+
 	const codexBackends = config.projects.filter(
 		(project) => !project.agent?.backend || project.agent.backend === "codex",
 	);
@@ -421,6 +437,11 @@ export async function runSetupWizard(cwd: string): Promise<void> {
 	});
 
 	try {
+		const rtk = await safeRun(runCommand, "rtk", ["--version"], cwd);
+		if (rtk.code !== 0) {
+			process.stdout.write(renderSetupRtkInstallPrompt());
+		}
+
 		const projectName = await ask(io, "Project name", DEFAULT_PROJECT_NAME);
 		const projectId = await ask(
 			io,
@@ -678,6 +699,14 @@ async function readOptionalText(
 function commandFailureMessage(result: CommandResult): string {
 	const output = (result.stderr || result.stdout).trim();
 	return output || `command exited with ${result.code}`;
+}
+
+function formatMissingRtkMessage(): string {
+	return `rtk binary not found. Install from: ${RTK_INSTALL_URL}`;
+}
+
+export function renderSetupRtkInstallPrompt(): string {
+	return `RTK is required for ADHD.ai agent workflow commands.\nInstall RTK before running workflows: ${RTK_INSTALL_URL}\n`;
 }
 
 function renderEnvEntries(entries: Record<string, string | undefined>): string {

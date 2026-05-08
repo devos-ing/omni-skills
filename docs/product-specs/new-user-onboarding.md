@@ -7,14 +7,14 @@ Get a new operator from zero setup to running a scoped project workflow.
 ## Preconditions
 
 1. Repository is cloned.
-2. `bun` and `gh` are installed.
+2. `bun`, `gh`, and `rtk` are installed.
 3. Linear and GitHub credentials are available.
 
 ## Setup
 
 1. Run `adhd-ai setup` and answer the guided prompts.
 2. Confirm the wizard writes `.env` for secrets and `adhd-ai.local.config.ts` for local project settings.
-3. Run `adhd-ai setup --check` to verify config, GitHub auth, Codex availability, and secret placement.
+3. Run `adhd-ai setup --check` to verify config, GitHub auth, RTK availability, Codex availability, and secret placement.
 
 ## First Run
 
