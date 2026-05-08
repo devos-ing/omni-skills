@@ -13,6 +13,7 @@ import {
 	normalizeProjectId,
 	renderEnvFile,
 	renderLocalConfig,
+	renderSetupRtkInstallPrompt,
 	writeSetupFiles,
 } from "../src/core/setup";
 import type { CommandResult } from "../src/utils/shell";
@@ -203,6 +204,35 @@ describe("setup helpers", () => {
 			status: "fail",
 			message: "adhd-ai.config.ts contains a configured secret",
 		});
+	});
+
+	it("reports missing rtk binary", async () => {
+		const checks = await collectSetupChecks("/tmp/demo", {
+			loadConfig: async () => loadedConfig({ linearApiKey: "lin_secret_123" }),
+			access: async () => {},
+			readFile: async () => "",
+			runCommand: async (command) =>
+				command === "rtk"
+					? {
+							code: 1,
+							stdout: "",
+							stderr: "command not found: rtk",
+						}
+					: okCommand(),
+		});
+
+		expect(checks).toContainEqual({
+			name: "RTK binary",
+			status: "fail",
+			message:
+				"rtk binary not found. Install from: https://github.com/rtk-ai/rtk",
+		});
+	});
+
+	it("renders setup rtk install prompt", () => {
+		expect(renderSetupRtkInstallPrompt()).toContain(
+			"Install RTK before running workflows: https://github.com/rtk-ai/rtk",
+		);
 	});
 });
 
