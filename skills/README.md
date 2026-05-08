@@ -9,6 +9,7 @@ This directory is the default skill pack root for ADHD.ai.
 - `piv-plan/SKILL.md`
 - `piv-implement/SKILL.md`
 - `piv-review-test/SKILL.md`
+- `adhd-docs/SKILL.md`
 
 ## Configure a custom skill root
 
@@ -44,3 +45,7 @@ You can source skills from another repo in three common ways:
 3. Copy selected skill folders into this `skills/` directory.
 
 For reproducibility, pin submodules or clone to a known commit.
+
+## Included Documentation Skill
+
+`adhd-docs/SKILL.md` is for generating and maintaining plain-language, operator-facing documentation that explains workflow behavior and integrations (Linear, GitHub, optional Resend notifications, and Claude/OpenAI Codex runtime options) without exposing secrets.

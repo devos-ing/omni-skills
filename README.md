@@ -6,6 +6,10 @@ The purpose is simple: create an idea, task, or issue in Linear; ADHD.ai pulls t
 
 Production default: run unattended processing with `adhd-ai cron`. Use `adhd-ai run --poll` as a local/dev mode when iterating on workflow behavior.
 
+## Operator Guide
+
+For non-technical operators, start with [NON_TECHNICAL_GUIDE.md](docs/NON_TECHNICAL_GUIDE.md).
+
 ## Purpose
 
 - Use Linear as the job board for engineering ideas, tasks, and issues.
