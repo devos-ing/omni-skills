@@ -11,6 +11,7 @@ import {
 	removeSkill,
 	updateSkill,
 } from "../skills/manage";
+import { formatWorkflowStageDisplay } from "../utils/status";
 
 type SetupCommand = Extract<CliCommand, { kind: "setup" }>;
 type RunnableCommand = Exclude<CliCommand, { kind: "help" } | SetupCommand>;
