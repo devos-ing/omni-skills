@@ -11,7 +11,8 @@ ADHD.ai is a multi-project orchestration hub that pulls eligible Linear issues a
 3. Integration modules stay isolated under `src/services/`:
    - `src/services/linear.ts`
    - `src/services/github.ts`
-   - `src/services/codex.ts`
+   - `src/services/codex-adapter.ts`
+   - `src/services/claude-code-adapter.ts`
    - `src/services/cron.ts`
    - `src/services/notifications.ts`
 4. `src/core/state.ts` owns run-state paths and legacy fallback behavior.
@@ -19,11 +20,50 @@ ADHD.ai is a multi-project orchestration hub that pulls eligible Linear issues a
 
 ## Stage Model
 
-The workflow advances through planning -> implementing -> testing and synchronizes Linear status and comments at each boundary. Review output must preserve the parsing contract:
+The workflow advances through planning -> implementing -> review/testing and synchronizes Linear status and comments at each boundary. Review output must preserve the parsing contract:
 
 - `RESULT: PASS|FAIL`
 - `SUMMARY: ...`
 - `BUGS_JSON: [...]`
+
+## System Diagram
+
+```mermaid
+flowchart TD
+    operator[Operator] --> linearIssue[Linear Issue Intake]
+    linearIssue --> config[src/core/config.ts<br/>project + runtime resolution]
+    config --> workflow[src/core/workflow.ts<br/>stage orchestration]
+
+    workflow --> planning[Planning Agent]
+    planning --> complexity{Complexity Score < 5?}
+
+    complexity -->|Yes| implementing[Implementation Agent]
+    complexity -->|No| humanReview[Human Review Pause]
+
+    implementing --> github[src/services/github.ts<br/>branch + draft PR updates]
+    github --> reviewTesting[Review/Testing Agent]
+
+    reviewTesting --> reviewPass{RESULT: PASS?}
+    reviewPass -->|No| implementing
+    reviewPass -->|Yes| done[Done]
+
+    workflow --> blocked[Blocked]
+    humanReview --> reviewingStage[Reviewing Stage in Linear]
+
+    workflow --> linearSvc[src/services/linear.ts<br/>status + comments + child tasks]
+    workflow --> notify[src/services/notifications.ts<br/>human review and outcome email]
+    workflow --> state[src/core/state.ts<br/>run state + leases]
+
+    state --> runFiles[.piv-loop/projects/<project-id>/runs/*.json]
+    state --> chatLogs[.piv-loop/projects/<project-id>/chat-logs/*.json]
+
+    planning --> codexAdapter[src/services/codex-adapter.ts]
+    planning --> claudeAdapter[src/services/claude-code-adapter.ts]
+    implementing --> codexAdapter
+    implementing --> claudeAdapter
+    reviewTesting --> codexAdapter
+    reviewTesting --> claudeAdapter
+```
 
 ## Multi-Project Runtime Rules
 
