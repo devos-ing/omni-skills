@@ -42,6 +42,10 @@ bun run src/index.ts cron
 # run the hourly PR review job
 bun run review:hourly
 
+# bump version, run quality gates, and publish
+bun run publish:version -- patch
+bun run publish:version -- 1.2.3
+
 # inspect run state for one issue
 bun run src/index.ts status --project <PROJECT_ID> --issue ENG-123
 
