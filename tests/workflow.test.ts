@@ -20,7 +20,9 @@ import {
 	buildPrioritizedIssueQueue,
 	buildReviewOnlyIssueQueue,
 	buildRunLeaseOwnerId,
+	finalizeIssueAfterReviewMerge,
 	fixedBugsForImplementationComment,
+	handleReviewTestingStage,
 	isReviewOnlyEligibleRunState,
 	isReviewOnlyExecutableStage,
 	isRunStateStaleForRetry,
@@ -824,6 +826,153 @@ describe("readyPullRequestAfterPassingReview", () => {
 
 		expect(updated).toBe(false);
 		expect(markPrReady).not.toHaveBeenCalled();
+	});
+});
+
+describe("review pass stage transitions", () => {
+	it("keeps Linear in reviewing after a passing review result", async () => {
+		const workspace = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-review-pass-"),
+		);
+		const state = createRunState("ENG-100", "reviewing", Date.now());
+		state.pullRequest = {
+			branch: "codex/eng-100",
+			title: "ENG-100",
+			url: "https://github.com/acme/repo/pull/100",
+		};
+		const config = {
+			...createProject("default"),
+			workspacePath: workspace,
+			dryRun: true,
+		};
+		const notifications = {
+			email: { enabled: false, to: [] },
+		};
+		const agent = {
+			runPlan: async () => {
+				throw new Error("unused");
+			},
+			resume: async () => {
+				throw new Error("unused");
+			},
+			runReview: async () => ({
+				finalMessage: "RESULT: PASS\nSUMMARY: good\nBUGS_JSON: []",
+				stdout: "",
+				usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+			}),
+		};
+		const markStage = mock(async () => {});
+		const applyStageLabel = mock(async () => {});
+		const comment = mock(async () => {});
+		const linear = {
+			markStage,
+			applyStageLabel,
+			comment,
+		};
+
+		await handleReviewTestingStage(
+			config,
+			agent,
+			notifications,
+			linear as never,
+			state,
+		);
+
+		expect(state.stage).toBe("done");
+		expect(markStage).toHaveBeenCalledWith("lin_ENG-100", "testing");
+		expect(markStage).toHaveBeenCalledWith("lin_ENG-100", "reviewing");
+		expect(markStage).not.toHaveBeenCalledWith("lin_ENG-100", "done");
+		expect(applyStageLabel).toHaveBeenCalledWith("lin_ENG-100", "testing");
+		expect(applyStageLabel).toHaveBeenCalledWith("lin_ENG-100", "reviewing");
+		expect(comment).toHaveBeenCalledWith(
+			"lin_ENG-100",
+			"Review/testing passed. PR is ready and issue remains in review until merge.",
+		);
+	});
+});
+
+describe("review-only done-stage merge finalization", () => {
+	it("moves Linear to done only after merge finalization", async () => {
+		const workspace = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-review-merge-"),
+		);
+		const state = createRunState("ENG-101", "done", Date.now());
+		state.pullRequest = {
+			branch: "codex/eng-101",
+			title: "ENG-101",
+			url: "https://github.com/acme/repo/pull/101",
+		};
+		const config = {
+			...createProject("default"),
+			workspacePath: workspace,
+		};
+		const notifications = {
+			email: { enabled: false, to: [] },
+		};
+		const markStage = mock(async () => {});
+		const clearWorkflowStageLabels = mock(async () => {});
+		const comment = mock(async () => {});
+		const linear = {
+			markStage,
+			clearWorkflowStageLabels,
+			comment,
+		};
+
+		await finalizeIssueAfterReviewMerge(
+			config,
+			notifications,
+			linear as never,
+			state,
+		);
+
+		expect(state.pullRequestApprovedAt).toBeDefined();
+		expect(markStage).toHaveBeenCalledWith("lin_ENG-101", "done");
+		expect(clearWorkflowStageLabels).toHaveBeenCalledWith("lin_ENG-101");
+		expect(comment).toHaveBeenCalledWith(
+			"lin_ENG-101",
+			"PR squash-merged after completed review.",
+		);
+	});
+
+	it("does not persist pullRequestApprovedAt when Linear finalization fails", async () => {
+		const workspace = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-review-merge-fail-"),
+		);
+		const state = createRunState("ENG-102", "done", Date.now());
+		state.pullRequest = {
+			branch: "codex/eng-102",
+			title: "ENG-102",
+			url: "https://github.com/acme/repo/pull/102",
+		};
+		const config = {
+			...createProject("default"),
+			workspacePath: workspace,
+		};
+		const notifications = {
+			email: { enabled: false, to: [] },
+		};
+		const markStage = mock(async () => {
+			throw new Error("Linear unavailable");
+		});
+		const clearWorkflowStageLabels = mock(async () => {});
+		const comment = mock(async () => {});
+		const linear = {
+			markStage,
+			clearWorkflowStageLabels,
+			comment,
+		};
+
+		await expect(
+			finalizeIssueAfterReviewMerge(
+				config,
+				notifications,
+				linear as never,
+				state,
+			),
+		).rejects.toThrow("Linear unavailable");
+		expect(state.pullRequestApprovedAt).toBeUndefined();
+		expect(clearWorkflowStageLabels).not.toHaveBeenCalled();
+		expect(comment).not.toHaveBeenCalled();
 	});
 });
 

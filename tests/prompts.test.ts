@@ -59,6 +59,18 @@ describe("buildReviewPrompt", () => {
 		expect(prompt).toContain("If `bun test` cannot be run");
 		expect(prompt).toContain("RESULT: FAIL");
 	});
+
+	it("includes review guidelines from the repo review skill", async () => {
+		const prompt = await buildReviewPrompt(
+			path.resolve(process.cwd(), "skills/piv-review-test/SKILL.md"),
+			issue,
+			pr,
+		);
+
+		expect(prompt).toContain("## Review Guidelines");
+		expect(prompt).toContain("Do not fail solely for style");
+		expect(prompt).toContain("When reporting `RESULT: PASS`");
+	});
 });
 
 describe("buildPlanPrompt", () => {

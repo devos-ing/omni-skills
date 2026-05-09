@@ -40,6 +40,27 @@ skills: {
 }
 ```
 
+## Manage skills via CLI
+
+Use the CLI to list, add, update, and remove skill folders under the configured
+`skills.root` for the selected project:
+
+```bash
+bun run src/index.ts skills list [--project <PROJECT_ID>]
+bun run src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+bun run src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+bun run src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
+```
+
+Generated `SKILL.md` template:
+
+```md
+name: <skill title>
+description: <skill description>
+
+<skill content>
+```
+
 ## Using skills from another repository
 
 You can source skills from another repo in three common ways:

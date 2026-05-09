@@ -131,6 +131,109 @@ describe("parseArgs", () => {
 		});
 	});
 
+	it("parses skills list command", () => {
+		expect(parseArgs(["bun", "adhd-ai", "skills", "list"])).toEqual({
+			kind: "skills",
+			command: {
+				action: "list",
+				projectId: undefined,
+			},
+		});
+	});
+
+	it("parses skills add command", () => {
+		expect(
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"skills",
+				"add",
+				"--title",
+				"Backend Standard",
+				"--description",
+				"Rules",
+				"--content",
+				"Use consistent module boundaries.",
+				"--project",
+				"api",
+			]),
+		).toEqual({
+			kind: "skills",
+			command: {
+				action: "add",
+				title: "Backend Standard",
+				description: "Rules",
+				content: "Use consistent module boundaries.",
+				projectId: "api",
+			},
+		});
+	});
+
+	it("parses skills update command", () => {
+		expect(
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"skills",
+				"update",
+				"backend-standard",
+				"--description",
+				"Updated description",
+			]),
+		).toEqual({
+			kind: "skills",
+			command: {
+				action: "update",
+				name: "backend-standard",
+				title: undefined,
+				description: "Updated description",
+				content: undefined,
+				projectId: undefined,
+			},
+		});
+	});
+
+	it("parses skills remove command", () => {
+		expect(
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"skills",
+				"remove",
+				"backend-standard",
+				"--project",
+				"default",
+			]),
+		).toEqual({
+			kind: "skills",
+			command: {
+				action: "remove",
+				name: "backend-standard",
+				projectId: "default",
+			},
+		});
+	});
+
+	it("rejects skills add without required flags", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "skills", "add", "--title", "t"]),
+		).toThrow("skills add requires --description <VALUE>");
+	});
+
+	it("rejects skills update without any fields", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "skills", "update", "backend-standard"]),
+		).toThrow(
+			"skills update requires at least one of --title, --description, or --content",
+		);
+	});
+
+	it("rejects unknown skills action", () => {
+		expect(() => parseArgs(["bun", "adhd-ai", "skills", "ship-it"])).toThrow(
+			"Unknown skills action: ship-it",
+		);
+	});
+
 	it("rejects project with all-projects", () => {
 		expect(() =>
 			parseArgs([

@@ -8,11 +8,11 @@ ADHD.ai is a multi-project orchestration hub that pulls eligible Linear issues a
 
 1. `src/core/config.ts` is the only runtime config resolver for env vars and config files.
 2. `src/core/workflow.ts` owns stage transitions, retries, and orchestration order.
-3. Integration modules stay isolated under `src/services/`:
+3. Integration modules stay isolated under `src/services/` and `src/agent-adapters/`:
    - `src/services/linear.ts`
    - `src/services/github.ts`
-   - `src/services/codex-adapter.ts`
-   - `src/services/claude-code-adapter.ts`
+   - `src/agent-adapters/codex.ts`
+   - `src/agent-adapters/claude-code.ts`
    - `src/services/cron.ts`
    - `src/services/notifications.ts`
 4. `src/core/state.ts` owns run-state paths and legacy fallback behavior.
@@ -57,8 +57,8 @@ flowchart TD
     state --> runFiles[.piv-loop/projects/<project-id>/runs/*.json]
     state --> chatLogs[.piv-loop/projects/<project-id>/chat-logs/*.json]
 
-    planning --> codexAdapter[src/services/codex-adapter.ts]
-    planning --> claudeAdapter[src/services/claude-code-adapter.ts]
+    planning --> codexAdapter[src/agent-adapters/codex.ts]
+    planning --> claudeAdapter[src/agent-adapters/claude-code.ts]
     implementing --> codexAdapter
     implementing --> claudeAdapter
     reviewTesting --> codexAdapter

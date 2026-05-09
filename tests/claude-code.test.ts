@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/core/types";
 import {
 	extractSessionId,
 	extractUsage,
-} from "../src/services/claude-code-adapter";
+} from "../src/agent-adapters/claude-code";
+import type { ResolvedProjectConfig } from "../src/core/types";
 
 const baseConfig: ResolvedProjectConfig = {
 	id: "default",

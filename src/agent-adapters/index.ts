@@ -1,4 +1,4 @@
-import type { ResolvedProjectConfig } from "./types";
+import type { ResolvedProjectConfig } from "../core/types";
 
 export interface AgentResult {
 	sessionId?: string;
@@ -27,11 +27,11 @@ export function createAgentAdapter(
 
 	switch (resolvedBackend) {
 		case "codex": {
-			const { CodexAdapter } = require("../services/codex-adapter");
+			const { CodexAdapter } = require("./codex");
 			return new CodexAdapter(config);
 		}
 		case "claude-code": {
-			const { ClaudeCodeAdapter } = require("../services/claude-code-adapter");
+			const { ClaudeCodeAdapter } = require("./claude-code");
 			return new ClaudeCodeAdapter(config);
 		}
 		default:

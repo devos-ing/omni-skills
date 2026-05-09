@@ -1,4 +1,9 @@
 import {
+	type AgentAdapter,
+	type AgentResult,
+	createAgentAdapter,
+} from "../agent-adapters";
+import {
 	commentOnPr,
 	createDraftPrFromWorktree,
 	findOpenPullRequestForIssue,
@@ -27,11 +32,6 @@ import {
 	buildReviewComment,
 } from "../utils/comments";
 import { logger, normalizeError } from "../utils/logger";
-import {
-	type AgentAdapter,
-	type AgentResult,
-	createAgentAdapter,
-} from "./agent-adapter";
 import { type LoadedConfig, getProjectById } from "./config";
 import { type ReviewOutcome, parseReviewOutcome } from "./review";
 import {
@@ -1268,7 +1268,7 @@ async function handlePrCreatedStage(
 	await linear.applyStageLabel(state.issue.id, "reviewing");
 }
 
-async function handleReviewTestingStage(
+export async function handleReviewTestingStage(
 	config: ResolvedProjectConfig,
 	agent: AgentAdapter,
 	notifications: ResolvedNotificationConfig,
@@ -1345,10 +1345,12 @@ async function handleReviewTestingStage(
 	await readyPullRequestAfterPassingReview(config, state.pullRequest, true);
 	Object.assign(state, transitionStage(state, "done"));
 	await saveRunState(config.workspacePath, state);
-	await linear.markStage(state.issue.id, "done");
-	await linear.clearWorkflowStageLabels(state.issue.id);
-	await linear.comment(state.issue.id, "Review/testing passed. Marked done.");
-	await safeNotifyTaskOutcome(notifications, state, "done");
+	await linear.markStage(state.issue.id, "reviewing");
+	await linear.applyStageLabel(state.issue.id, "reviewing");
+	await linear.comment(
+		state.issue.id,
+		"Review/testing passed. PR is ready and issue remains in review until merge.",
+	);
 	logger.info(
 		buildIssueJobLogFields(state, "testing"),
 		"Review/testing completed",
@@ -1391,12 +1393,24 @@ async function handleDoneReviewMergeStage(
 		return;
 	}
 
-	state.pullRequestApprovedAt = new Date().toISOString();
-	await saveRunState(config.workspacePath, state);
+	await finalizeIssueAfterReviewMerge(config, notifications, linear, state);
+}
+
+export async function finalizeIssueAfterReviewMerge(
+	config: ResolvedProjectConfig,
+	notifications: ResolvedNotificationConfig,
+	linear: LinearClient,
+	state: RunState,
+): Promise<void> {
+	await linear.markStage(state.issue.id, "done");
+	await linear.clearWorkflowStageLabels(state.issue.id);
 	await linear.comment(
 		state.issue.id,
 		"PR squash-merged after completed review.",
 	);
+	state.pullRequestApprovedAt = new Date().toISOString();
+	await saveRunState(config.workspacePath, state);
+	await safeNotifyTaskOutcome(notifications, state, "done");
 }
 
 export function normalizeFailedReviewBugs(

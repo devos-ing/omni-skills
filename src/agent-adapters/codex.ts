@@ -1,11 +1,11 @@
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import type { AgentAdapter, AgentResult } from "../core/agent-adapter";
 import type {
 	CodexReasoningEffort,
 	ResolvedProjectConfig,
 } from "../core/types";
 import { assertCommandOk, runCommand } from "../utils/shell";
+import type { AgentAdapter, AgentResult } from "./index";
 
 export class CodexAdapter implements AgentAdapter {
 	constructor(private config: ResolvedProjectConfig) {}

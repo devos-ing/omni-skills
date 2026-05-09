@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/core/types";
 import {
 	CodexAdapter,
 	extractSessionId,
 	extractUsage,
-} from "../src/services/codex-adapter";
+} from "../src/agent-adapters/codex";
+import type { ResolvedProjectConfig } from "../src/core/types";
 
 const config: ResolvedProjectConfig = {
 	id: "default",
