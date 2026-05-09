@@ -1,7 +1,13 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"ignore": ["node_modules", "dist", ".piv-loop", "bun.lock"]
+		"ignore": [
+			"node_modules",
+			"dist",
+			".piv-loop",
+			"bun.lock",
+			"adhd-ai.local.config.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true
