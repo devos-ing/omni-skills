@@ -16,6 +16,7 @@ import {
 	appendCodexUsage,
 	buildIssueJobLogFields,
 	buildPrioritizedIssueQueue,
+	buildReviewOnlyIssueQueue,
 	buildRunLeaseOwnerId,
 	fixedBugsForImplementationComment,
 	isReviewOnlyExecutableStage,
@@ -26,6 +27,7 @@ import {
 	readyPullRequestAfterPassingReview,
 	resolvePollingSettings,
 	resolveReviewModeForComplexityScore,
+	resolveReviewOnlyBootstrapStage,
 	routeProjectsForIssueProjectId,
 	runAgentWithChatLog,
 	selectIssueQueueForCycle,
@@ -249,6 +251,82 @@ describe("review-only selection", () => {
 			"ROY-2",
 			"ROY-3",
 		]);
+	});
+
+	it("merges local and Linear review-only candidates and skips missing PRs", () => {
+		const now = Date.parse("2026-05-07T12:00:00.000Z");
+		const runStates: RunState[] = [
+			{
+				...createRunState("ROY-1", "reviewing", now),
+				pullRequest: {
+					branch: "codex/roy-1",
+					title: "PR",
+					url: "https://github.com/acme/repo/pull/1",
+				},
+			},
+		];
+		const localIssues = [createWorkflowIssue("ROY-1", 2, "High")];
+		const linearIssues = [
+			createWorkflowIssue("ROY-1", 1, "Urgent"),
+			createWorkflowIssue("ROY-2", 2, "High"),
+			createWorkflowIssue("ROY-3", 3, "Medium"),
+		];
+		const discoveredPullRequestsByIssueKey = new Map([
+			[
+				"ROY-2",
+				{
+					branch: "codex/roy-2",
+					title: "PR",
+					url: "https://github.com/acme/repo/pull/2",
+				},
+			],
+			["ROY-3", undefined],
+		]);
+
+		const result = buildReviewOnlyIssueQueue({
+			runStates,
+			localIssues,
+			linearIssues,
+			discoveredPullRequestsByIssueKey,
+		});
+
+		expect(result.issueQueue.map((issue) => issue.identifier)).toEqual([
+			"ROY-1",
+			"ROY-2",
+		]);
+		expect(result.mergedCandidateCount).toBe(3);
+		expect(result.discoveredPrCount).toBe(1);
+		expect(result.skippedWithoutPr).toBe(1);
+	});
+
+	it("resolves review-only bootstrap stage from issue state mapping", () => {
+		const statusMap = {
+			...createProject("default").linear.statusMap,
+			pr_created: "PR Created",
+			reviewing: "In Review",
+			testing: "Testing",
+		};
+		expect(
+			resolveReviewOnlyBootstrapStage(
+				{ id: "unknown", name: "In Review" },
+				statusMap,
+			),
+		).toBe("reviewing");
+		expect(
+			resolveReviewOnlyBootstrapStage(
+				{ id: "in review", name: "Whatever" },
+				{
+					...statusMap,
+					pr_created: "In Review",
+				},
+			),
+		).toBe("pr_created");
+		expect(
+			resolveReviewOnlyBootstrapStage(
+				{ id: "unknown", name: "Something else" },
+				statusMap,
+			),
+		).toBe("testing");
 	});
 });
 

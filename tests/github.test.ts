@@ -5,6 +5,7 @@ import {
 	commentOnPr,
 	createDraftPrFromWorktree,
 	ensureGhAuth,
+	findOpenPullRequestForIssue,
 	issueBranchName,
 } from "../src/services/github";
 import type { CommandResult } from "../src/utils/shell";
@@ -288,6 +289,68 @@ describe("createDraftPrFromWorktree", () => {
 
 		expect(commitAttempts).toBe(1);
 		expect(pr.number).toBe(99);
+	});
+});
+
+describe("findOpenPullRequestForIssue", () => {
+	it("returns matching open PR when list includes issue key", async () => {
+		const runCommand = mock(
+			async (_command: string, args: string[]): Promise<CommandResult> => {
+				if (args[0] === "pr" && args[1] === "list") {
+					return {
+						code: 0,
+						stdout: JSON.stringify([
+							{
+								number: 101,
+								url: "https://github.com/acme/repo/pull/101",
+								title: "[codex] ENG-42: Fix hourly review",
+								headRefName: "codex/eng-42",
+							},
+						]),
+						stderr: "",
+					};
+				}
+				return { code: 0, stdout: "", stderr: "" };
+			},
+		);
+
+		const pr = await findOpenPullRequestForIssue(
+			createProjectConfig(),
+			"ENG-42",
+			{
+				runCommand,
+				assertCommandOk: assertOk,
+			},
+		);
+
+		expect(pr).toEqual({
+			number: 101,
+			url: "https://github.com/acme/repo/pull/101",
+			branch: "codex/eng-42",
+			title: "[codex] ENG-42: Fix hourly review",
+		});
+	});
+
+	it("returns undefined when no open PR is found", async () => {
+		const runCommand = mock(
+			async (_command: string, args: string[]): Promise<CommandResult> => {
+				if (args[0] === "pr" && args[1] === "list") {
+					return { code: 0, stdout: "[]", stderr: "" };
+				}
+				return { code: 0, stdout: "", stderr: "" };
+			},
+		);
+
+		const pr = await findOpenPullRequestForIssue(
+			createProjectConfig(),
+			"ENG-43",
+			{
+				runCommand,
+				assertCommandOk: assertOk,
+			},
+		);
+
+		expect(pr).toBeUndefined();
 	});
 });
 

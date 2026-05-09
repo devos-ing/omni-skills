@@ -206,6 +206,41 @@ export class LinearClient {
 		return this.findIssueByIdentifier(normalizeIssueKey(issueArg));
 	}
 
+	async fetchReviewOnlyWork(): Promise<LinearIssue[]> {
+		await this.ensureResolvedStatusMap();
+		const viewer = await this.client.viewer;
+		const assignedIssues = await viewer.assignedIssues({
+			first: this.config.linear.pollLimit,
+		});
+		const reviewStateIds = new Set([
+			this.requiredStatusMap().pr_created,
+			this.requiredStatusMap().reviewing,
+			this.requiredStatusMap().testing,
+		]);
+		const testingLabelName = this.config.linear.labelMap.testing?.trim();
+		const issues = await Promise.all(
+			assignedIssues.nodes.map((issue) =>
+				this.mapSdkIssueToLinearIssue(issue, true),
+			),
+		);
+		return sortIssuesByPriority(
+			issues
+				.filter((issue) =>
+					isIssueInConfiguredProject(
+						issue.projectId,
+						this.config.linear.projectId,
+					),
+				)
+				.filter((issue) =>
+					isLinearIssueReviewOnlyCandidate(
+						issue,
+						reviewStateIds,
+						testingLabelName,
+					),
+				),
+		);
+	}
+
 	async isAssignedState(stateId: string): Promise<boolean> {
 		await this.ensureResolvedStatusMap();
 		return this.requiredStatusMap().assigned === stateId;
@@ -705,6 +740,22 @@ export function sortIssuesByPriority(issues: LinearIssue[]): LinearIssue[] {
 			return left.index - right.index;
 		})
 		.map((entry) => entry.issue);
+}
+
+export function isLinearIssueReviewOnlyCandidate(
+	issue: LinearIssue,
+	reviewStateIds: Set<string>,
+	testingLabelName?: string,
+): boolean {
+	if (reviewStateIds.has(issue.state.id)) {
+		return true;
+	}
+	if (!testingLabelName) {
+		return false;
+	}
+	return issue.labels.some(
+		(label) => label.name.toLowerCase() === testingLabelName.toLowerCase(),
+	);
 }
 
 export function isIssueInConfiguredProject(

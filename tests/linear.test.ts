@@ -5,6 +5,7 @@ import {
 	buildSplitTaskIssueTitle,
 	buildTodoIssueFromPlanInput,
 	isIssueInConfiguredProject,
+	isLinearIssueReviewOnlyCandidate,
 	resolveSplitTaskTeamId,
 	sortIssuesByPriority,
 } from "../src/services/linear";
@@ -94,6 +95,42 @@ describe("isIssueInConfiguredProject", () => {
 		expect(isIssueInConfiguredProject("proj_a", "proj_a")).toBe(true);
 		expect(isIssueInConfiguredProject("proj_b", "proj_a")).toBe(false);
 		expect(isIssueInConfiguredProject(undefined, "proj_a")).toBe(false);
+	});
+});
+
+describe("isLinearIssueReviewOnlyCandidate", () => {
+	it("includes issues in review-related workflow states", () => {
+		const issue = createIssue("ROY-70", 2, "High");
+		issue.state.id = "state_testing";
+		const candidate = isLinearIssueReviewOnlyCandidate(
+			issue,
+			new Set(["state_pr_created", "state_reviewing", "state_testing"]),
+		);
+		expect(candidate).toBe(true);
+	});
+
+	it("includes issues with testing label even when state does not match", () => {
+		const issue = createIssue("ROY-71", 2, "High");
+		issue.state.id = "state_other";
+		issue.labels = [{ id: "lbl_testing", name: "Testing" }];
+		const candidate = isLinearIssueReviewOnlyCandidate(
+			issue,
+			new Set(["state_pr_created", "state_reviewing", "state_testing"]),
+			"Testing",
+		);
+		expect(candidate).toBe(true);
+	});
+
+	it("excludes issues without state or testing label match", () => {
+		const issue = createIssue("ROY-72", 2, "High");
+		issue.state.id = "state_other";
+		issue.labels = [{ id: "lbl_other", name: "Backend" }];
+		const candidate = isLinearIssueReviewOnlyCandidate(
+			issue,
+			new Set(["state_pr_created", "state_reviewing", "state_testing"]),
+			"Testing",
+		);
+		expect(candidate).toBe(false);
 	});
 });
 
