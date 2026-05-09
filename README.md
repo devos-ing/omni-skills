@@ -44,6 +44,12 @@ bun run review:hourly
 
 # inspect run state for one issue
 bun run src/index.ts status --project <PROJECT_ID> --issue ENG-123
+
+# skills management
+bun run src/index.ts skills list [--project <PROJECT_ID>]
+bun run src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+bun run src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+bun run src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 After linking/installing the package bin, you can also use `adhd-ai ...` directly.
