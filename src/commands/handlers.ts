@@ -5,6 +5,7 @@ import { runSetupCheck, runSetupWizard } from "../core/setup";
 import { loadRunState, normalizeIssueKey } from "../core/state";
 import { runWorkflow } from "../core/workflow";
 import { runCronScheduler } from "../services/cron";
+import { formatWorkflowStageDisplay } from "../utils/status";
 
 type SetupCommand = Extract<CliCommand, { kind: "setup" }>;
 type RunnableCommand = Exclude<CliCommand, { kind: "help" } | SetupCommand>;
@@ -60,7 +61,11 @@ export async function handleCommand(
 		);
 		return;
 	}
-	process.stdout.write(`${JSON.stringify(state, null, 2)}\n`);
+	const statusDisplay = {
+		...state,
+		stageDisplay: formatWorkflowStageDisplay(state.stage),
+	};
+	process.stdout.write(`${JSON.stringify(statusDisplay, null, 2)}\n`);
 }
 
 export function printHelp(): void {

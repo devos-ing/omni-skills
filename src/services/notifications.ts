@@ -1,4 +1,5 @@
 import type { ResolvedNotificationEmailConfig, RunState } from "../core/types";
+import { appendStatusEmoji } from "../utils/status";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 
@@ -73,7 +74,7 @@ export function buildTaskOutcomeEmailPayload(
 		`Project: ${state.projectName} (${state.projectId})`,
 		`Issue: ${state.issue.key} - ${state.issue.title}`,
 		`URL: ${state.issue.url}`,
-		`Status: ${statusText}`,
+		`Status: ${appendStatusEmoji(statusText)}`,
 		`Updated: ${state.updatedAt}`,
 	];
 
@@ -111,7 +112,7 @@ export function buildHumanReviewRequiredEmailPayload(
 		`Project: ${state.projectName} (${state.projectId})`,
 		`Issue: ${state.issue.key} - ${state.issue.title}`,
 		`URL: ${state.issue.url}`,
-		"Status: HUMAN REVIEW REQUIRED",
+		`Status: ${appendStatusEmoji("HUMAN REVIEW REQUIRED")}`,
 		`Complexity Score: ${complexityScore}/10`,
 		`Reason: ${reason}`,
 		`Updated: ${state.updatedAt}`,
