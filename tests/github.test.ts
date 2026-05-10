@@ -4,6 +4,7 @@ import {
 	buildBugIssueBody,
 	commentOnPr,
 	createDraftPrFromWorktree,
+	ensureBaseBranchFresh,
 	ensureGhAuth,
 	findOpenPullRequestForIssue,
 	issueBranchName,
@@ -62,6 +63,58 @@ describe("ensureGhAuth", () => {
 			}),
 		).rejects.toThrow("gh auth status failed after 3 attempts");
 		expect(attempts).toBe(3);
+	});
+});
+
+describe("ensureBaseBranchFresh", () => {
+	it("fetches without writing FETCH_HEAD and fast-forwards checked-out base branch", async () => {
+		const calls: string[][] = [];
+		const runCommand = mock(
+			async (_command: string, args: string[]): Promise<CommandResult> => {
+				calls.push(args);
+				if (args[0] === "branch") {
+					return { code: 0, stdout: "main\n", stderr: "" };
+				}
+				return { code: 0, stdout: "", stderr: "" };
+			},
+		);
+
+		await ensureBaseBranchFresh(createProjectConfig(), {
+			runCommand,
+			assertCommandOk: assertOk,
+		});
+
+		expect(calls).toEqual([
+			["fetch", "--no-write-fetch-head", "origin", "main"],
+			["branch", "--show-current"],
+			["merge", "--ff-only", "origin/main"],
+		]);
+	});
+
+	it("fast-forwards local base branch by ref when working on another branch", async () => {
+		const calls: string[][] = [];
+		const runCommand = mock(
+			async (_command: string, args: string[]): Promise<CommandResult> => {
+				calls.push(args);
+				if (args[0] === "branch") {
+					return { code: 0, stdout: "codex/eng-42\n", stderr: "" };
+				}
+				return { code: 0, stdout: "", stderr: "" };
+			},
+		);
+
+		await ensureBaseBranchFresh(createProjectConfig(), {
+			runCommand,
+			assertCommandOk: assertOk,
+		});
+
+		expect(calls).toEqual([
+			["fetch", "--no-write-fetch-head", "origin", "main"],
+			["branch", "--show-current"],
+			["show-ref", "--verify", "--quiet", "refs/heads/main"],
+			["merge-base", "--is-ancestor", "main", "origin/main"],
+			["update-ref", "refs/heads/main", "origin/main"],
+		]);
 	});
 });
 

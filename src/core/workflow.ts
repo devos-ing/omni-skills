@@ -1,11 +1,8 @@
-import {
-	type AgentAdapter,
-	type AgentResult,
-	createAgentAdapter,
-} from "../agent-adapters";
+import { type AgentAdapter, createAgentAdapter } from "../agent-adapters";
 import {
 	commentOnPr,
 	createDraftPrFromWorktree,
+	ensureBaseBranchFresh,
 	findOpenPullRequestForIssue,
 	issueBranchName,
 	prepareImplementationBranch,
@@ -986,12 +983,13 @@ async function executeIssue(
 	leaseOwnerId: string,
 	leaseTimeoutMs: number,
 ): Promise<void> {
-	const agent = createAgentAdapter(config);
-
 	if (options.reviewOnly && state.stage === "done") {
 		await handleDoneReviewMergeStage(config, notifications, linear, state);
 		return;
 	}
+
+	await ensureBaseBranchFresh(config);
+	const agent = createAgentAdapter(config);
 
 	while (
 		state.stage !== "done" &&
@@ -1281,86 +1279,6 @@ async function handleDoneReviewMergeStage(
 	}
 
 	await finalizeIssueAfterReviewMerge(config, notifications, linear, state);
-}
-
-export interface RunAgentWithChatLogOptions {
-	workspacePath: string;
-	projectId: string;
-	issue: RunState["issue"];
-	agentRole: AgentChatLogRole;
-	skillPath: string;
-	prompt: string;
-	invoke: () => Promise<AgentResult>;
-}
-
-export async function runAgentWithChatLog(
-	options: RunAgentWithChatLogOptions,
-): Promise<AgentResult> {
-	try {
-		const result = await options.invoke();
-		await persistAgentChatLog(options, {
-			finalMessage: result.finalMessage,
-			stdout: result.stdout,
-			sessionId: result.sessionId,
-			usage: result.usage,
-			success: true,
-		});
-		return result;
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		await persistAgentChatLog(options, {
-			finalMessage: "",
-			stdout: "",
-			success: false,
-			error: message,
-		});
-		throw error;
-	}
-}
-
-interface PersistedAgentChatLogResult {
-	finalMessage: string;
-	stdout: string;
-	sessionId?: string;
-	usage?: AgentResult["usage"];
-	success: boolean;
-	error?: string;
-}
-
-async function persistAgentChatLog(
-	options: RunAgentWithChatLogOptions,
-	result: PersistedAgentChatLogResult,
-): Promise<void> {
-	const entry: AgentChatLogEntry = {
-		projectId: options.projectId,
-		issueKey: options.issue.key,
-		issueId: options.issue.id,
-		issueTitle: options.issue.title,
-		agentRole: options.agentRole,
-		skillPath: options.skillPath,
-		prompt: options.prompt,
-		finalMessage: result.finalMessage,
-		stdout: result.stdout,
-		sessionId: result.sessionId,
-		usage: result.usage,
-		success: result.success,
-		error: result.error,
-		recordedAt: new Date().toISOString(),
-	};
-	try {
-		await appendAgentChatLog(options.workspacePath, options.projectId, entry);
-	} catch (error) {
-		logger.error(
-			{
-				projectId: options.projectId,
-				issueKey: options.issue.key,
-				agentRole: options.agentRole,
-				skillPath: options.skillPath,
-				err: normalizeError(error),
-			},
-			"Failed to append agent chat log entry",
-		);
-	}
 }
 
 export function appendCodexUsage(

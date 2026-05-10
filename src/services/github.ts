@@ -30,6 +30,70 @@ export async function ensureGhAuth(
 	});
 }
 
+export async function ensureBaseBranchFresh(
+	config: ResolvedProjectConfig,
+	deps: GithubCommandDeps = {},
+): Promise<void> {
+	const commandRunner = deps.runCommand ?? runCommand;
+	const assertOk = deps.assertCommandOk ?? assertCommandOk;
+	const baseBranch = config.repo.baseBranch;
+	const fetch = await commandRunner(
+		"git",
+		["fetch", "--no-write-fetch-head", "origin", baseBranch],
+		{ cwd: config.executionPath },
+	);
+	assertOk(
+		"git",
+		["fetch", "--no-write-fetch-head", "origin", baseBranch],
+		fetch,
+	);
+
+	const current = await commandRunner("git", ["branch", "--show-current"], {
+		cwd: config.executionPath,
+	});
+	assertOk("git", ["branch", "--show-current"], current);
+
+	if (current.stdout.trim() === baseBranch) {
+		const merge = await commandRunner(
+			"git",
+			["merge", "--ff-only", `origin/${baseBranch}`],
+			{ cwd: config.executionPath },
+		);
+		assertOk("git", ["merge", "--ff-only", `origin/${baseBranch}`], merge);
+		return;
+	}
+
+	const localBranch = await commandRunner(
+		"git",
+		["show-ref", "--verify", "--quiet", `refs/heads/${baseBranch}`],
+		{ cwd: config.executionPath },
+	);
+	if (localBranch.code !== 0) {
+		return;
+	}
+
+	const ancestor = await commandRunner(
+		"git",
+		["merge-base", "--is-ancestor", baseBranch, `origin/${baseBranch}`],
+		{ cwd: config.executionPath },
+	);
+	assertOk(
+		"git",
+		["merge-base", "--is-ancestor", baseBranch, `origin/${baseBranch}`],
+		ancestor,
+	);
+	const update = await commandRunner(
+		"git",
+		["update-ref", `refs/heads/${baseBranch}`, `origin/${baseBranch}`],
+		{ cwd: config.executionPath },
+	);
+	assertOk(
+		"git",
+		["update-ref", `refs/heads/${baseBranch}`, `origin/${baseBranch}`],
+		update,
+	);
+}
+
 export async function createDraftPrFromWorktree(
 	config: ResolvedProjectConfig,
 	issueKey: string,

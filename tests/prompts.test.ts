@@ -5,6 +5,7 @@ import path from "node:path";
 import type { IssueRef, PullRequestRef } from "../src/core/types";
 import {
 	buildFixPrompt,
+	buildImplementPrompt,
 	buildPlanPrompt,
 	buildReviewPrompt,
 } from "../src/skills/prompts";
@@ -38,12 +39,26 @@ describe("buildFixPrompt", () => {
 			"This is a fix pass after review/testing found bugs.",
 		);
 		expect(prompt).toContain("Linear issue: ENG-1");
+		expect(prompt).toContain("do not run git fetch or git pull");
 		expect(prompt).toContain("PR: https://github.com/acme/repo/pull/10");
 		expect(prompt).toContain("Regression found in verify stage.");
 		expect(prompt).toContain('"title": "Bug A"');
 		expect(prompt).toContain(
 			"Address every bug, update the existing branch/PR",
 		);
+	});
+});
+
+describe("buildImplementPrompt", () => {
+	it("tells implementation agents repository freshness was already handled", async () => {
+		const prompt = await buildImplementPrompt(
+			"/tmp/missing-skill-file.md",
+			issue,
+			"Update workflow stage transitions.",
+		);
+
+		expect(prompt).toContain("do not run git fetch or git pull");
+		expect(prompt).toContain("Plan summary:");
 	});
 });
 
@@ -56,6 +71,7 @@ describe("buildReviewPrompt", () => {
 		);
 
 		expect(prompt).toContain("run `bun test`");
+		expect(prompt).toContain("do not run git fetch or git pull");
 		expect(prompt).toContain("If `bun test` cannot be run");
 		expect(prompt).toContain("RESULT: FAIL");
 	});
@@ -93,6 +109,7 @@ describe("buildPlanPrompt", () => {
 			expect(prompt).toContain("COMPLEXITY_SCORE: 0..10");
 			expect(prompt).toContain("SPLIT_TASKS_JSON: [...]");
 			expect(prompt).toContain("ISSUE_REFINEMENT_JSON");
+			expect(prompt).toContain("do not run git fetch or git pull");
 			expect(prompt).toContain(
 				"When including SPLIT_TASKS_JSON, write action-oriented task titles",
 			);

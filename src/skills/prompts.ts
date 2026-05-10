@@ -49,6 +49,7 @@ export async function buildPlanPrompt(
 
 	return [
 		"You are the planning agent in the Agent-Driven Development Hub (ADHD.ai) workflow.",
+		"ADHD.ai already refreshed the repository base branch before launching you; do not run git fetch or git pull.",
 		"",
 		"Use this skill:",
 		skill,
@@ -73,6 +74,7 @@ export async function buildImplementPrompt(
 	const skill = await loadSkillText(skillPath);
 	return [
 		"You are the implementation agent in the Agent-Driven Development Hub (ADHD.ai) workflow.",
+		"ADHD.ai already refreshed the repository base branch before launching you; do not run git fetch or git pull.",
 		"",
 		"Use this skill:",
 		skill,
@@ -98,6 +100,7 @@ export async function buildReviewPrompt(
 		: `Branch: ${pr?.branch ?? "unknown"}`;
 	return [
 		"You are the review and testing agent in the Agent-Driven Development Hub (ADHD.ai) workflow.",
+		"ADHD.ai already refreshed the repository base branch before launching you; do not run git fetch or git pull.",
 		"",
 		"Use this skill:",
 		skill,
@@ -129,6 +132,7 @@ export async function buildFixPrompt(
 		: `Branch: ${pr?.branch ?? "unknown"}`;
 	return [
 		"You are the implementation agent in the Agent-Driven Development Hub (ADHD.ai) workflow.",
+		"ADHD.ai already refreshed the repository base branch before launching you; do not run git fetch or git pull.",
 		"",
 		"Use this skill:",
 		skill,
