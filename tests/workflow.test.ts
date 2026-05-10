@@ -218,6 +218,18 @@ describe("buildPrioritizedIssueQueue", () => {
 		);
 		expect(queue.map((issue) => issue.identifier)).toEqual(["ROY-9"]);
 	});
+
+	it("sorts merged queues when polling without an explicit issue target", () => {
+		const assignedIssues = [createWorkflowIssue("ROY-9", 4, "Low")];
+		const staleRetryIssues = [createWorkflowIssue("ROY-8", 1, "Urgent")];
+
+		const queue = selectIssueQueueForCycle(
+			undefined,
+			assignedIssues,
+			staleRetryIssues,
+		);
+		expect(queue.map((issue) => issue.identifier)).toEqual(["ROY-8", "ROY-9"]);
+	});
 });
 
 describe("review-only selection", () => {

@@ -54,7 +54,6 @@ import {
 import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
 	dedupeIssuesByKey,
-	selectIssueQueueForCycle as selectIssueQueueForCycleHelper,
 } from "./workflow-queue";
 
 export { buildRunLeaseOwnerId } from "./workflow-lease";
@@ -464,12 +463,13 @@ export function selectIssueQueueForCycle(
 	staleRetryIssues: WorkflowIssue[],
 	options: Pick<RunOptions, "reviewOnly"> = {},
 ): WorkflowIssue[] {
-	return selectIssueQueueForCycleHelper(
-		issueArg,
-		assignedIssues,
-		staleRetryIssues,
-		options,
-	);
+	if (options.reviewOnly) {
+		return [];
+	}
+	if (issueArg !== undefined) {
+		return assignedIssues;
+	}
+	return buildPrioritizedIssueQueue(assignedIssues, staleRetryIssues);
 }
 
 export function isReviewOnlyEligibleRunState(state: RunState): boolean {
