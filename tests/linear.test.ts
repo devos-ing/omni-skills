@@ -305,6 +305,16 @@ describe("Linear rate limit handling", () => {
 		expect(resolveLinearRateLimitDelayMs(error)).toBe(3000);
 	});
 
+	it("uses the reported rate limit window when retry-after is missing", () => {
+		expect(
+			resolveLinearRateLimitDelayMs(
+				new Error(
+					"Rate limit exceeded. Only 2500 requests are allowed per 1 hour",
+				),
+			),
+		).toBe(3_600_000);
+	});
+
 	it("falls back to a bounded delay for Linear rate limits", () => {
 		expect(resolveLinearRateLimitDelayMs({ status: 429 })).toBe(60_000);
 		expect(resolveLinearRateLimitDelayMs(new Error("boom"))).toBeUndefined();

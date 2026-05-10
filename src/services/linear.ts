@@ -55,7 +55,7 @@ interface WorkflowLabelUpdate {
 	removedLabelIds: string[];
 }
 
-const LINEAR_MAX_REQUESTS_PER_HOUR = 2300;
+const LINEAR_MAX_REQUESTS_PER_HOUR = 1800;
 const LINEAR_REQUEST_INTERVAL_MS = Math.ceil(
 	(60 * 60 * 1000) / LINEAR_MAX_REQUESTS_PER_HOUR,
 );
@@ -206,7 +206,7 @@ export class LinearClient {
 		const includeLabels = Boolean(this.config.linear.requiredLabel);
 		const issues = await Promise.all(
 			assignedIssues.nodes.map((issue) =>
-				this.mapSdkIssueToLinearIssue(issue, includeLabels),
+				this.mapSdkIssueToLinearIssue(issue, includeLabels, false),
 			),
 		);
 		const assignedStateId = this.requiredStatusMap().assigned;
@@ -254,7 +254,7 @@ export class LinearClient {
 		const testingLabelName = this.config.linear.labelMap.testing?.trim();
 		const issues = await Promise.all(
 			assignedIssues.nodes.map((issue) =>
-				this.mapSdkIssueToLinearIssue(issue, true),
+				this.mapSdkIssueToLinearIssue(issue, true, false),
 			),
 		);
 		return sortIssuesByPriority(
@@ -791,11 +791,16 @@ export class LinearClient {
 	private async mapSdkIssueToLinearIssue(
 		issue: LinearSdkIssue,
 		includeLabels: boolean,
+		includeActorRefs = true,
 	): Promise<LinearIssue> {
-		const state = await issue.state;
-		const project = await issue.project;
-		const creator = await issue.creator;
-		const assignee = await issue.assignee;
+		const state = await this.linearRequest(() => issue.state);
+		const project = await this.linearRequest(() => issue.project);
+		const creator = includeActorRefs
+			? await this.linearRequest(() => issue.creator)
+			: undefined;
+		const assignee = includeActorRefs
+			? await this.linearRequest(() => issue.assignee)
+			: undefined;
 		if (!state?.id) {
 			throw new Error(
 				`Issue ${issue.identifier} is missing workflow state data.`,
@@ -934,9 +939,36 @@ export function resolveLinearRateLimitDelayMs(
 	if (retryAfterMs !== undefined) {
 		return retryAfterMs;
 	}
+	const rateLimitWindowMs = readRateLimitWindowDelayMs(error);
+	if (rateLimitWindowMs !== undefined) {
+		return rateLimitWindowMs;
+	}
 	return isLinearRateLimitError(error)
 		? LINEAR_RATE_LIMIT_FALLBACK_DELAY_MS
 		: undefined;
+}
+
+function readRateLimitWindowDelayMs(error: unknown): number | undefined {
+	const message = readErrorMessage(error).toLowerCase();
+	const match = message.match(/\bper\s+(\d+)\s+(second|minute|hour|day)s?\b/);
+	if (!match) {
+		return undefined;
+	}
+	const amount = Number(match[1]);
+	if (!Number.isInteger(amount) || amount <= 0) {
+		return undefined;
+	}
+	const unit = match[2];
+	if (unit === "second") {
+		return amount * 1000;
+	}
+	if (unit === "minute") {
+		return amount * 60 * 1000;
+	}
+	if (unit === "hour") {
+		return amount * 60 * 60 * 1000;
+	}
+	return amount * 24 * 60 * 60 * 1000;
 }
 
 function readErrorStatus(error: unknown): number | undefined {
