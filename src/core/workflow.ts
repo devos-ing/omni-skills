@@ -32,10 +32,18 @@ import {
 	buildReviewComment,
 } from "../utils/comments";
 import { logger, normalizeError } from "../utils/logger";
+import { runAgentWithChatLog } from "./agent-chat-log";
 import { type LoadedConfig, getProjectById } from "./config";
+import {
+	safeLinearComment,
+	safeLinearMoveToCanceled,
+	safeNotifyHumanReviewRequired,
+	safeNotifyTaskOutcome,
+	safePrComment,
+	safeSquashMergePullRequest,
+} from "./integration-wrappers";
 import { type ReviewOutcome, parseReviewOutcome } from "./review";
 import {
-	appendAgentChatLog,
 	appendProjectErrorLog,
 	applyRunLease,
 	clearRunLease,
@@ -49,8 +57,6 @@ import {
 	transitionStage,
 } from "./state";
 import type {
-	AgentChatLogEntry,
-	AgentChatLogRole,
 	CodexUsageRecord,
 	IssueRef,
 	PlannedSplitTask,
@@ -62,6 +68,8 @@ import type {
 	RunState,
 	WorkflowStage,
 } from "./types";
+
+export { runAgentWithChatLog } from "./agent-chat-log";
 
 interface WorkflowIssue {
 	id: string;
@@ -1445,86 +1453,6 @@ export function normalizeFailedReviewBugs(
 	];
 }
 
-export interface RunAgentWithChatLogOptions {
-	workspacePath: string;
-	projectId: string;
-	issue: RunState["issue"];
-	agentRole: AgentChatLogRole;
-	skillPath: string;
-	prompt: string;
-	invoke: () => Promise<AgentResult>;
-}
-
-export async function runAgentWithChatLog(
-	options: RunAgentWithChatLogOptions,
-): Promise<AgentResult> {
-	try {
-		const result = await options.invoke();
-		await persistAgentChatLog(options, {
-			finalMessage: result.finalMessage,
-			stdout: result.stdout,
-			sessionId: result.sessionId,
-			usage: result.usage,
-			success: true,
-		});
-		return result;
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		await persistAgentChatLog(options, {
-			finalMessage: "",
-			stdout: "",
-			success: false,
-			error: message,
-		});
-		throw error;
-	}
-}
-
-interface PersistedAgentChatLogResult {
-	finalMessage: string;
-	stdout: string;
-	sessionId?: string;
-	usage?: AgentResult["usage"];
-	success: boolean;
-	error?: string;
-}
-
-async function persistAgentChatLog(
-	options: RunAgentWithChatLogOptions,
-	result: PersistedAgentChatLogResult,
-): Promise<void> {
-	const entry: AgentChatLogEntry = {
-		projectId: options.projectId,
-		issueKey: options.issue.key,
-		issueId: options.issue.id,
-		issueTitle: options.issue.title,
-		agentRole: options.agentRole,
-		skillPath: options.skillPath,
-		prompt: options.prompt,
-		finalMessage: result.finalMessage,
-		stdout: result.stdout,
-		sessionId: result.sessionId,
-		usage: result.usage,
-		success: result.success,
-		error: result.error,
-		recordedAt: new Date().toISOString(),
-	};
-	try {
-		await appendAgentChatLog(options.workspacePath, options.projectId, entry);
-	} catch (error) {
-		logger.error(
-			{
-				projectId: options.projectId,
-				issueKey: options.issue.key,
-				agentRole: options.agentRole,
-				skillPath: options.skillPath,
-				err: normalizeError(error),
-			},
-			"Failed to append agent chat log entry",
-		);
-	}
-}
-
 export function appendCodexUsage(
 	state: RunState,
 	stage: CodexUsageRecord["stage"],
@@ -1994,138 +1922,4 @@ async function releaseRunLease(
 	}
 	Object.assign(state, clearRunLease(state));
 	await saveRunState(cwd, state);
-}
-
-async function safeLinearComment(
-	linear: LinearClient,
-	issueId: string,
-	body: string,
-): Promise<void> {
-	const runLogger = logger.child({ issueId });
-	try {
-		await linear.comment(issueId, body);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to add Linear comment",
-		);
-	}
-}
-
-async function safePrComment(
-	config: ResolvedProjectConfig,
-	state: RunState,
-	body: string,
-): Promise<void> {
-	if (!state.pullRequest) {
-		return;
-	}
-	const runLogger = logger.child({
-		projectId: state.projectId,
-		issueKey: state.issue.key,
-		pr: state.pullRequest.url ?? state.pullRequest.number,
-	});
-	try {
-		runLogger.info(
-			{
-				commentBody: body,
-				runState: state,
-			},
-			"Adding GitHub PR comment",
-		);
-		await commentOnPr(config, state.pullRequest, body);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to add GitHub PR comment",
-		);
-	}
-}
-
-async function safeSquashMergePullRequest(
-	config: ResolvedProjectConfig,
-	state: RunState,
-): Promise<boolean> {
-	if (!state.pullRequest) {
-		return false;
-	}
-	const runLogger = logger.child({
-		projectId: state.projectId,
-		issueKey: state.issue.key,
-		pr: state.pullRequest.url ?? state.pullRequest.number,
-	});
-	try {
-		return await squashMergePullRequest(config, state.pullRequest);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to squash-merge GitHub PR",
-		);
-		return false;
-	}
-}
-
-async function safeNotifyTaskOutcome(
-	notifications: ResolvedNotificationConfig,
-	state: RunState,
-	outcome: "done" | "blocked",
-	errorMessage?: string,
-): Promise<void> {
-	const runLogger = logger.child({
-		projectId: state.projectId,
-		issueKey: state.issue.key,
-		outcome,
-	});
-	try {
-		await sendTaskOutcomeEmail(
-			notifications.email,
-			state,
-			outcome,
-			errorMessage,
-		);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to send task outcome email notification",
-		);
-	}
-}
-
-async function safeNotifyHumanReviewRequired(
-	notifications: ResolvedNotificationConfig,
-	state: RunState,
-	complexityScore: number,
-	reason: string,
-): Promise<void> {
-	const runLogger = logger.child({
-		projectId: state.projectId,
-		issueKey: state.issue.key,
-		outcome: "human_review_required",
-	});
-	try {
-		await sendHumanReviewRequiredEmail(notifications.email, state, {
-			complexityScore,
-			reason,
-		});
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to send human review required email notification",
-		);
-	}
-}
-
-async function safeLinearMoveToCanceled(
-	linear: LinearClient,
-	issueId: string,
-): Promise<void> {
-	const runLogger = logger.child({ issueId, stage: "canceled" });
-	try {
-		await linear.markCanceled(issueId);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to move Linear issue to Canceled",
-		);
-	}
 }
