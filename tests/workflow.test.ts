@@ -49,6 +49,7 @@ import {
 	shouldStopPolling,
 	withExecutionPathLock,
 } from "../src/core/workflow";
+import { processIssueQueueBounded } from "../src/core/workflow-queue";
 
 describe("resolvePollingSettings", () => {
 	const polling: PollingConfig = {
@@ -83,6 +84,36 @@ describe("resolvePollingSettings", () => {
 			exitWhenIdle: false,
 			staleRunTimeoutMs: 3600000,
 		});
+	});
+});
+
+describe("processIssueQueueBounded", () => {
+	it("falls back to sequential processing for undefined concurrency", async () => {
+		const maxWorkersSeen = { value: 0 };
+		let activeWorkers = 0;
+
+		await processIssueQueueBounded([1, 2, 3], undefined, async () => {
+			activeWorkers += 1;
+			maxWorkersSeen.value = Math.max(maxWorkersSeen.value, activeWorkers);
+			await new Promise((resolve) => setTimeout(resolve, 1));
+			activeWorkers -= 1;
+		});
+
+		expect(maxWorkersSeen.value).toBe(1);
+	});
+
+	it("respects explicit concurrency values above one", async () => {
+		const maxWorkersSeen = { value: 0 };
+		let activeWorkers = 0;
+
+		await processIssueQueueBounded([1, 2, 3], 2, async () => {
+			activeWorkers += 1;
+			maxWorkersSeen.value = Math.max(maxWorkersSeen.value, activeWorkers);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			activeWorkers -= 1;
+		});
+
+		expect(maxWorkersSeen.value).toBe(2);
 	});
 });
 

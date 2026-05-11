@@ -159,4 +159,25 @@ describe("deterministic workflow smoke flow", () => {
 		expect(await h.state("default", "API-1")).toBeNull();
 		expect((await h.state("api", "API-1"))?.stage).toBe("done");
 	});
+
+	it("executes review-only issues concurrently when run concurrency is configured", async () => {
+		const h = await createSmokeHarness();
+		const reviewA = issue("ENG-9");
+		const reviewB = issue("ENG-10");
+		reviewA.state = { id: "reviewing", name: "reviewing" };
+		reviewB.state = { id: "reviewing", name: "reviewing" };
+		h.addIssue("default", reviewA);
+		h.addIssue("default", reviewB);
+		const agent = h.agent("default");
+		agent.delayMs = 60;
+		agent.reviews.push(result(passReview), result(passReview));
+
+		const startedAt = Date.now();
+		await h.run({ reviewOnly: true, concurrency: 2 });
+		const elapsedMs = Date.now() - startedAt;
+
+		expect((await h.state("default", "ENG-9"))?.stage).toBe("done");
+		expect((await h.state("default", "ENG-10"))?.stage).toBe("done");
+		expect(elapsedMs).toBeLessThan(180);
+	});
 });

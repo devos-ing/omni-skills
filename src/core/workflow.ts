@@ -34,6 +34,7 @@ import {
 import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
 	dedupeIssuesByKey,
+	processIssueQueueBounded,
 } from "./workflow-queue";
 import {
 	type WorkflowLinearClient,
@@ -343,36 +344,21 @@ async function runProjectCycle(
 		projectLogger.info({ cycle }, "No eligible Linear issues found.");
 	}
 
-	if (options.reviewOnly) {
-		await Promise.all(
-			issueQueue.map((issue) =>
-				processIssue(
-					config,
-					notifications,
-					linear,
-					issue,
-					options,
-					polling.staleRunTimeoutMs,
-					buildRunLeaseOwnerId(),
-					runtime,
-				),
+	await processIssueQueueBounded(
+		issueQueue,
+		options.concurrency,
+		async (issue) =>
+			processIssue(
+				config,
+				notifications,
+				linear,
+				issue,
+				options,
+				polling.staleRunTimeoutMs,
+				buildRunLeaseOwnerId(),
+				runtime,
 			),
-		);
-		return issueQueue.length;
-	}
-
-	for (const issue of issueQueue) {
-		await processIssue(
-			config,
-			notifications,
-			linear,
-			issue,
-			options,
-			polling.staleRunTimeoutMs,
-			buildRunLeaseOwnerId(),
-			runtime,
-		);
-	}
+	);
 
 	return issueQueue.length;
 }
@@ -833,32 +819,37 @@ async function processIssue(
 	);
 
 	let leaseAcquired = false;
+	const executeIssueWithLease = async () => {
+		leaseAcquired = await tryAcquireRunLease(
+			config.workspacePath,
+			runState,
+			leaseOwnerId,
+			leaseTimeoutMs,
+		);
+		if (!leaseAcquired) {
+			issueLogger.info(
+				{ leaseOwnerId, currentLeaseOwnerId: runState.lease?.ownerId },
+				"Skipping issue because it is already leased by another worker",
+			);
+			return;
+		}
+		await executeIssue(
+			config,
+			notifications,
+			linear,
+			runState,
+			options,
+			leaseOwnerId,
+			leaseTimeoutMs,
+			runtime,
+		);
+	};
 	try {
-		await withExecutionPathLock(config.executionPath, async () => {
-			leaseAcquired = await tryAcquireRunLease(
-				config.workspacePath,
-				runState,
-				leaseOwnerId,
-				leaseTimeoutMs,
-			);
-			if (!leaseAcquired) {
-				issueLogger.info(
-					{ leaseOwnerId, currentLeaseOwnerId: runState.lease?.ownerId },
-					"Skipping issue because it is already leased by another worker",
-				);
-				return;
-			}
-			await executeIssue(
-				config,
-				notifications,
-				linear,
-				runState,
-				options,
-				leaseOwnerId,
-				leaseTimeoutMs,
-				runtime,
-			);
-		});
+		if (options.reviewOnly) {
+			await executeIssueWithLease();
+		} else {
+			await withExecutionPathLock(config.executionPath, executeIssueWithLease);
+		}
 		if (!leaseAcquired) {
 			return;
 		}

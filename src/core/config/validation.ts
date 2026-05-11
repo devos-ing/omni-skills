@@ -142,6 +142,14 @@ function validateCronRun(jobId: string, run: RunOptions): void {
 			`Cron job '${jobId}' run cannot use projectId with allProjects`,
 		);
 	}
+	if (
+		run.concurrency !== undefined &&
+		(!Number.isInteger(run.concurrency) || run.concurrency <= 0)
+	) {
+		throw new Error(
+			`Cron job '${jobId}' run.concurrency must be a positive integer`,
+		);
+	}
 	if (run.reviewOnly && run.issueArg) {
 		throw new Error(
 			`Cron job '${jobId}' run cannot use issueArg with reviewOnly`,

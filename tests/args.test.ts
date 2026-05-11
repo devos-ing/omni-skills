@@ -11,6 +11,7 @@ describe("parseArgs", () => {
 				projectId: undefined,
 				allProjects: false,
 				poll: false,
+				concurrency: undefined,
 				exitWhenIdle: undefined,
 				pollIntervalMs: undefined,
 				maxPollCycles: undefined,
@@ -26,6 +27,7 @@ describe("parseArgs", () => {
 				projectId: "api",
 				allProjects: false,
 				poll: false,
+				concurrency: undefined,
 				exitWhenIdle: undefined,
 				pollIntervalMs: undefined,
 				maxPollCycles: undefined,
@@ -51,6 +53,7 @@ describe("parseArgs", () => {
 				projectId: undefined,
 				allProjects: false,
 				poll: true,
+				concurrency: undefined,
 				exitWhenIdle: undefined,
 				pollIntervalMs: 15000,
 				maxPollCycles: 20,
@@ -73,7 +76,25 @@ describe("parseArgs", () => {
 				projectId: undefined,
 				allProjects: false,
 				poll: true,
+				concurrency: undefined,
 				exitWhenIdle: false,
+				pollIntervalMs: undefined,
+				maxPollCycles: undefined,
+			},
+		});
+	});
+
+	it("parses run concurrency flag", () => {
+		const parsed = parseArgs(["bun", "adhd-ai", "run", "--concurrency", "2"]);
+		expect(parsed).toEqual({
+			kind: "run",
+			options: {
+				issueArg: undefined,
+				projectId: undefined,
+				allProjects: false,
+				poll: false,
+				concurrency: 2,
+				exitWhenIdle: undefined,
 				pollIntervalMs: undefined,
 				maxPollCycles: undefined,
 			},
@@ -90,6 +111,24 @@ describe("parseArgs", () => {
 		expect(() =>
 			parseArgs(["bun", "adhd-ai", "run", "--max-poll-cycles", "-1"]),
 		).toThrow("--max-poll-cycles must be a positive integer");
+	});
+
+	it("rejects invalid concurrency when zero", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "run", "--concurrency", "0"]),
+		).toThrow("--concurrency must be a positive integer");
+	});
+
+	it("rejects invalid concurrency when negative", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "run", "--concurrency", "-2"]),
+		).toThrow("--concurrency must be a positive integer");
+	});
+
+	it("rejects invalid concurrency when non-integer", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "run", "--concurrency", "1.5"]),
+		).toThrow("--concurrency must be a positive integer");
 	});
 
 	it("parses status command", () => {

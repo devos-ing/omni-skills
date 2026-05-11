@@ -1069,6 +1069,7 @@ describe("loadConfig", () => {
 					maxPollCycles: 2,
 					issueArg: undefined,
 					allProjects: undefined,
+					concurrency: undefined,
 					pollIntervalMs: undefined,
 					exitWhenIdle: undefined,
 				},
@@ -1344,6 +1345,39 @@ describe("loadConfig", () => {
 		}
 	});
 
+	it("loads cron run concurrency", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			[
+				"export default {",
+				"  cron: {",
+				"    jobs: [",
+				"      {",
+				"        id: 'hourly-concurrency',",
+				"        schedule: { frequency: 'hourly', every: 1 },",
+				"        run: { concurrency: 2, allProjects: true }",
+				"      }",
+				"    ]",
+				"  },",
+				"  projects: [",
+				"    { id: 'default' }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.cron.jobs[0]?.run.concurrency).toBe(2);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects invalid cron run reviewOnly value", async () => {
 		const tempDir = await mkdtemp(
 			path.join(process.cwd(), ".tmp-config-test-"),
@@ -1406,6 +1440,108 @@ describe("loadConfig", () => {
 		try {
 			await expect(loadConfig(tempDir)).rejects.toThrow(
 				"Cron job 'invalid-review-only-target' run cannot use issueArg with reviewOnly",
+			);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects cron run non-positive concurrency", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			[
+				"export default {",
+				"  cron: {",
+				"    jobs: [",
+				"      {",
+				"        id: 'invalid-concurrency',",
+				"        schedule: { frequency: 'hourly' },",
+				"        run: { concurrency: 0 }",
+				"      }",
+				"    ]",
+				"  },",
+				"  projects: [",
+				"    { id: 'default' }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow(
+				"cron.jobs[0].run.concurrency must be a positive integer",
+			);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects cron run negative concurrency", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			[
+				"export default {",
+				"  cron: {",
+				"    jobs: [",
+				"      {",
+				"        id: 'invalid-concurrency-negative',",
+				"        schedule: { frequency: 'hourly' },",
+				"        run: { concurrency: -1 }",
+				"      }",
+				"    ]",
+				"  },",
+				"  projects: [",
+				"    { id: 'default' }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow(
+				"cron.jobs[0].run.concurrency must be a positive integer",
+			);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects cron run non-integer concurrency", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			[
+				"export default {",
+				"  cron: {",
+				"    jobs: [",
+				"      {",
+				"        id: 'invalid-concurrency-float',",
+				"        schedule: { frequency: 'hourly' },",
+				"        run: { concurrency: 1.5 }",
+				"      }",
+				"    ]",
+				"  },",
+				"  projects: [",
+				"    { id: 'default' }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow(
+				"cron.jobs[0].run.concurrency must be an integer",
 			);
 		} finally {
 			await rm(tempDir, { recursive: true, force: true });

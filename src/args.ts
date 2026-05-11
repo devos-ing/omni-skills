@@ -54,6 +54,7 @@ export function parseArgs(argv: string[]): CliCommand {
 		const exitWhenIdle = args.includes("--no-exit-when-idle")
 			? false
 			: undefined;
+		const concurrency = readOptionalPositiveInt(args, "--concurrency");
 		const pollIntervalMs = readOptionalPositiveInt(args, "--poll-interval-ms");
 		const maxPollCycles = readOptionalPositiveInt(args, "--max-poll-cycles");
 		if (projectId && allProjects) {
@@ -66,6 +67,7 @@ export function parseArgs(argv: string[]): CliCommand {
 				projectId,
 				allProjects,
 				poll,
+				concurrency,
 				exitWhenIdle,
 				pollIntervalMs,
 				maxPollCycles,

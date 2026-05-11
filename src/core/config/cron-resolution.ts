@@ -155,6 +155,10 @@ function resolveCronRun(
 		run.pollIntervalMs,
 		`${fieldPath}[${index}].run.pollIntervalMs`,
 	);
+	const concurrency = parseOptionalPositiveIntStrict(
+		run.concurrency,
+		`${fieldPath}[${index}].run.concurrency`,
+	);
 	const maxPollCycles = parseOptionalPositiveIntStrict(
 		run.maxPollCycles,
 		`${fieldPath}[${index}].run.maxPollCycles`,
@@ -174,6 +178,7 @@ function resolveCronRun(
 			run.poll,
 			`${fieldPath}[${index}].run.poll must be a boolean`,
 		),
+		concurrency,
 		pollIntervalMs,
 		maxPollCycles,
 		exitWhenIdle: normalizeCronRunBoolean(

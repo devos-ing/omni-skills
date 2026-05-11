@@ -114,6 +114,7 @@ export class FakeAgent implements AgentAdapter {
 	plans: Array<AgentResult | Error> = [];
 	resumes: Array<AgentResult | Error> = [];
 	reviews: Array<AgentResult | Error> = [];
+	delayMs = 0;
 
 	async runPlan(): Promise<AgentResult> {
 		return this.next(this.plans, "plan-1");
@@ -129,7 +130,12 @@ export class FakeAgent implements AgentAdapter {
 		if (result instanceof Error) {
 			throw result;
 		}
-		return Promise.resolve(result);
+		if (this.delayMs <= 0) {
+			return Promise.resolve(result);
+		}
+		return new Promise<AgentResult>((resolve) => {
+			setTimeout(() => resolve(result), this.delayMs);
+		});
 	}
 }
 

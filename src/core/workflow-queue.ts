@@ -181,3 +181,38 @@ export function buildReviewOnlyIssueQueue(
 		skippedWithoutPr,
 	};
 }
+
+export function normalizeIssueConcurrency(
+	concurrency: number | undefined,
+): number {
+	if (!Number.isInteger(concurrency) || (concurrency ?? 0) <= 0) {
+		return 1;
+	}
+	return Number(concurrency);
+}
+
+export async function processIssueQueueBounded<T>(
+	issues: T[],
+	concurrency: number | undefined,
+	worker: (issue: T) => Promise<void>,
+): Promise<void> {
+	const effectiveConcurrency = normalizeIssueConcurrency(concurrency);
+	let nextIndex = 0;
+
+	async function runWorker(): Promise<void> {
+		while (true) {
+			const index = nextIndex;
+			nextIndex += 1;
+			if (index >= issues.length) {
+				return;
+			}
+			await worker(issues[index] as T);
+		}
+	}
+
+	await Promise.all(
+		Array.from({ length: Math.min(effectiveConcurrency, issues.length) }, () =>
+			runWorker(),
+		),
+	);
+}
