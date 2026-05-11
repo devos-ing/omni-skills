@@ -5,18 +5,12 @@ import {
 	sendTaskOutcomeEmail,
 } from "../services/notifications";
 import { logger, normalizeError } from "../utils/logger";
+import type { IntegrationWrapperDeps } from "./integration-wrappers.types";
 import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
 } from "./types";
-
-interface IntegrationWrapperDeps {
-	commentOnPr?: typeof commentOnPr;
-	squashMergePullRequest?: typeof squashMergePullRequest;
-	sendTaskOutcomeEmail?: typeof sendTaskOutcomeEmail;
-	sendHumanReviewRequiredEmail?: typeof sendHumanReviewRequiredEmail;
-}
 
 export async function safeLinearComment(
 	linear: Pick<LinearClient, "comment">,

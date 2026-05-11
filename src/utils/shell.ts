@@ -1,21 +1,11 @@
 import { spawn } from "node:child_process";
-
-export interface CommandResult {
-	code: number;
-	stdout: string;
-	stderr: string;
-}
+import type { CommandResult, RunCommandOptions } from "./shell.types";
+export type { CommandResult, RunCommandOptions } from "./shell.types";
 
 export async function runCommand(
 	command: string,
 	args: string[],
-	options: {
-		cwd: string;
-		env?: Record<string, string | undefined>;
-		streamStdout?: boolean;
-		streamStderr?: boolean;
-		stdinMode?: "ignore" | "pipe";
-	},
+	options: RunCommandOptions,
 ): Promise<CommandResult> {
 	return new Promise((resolve, reject) => {
 		const child = spawn(command, args, {

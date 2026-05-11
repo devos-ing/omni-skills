@@ -1,23 +1,6 @@
 import type { ResolvedProjectConfig } from "../core/types";
-
-export interface AgentResult {
-	sessionId?: string;
-	finalMessage: string;
-	stdout: string;
-	usage?: {
-		inputTokens?: number;
-		outputTokens?: number;
-		totalTokens?: number;
-	};
-}
-
-export interface AgentAdapter {
-	runPlan(prompt: string): Promise<AgentResult>;
-	resume(sessionId: string, prompt: string): Promise<AgentResult>;
-	runReview(prompt: string): Promise<AgentResult>;
-}
-
-export type AgentBackend = "codex" | "claude-code";
+import type { AgentAdapter, AgentBackend } from "./types";
+export type { AgentAdapter, AgentBackend, AgentResult } from "./types";
 
 export function createAgentAdapter(
 	config: ResolvedProjectConfig,

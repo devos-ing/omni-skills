@@ -11,49 +11,17 @@ import type {
 	ResolvedProjectConfig,
 	WorkflowStage,
 } from "../core/types";
-
-type WorkflowLabelStage = keyof ResolvedProjectConfig["linear"]["labelMap"];
-type LinearStatusStage = keyof ResolvedProjectConfig["linear"]["statusMap"];
-
-interface LinearLabelRecord {
-	id: string;
-	name: string;
-	teamId?: string;
-}
-
-interface ParentIssueRef {
-	id: string;
-	key: string;
-	title: string;
-	url: string;
-	projectId?: string;
-	teamId?: string;
-	creatorId?: string;
-	assigneeId?: string;
-}
-
-interface CreatedLinearIssueRef {
-	id: string;
-	identifier: string;
-	title: string;
-	url: string;
-}
-
-interface TodoIssueFromPlanInput {
-	title: string;
-	description: string;
-	stateId: string;
-	teamId: string;
-	parentId: string;
-	projectId?: string;
-	assigneeId?: string;
-	priority?: number;
-}
-
-interface WorkflowLabelUpdate {
-	addedLabelIds: string[];
-	removedLabelIds: string[];
-}
+import type {
+	BuildTodoIssueInput,
+	CreatedLinearIssueRef,
+	LinearLabelRecord,
+	LinearStatusStage,
+	ParentIssueRef,
+	SplitTaskIssueDescriptionInput,
+	TodoIssueFromPlanInput,
+	WorkflowLabelStage,
+	WorkflowLabelUpdate,
+} from "./linear.types";
 
 const LINEAR_MAX_REQUESTS_PER_HOUR = 1800;
 const LINEAR_REQUEST_INTERVAL_MS = Math.ceil(
@@ -88,10 +56,9 @@ export function buildSplitTaskIssueTitle(
 	return `[${normalizedParentKey}] ${normalizedTitle}`;
 }
 
-export function buildSplitTaskIssueDescription(input: {
-	task: PlannedSplitTask;
-	parentIssue: ParentIssueRef;
-}): string {
+export function buildSplitTaskIssueDescription(
+	input: SplitTaskIssueDescriptionInput,
+): string {
 	const summary =
 		input.task.description?.trim() || "No task summary provided by planner.";
 	const plannerLabels = input.task.labels
@@ -123,13 +90,9 @@ export function buildSplitTaskIssueDescription(input: {
 	].join("\n");
 }
 
-export function buildTodoIssueFromPlanInput(input: {
-	task: PlannedSplitTask;
-	parentIssue: ParentIssueRef;
-	assignedStateId: string;
-	teamId: string;
-	projectId?: string;
-}): TodoIssueFromPlanInput {
+export function buildTodoIssueFromPlanInput(
+	input: BuildTodoIssueInput,
+): TodoIssueFromPlanInput {
 	const projectId = input.parentIssue.projectId?.trim() || input.projectId;
 	const assigneeId = input.parentIssue.creatorId?.trim();
 	return {

@@ -1,53 +1,29 @@
 import { Database } from "bun:sqlite";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { IssueRef, ResolvedProjectConfig } from "../core/types";
+import {
+	clampText,
+	collectSkillFiles,
+	dedupeCandidates,
+	parseSkillDocument,
+	parseTags,
+	sourcePriority,
+	tokenize,
+} from "./catalog-helpers";
+import type {
+	RankedSkillCandidate,
+	SkillCandidate,
+	SkillSelectionResult,
+} from "./types";
+
+export type {
+	RankedSkillCandidate,
+	SkillCandidate,
+	SkillSelectionResult,
+} from "./types";
 
 const MAX_SKILL_CONTENT_CHARS = 4000;
-
-const STOP_WORDS = new Set([
-	"a",
-	"an",
-	"and",
-	"are",
-	"as",
-	"at",
-	"be",
-	"by",
-	"for",
-	"from",
-	"in",
-	"is",
-	"it",
-	"of",
-	"on",
-	"or",
-	"that",
-	"the",
-	"to",
-	"with",
-	"workflow",
-	"agent",
-	"issue",
-]);
-
-export interface SkillCandidate {
-	name: string;
-	description?: string;
-	content?: string;
-	path?: string;
-	tags: string[];
-	source: "folder" | "database";
-}
-
-export interface RankedSkillCandidate extends SkillCandidate {
-	score: number;
-}
-
-export interface SkillSelectionResult {
-	selected: RankedSkillCandidate[];
-	warnings: string[];
-}
 
 interface DatabaseSkillRow {
 	name: string;
@@ -238,102 +214,4 @@ function overlapSize(a: Set<string>, b: Set<string>): number {
 		}
 	}
 	return count;
-}
-
-function sourcePriority(source: SkillCandidate["source"]): number {
-	return source === "folder" ? 0 : 1;
-}
-
-function dedupeCandidates(candidates: SkillCandidate[]): SkillCandidate[] {
-	const selectedByName = new Map<string, SkillCandidate>();
-	for (const candidate of candidates) {
-		const key = candidate.name.trim().toLowerCase();
-		if (!key) {
-			continue;
-		}
-		const existing = selectedByName.get(key);
-		if (!existing) {
-			selectedByName.set(key, candidate);
-			continue;
-		}
-		if (sourcePriority(candidate.source) < sourcePriority(existing.source)) {
-			selectedByName.set(key, candidate);
-			continue;
-		}
-		if (
-			candidate.source === existing.source &&
-			(candidate.description?.length ?? 0) > (existing.description?.length ?? 0)
-		) {
-			selectedByName.set(key, candidate);
-		}
-	}
-	return Array.from(selectedByName.values());
-}
-
-function parseSkillDocument(input: string): {
-	name?: string;
-	description?: string;
-} {
-	const nameMatch = input.match(/^name:\s*(.+)$/im);
-	const descriptionMatch = input.match(/^description:\s*(.+)$/im);
-	return {
-		name: nameMatch?.[1]?.trim() || undefined,
-		description: descriptionMatch?.[1]?.trim() || undefined,
-	};
-}
-
-function parseTags(raw: string | null): string[] {
-	if (!raw || !raw.trim()) {
-		return [];
-	}
-	const trimmed = raw.trim();
-	if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-		try {
-			const parsed = JSON.parse(trimmed) as unknown;
-			if (Array.isArray(parsed)) {
-				return parsed
-					.filter((item): item is string => typeof item === "string")
-					.map((item) => item.trim())
-					.filter(Boolean);
-			}
-		} catch {}
-	}
-	return trimmed
-		.split(",")
-		.map((item) => item.trim())
-		.filter(Boolean);
-}
-
-async function collectSkillFiles(root: string): Promise<string[]> {
-	const files: string[] = [];
-	const entries = await readdir(root, { withFileTypes: true });
-	for (const entry of entries) {
-		const fullPath = path.join(root, entry.name);
-		if (entry.isDirectory()) {
-			const nested = await collectSkillFiles(fullPath);
-			files.push(...nested);
-			continue;
-		}
-		if (entry.isFile() && entry.name === "SKILL.md") {
-			files.push(fullPath);
-		}
-	}
-	return files;
-}
-
-function tokenize(input: string): Set<string> {
-	const normalized = input.toLowerCase().replace(/[^a-z0-9]+/g, " ");
-	const tokens = normalized
-		.split(/\s+/)
-		.map((token) => token.trim())
-		.filter((token) => token.length >= 2 && !STOP_WORDS.has(token));
-	return new Set(tokens);
-}
-
-function clampText(input: string, limit: number): string {
-	const trimmed = input.trim();
-	if (trimmed.length <= limit) {
-		return trimmed;
-	}
-	return `${trimmed.slice(0, limit)}\n...[truncated]`;
 }

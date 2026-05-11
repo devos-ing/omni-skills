@@ -8,26 +8,25 @@ import type {
 import { runWorkflow, sleep } from "../core/workflow";
 import { logger, normalizeError } from "../utils/logger";
 import { applyCronJobSkillOverrides, selectCronJobs } from "./cron-jobs";
+import type {
+	CronCycleDeps,
+	CronCycleState,
+	CronRuntimeState,
+	CronSchedulerDependencies,
+	RunCronOptions,
+} from "./cron.types";
 
 export { runCronJobOnce, selectCronJobs } from "./cron-jobs";
+export type {
+	CronJobRunDependencies,
+	CronRuntimeState,
+	CronSchedulerDependencies,
+	RunCronJobOnceOptions,
+	RunCronOptions,
+} from "./cron.types";
 
 const SCHEDULER_MIN_SLEEP_MS = 250;
 const SCHEDULER_MAX_SLEEP_MS = 60000;
-
-export interface RunCronOptions {
-	jobId?: string;
-}
-
-export interface CronRuntimeState {
-	readonly nextRunAtByJobId: ReadonlyMap<string, number>;
-	readonly activeJobIds: ReadonlySet<string>;
-}
-
-export interface CronSchedulerDependencies {
-	now?: () => Date;
-	sleep?: (ms: number) => Promise<void>;
-	runWorkflow?: (config: LoadedConfig, options: RunOptions) => Promise<void>;
-}
 
 export async function runCronScheduler(
 	config: LoadedConfig,
@@ -72,14 +71,8 @@ export async function runCronScheduler(
 export async function runCronSchedulerCycle(
 	config: LoadedConfig,
 	jobs: CronJobConfig[],
-	state: {
-		nextRunAtByJobId: Map<string, number>;
-		activeJobIds: Set<string>;
-	},
-	deps: {
-		now: () => Date;
-		runWorkflow: (config: LoadedConfig, options: RunOptions) => Promise<void>;
-	},
+	state: CronCycleState,
+	deps: CronCycleDeps,
 ): Promise<void> {
 	const currentMs = deps.now().getTime();
 

@@ -7,6 +7,7 @@ import {
 	DEFAULT_LABEL_MAP,
 	DEFAULT_REASONING_EFFORTS,
 	DEFAULT_STATUS_MAP,
+	LINEAR_API_KEY_SETTINGS_URL,
 	type SetupDraft,
 	collectSetupChecks,
 	formatSetupChecks,
@@ -90,6 +91,12 @@ describe("setup helpers", () => {
 
 	it("uses low as default planning reasoning effort", () => {
 		expect(DEFAULT_REASONING_EFFORTS.plan).toBe("low");
+	});
+
+	it("exports the Linear API key settings URL used by setup prompts", () => {
+		expect(LINEAR_API_KEY_SETTINGS_URL).toBe(
+			"https://linear.app/settings/account/security",
+		);
 	});
 
 	it("merges env updates without dropping unrelated values", () => {

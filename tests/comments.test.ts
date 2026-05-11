@@ -15,14 +15,14 @@ describe("buildPlanComment", () => {
 		});
 		expect(comment).toContain("ADHD.ai plan for ENG-1");
 		expect(comment).toContain("Planning completed; implementation started.");
-		expect(comment).toContain("Token usage: input 12, output 8, total 20");
+		expect(comment).toContain("Token usage 🧮: input 12, output 8, total 20");
 		expect(comment).toContain("1. Do A");
 	});
 
 	it("uses fallback when no summary is returned", () => {
 		const comment = buildPlanComment("ENG-1", "   ");
 		expect(comment).toContain("(No plan summary returned by planning agent.)");
-		expect(comment).toContain("Token usage: unknown");
+		expect(comment).toContain("Token usage 🧮: unknown");
 	});
 });
 
@@ -34,7 +34,7 @@ describe("formatCodexUsageLine", () => {
 				outputTokens: 7,
 				totalTokens: 10,
 			}),
-		).toBe("Token usage: input 3, output 7, total 10");
+		).toBe("Token usage 🧮: input 3, output 7, total 10");
 	});
 
 	it("derives total when missing", () => {
@@ -43,14 +43,14 @@ describe("formatCodexUsageLine", () => {
 				inputTokens: 9,
 				outputTokens: 4,
 			}),
-		).toBe("Token usage: input 9, output 4, total 13");
+		).toBe("Token usage 🧮: input 9, output 4, total 13");
 	});
 
 	it("handles missing fields", () => {
 		expect(formatCodexUsageLine({ inputTokens: 5 })).toBe(
-			"Token usage: input 5, output unknown, total unknown",
+			"Token usage 🧮: input 5, output unknown, total unknown",
 		);
-		expect(formatCodexUsageLine()).toBe("Token usage: unknown");
+		expect(formatCodexUsageLine()).toBe("Token usage 🧮: unknown");
 	});
 });
 
@@ -62,7 +62,7 @@ describe("buildImplementationComment", () => {
 		});
 		expect(comment).toContain("Implementation completed. Draft PR:");
 		expect(comment).toContain("https://example.com/pr/1");
-		expect(comment).toContain("Token usage: input 2, output 3, total 5");
+		expect(comment).toContain("Token usage 🧮: input 2, output 3, total 5");
 	});
 
 	it("renders update wording for feedback passes", () => {
@@ -95,7 +95,7 @@ describe("buildImplementationComment", () => {
 		expect(comment).toContain("Fixed bugs:");
 		expect(comment).toContain("- Bug A");
 		expect(comment).toContain("- Bug B");
-		expect(comment).toContain("Token usage: input 2, output 3, total 5");
+		expect(comment).toContain("Token usage 🧮: input 2, output 3, total 5");
 	});
 });
 
@@ -109,8 +109,8 @@ describe("buildReviewComment", () => {
 			bugs: [],
 		});
 		expect(comment).toContain("ADHD.ai review for ENG-1");
-		expect(comment).toContain("Result: PASS");
-		expect(comment).toContain("No bugs found.");
+		expect(comment).toContain("Result: PASS ✅");
+		expect(comment).toContain("No bugs found. ✅");
 	});
 
 	it("renders fail review summary as feedback loop", () => {
@@ -121,7 +121,7 @@ describe("buildReviewComment", () => {
 			usage: { inputTokens: 1, outputTokens: 2 },
 			bugs: [{ title: "Bug A", body: "Details" }],
 		});
-		expect(comment).toContain("Result: FAIL");
+		expect(comment).toContain("Result: FAIL ❌");
 		expect(comment).toContain(
 			"Bugs were detected and sent back to implementation.",
 		);

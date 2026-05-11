@@ -1,9 +1,5 @@
 import { type CommandResult, runCommand } from "../src/utils/shell";
 
-const BUMP_TYPES = new Set(["patch", "minor", "major"]);
-const SEMVER_PATTERN =
-	/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
-
 export type RunCommandFn = (
 	command: string,
 	args: string[],
@@ -16,33 +12,18 @@ export type RunCommandFn = (
 	},
 ) => Promise<CommandResult>;
 
-export function parseReleaseTarget(raw: string | undefined): string {
-	if (!raw) {
-		throw new Error(
-			"Missing version argument. Use one of: patch | minor | major | <semver>",
-		);
-	}
-	if (BUMP_TYPES.has(raw) || SEMVER_PATTERN.test(raw)) {
-		return raw;
-	}
-	throw new Error(
-		`Invalid version target '${raw}'. Use patch | minor | major | <semver>`,
-	);
-}
-
 export async function runPublishVersion(
 	cwd: string,
-	target: string,
 	commandRunner: RunCommandFn = runCommand,
 ): Promise<void> {
 	const commands: Array<{ command: string; args: string[] }> = [
 		{ command: "git", args: ["status", "--porcelain"] },
-		{ command: "npm", args: ["version", target, "--no-git-tag-version"] },
+		{ command: "bun", args: ["run", "changeset", "version"] },
 		{ command: "bun", args: ["run", "check"] },
 		{ command: "bun", args: ["run", "typecheck"] },
 		{ command: "bun", args: ["test"] },
 		{ command: "bun", args: ["run", "build"] },
-		{ command: "npm", args: ["publish", "--access", "public"] },
+		{ command: "bun", args: ["run", "changeset", "publish"] },
 	];
 
 	for (const step of commands) {
@@ -73,6 +54,5 @@ export async function runPublishVersion(
 }
 
 if (import.meta.main) {
-	const target = parseReleaseTarget(process.argv[2]);
-	await runPublishVersion(process.cwd(), target);
+	await runPublishVersion(process.cwd());
 }

@@ -73,6 +73,11 @@ describe("codex adapter", () => {
 		expect(extractSessionId(jsonl)).toBe("abc-123");
 	});
 
+	it("extracts session id from session_id fallback key", () => {
+		const jsonl = `{"event":{"session_id":"session-456"}}`;
+		expect(extractSessionId(jsonl)).toBe("session-456");
+	});
+
 	it("extracts usage from nested usage object", () => {
 		const jsonl = `{"type":"turn.completed","usage":{"input_tokens":120,"output_tokens":30,"total_tokens":150}}`;
 		expect(extractUsage(jsonl)).toEqual({

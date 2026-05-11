@@ -30,3 +30,22 @@ Planning output can optionally include:
 - `SPLIT_TASKS_JSON: [...]` (required only when complexity is `COMPLEX`)
 
 When `COMPLEXITY: COMPLEX` is returned, ADHD.ai creates child Linear tasks from `SPLIT_TASKS_JSON` and completes the parent issue without entering implementation/review stages.
+
+## Docker Isolated Codex Execution
+
+Docker-backed Codex execution is not implemented in this branch yet. Isolation work is tracked under ROY-95, and this section documents current behavior plus implementation expectations.
+
+Current behavior:
+
+1. ADHD.ai runs Codex directly on the host using `codex.binary`.
+2. `CODEX_HOME` (or `codex.codexHome`) is passed to the host Codex process when configured.
+3. No `codex.docker.*` config block or `CODEX_DOCKER_*` env variable is currently read by the runtime config loader.
+
+Planned Docker execution expectations (ROY-95 scope):
+
+1. Host execution remains the default unless Docker mode is explicitly enabled.
+2. Docker image should include the configured Codex binary (default: `codex`) and required workflow tooling (`git`, `gh`, `bun`, project dependencies).
+3. Mount/path behavior should preserve workspace and execution path correctness and support `CODEX_HOME` mapping when provided.
+4. Container user permissions must allow read/write access for repository paths and ADHD.ai state/output files.
+
+For security caveats around mounted paths, permissions, and credential exposure, see [docs/SECURITY.md](SECURITY.md).

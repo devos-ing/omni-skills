@@ -12,11 +12,12 @@ This repository orchestrates multi-project agent workflows. Keep behavior projec
 6. Keep CLI parsing and dispatch in `src/args.ts` and `src/index.ts`.
 7. Do not construct raw shell command strings in workflow logic; use helper modules.
 8. Keep TypeScript files under 250 lines; split files before they grow beyond that limit.
-9. Keep review parsing contract stable:
+9. Keep TypeScript interfaces/type aliases in dedicated `*.types.ts` modules separate from runtime implementation when adding or changing contracts.
+10. Keep review parsing contract stable:
    - `RESULT: PASS|FAIL`
    - `SUMMARY: ...`
    - `BUGS_JSON: [...]`
-10. Add tests for any new CLI flag, config shape, state path, or stage transition.
+11. Add tests for any new CLI flag, config shape, state path, or stage transition.
 
 ## Quality Gates
 

@@ -4,13 +4,9 @@ import type {
 	ResolvedProjectConfig,
 } from "../core/types";
 import { assertCommandOk, runCommand } from "../utils/shell";
+import type { GithubCommandDeps, PrListEntry } from "./github.types";
 
 const GITHUB_RETRY_ATTEMPTS = 3;
-
-interface GithubCommandDeps {
-	runCommand?: typeof runCommand;
-	assertCommandOk?: typeof assertCommandOk;
-}
 
 export function issueBranchName(issueKey: string): string {
 	return `codex/${issueKey.toLowerCase()}`;
@@ -407,6 +403,7 @@ export async function squashMergePullRequest(
 				"merge",
 				target,
 				"--squash",
+				"--delete-branch",
 				"--subject",
 				pr.title,
 				"--body",
@@ -623,13 +620,6 @@ function parsePrNumber(prUrl: string | undefined): number | undefined {
 	}
 	const match = prUrl.match(/\/pull\/(\d+)/);
 	return match ? Number(match[1]) : undefined;
-}
-
-interface PrListEntry {
-	number?: number;
-	url?: string;
-	title?: string;
-	headRefName?: string;
 }
 
 function parsePrListJson(raw: string): PrListEntry[] {

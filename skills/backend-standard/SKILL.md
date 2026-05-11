@@ -27,14 +27,15 @@ Use this skill when implementing or reviewing backend code.
 
 1. Validate all external input at boundaries (CLI, HTTP, webhook, queue, third-party payloads).
 2. Keep service methods focused on one responsibility and explicit inputs/outputs.
-3. Use typed interfaces for adapter contracts.
-4. Prefer explicit return values over hidden shared mutable state.
-5. Handle errors with context-rich messages and stable categories.
-6. Add retries only for transient failures, with bounded attempts and clear logging.
-7. Log key state transitions, request identifiers, and failure context without secrets.
-8. Never log tokens, credentials, or private user content.
-9. Keep database or filesystem operations idempotent where reruns are expected.
-10. Avoid framework lock-in in core logic; keep framework-specific code near integration edges.
+3. Keep adapter/service contracts in dedicated `*.types.ts` files and avoid mixing contract declarations into runtime modules when adding or changing types.
+4. Use typed interfaces for adapter contracts.
+5. Prefer explicit return values over hidden shared mutable state.
+6. Handle errors with context-rich messages and stable categories.
+7. Add retries only for transient failures, with bounded attempts and clear logging.
+8. Log key state transitions, request identifiers, and failure context without secrets.
+9. Never log tokens, credentials, or private user content.
+10. Keep database or filesystem operations idempotent where reruns are expected.
+11. Avoid framework lock-in in core logic; keep framework-specific code near integration edges.
 
 ## Testing Expectations
 

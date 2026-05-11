@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { BugRecord, IssueRef, PullRequestRef } from "../core/types";
-import type { RankedSkillCandidate } from "./catalog";
+import type { PlanPromptOptions } from "./prompt-types";
 
 async function loadSkillText(filePath: string): Promise<string> {
 	try {
@@ -13,10 +13,7 @@ async function loadSkillText(filePath: string): Promise<string> {
 export async function buildPlanPrompt(
 	skillPath: string,
 	issue: IssueRef,
-	options?: {
-		supplementalSkills?: RankedSkillCandidate[];
-		autoSelectWarnings?: string[];
-	},
+	options?: PlanPromptOptions,
 ): Promise<string> {
 	const skill = await loadSkillText(skillPath);
 	const supplementalSkills = options?.supplementalSkills ?? [];

@@ -40,6 +40,13 @@ import {
 	type WorkflowRuntime,
 	createWorkflowRuntime,
 } from "./workflow-runtime";
+import type {
+	IssueJobLogFields,
+	IssueProjectRoutingResult,
+	PollingSettings,
+	ReviewOnlyQueueBuildResult,
+	WorkflowIssue,
+} from "./workflow.types";
 
 export { buildRunLeaseOwnerId } from "./workflow-lease";
 import type {
@@ -52,33 +59,15 @@ import type {
 	RunState,
 	WorkflowStage,
 } from "./types";
+export type {
+	IssueJobLogFields,
+	IssueProjectRoutingResult,
+	PollingSettings,
+	ReviewOnlyQueueBuildResult,
+	WorkflowIssue,
+} from "./workflow.types";
 
 export { runAgentWithChatLog } from "./agent-chat-log";
-
-interface WorkflowIssue {
-	id: string;
-	identifier: string;
-	title: string;
-	description?: string;
-	url: string;
-	projectId?: string;
-	teamId?: string;
-	creatorId?: string;
-	assigneeId?: string;
-	priority: {
-		value: number;
-		name: string;
-	};
-	labels: Array<{
-		id: string;
-		name: string;
-	}>;
-	state: {
-		id: string;
-		name: string;
-	};
-	pullRequest?: PullRequestRef;
-}
 
 const DEFAULT_PLANNER_COMPLEXITY_SCORE = 4;
 const HUMAN_REVIEW_COMPLEXITY_THRESHOLD = 5;
@@ -256,12 +245,6 @@ async function routeProjectContextsForTargetIssue(
 		"Routed target issue to project by Linear project id",
 	);
 	return selected;
-}
-
-export interface IssueProjectRoutingResult {
-	selectedProjectId?: string;
-	skipReason?: string;
-	error?: string;
 }
 
 export function routeProjectsForIssueProjectId(
@@ -494,13 +477,6 @@ export function resolveReviewOnlyBootstrapStage(
 		return "done";
 	}
 	return "testing";
-}
-
-export interface ReviewOnlyQueueBuildResult {
-	issueQueue: WorkflowIssue[];
-	mergedCandidateCount: number;
-	discoveredPrCount: number;
-	skippedWithoutPr: number;
 }
 
 export function buildReviewOnlyIssueQueue(input: {
@@ -930,14 +906,6 @@ async function processIssue(
 	}
 }
 
-export interface PollingSettings {
-	enabled: boolean;
-	intervalMs: number;
-	maxCycles?: number;
-	exitWhenIdle: boolean;
-	staleRunTimeoutMs: number;
-}
-
 export function resolvePollingSettings(
 	pollingConfig: PollingConfig,
 	options: RunOptions,
@@ -953,15 +921,6 @@ export function resolvePollingSettings(
 
 export async function sleep(ms: number): Promise<void> {
 	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export interface IssueJobLogFields {
-	projectId: string;
-	issueKey: string;
-	issueId: string;
-	issueTitle: string;
-	stage: string;
-	resumed?: true;
 }
 
 function matchesIssueStateConfigValue(

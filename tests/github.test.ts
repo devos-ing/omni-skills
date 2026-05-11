@@ -214,6 +214,7 @@ describe("squashMergePullRequest", () => {
 				"merge",
 				"https://github.com/acme/repo/pull/77",
 				"--squash",
+				"--delete-branch",
 				"--subject",
 				"ENG-42",
 				"--body",

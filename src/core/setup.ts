@@ -7,7 +7,15 @@ import type { CommandResult } from "../utils/shell";
 import { runCommand } from "../utils/shell";
 import type { LoadedConfig } from "./config";
 import { loadConfig, saveSqliteEnv } from "./config";
+import type { GitHubDefaults, SetupCheckDeps } from "./setup.types";
+import type { SetupCheck, SetupDraft } from "./setup.types";
 import type { CodexReasoningEffort } from "./types";
+export type {
+	GitHubDefaults,
+	SetupCheck,
+	SetupCheckDeps,
+	SetupDraft,
+} from "./setup.types";
 
 const ENV_FILE = ".env";
 const LOCAL_CONFIG_FILE = "adhd-ai.local.config.ts";
@@ -15,83 +23,8 @@ const DEFAULT_PROJECT_NAME = "Default Project";
 const DEFAULT_BASE_BRANCH = "main";
 const RTK_INSTALL_URL = "https://github.com/rtk-ai/rtk";
 const GITHUB_CLI_INSTALL_URL = "https://cli.github.com/manual/installation";
-
-export interface SetupDraft {
-	projectId: string;
-	projectName: string;
-	workspacePath: string;
-	executionPath: string;
-	repoOwner: string;
-	repoName: string;
-	baseBranch: string;
-	linearApiKey: string;
-	linearProjectId?: string;
-	linearTeamId?: string;
-	notifications: {
-		email: {
-			enabled: boolean;
-			resendApiKey?: string;
-			from?: string;
-			to: string[];
-		};
-	};
-	statusMap: {
-		backlog: string;
-		assigned: string;
-		planning: string;
-		implementing: string;
-		pr_created: string;
-		reviewing: string;
-		testing: string;
-		blocked: string;
-		done: string;
-	};
-	labelMap: {
-		pr_created: string;
-		reviewing: string;
-		testing: string;
-	};
-	codex: {
-		reasoningEffort?: CodexReasoningEffort;
-		reasoningEfforts?: {
-			plan?: CodexReasoningEffort;
-			implement?: CodexReasoningEffort;
-			reviewTest?: CodexReasoningEffort;
-		};
-		models: {
-			plan: string;
-			implement: string;
-			reviewTest: string;
-		};
-		plugins: string[];
-		skillsets: string[];
-		configOverrides: Record<string, string>;
-		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
-	};
-}
-
-export interface SetupCheck {
-	name: string;
-	status: "pass" | "fail";
-	message: string;
-}
-
-interface SetupCheckDeps {
-	loadConfig?: (cwd: string) => Promise<LoadedConfig>;
-	runCommand?: (
-		command: string,
-		args: string[],
-		options: { cwd: string },
-	) => Promise<CommandResult>;
-	access?: (targetPath: string) => Promise<void>;
-	readFile?: (targetPath: string, encoding: BufferEncoding) => Promise<string>;
-}
-
-interface GitHubDefaults {
-	owner?: string;
-	name?: string;
-	baseBranch?: string;
-}
+export const LINEAR_API_KEY_SETTINGS_URL =
+	"https://linear.app/settings/account/security";
 
 export const DEFAULT_STATUS_MAP: SetupDraft["statusMap"] = {
 	backlog: "Backlog",
@@ -529,7 +462,11 @@ export async function runSetupWizard(cwd: string): Promise<void> {
 			"GitHub base branch",
 			defaults.baseBranch ?? DEFAULT_BASE_BRANCH,
 		);
-		const linearApiKey = await ask(io, "Linear API key", "");
+		const linearApiKey = await ask(
+			io,
+			`Linear API key (create one: ${LINEAR_API_KEY_SETTINGS_URL})`,
+			"",
+		);
 		const linearProjectId = emptyToUndefined(
 			await ask(io, "Linear project ID filter (optional)", ""),
 		);

@@ -25,8 +25,9 @@ You are the implementation agent.
 1. Re-state scope from the plan before editing code.
 2. Apply minimal, focused changes in the modules that own the behavior.
 3. Preserve existing interfaces and contracts unless the plan explicitly requires changes.
-4. Add or update tests when behavior, parsing, config, CLI, or workflow transitions are affected.
-5. Run the relevant checks and report pass/fail status with blockers if any command cannot run.
+4. Keep TypeScript contract declarations (`interface`/type aliases) in dedicated `*.types.ts` files separate from runtime implementation when adding or modifying contracts.
+5. Add or update tests when behavior, parsing, config, CLI, or workflow transitions are affected.
+6. Run the relevant checks and report pass/fail status with blockers if any command cannot run.
 
 ## Validation and Reporting
 

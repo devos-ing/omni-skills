@@ -8,7 +8,7 @@ export interface TokenUsage {
 
 export function formatCodexUsageLine(usage?: TokenUsage): string {
 	if (!usage) {
-		return "Token usage: unknown";
+		return "Token usage 🧮: unknown";
 	}
 	const input = usage.inputTokens ?? "unknown";
 	const output = usage.outputTokens ?? "unknown";
@@ -18,7 +18,7 @@ export function formatCodexUsageLine(usage?: TokenUsage): string {
 		typeof usage.outputTokens === "number"
 			? usage.inputTokens + usage.outputTokens
 			: "unknown");
-	return `Token usage: input ${input}, output ${output}, total ${total}`;
+	return `Token usage 🧮: input ${input}, output ${output}, total ${total}`;
 }
 
 export function buildPlanComment(
@@ -110,7 +110,7 @@ export function buildReviewComment(input: {
 	return [
 		`ADHD.ai review for ${input.issueKey}`,
 		"",
-		`Result: ${input.passed ? "PASS" : "FAIL"}`,
+		`Result: ${input.passed ? "PASS ✅" : "FAIL ❌"}`,
 		"",
 		formatCodexUsageLine(input.usage),
 		"",
@@ -119,7 +119,7 @@ export function buildReviewComment(input: {
 		input.bugs.length > 0
 			? "Bugs were detected and sent back to implementation."
 			: input.passed
-				? "No bugs found."
+				? "No bugs found. ✅"
 				: "Review failed without structured bug details; feedback was still sent to implementation.",
 	].join("\n");
 }

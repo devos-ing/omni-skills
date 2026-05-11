@@ -3,14 +3,10 @@ import type { LoadedConfig } from "../core/config";
 import type { CronJobConfig, RunOptions } from "../core/types";
 import { runWorkflow } from "../core/workflow";
 import { logger, normalizeError } from "../utils/logger";
-
-export interface RunCronJobOnceOptions {
-	jobId?: string;
-}
-
-export interface CronJobRunDependencies {
-	runWorkflow?: (config: LoadedConfig, options: RunOptions) => Promise<void>;
-}
+import type {
+	CronJobRunDependencies,
+	RunCronJobOnceOptions,
+} from "./cron.types";
 
 export async function runCronJobOnce(
 	config: LoadedConfig,

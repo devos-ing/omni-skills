@@ -48,9 +48,14 @@ bun run review:hourly
 # run the hourly PR review job once now
 bun run review:hourly:once
 
-# bump version, run quality gates, and publish
-bun run publish:version -- patch
-bun run publish:version -- 1.2.3
+# create a release changeset
+bun run changeset
+
+# apply version updates, run quality gates, and publish
+bun run publish:version
+
+# push version commit and tags after publish
+git push --follow-tags
 
 # inspect run state for one issue
 bun run src/index.ts status --project <PROJECT_ID> --issue ENG-123
@@ -78,6 +83,7 @@ After linking/installing the package bin, you can also use `adhd-ai ...` directl
 - Local overrides (gitignored): `adhd-ai.local.config.ts`.
 - Legacy `piv-loop.config.ts` is still supported.
 - Guided setup stores local secrets in `.piv-loop/config/env.sqlite` (and writes `.env` for compatibility).
+- Docker-isolated Codex execution status and caveats (ROY-95): [docs/RELIABILITY.md#docker-isolated-codex-execution](docs/RELIABILITY.md#docker-isolated-codex-execution)
 
 For full config shape, polling, automations/cron compatibility, env vars, and routing behavior, use:
 

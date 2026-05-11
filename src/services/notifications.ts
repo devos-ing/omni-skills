@@ -1,16 +1,15 @@
 import type { ResolvedNotificationEmailConfig, RunState } from "../core/types";
 import { appendStatusEmoji } from "../utils/status";
+import type {
+	NotificationEmailPayload,
+	NotificationOutcome,
+} from "./notifications.types";
+export type {
+	NotificationEmailPayload,
+	NotificationOutcome,
+} from "./notifications.types";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-
-export type NotificationOutcome = "done" | "blocked";
-
-interface NotificationEmailPayload {
-	from: string;
-	to: string[];
-	subject: string;
-	text: string;
-}
 
 export async function sendTaskOutcomeEmail(
 	config: ResolvedNotificationEmailConfig,

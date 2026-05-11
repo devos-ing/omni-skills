@@ -16,13 +16,14 @@ Use this skill for TypeScript implementation and review.
 ## TypeScript Rules
 
 1. Prefer explicit types at module boundaries (public functions, adapters, config).
-2. Model domain concepts with named interfaces/types instead of loose objects.
-3. Avoid `any`; use `unknown` and narrow with guards when needed.
-4. Keep functions small with clear input/output contracts.
-5. Use `async`/`await` for asynchronous flows and propagate typed errors.
-6. Prefer immutable patterns; avoid mutating shared objects in place.
-7. Keep naming descriptive and stable for variables, types, and functions.
-8. Add comments only where intent is not obvious from code.
+2. Place interfaces and type aliases in dedicated `*.types.ts` modules and keep runtime logic in separate files when adding or modifying contracts.
+3. Model domain concepts with named interfaces/types instead of loose objects.
+4. Avoid `any`; use `unknown` and narrow with guards when needed.
+5. Keep functions small with clear input/output contracts.
+6. Use `async`/`await` for asynchronous flows and propagate typed errors.
+7. Prefer immutable patterns; avoid mutating shared objects in place.
+8. Keep naming descriptive and stable for variables, types, and functions.
+9. Add comments only where intent is not obvious from code.
 
 ## Biome Rules
 
