@@ -1,15 +1,9 @@
-import { readFile, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { runCommand } from "../../utils/shell";
 import { saveSqliteEnv } from "../config";
-import type {
-	GitHubDefaults,
-	SetupCheckDeps,
-	SetupDraft,
-} from "../setup.types";
-import type { CodexReasoningEffort } from "../types";
+import type { SetupDraft } from "../setup.types";
 import {
 	renderSetupGitHubInstallPrompt,
 	renderSetupRtkInstallPrompt,
@@ -27,6 +21,17 @@ import {
 import { buildEnvUpdates, mergeEnvFile } from "./env-file";
 import { renderLocalConfig } from "./local-config";
 import { normalizeProjectId } from "./normalize";
+import {
+	ask,
+	emptyToUndefined,
+	inferGitHubDefaults,
+	normalizeReasoningEffort,
+	normalizeSandbox,
+	parseRecipients,
+	parseYesNo,
+	readExistingFile,
+	resolveUserPath,
+} from "./wizard-helpers";
 
 export async function runSetupWizard(cwd: string): Promise<void> {
 	const io = readline.createInterface({
@@ -218,106 +223,4 @@ export async function writeSetupFiles(
 		RESEND_API_KEY: draft.notifications.email.resendApiKey,
 	});
 	await writeFile(configPath, renderLocalConfig(draft));
-}
-
-async function ask(
-	io: readline.Interface,
-	label: string,
-	defaultValue: string,
-): Promise<string> {
-	const suffix = defaultValue ? ` [${defaultValue}]` : "";
-	const answer = await io.question(`${label}${suffix}: `);
-	return answer.trim() || defaultValue;
-}
-
-async function readExistingFile(filePath: string): Promise<string | undefined> {
-	try {
-		return await readFile(filePath, "utf8");
-	} catch {
-		return undefined;
-	}
-}
-
-async function inferGitHubDefaults(cwd: string): Promise<GitHubDefaults> {
-	const remote = await safeRun(
-		runCommand as NonNullable<SetupCheckDeps["runCommand"]>,
-		"git",
-		["config", "--get", "remote.origin.url"],
-		cwd,
-	);
-	const branch = await safeRun(
-		runCommand as NonNullable<SetupCheckDeps["runCommand"]>,
-		"git",
-		["symbolic-ref", "refs/remotes/origin/HEAD", "--short"],
-		cwd,
-	);
-	const parsed = parseGitHubRemote(remote.stdout.trim());
-	const branchName = branch.stdout.trim().replace(/^origin\//, "");
-	return { ...parsed, baseBranch: branchName || DEFAULT_BASE_BRANCH };
-}
-
-function parseGitHubRemote(
-	remote: string,
-): Pick<GitHubDefaults, "owner" | "name"> {
-	const httpsMatch =
-		/^https:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?$/.exec(remote);
-	if (httpsMatch) return { owner: httpsMatch[1], name: httpsMatch[2] };
-	const sshMatch = /^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/.exec(remote);
-	if (sshMatch) return { owner: sshMatch[1], name: sshMatch[2] };
-	return {};
-}
-
-function resolveUserPath(input: string): string {
-	if (input === "~") return os.homedir();
-	if (input.startsWith("~/")) return path.join(os.homedir(), input.slice(2));
-	return path.resolve(input);
-}
-
-function emptyToUndefined(input: string): string | undefined {
-	const value = input.trim();
-	return value ? value : undefined;
-}
-
-function parseRecipients(input: string): string[] {
-	return input
-		.split(",")
-		.map((item) => item.trim())
-		.filter(Boolean);
-}
-
-function normalizeSandbox(
-	input: string,
-): SetupDraft["codex"]["sandbox"] | undefined {
-	const value = input.trim();
-	if (!value || value === "off" || value === "none" || value === "0")
-		return undefined;
-	if (
-		value === "read-only" ||
-		value === "workspace-write" ||
-		value === "danger-full-access"
-	) {
-		return value;
-	}
-	return "workspace-write";
-}
-
-function normalizeReasoningEffort(
-	input: string,
-	fallback: CodexReasoningEffort,
-): CodexReasoningEffort {
-	const value = input.trim().toLowerCase();
-	if (
-		value === "low" ||
-		value === "medium" ||
-		value === "high" ||
-		value === "xhigh"
-	) {
-		return value;
-	}
-	return fallback;
-}
-
-function parseYesNo(input: string): boolean {
-	const value = input.trim().toLowerCase();
-	return value === "" || value === "y" || value === "yes" || value === "true";
 }
