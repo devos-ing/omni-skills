@@ -2,7 +2,7 @@ import type {
 	DeepPartial,
 	NotificationConfig,
 	ResolvedNotificationConfig,
-} from "../types";
+} from "../../core/types";
 import { normalizeOptionalValue } from "./env-normalizers";
 
 export function resolveNotifications(

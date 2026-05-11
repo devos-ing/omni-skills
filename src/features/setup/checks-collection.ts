@@ -2,9 +2,9 @@ import { access, readFile } from "node:fs/promises";
 import { runCommand } from "../../utils/shell";
 import { loadConfig } from "../config";
 import type { LoadedConfig } from "../config";
-import type { SetupCheck, SetupCheckDeps } from "../setup.types";
 import { addBinaryChecks } from "./checks-binaries";
 import { checkTrackedConfigSecrets } from "./checks-helpers";
+import type { SetupCheck, SetupCheckDeps } from "./setup.types";
 
 export async function collectSetupChecks(
 	cwd: string,

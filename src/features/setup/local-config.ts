@@ -1,4 +1,4 @@
-import type { SetupDraft } from "../setup.types";
+import type { SetupDraft } from "./setup.types";
 
 export function renderLocalConfig(draft: SetupDraft): string {
 	const config = {

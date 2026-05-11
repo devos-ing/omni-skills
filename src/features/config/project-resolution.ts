@@ -5,7 +5,7 @@ import type {
 	ProjectConfig,
 	ProjectRuntimeConfig,
 	ResolvedProjectConfig,
-} from "../types";
+} from "../../core/types";
 
 export function resolveProjects(
 	configCwd: string,

@@ -1,4 +1,7 @@
-import type { CodexReasoningEffort, ResolvedProjectConfig } from "../types";
+import type {
+	CodexReasoningEffort,
+	ResolvedProjectConfig,
+} from "../../core/types";
 
 export function parseOptionalPositiveInt(
 	value: string | undefined,

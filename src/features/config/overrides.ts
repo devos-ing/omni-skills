@@ -6,7 +6,7 @@ import type {
 	DeepPartial,
 	ProjectConfig,
 	ProjectRuntimeConfig,
-} from "../types";
+} from "../../core/types";
 import {
 	DEFAULT_CONFIG_FILE,
 	LEGACY_CONFIG_FILE,

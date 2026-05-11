@@ -3,7 +3,6 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { runCommand } from "../../utils/shell";
 import { saveSqliteEnv } from "../config";
-import type { SetupDraft } from "../setup.types";
 import {
 	renderSetupGitHubInstallPrompt,
 	renderSetupRtkInstallPrompt,
@@ -16,11 +15,13 @@ import {
 	DEFAULT_REASONING_EFFORTS,
 	DEFAULT_STATUS_MAP,
 	ENV_FILE,
+	LINEAR_API_KEY_SETTINGS_URL,
 	LOCAL_CONFIG_FILE,
 } from "./constants";
 import { buildEnvUpdates, mergeEnvFile } from "./env-file";
 import { renderLocalConfig } from "./local-config";
 import { normalizeProjectId } from "./normalize";
+import type { SetupDraft } from "./setup.types";
 import {
 	ask,
 	emptyToUndefined,
@@ -66,7 +67,11 @@ export async function runSetupWizard(cwd: string): Promise<void> {
 			"GitHub base branch",
 			defaults.baseBranch ?? DEFAULT_BASE_BRANCH,
 		);
-		const linearApiKey = await ask(io, "Linear API key", "");
+		const linearApiKey = await ask(
+			io,
+			`Linear API key (create one: ${LINEAR_API_KEY_SETTINGS_URL})`,
+			"",
+		);
 		const linearProjectId = emptyToUndefined(
 			await ask(io, "Linear project ID filter (optional)", ""),
 		);

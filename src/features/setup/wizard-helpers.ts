@@ -2,15 +2,11 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type readline from "node:readline/promises";
+import type { CodexReasoningEffort } from "../../core/types";
 import { runCommand } from "../../utils/shell";
-import type {
-	GitHubDefaults,
-	SetupCheckDeps,
-	SetupDraft,
-} from "../setup.types";
-import type { CodexReasoningEffort } from "../types";
 import { safeRun } from "./checks-helpers";
 import { DEFAULT_BASE_BRANCH } from "./constants";
+import type { GitHubDefaults, SetupCheckDeps, SetupDraft } from "./setup.types";
 
 export async function ask(
 	io: readline.Interface,

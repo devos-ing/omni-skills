@@ -1,8 +1,8 @@
 import path from "node:path";
 import type { CommandResult } from "../../utils/shell";
 import type { LoadedConfig } from "../config";
-import type { SetupCheck, SetupCheckDeps } from "../setup.types";
 import { RTK_INSTALL_URL } from "./constants";
+import type { SetupCheck, SetupCheckDeps } from "./setup.types";
 
 export async function safeRun(
 	commandRunner: NonNullable<SetupCheckDeps["runCommand"]>,
@@ -28,6 +28,17 @@ export function commandFailureMessage(result: CommandResult): string {
 
 export function formatMissingRtkMessage(): string {
 	return `rtk binary not found. Install from: ${RTK_INSTALL_URL}`;
+}
+
+export function formatMissingDockerMessage(
+	dockerBinary: string,
+	result: CommandResult,
+): string {
+	const output = (result.stderr || result.stdout).trim();
+	if (!output) {
+		return `${dockerBinary} binary not found but required for codex.docker.enabled projects`;
+	}
+	return `${dockerBinary} unavailable for codex.docker.enabled projects: ${output}`;
 }
 
 export async function checkTrackedConfigSecrets(

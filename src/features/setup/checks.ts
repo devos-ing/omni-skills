@@ -1,6 +1,6 @@
-import type { SetupCheck } from "../setup.types";
 import { collectSetupChecks } from "./checks-collection";
 import { GITHUB_CLI_INSTALL_URL, RTK_INSTALL_URL } from "./constants";
+import type { SetupCheck } from "./setup.types";
 
 export { collectSetupChecks };
 

@@ -1,11 +1,12 @@
 import { findClaudeBinary } from "../../utils/claude-path";
 import type { LoadedConfig } from "../config";
-import type { SetupCheck, SetupCheckDeps } from "../setup.types";
 import {
 	commandFailureMessage,
+	formatMissingDockerMessage,
 	formatMissingRtkMessage,
 	safeRun,
 } from "./checks-helpers";
+import type { SetupCheck, SetupCheckDeps } from "./setup.types";
 
 export async function addBinaryChecks(
 	checks: SetupCheck[],
@@ -38,8 +39,14 @@ export async function addBinaryChecks(
 	const codexBackends = config.projects.filter(
 		(project) => !project.agent?.backend || project.agent.backend === "codex",
 	);
-	if (codexBackends.length > 0) {
-		const codexBinary = config.projects[0]?.codex.binary ?? "codex";
+	const codexDockerEnabled = codexBackends.filter(
+		(project) => project.codex.docker?.enabled,
+	);
+	const codexHostBackends = codexBackends.filter(
+		(project) => !project.codex.docker?.enabled,
+	);
+	if (codexHostBackends.length > 0) {
+		const codexBinary = codexHostBackends[0]?.codex.binary ?? "codex";
 		const codex = await safeRun(
 			commandRunner,
 			codexBinary,
@@ -57,6 +64,29 @@ export async function addBinaryChecks(
 						name: "Codex binary",
 						status: "fail",
 						message: commandFailureMessage(codex),
+					},
+		);
+	}
+	if (codexDockerEnabled.length > 0) {
+		const dockerBinary =
+			codexDockerEnabled[0]?.codex.docker?.binary ?? "docker";
+		const docker = await safeRun(
+			commandRunner,
+			dockerBinary,
+			["--version"],
+			commandCwd,
+		);
+		checks.push(
+			docker.code === 0
+				? {
+						name: "Docker binary",
+						status: "pass",
+						message: `${dockerBinary} is available`,
+					}
+				: {
+						name: "Docker binary",
+						status: "fail",
+						message: formatMissingDockerMessage(dockerBinary, docker),
 					},
 		);
 	}
