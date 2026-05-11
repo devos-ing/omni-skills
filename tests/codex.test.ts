@@ -4,6 +4,7 @@ import {
 	extractSessionId,
 	extractUsage,
 } from "../src/agent-adapters/codex";
+import { buildCodexRuntimeInvocation } from "../src/agent-adapters/codex-docker";
 import type { ResolvedProjectConfig } from "../src/core/types";
 
 const config: ResolvedProjectConfig = {
@@ -205,5 +206,107 @@ describe("codex adapter", () => {
 		expect(defaultTier).toBeGreaterThan(fastTier);
 		expect(fastModeTrue).toBeGreaterThanOrEqual(0);
 		expect(fastModeFalse).toBeGreaterThan(fastModeTrue);
+	});
+
+	it("builds non-docker invocation by default", () => {
+		const invocation = buildCodexRuntimeInvocation(config, [
+			"exec",
+			"--cd",
+			"/tmp/work/repo",
+			"--output-last-message",
+			"/tmp/work/.piv-loop/tmp/out.txt",
+			"prompt",
+		]);
+		expect(invocation.command).toBe("codex");
+		expect(invocation.cwd).toBe("/tmp/work/repo");
+		expect(invocation.hostOutputFile).toBe("/tmp/work/.piv-loop/tmp/out.txt");
+		expect(invocation.env).toEqual({ CODEX_HOME: "/tmp/codex" });
+	});
+
+	it("wraps codex exec args in docker when enabled", () => {
+		const invocation = buildCodexRuntimeInvocation(
+			{
+				...config,
+				codex: {
+					...config.codex,
+					docker: {
+						enabled: true,
+						image: "codex:latest",
+					},
+				},
+			},
+			[
+				"exec",
+				"--cd",
+				"/tmp/work/repo",
+				"--output-last-message",
+				"/tmp/work/.piv-loop/tmp/out.txt",
+				"prompt",
+			],
+		);
+		expect(invocation.command).toBe("docker");
+		expect(invocation.args).toContain("run");
+		expect(invocation.args).toContain("codex:latest");
+		expect(invocation.args).toContain("codex");
+		expect(invocation.args).toContain("/workspace/repo");
+		expect(invocation.args).toContain("/workspace/.piv-loop/tmp/out.txt");
+		expect(invocation.args).toContain("-w");
+		expect(invocation.args).toContain("/workspace/repo");
+		expect(invocation.args).toContain("CODEX_HOME=/codex-home");
+	});
+
+	it("adds explicit execution volume when execution path is outside workspace", () => {
+		const invocation = buildCodexRuntimeInvocation(
+			{
+				...config,
+				workspacePath: "/tmp/state",
+				executionPath: "/tmp/repo",
+				codex: {
+					...config.codex,
+					docker: {
+						enabled: true,
+						image: "codex:latest",
+					},
+				},
+			},
+			[
+				"exec",
+				"--cd",
+				"/tmp/repo",
+				"--output-last-message",
+				"/tmp/state/.piv-loop/tmp/out.txt",
+				"prompt",
+			],
+		);
+		expect(invocation.args).toContain("/tmp/state:/workspace");
+		expect(invocation.args).toContain("/tmp/repo:/workspace/repo");
+		expect(invocation.args).toContain("/workspace/.piv-loop/tmp/out.txt");
+	});
+
+	it("supports resume args by setting docker working directory", () => {
+		const invocation = buildCodexRuntimeInvocation(
+			{
+				...config,
+				codex: {
+					...config.codex,
+					docker: {
+						enabled: true,
+						image: "codex:latest",
+					},
+				},
+			},
+			[
+				"exec",
+				"resume",
+				"--output-last-message",
+				"/tmp/work/.piv-loop/tmp/out.txt",
+				"session-1",
+				"prompt",
+			],
+		);
+		const workdirIndex = invocation.args.indexOf("-w");
+		expect(workdirIndex).toBeGreaterThanOrEqual(0);
+		expect(invocation.args[workdirIndex + 1]).toBe("/workspace/repo");
+		expect(invocation.args).toContain("/workspace/.piv-loop/tmp/out.txt");
 	});
 });

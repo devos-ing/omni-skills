@@ -31,6 +31,12 @@ const envKeys = [
 	"CODEX_MODEL_PLAN",
 	"CODEX_MODEL_IMPLEMENT",
 	"CODEX_MODEL_REVIEW_TEST",
+	"CODEX_DOCKER_ENABLED",
+	"CODEX_DOCKER_IMAGE",
+	"CODEX_DOCKER_BINARY",
+	"CODEX_DOCKER_WORKSPACE_PATH",
+	"CODEX_DOCKER_EXECUTION_PATH",
+	"CODEX_DOCKER_CODEX_HOME_PATH",
 	"PIV_DEV_MODE",
 	"PIV_PRINT_CODEX_LOGS",
 	"PIV_POLL_INTERVAL_MS",
@@ -65,6 +71,12 @@ describe("loadConfig", () => {
 								key === "CODEX_FAST_MODE_PLAN" ||
 								key === "CODEX_FAST_MODE_IMPLEMENT" ||
 								key === "CODEX_FAST_MODE_REVIEW_TEST" ||
+								key === "CODEX_DOCKER_ENABLED" ||
+								key === "CODEX_DOCKER_IMAGE" ||
+								key === "CODEX_DOCKER_BINARY" ||
+								key === "CODEX_DOCKER_WORKSPACE_PATH" ||
+								key === "CODEX_DOCKER_EXECUTION_PATH" ||
+								key === "CODEX_DOCKER_CODEX_HOME_PATH" ||
 								key === "CLAUDE_CODE_MODEL" ||
 								key === "CLAUDE_CODE_ALLOWED_TOOLS"
 							? ""
@@ -552,6 +564,64 @@ describe("loadConfig", () => {
 			expect(config.projects[0]?.codex.models?.implement).toBe("gpt-5.3-codex");
 			expect(config.projects[0]?.codex.models?.reviewTest).toBe(
 				"gpt-5.3-codex",
+			);
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("loads codex docker settings from env", async () => {
+		process.env.CODEX_DOCKER_ENABLED = "true";
+		process.env.CODEX_DOCKER_IMAGE = "codex:latest";
+		process.env.CODEX_DOCKER_BINARY = "docker";
+		process.env.CODEX_DOCKER_WORKSPACE_PATH = "/container/state";
+		process.env.CODEX_DOCKER_EXECUTION_PATH = "/container/repo";
+		process.env.CODEX_DOCKER_CODEX_HOME_PATH = "/container/codex-home";
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			["export default { projects: [{ id: 'default' }] };", ""].join("\n"),
+		);
+
+		try {
+			const loaded = await loadConfig(tempDir);
+			expect(loaded.projects[0]?.codex.docker).toEqual({
+				enabled: true,
+				image: "codex:latest",
+				binary: "docker",
+				workspacePath: "/container/state",
+				executionPath: "/container/repo",
+				codexHomePath: "/container/codex-home",
+			});
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects enabled codex docker config without an image", async () => {
+		process.env.CODEX_DOCKER_ENABLED = "";
+		process.env.CODEX_DOCKER_IMAGE = "";
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "adhd-ai.config.ts"),
+			[
+				"export default {",
+				"  codex: {",
+				"    docker: { enabled: true }",
+				"  },",
+				"  projects: [{ id: 'default' }]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			await expect(loadConfig(tempDir)).rejects.toThrow(
+				"Codex Docker image is required",
 			);
 		} finally {
 			await rm(tempDir, { recursive: true, force: true });

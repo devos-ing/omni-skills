@@ -86,6 +86,11 @@ function validateProject(project: ResolvedProjectConfig): void {
 	if (!project.executionPath) {
 		throw new Error(`Execution path is required for project '${project.id}'`);
 	}
+	if (project.codex.docker?.enabled && !project.codex.docker.image) {
+		throw new Error(
+			`Codex Docker image is required for project '${project.id}' when codex.docker.enabled is true`,
+		);
+	}
 	const requiredStateIds = Object.entries(project.linear.statusMap).filter(
 		([, value]) => !value,
 	);

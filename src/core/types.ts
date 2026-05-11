@@ -96,6 +96,14 @@ export interface ProjectRuntimeConfig {
 		configOverrides?: Record<string, string>;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
 		codexHome?: string;
+		docker?: {
+			enabled?: boolean;
+			image?: string;
+			binary?: string;
+			workspacePath?: string;
+			executionPath?: string;
+			codexHomePath?: string;
+		};
 	};
 	agent?: {
 		backend?: "codex" | "claude-code";

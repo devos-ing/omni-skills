@@ -118,6 +118,17 @@ export function buildEnvBase(
 			},
 			sandbox,
 			codexHome,
+			docker: {
+				enabled: normalizeBooleanEnvValue(
+					env.CODEX_DOCKER_ENABLED,
+					"CODEX_DOCKER_ENABLED",
+				),
+				image: normalizeOptionalValue(env.CODEX_DOCKER_IMAGE),
+				binary: normalizeOptionalValue(env.CODEX_DOCKER_BINARY),
+				workspacePath: normalizeOptionalValue(env.CODEX_DOCKER_WORKSPACE_PATH),
+				executionPath: normalizeOptionalValue(env.CODEX_DOCKER_EXECUTION_PATH),
+				codexHomePath: normalizeOptionalValue(env.CODEX_DOCKER_CODEX_HOME_PATH),
+			},
 		},
 		skills: {
 			root: path.join(cwd, "skills"),
