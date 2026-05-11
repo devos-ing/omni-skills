@@ -78,6 +78,7 @@ After linking/installing the package bin, you can also use `adhd-ai ...` directl
 - Local overrides (gitignored): `adhd-ai.local.config.ts`.
 - Legacy `piv-loop.config.ts` is still supported.
 - Guided setup stores local secrets in `.piv-loop/config/env.sqlite` (and writes `.env` for compatibility).
+- Docker-isolated Codex execution status and caveats (ROY-95): [docs/RELIABILITY.md#docker-isolated-codex-execution](docs/RELIABILITY.md#docker-isolated-codex-execution)
 
 For full config shape, polling, automations/cron compatibility, env vars, and routing behavior, use:
 
