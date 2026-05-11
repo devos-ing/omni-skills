@@ -39,8 +39,14 @@ bun run src/index.ts run --project <PROJECT_ID> --poll
 # unattended scheduled mode
 bun run src/index.ts cron
 
+# run the first enabled automation job once now
+bun run cron:once
+
 # run the hourly PR review job
 bun run review:hourly
+
+# run the hourly PR review job once now
+bun run review:hourly:once
 
 # bump version, run quality gates, and publish
 bun run publish:version -- patch

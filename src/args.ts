@@ -25,7 +25,7 @@ export type SkillsCommand =
 
 export type CliCommand =
 	| { kind: "run"; options: RunOptions }
-	| { kind: "cron"; jobId?: string }
+	| { kind: "cron"; jobId?: string; once?: boolean }
 	| { kind: "status"; issueKey: string; projectId: string }
 	| { kind: "projects" }
 	| { kind: "skills"; command: SkillsCommand }
@@ -76,7 +76,8 @@ export function parseArgs(argv: string[]): CliCommand {
 	if (command === "cron") {
 		const args = rest.slice(1);
 		const jobId = readFlagValue(args, "--job");
-		return { kind: "cron", jobId };
+		const once = args.includes("--once");
+		return { kind: "cron", jobId, ...(once ? { once } : {}) };
 	}
 
 	if (command === "setup") {

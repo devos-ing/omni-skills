@@ -39,6 +39,7 @@ export default {
 Run it manually with:
 
 1. `bun run review:hourly`
+2. `bun run review:hourly:once`
 
 Per-issue leases still prevent duplicate workers from processing the same issue concurrently.
 

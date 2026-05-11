@@ -20,6 +20,8 @@
 		"lint": "biome lint .",
 		"check": "biome check .",
 		"check:write": "biome check --write .",
+		"cron:once": "bun run ./src/index.ts cron --once",
+		"review:hourly:once": "bun run ./src/index.ts cron --once --job hourly-pr-review",
 		"prepare:publish": "bun run check && bun run typecheck && bun test && bun run build && npm pack --dry-run --ignore-scripts",
 		"prepare": "husky"
 	},

@@ -4,7 +4,7 @@ import { getProjectById } from "../core/config";
 import { runSetupCheck, runSetupWizard } from "../core/setup";
 import { loadRunState, normalizeIssueKey } from "../core/state";
 import { runWorkflow } from "../core/workflow";
-import { runCronScheduler } from "../services/cron";
+import { runCronJobOnce, runCronScheduler } from "../services/cron";
 import {
 	addSkill,
 	listSkills,
@@ -37,6 +37,10 @@ export async function handleCommand(
 	}
 
 	if (command.kind === "cron") {
+		if (command.once) {
+			await runCronJobOnce(config, { jobId: command.jobId });
+			return;
+		}
 		await runCronScheduler(config, { jobId: command.jobId });
 		return;
 	}
@@ -144,7 +148,7 @@ export function printHelp(): void {
 			"Commands:",
 			"  adhd-ai run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle] [--poll-interval-ms <MS>] [--max-poll-cycles <N>]",
 			"  adhd-ai run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
-			"  adhd-ai cron [--job <JOB_ID>]",
+			"  adhd-ai cron [--once] [--job <JOB_ID>]",
 			"  adhd-ai status --project <PROJECT_ID> --issue <LINEAR_KEY>",
 			"  adhd-ai projects",
 			"  adhd-ai skills list [--project <PROJECT_ID>]",

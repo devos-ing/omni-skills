@@ -1,4 +1,3 @@
-import path from "node:path";
 import type { LoadedConfig } from "../core/config";
 import type {
 	CronJobConfig,
@@ -8,6 +7,9 @@ import type {
 } from "../core/types";
 import { runWorkflow, sleep } from "../core/workflow";
 import { logger, normalizeError } from "../utils/logger";
+import { applyCronJobSkillOverrides, selectCronJobs } from "./cron-jobs";
+
+export { runCronJobOnce, selectCronJobs } from "./cron-jobs";
 
 const SCHEDULER_MIN_SLEEP_MS = 250;
 const SCHEDULER_MAX_SLEEP_MS = 60000;
@@ -136,73 +138,6 @@ export async function runCronSchedulerCycle(
 				logger.info({ jobId: job.id }, "Automation job run finished");
 			});
 	}
-}
-
-export function selectCronJobs(
-	config: LoadedConfig,
-	jobId: string | undefined,
-): CronJobConfig[] {
-	const jobs = (config.automations?.jobs ?? config.cron.jobs).filter(
-		(job) => job.enabled !== false,
-	);
-	if (!jobId) {
-		return jobs;
-	}
-	const selected = jobs.find((job) => job.id === jobId);
-	if (!selected) {
-		throw new Error(`Automation job '${jobId}' not found or disabled`);
-	}
-	return [selected];
-}
-
-function applyCronJobSkillOverrides(
-	config: LoadedConfig,
-	job: CronJobConfig,
-): LoadedConfig {
-	const overrides = job.skills;
-	if (!overrides) {
-		return config;
-	}
-
-	const projects = config.projects.map((project) => ({
-		...project,
-		skills: {
-			...project.skills,
-			plan: resolveJobSkillPath(
-				project.skills.root,
-				overrides.plan,
-				project.skills.plan,
-			),
-			implement: resolveJobSkillPath(
-				project.skills.root,
-				overrides.implement,
-				project.skills.implement,
-			),
-			reviewTest: resolveJobSkillPath(
-				project.skills.root,
-				overrides.reviewTest,
-				project.skills.reviewTest,
-			),
-		},
-	}));
-
-	return {
-		...config,
-		projects,
-	};
-}
-
-function resolveJobSkillPath(
-	skillsRoot: string,
-	overridePath: string | undefined,
-	fallbackPath: string,
-): string {
-	if (!overridePath) {
-		return fallbackPath;
-	}
-	return path.isAbsolute(overridePath)
-		? overridePath
-		: path.resolve(skillsRoot, overridePath);
 }
 
 export function computeNextCronRunAt(
