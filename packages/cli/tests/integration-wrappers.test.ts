@@ -3,7 +3,7 @@ import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../src/core/types";
+} from "../src/features/types";
 import {
 	safeLinearComment,
 	safeLinearMoveToCanceled,

@@ -1,4 +1,4 @@
-import type { ResolvedProjectConfig } from "../../core/types";
+import type { ResolvedProjectConfig } from "../../features/types";
 import { getClaudeBinaryPath } from "../../utils/claude-path";
 import { logger, normalizeError } from "../../utils/logger";
 import { assertCommandOk, runCommand } from "../../utils/shell";

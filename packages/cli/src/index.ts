@@ -5,7 +5,7 @@ import {
 	handleSetupCommand,
 	printHelp,
 } from "./commands/handlers";
-import { loadConfig } from "./core/config";
+import { loadConfig } from "./features/config";
 import {
 	logger,
 	normalizeError,

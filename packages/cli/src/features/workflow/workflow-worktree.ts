@@ -3,7 +3,7 @@ import type {
 	ResolvedProjectConfig,
 	RunOptions,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import { logger } from "../../utils/logger";
 import { normalizeIssueKey } from "./state";
 import type { WorkflowRuntime } from "./workflow-runtime";

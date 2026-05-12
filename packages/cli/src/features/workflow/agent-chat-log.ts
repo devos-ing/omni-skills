@@ -2,7 +2,7 @@ import type {
 	AgentChatLogEntry,
 	AgentChatLogRole,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentResult } from "../../integrations/agent-adapters";
 import { logger, normalizeError } from "../../utils/logger";
 import { appendAgentChatLog } from "./state";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/core/types";
+import type { ResolvedProjectConfig } from "../src/features/types";
 import { ClaudeCodeAdapter } from "../src/integrations/agent-adapters/claude-code";
 import { CodexAdapter } from "../src/integrations/agent-adapters/codex";
 import {

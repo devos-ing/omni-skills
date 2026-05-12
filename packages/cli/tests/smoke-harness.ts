@@ -1,13 +1,13 @@
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { LoadedConfig } from "../src/core/config";
+import type { LoadedConfig } from "../src/features/config";
 import type {
 	LinearIssue,
 	ResolvedProjectConfig,
 	RunOptions,
 	RunState,
-} from "../src/core/types";
+} from "../src/features/types";
 import { loadRunState, saveRunState } from "../src/features/workflow/state";
 import {
 	type WorkflowLinearClient,

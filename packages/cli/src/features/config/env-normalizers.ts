@@ -1,7 +1,7 @@
 import type {
 	CodexReasoningEffort,
 	ResolvedProjectConfig,
-} from "../../core/types";
+} from "../../features/types";
 
 export function parseOptionalPositiveInt(
 	value: string | undefined,

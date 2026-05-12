@@ -1,4 +1,4 @@
-import type { BugRecord, SplitTaskRef } from "../core/types";
+import type { BugRecord, SplitTaskRef } from "../features/types";
 
 export interface TokenUsage {
 	inputTokens?: number;

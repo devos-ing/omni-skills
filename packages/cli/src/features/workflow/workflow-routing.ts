@@ -1,4 +1,4 @@
-import type { ResolvedProjectConfig } from "../../core/types";
+import type { ResolvedProjectConfig } from "../../features/types";
 import type { IssueProjectRoutingResult } from "./workflow.types";
 
 export function routeProjectsForIssueProjectId(

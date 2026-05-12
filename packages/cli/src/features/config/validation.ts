@@ -6,7 +6,7 @@ import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunOptions,
-} from "../../core/types";
+} from "../../features/types";
 
 export function validateProjects(projects: ResolvedProjectConfig[]): void {
 	if (projects.length === 0) {

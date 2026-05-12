@@ -3,7 +3,7 @@ import type {
 	ResolvedNotificationEmailConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import type { RemoveWorktreeResult } from "../../integrations/github";
 import type { LinearClient } from "../../integrations/linear";

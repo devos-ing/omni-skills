@@ -1,4 +1,4 @@
-import { type LoadedConfig, getProjectById } from "../../core/config";
+import { type LoadedConfig, getProjectById } from "../../features/config";
 import { logger, normalizeError } from "../../utils/logger";
 import { runAgentWithChatLog } from "./agent-chat-log";
 import {
@@ -81,7 +81,7 @@ import type {
 	ResolvedProjectConfig,
 	RunOptions,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { sortIssuesByPriority } from "../../integrations/linear";
 export type {

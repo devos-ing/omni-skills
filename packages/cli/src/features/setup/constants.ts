@@ -1,4 +1,4 @@
-import type { CodexReasoningEffort } from "../../core/types";
+import type { CodexReasoningEffort } from "../../features/types";
 import type { SetupDraft } from "./setup.types";
 
 export const ENV_FILE = ".env";

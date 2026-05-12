@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
-import type { IssueRef, ResolvedProjectConfig } from "../../core/types";
+import type { IssueRef, ResolvedProjectConfig } from "../../features/types";
 import {
 	clampText,
 	collectSkillFiles,

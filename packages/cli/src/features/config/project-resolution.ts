@@ -4,7 +4,7 @@ import type {
 	ProjectConfig,
 	ProjectRuntimeConfig,
 	ResolvedProjectConfig,
-} from "../../core/types";
+} from "../../features/types";
 import { resolveSkillsConfig } from "./skills-resolution";
 
 export function resolveProjects(

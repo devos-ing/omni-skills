@@ -3,7 +3,7 @@ import type {
 	PollingConfig,
 	ProjectRuntimeConfig,
 	ResolvedNotificationConfig,
-} from "../../core/types";
+} from "../../features/types";
 import { AUTO_SELECT_SKILLS_DB_FILE, SQLITE_ENV_DIR } from "./constants";
 import {
 	normalizeAgentBackend,

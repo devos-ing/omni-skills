@@ -1,4 +1,4 @@
-import type { ResolvedProjectConfig, RunState } from "../../core/types";
+import type { ResolvedProjectConfig, RunState } from "../../features/types";
 import { markPrReadyForReview } from "../../integrations/github";
 import type { ReviewOutcome } from "./review";
 

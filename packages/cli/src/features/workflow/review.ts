@@ -1,4 +1,4 @@
-import type { BugRecord } from "../../core/types";
+import type { BugRecord } from "../../features/types";
 
 export interface ReviewOutcome {
 	passed: boolean;

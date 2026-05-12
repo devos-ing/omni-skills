@@ -9,7 +9,7 @@ project-agnostic across all configured workspaces.
 1. Keep CLI parsing and dispatch in `packages/cli/src/args.ts`,
    `packages/cli/src/index.ts`, and command handlers.
 2. Resolve env vars and config only through CLI config modules. Preserve
-   `packages/cli/src/core/config.ts` as the canonical runtime config entry.
+   `packages/cli/src/features/config/index.ts` as the canonical runtime config entry.
 3. Keep stage transitions, sequencing, retries, and orchestration in
    `packages/cli/src/features/workflow/`.
 4. Keep run-state path logic in `packages/cli/src/features/workflow/state.ts`

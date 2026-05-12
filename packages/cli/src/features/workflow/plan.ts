@@ -4,7 +4,7 @@ import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { buildPlanComment, buildPlanSplitComment } from "../../utils/comments";
 import { selectPlanningSupplementalSkills } from "../skills/catalog";

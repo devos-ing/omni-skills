@@ -7,7 +7,7 @@ import type {
 	PollingConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../src/core/types";
+} from "../src/features/types";
 import { handlePlanningStage } from "../src/features/workflow/plan";
 import {
 	agentChatLogPath,

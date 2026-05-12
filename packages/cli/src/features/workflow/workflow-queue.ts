@@ -3,7 +3,7 @@ import type {
 	RunOptions,
 	RunState,
 	WorkflowStage,
-} from "../../core/types";
+} from "../../features/types";
 import { normalizeIssueKey } from "./state";
 import type {
 	ReviewOnlyQueueBuildResult,

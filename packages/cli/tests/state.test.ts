@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { RunState } from "../src/core/types";
+import type { RunState } from "../src/features/types";
 import {
 	AGENT_CHAT_LOG_RETENTION,
 	agentChatLogPath,

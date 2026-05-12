@@ -3,7 +3,7 @@ import path from "node:path";
 import type {
 	CodexReasoningEffort,
 	ResolvedProjectConfig,
-} from "../../core/types";
+} from "../../features/types";
 import { assertCommandOk, runCommand } from "../../utils/shell";
 import { buildCodexRuntimeInvocation } from "./codex-docker";
 import type { AgentAdapter, AgentResult } from "./index";

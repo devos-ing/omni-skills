@@ -1,7 +1,7 @@
 import type { CliCommand } from "../../args";
-import type { LoadedConfig } from "../../core/config";
-import { getProjectById } from "../../core/config";
-import { runSetupCheck, runSetupWizard } from "../../core/setup";
+import type { LoadedConfig } from "../../features/config";
+import { getProjectById } from "../../features/config";
+import { runSetupCheck, runSetupWizard } from "../../features/setup";
 import { createAgentAdapter } from "../../integrations/agent-adapters";
 import { runCronJobOnce, runCronScheduler } from "../../integrations/cron";
 import { LinearClient } from "../../integrations/linear";

@@ -3,7 +3,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { IssueRef } from "../src/core/types";
+import type { IssueRef } from "../src/features/types";
 import {
 	loadDatabaseSkillCandidates,
 	loadFolderSkillCandidates,

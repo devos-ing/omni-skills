@@ -3,7 +3,7 @@ import type {
 	BugRecord,
 	PullRequestRef,
 	ResolvedProjectConfig,
-} from "../../core/types";
+} from "../../features/types";
 import { assertCommandOk, runCommand } from "../../utils/shell";
 import type {
 	GithubCommandDeps,

@@ -2,7 +2,11 @@ import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { loadConfig, saveSqliteEnv, sqliteEnvDbPath } from "../src/core/config";
+import {
+	loadConfig,
+	saveSqliteEnv,
+	sqliteEnvDbPath,
+} from "../src/features/config";
 
 const envKeys = [
 	"LINEAR_API_KEY",

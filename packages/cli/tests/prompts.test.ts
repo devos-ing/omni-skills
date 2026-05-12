@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { IssueRef, PullRequestRef } from "../src/core/types";
+import type { IssueRef, PullRequestRef } from "../src/features/types";
 import {
 	buildGithubCommentPrompt,
 	buildImplementPrompt,

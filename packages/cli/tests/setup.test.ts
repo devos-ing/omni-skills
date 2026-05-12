@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import type { LoadedConfig } from "../src/core/config";
-import { loadSqliteEnv } from "../src/core/config";
+import type { LoadedConfig } from "../src/features/config";
+import { loadSqliteEnv } from "../src/features/config";
 import {
 	DEFAULT_LABEL_MAP,
 	DEFAULT_REASONING_EFFORTS,
@@ -18,7 +18,7 @@ import {
 	renderSetupGitHubInstallPrompt,
 	renderSetupRtkInstallPrompt,
 	writeSetupFiles,
-} from "../src/core/setup";
+} from "../src/features/setup";
 import type { CommandResult } from "../src/utils/shell";
 
 const draft: SetupDraft = {

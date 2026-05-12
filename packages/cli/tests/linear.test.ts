@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { LinearIssue } from "../src/core/types";
-import type { ResolvedProjectConfig } from "../src/core/types";
+import type { LinearIssue, ResolvedProjectConfig } from "../src/features/types";
 import {
 	LinearClient,
 	buildBacklogTaskIssueInput,

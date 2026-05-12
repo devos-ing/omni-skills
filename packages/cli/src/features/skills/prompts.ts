@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { BugRecord, IssueRef, PullRequestRef } from "../../core/types";
+import type { BugRecord, IssueRef, PullRequestRef } from "../../features/types";
 import type { PlanPromptOptions, ReviewPromptOptions } from "./prompt-types";
 
 async function loadSkillText(filePath: string): Promise<string> {

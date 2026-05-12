@@ -1,4 +1,4 @@
-import type { CodexReasoningEffort } from "../../core/types";
+import type { CodexReasoningEffort } from "../../features/types";
 import type { CommandResult } from "../../utils/shell";
 import type { LoadedConfig } from "../config";
 

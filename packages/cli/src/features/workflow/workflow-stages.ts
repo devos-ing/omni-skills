@@ -3,7 +3,7 @@ import type {
 	ResolvedProjectConfig,
 	RunState,
 	WorkflowStage,
-} from "../../core/types";
+} from "../../features/types";
 import { shouldSquashMergePullRequestForComplexityScore } from "./plan";
 import type { WorkflowLinearClient, WorkflowRuntime } from "./workflow-runtime";
 import type { WorkflowIssue } from "./workflow.types";

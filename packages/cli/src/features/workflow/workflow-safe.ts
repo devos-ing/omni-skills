@@ -2,7 +2,7 @@ import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import { logger, normalizeError } from "../../utils/logger";
 import type { WorkflowLinearClient, WorkflowRuntime } from "./workflow-runtime";
 import { createWorkflowRuntime } from "./workflow-runtime";

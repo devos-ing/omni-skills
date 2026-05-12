@@ -2,7 +2,7 @@ import type {
 	ResolvedProjectConfig,
 	RunState,
 	WorkflowStage,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { issueBranchName } from "../../integrations/github";
 import { buildFixPrompt, buildImplementPrompt } from "../../skills/prompts";

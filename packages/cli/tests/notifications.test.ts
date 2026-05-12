@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import type { RunState } from "../src/core/types";
+import type { RunState } from "../src/features/types";
 import {
 	buildHumanReviewRequiredEmailPayload,
 	buildTaskOutcomeEmailPayload,

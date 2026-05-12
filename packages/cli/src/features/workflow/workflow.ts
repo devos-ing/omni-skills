@@ -1,4 +1,4 @@
-import { type LoadedConfig, getProjectById } from "../../core/config";
+import { type LoadedConfig, getProjectById } from "../../features/config";
 import { buildFixPrompt, buildImplementPrompt } from "../../skills/prompts";
 import { buildImplementationComment } from "../../utils/comments";
 import { logger, normalizeError } from "../../utils/logger";
@@ -61,7 +61,7 @@ import type {
 	RunOptions,
 	RunState,
 	WorkflowStage,
-} from "../../core/types";
+} from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { issueBranchName } from "../../integrations/github";
 import { sortIssuesByPriority } from "../../integrations/linear";

@@ -4,7 +4,7 @@ import type {
 	PlannedSplitTask,
 	ResolvedProjectConfig,
 	WorkflowStage,
-} from "../../core/types";
+} from "../../features/types";
 import { normalizeIssueKey } from "../../features/workflow/state";
 import type {
 	BacklogTaskInput,

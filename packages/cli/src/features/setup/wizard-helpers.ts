@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type readline from "node:readline/promises";
-import type { CodexReasoningEffort } from "../../core/types";
+import type { CodexReasoningEffort } from "../../features/types";
 import { runCommand } from "../../utils/shell";
 import { safeRun } from "./checks-helpers";
 import { DEFAULT_BASE_BRANCH } from "./constants";

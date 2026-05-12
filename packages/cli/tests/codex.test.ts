@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/core/types";
+import type { ResolvedProjectConfig } from "../src/features/types";
 import {
 	CodexAdapter,
 	extractSessionId,

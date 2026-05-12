@@ -1,4 +1,4 @@
-import type { ResolvedProjectConfig } from "../../core/types";
+import type { ResolvedProjectConfig } from "../../features/types";
 import type { AgentAdapter, AgentBackend } from "./types";
 export type { AgentAdapter, AgentBackend, AgentResult } from "./types";
 

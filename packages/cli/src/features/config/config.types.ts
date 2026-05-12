@@ -1,4 +1,7 @@
-import type { PollingConfig, ResolvedProjectConfig } from "../../core/types";
+import type {
+	PollingConfig,
+	ResolvedProjectConfig,
+} from "../../features/types";
 import type { resolveAutomations } from "./cron-resolution";
 import type { resolveNotifications } from "./notification-resolution";
 

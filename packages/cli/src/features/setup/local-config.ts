@@ -41,7 +41,7 @@ export function renderLocalConfig(draft: SetupDraft): string {
 	};
 
 	return [
-		'import type { AdhdAiRootConfig, DeepPartial } from "./packages/cli/src/core/types";',
+		'import type { AdhdAiRootConfig, DeepPartial } from "./packages/cli/src/features/types";',
 		"",
 		"const cwd = process.cwd();",
 		"",

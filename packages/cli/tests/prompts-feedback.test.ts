@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import path from "node:path";
-import type { IssueRef, PullRequestRef } from "../src/core/types";
+import type { IssueRef, PullRequestRef } from "../src/features/types";
 import { buildFixPrompt, buildReviewPrompt } from "../src/skills/prompts";
 
 const issue: IssueRef = {

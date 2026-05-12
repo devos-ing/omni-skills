@@ -6,7 +6,7 @@ import {
 	writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import type { RunState, WorkflowStage } from "../../core/types";
+import type { RunState, WorkflowStage } from "../../features/types";
 export {
 	AGENT_CHAT_LOG_RETENTION,
 	agentChatLogPath,

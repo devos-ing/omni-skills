@@ -2,7 +2,7 @@ import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
-} from "../../core/types";
+} from "../../features/types";
 import { commentOnPr, squashMergePullRequest } from "../../integrations/github";
 import type { LinearClient } from "../../integrations/linear";
 import {

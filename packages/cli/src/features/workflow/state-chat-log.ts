@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { AgentChatLogEntry } from "../../core/types";
+import type { AgentChatLogEntry } from "../../features/types";
 
 const STATE_ROOT_DIR = path.join(".piv-loop", "projects");
 const CHAT_LOGS_DIR = "chat-logs";

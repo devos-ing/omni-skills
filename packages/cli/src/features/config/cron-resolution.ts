@@ -5,7 +5,7 @@ import type {
 	CronScheduleDayOfWeek,
 	DeepPartial,
 	RunOptions,
-} from "../../core/types";
+} from "../../features/types";
 import {
 	normalizeCronRunBoolean,
 	parseOptionalPositiveIntStrict,

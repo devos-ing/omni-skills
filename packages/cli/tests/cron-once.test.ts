@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { LoadedConfig } from "../src/core/config";
-import type { CronJobConfig } from "../src/core/types";
+import type { LoadedConfig } from "../src/features/config";
+import type { CronJobConfig } from "../src/features/types";
 import { runCronJobOnce } from "../src/integrations/cron";
 
 describe("runCronJobOnce", () => {
