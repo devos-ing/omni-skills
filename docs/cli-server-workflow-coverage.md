@@ -121,18 +121,54 @@ Current web app scaffold:
 - `packages/web/src/app/page.tsx`
 
 No workflow API integration is wired in the UI yet. For ROY-144 execution
-control from web, use the following target contracts:
+control from web, use the following target contracts.
 
-1. Read-only monitoring/data views:
-   use existing GET routes:
-   `/api/token-usage`, `/api/jobs`, `/api/agents`, `/api/skills`,
-   `/api/command-history`.
-2. Workflow control actions:
-   add server routes that accept the CLI executor request contract for:
-   `run`, `status`, and `projects`.
-3. Additional CLI command coverage:
-   expand executor contract and route handling only when ROY-144 scope
-   explicitly requires `cron`, `setup`, `skills`, or `task` controls.
+Read-only monitoring/data views:
+
+- `GET /api/token-usage` -> `TokenUsageRecord[]`
+- `GET /api/jobs` -> `JobRecord[]`
+- `GET /api/agents` -> `AgentRecord[]`
+- `GET /api/skills` -> `SkillRecord[]`
+- `GET /api/command-history` -> `CommandHistoryRecord[]`
+
+Workflow control capability mappings (intended server contract):
+
+1. Start or poll workflow runs (`run` capability):
+   - Route: `POST /api/workflow/run`
+   - Request body: `RunActionRequest`
+     (`{ action: "run", projectId?, issueKey?, allProjects?, poll?, noExitWhenIdle?, concurrency?, pollIntervalMs?, maxPollCycles?, isolatedWorktrees? }`)
+   - Runtime handling: pass request body to `CliCommandExecutor.execute()`
+   - Response: `CliCommandExecutionResult`
+     (`{ status, request, invocation?, commandResult?, error? }`)
+2. Query a specific run state (`status` capability):
+   - Route: `POST /api/workflow/status`
+   - Request body: `StatusActionRequest`
+     (`{ action: "status", projectId, issueKey }`)
+   - Runtime handling: pass request body to `CliCommandExecutor.execute()`
+   - Response: `CliCommandExecutionResult`
+3. List configured projects (`projects` capability):
+   - Route: `POST /api/workflow/projects`
+   - Request body: `ProjectsActionRequest`
+     (`{ action: "projects" }`)
+   - Runtime handling: pass request body to `CliCommandExecutor.execute()`
+   - Response: `CliCommandExecutionResult`
+4. Command execution history for web UX polling/logs:
+   - Route: `GET /api/workflow/history`
+   - Request params: none
+   - Runtime handling: return `CliCommandExecutor.getHistory()`
+   - Response: `CliCommandExecutionHistoryEntry[]`
+
+Contract source files:
+
+- Request/response types:
+  `packages/cli/src/features/server/cli-command-executor.types.ts`
+- Command resolution/execution:
+  `packages/cli/src/features/server/cli-command-executor.ts`
+
+Additional CLI command coverage:
+
+- Expand executor contract and workflow routes only when ROY-144 scope
+  explicitly requires `cron`, `setup`, `skills`, or `task` controls.
 
 ## Missing Execution Paths (For ROY-144)
 
