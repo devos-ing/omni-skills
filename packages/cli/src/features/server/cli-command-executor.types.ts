@@ -1,0 +1,85 @@
+import type { CommandResult } from "../../utils/shell";
+
+export type SupportedCliAction = "run" | "status" | "projects";
+
+export interface RunActionRequest {
+	action: "run";
+	projectId?: string;
+	issueKey?: string;
+	allProjects?: boolean;
+	poll?: boolean;
+	noExitWhenIdle?: boolean;
+	concurrency?: number;
+	pollIntervalMs?: number;
+	maxPollCycles?: number;
+	isolatedWorktrees?: boolean;
+}
+
+export interface StatusActionRequest {
+	action: "status";
+	projectId: string;
+	issueKey: string;
+}
+
+export interface ProjectsActionRequest {
+	action: "projects";
+}
+
+export type SupportedCliCommandRequest =
+	| RunActionRequest
+	| StatusActionRequest
+	| ProjectsActionRequest;
+
+export type CliCommandRequest =
+	| SupportedCliCommandRequest
+	| {
+			action: string;
+			[key: string]: unknown;
+	  };
+
+export interface CliCommandInvocation {
+	command: string;
+	args: string[];
+}
+
+export interface CliCommandExecutionHistoryEntry {
+	requestedAt: string;
+	finishedAt: string;
+	request: CliCommandRequest;
+	status: "succeeded" | "failed" | "rejected";
+	command?: string;
+	args?: string[];
+	exitCode?: number;
+	stdout?: string;
+	stderr?: string;
+	error?: string;
+}
+
+export interface CliCommandExecutionResult {
+	status: "succeeded" | "failed" | "rejected";
+	request: CliCommandRequest;
+	invocation?: CliCommandInvocation;
+	commandResult?: CommandResult;
+	error?: string;
+}
+
+export type RunCommandFn = (
+	command: string,
+	args: string[],
+	options: {
+		cwd: string;
+		env?: NodeJS.ProcessEnv;
+		stdinMode?: "pipe" | "ignore" | "inherit";
+		streamStdout?: boolean;
+		streamStderr?: boolean;
+	},
+) => Promise<CommandResult>;
+
+export interface CliCommandExecutorOptions {
+	cwd: string;
+	command: string;
+	baseArgs: string[];
+	env?: NodeJS.ProcessEnv;
+	maxHistoryEntries?: number;
+	runCommandFn?: RunCommandFn;
+}
