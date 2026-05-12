@@ -5,6 +5,11 @@
 	"workspaces": ["packages/*"],
 	"scripts": {
 		"build": "bun run --filter adhdai build",
+		"build:server": "bun -e \"console.log('No server workspace package is present yet. Add the ROY-120 server package, then wire this script to its build command.')\"",
+		"build:web": "bun -e \"console.log('No web workspace package is present yet. Add the ROY-120 web package, then wire this script to its build command.')\"",
+		"dev:server": "bun -e \"console.log('No server workspace package is present yet. Add the ROY-120 server package, then wire this script to its dev command.')\"",
+		"dev:web": "bun -e \"console.log('No web workspace package is present yet. Add the ROY-120 web package, then wire this script to its dev command.')\"",
+		"dev": "bun -e \"console.log('Server/web workspace packages are not present in this branch yet. Use bun run start for the CLI.')\"",
 		"start": "bun run ./packages/cli/src/index.ts",
 		"smoke": "bun test packages/cli/tests/smoke-flow.test.ts",
 		"publish:version": "bun run --filter adhdai publish:version",

@@ -23,9 +23,20 @@ Use `bun run packages/cli/src/index.ts projects` to list available project IDs, 
 ## Common Commands
 
 ```bash
+# install dependencies
+bun install
+
 # setup and validation
 bun run packages/cli/src/index.ts setup
 bun run packages/cli/src/index.ts setup --check
+
+# local workspace startup/build shortcuts
+bun run dev:server
+bun run dev:web
+bun run dev
+bun run build:server
+bun run build:web
+bun run build
 
 # inspect configured projects
 bun run packages/cli/src/index.ts projects
@@ -68,6 +79,10 @@ bun run packages/cli/src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 After linking/installing the package bin, you can also use `adhd-ai ...` directly.
+
+## Local Server/Web Notes
+
+`dev:server`, `dev:web`, `dev`, `build:server`, and `build:web` are wired at the workspace level for ROY-120 local server/web flows. In this branch, only `packages/cli` exists, so these commands currently print a status message until server/web workspace packages are added.
 
 ## Workflow Summary
 
