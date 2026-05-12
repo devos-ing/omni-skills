@@ -1,6 +1,13 @@
 import type { CommandResult } from "../../utils/shell";
 
-export type SupportedCliAction = "run" | "status" | "projects";
+export type SupportedCliAction =
+	| "run"
+	| "status"
+	| "projects"
+	| "cron"
+	| "setup"
+	| "skills"
+	| "task";
 
 export interface RunActionRequest {
 	action: "run";
@@ -25,10 +32,70 @@ export interface ProjectsActionRequest {
 	action: "projects";
 }
 
+export interface CronActionRequest {
+	action: "cron";
+	jobId?: string;
+	once?: boolean;
+}
+
+export interface SetupActionRequest {
+	action: "setup";
+	check?: boolean;
+}
+
+export interface SkillsListActionRequest {
+	action: "skills";
+	skillsAction: "list";
+	projectId?: string;
+}
+
+export interface SkillsAddActionRequest {
+	action: "skills";
+	skillsAction: "add";
+	projectId?: string;
+	title: string;
+	description: string;
+	content: string;
+}
+
+export interface SkillsUpdateActionRequest {
+	action: "skills";
+	skillsAction: "update";
+	projectId?: string;
+	name: string;
+	title?: string;
+	description?: string;
+	content?: string;
+}
+
+export interface SkillsRemoveActionRequest {
+	action: "skills";
+	skillsAction: "remove";
+	projectId?: string;
+	name: string;
+}
+
+export type SkillsActionRequest =
+	| SkillsListActionRequest
+	| SkillsAddActionRequest
+	| SkillsUpdateActionRequest
+	| SkillsRemoveActionRequest;
+
+export interface TaskCreateActionRequest {
+	action: "task";
+	taskAction: "create";
+	projectId?: string;
+	request: string;
+}
+
 export type SupportedCliCommandRequest =
 	| RunActionRequest
 	| StatusActionRequest
-	| ProjectsActionRequest;
+	| ProjectsActionRequest
+	| CronActionRequest
+	| SetupActionRequest
+	| SkillsActionRequest
+	| TaskCreateActionRequest;
 
 export type CliCommandRequest =
 	| SupportedCliCommandRequest

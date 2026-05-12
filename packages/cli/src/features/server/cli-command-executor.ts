@@ -153,6 +153,50 @@ function resolveInvocation(
 			},
 		};
 	}
+	if (request.action === "cron") {
+		return {
+			status: "ok",
+			invocation: {
+				command,
+				args: [...baseArgs, ...buildCronArgs(request)],
+			},
+		};
+	}
+	if (request.action === "setup") {
+		return {
+			status: "ok",
+			invocation: {
+				command,
+				args: [...baseArgs, ...buildSetupArgs(request)],
+			},
+		};
+	}
+	if (request.action === "skills") {
+		const skillsResolution = resolveSkillsArgs(request);
+		if (skillsResolution.status !== "ok") {
+			return skillsResolution;
+		}
+		return {
+			status: "ok",
+			invocation: {
+				command,
+				args: [...baseArgs, ...skillsResolution.args],
+			},
+		};
+	}
+	if (request.action === "task") {
+		const taskResolution = resolveTaskArgs(request);
+		if (taskResolution.status !== "ok") {
+			return taskResolution;
+		}
+		return {
+			status: "ok",
+			invocation: {
+				command,
+				args: [...baseArgs, ...taskResolution.args],
+			},
+		};
+	}
 	return {
 		status: "error",
 		error: `Unsupported CLI action: ${request.action}`,
@@ -189,6 +233,142 @@ function buildStatusArgs(
 	];
 }
 
+function buildCronArgs(
+	request: Extract<SupportedCliCommandRequest, { action: "cron" }>,
+): string[] {
+	const args = ["cron"];
+	appendBooleanFlag(args, "--once", request.once);
+	appendFlag(args, "--job", request.jobId);
+	return args;
+}
+
+function buildSetupArgs(
+	request: Extract<SupportedCliCommandRequest, { action: "setup" }>,
+): string[] {
+	const args = ["setup"];
+	appendBooleanFlag(args, "--check", request.check);
+	return args;
+}
+
+function resolveSkillsArgs(
+	request: CliCommandRequest,
+): { status: "ok"; args: string[] } | { status: "error"; error: string } {
+	if (!isNonEmptyString(request.skillsAction)) {
+		return {
+			status: "error",
+			error: "Malformed skills request: skillsAction is required",
+		};
+	}
+
+	if (request.skillsAction === "list") {
+		const args = ["skills", "list"];
+		appendFlag(args, "--project", asOptionalString(request.projectId));
+		return { status: "ok", args };
+	}
+
+	if (request.skillsAction === "add") {
+		if (!isNonEmptyString(request.title)) {
+			return {
+				status: "error",
+				error: "Malformed skills add request: title is required",
+			};
+		}
+		if (!isNonEmptyString(request.description)) {
+			return {
+				status: "error",
+				error: "Malformed skills add request: description is required",
+			};
+		}
+		if (!isNonEmptyString(request.content)) {
+			return {
+				status: "error",
+				error: "Malformed skills add request: content is required",
+			};
+		}
+		const args = [
+			"skills",
+			"add",
+			"--title",
+			request.title,
+			"--description",
+			request.description,
+			"--content",
+			request.content,
+		];
+		appendFlag(args, "--project", asOptionalString(request.projectId));
+		return { status: "ok", args };
+	}
+
+	if (request.skillsAction === "update") {
+		if (!isNonEmptyString(request.name)) {
+			return {
+				status: "error",
+				error: "Malformed skills update request: name is required",
+			};
+		}
+		const args = ["skills", "update", request.name];
+		appendFlag(args, "--title", asOptionalString(request.title));
+		appendFlag(args, "--description", asOptionalString(request.description));
+		appendFlag(args, "--content", asOptionalString(request.content));
+		appendFlag(args, "--project", asOptionalString(request.projectId));
+		if (
+			!args.includes("--title") &&
+			!args.includes("--description") &&
+			!args.includes("--content")
+		) {
+			return {
+				status: "error",
+				error:
+					"Malformed skills update request: at least one of title, description, or content is required",
+			};
+		}
+		return { status: "ok", args };
+	}
+
+	if (request.skillsAction === "remove") {
+		if (!isNonEmptyString(request.name)) {
+			return {
+				status: "error",
+				error: "Malformed skills remove request: name is required",
+			};
+		}
+		const args = ["skills", "remove", request.name];
+		appendFlag(args, "--project", asOptionalString(request.projectId));
+		return { status: "ok", args };
+	}
+
+	return {
+		status: "error",
+		error: `Unsupported skills action: ${String(request.skillsAction)}`,
+	};
+}
+
+function resolveTaskArgs(
+	request: CliCommandRequest,
+): { status: "ok"; args: string[] } | { status: "error"; error: string } {
+	if (!isNonEmptyString(request.taskAction)) {
+		return {
+			status: "error",
+			error: "Malformed task request: taskAction is required",
+		};
+	}
+	if (request.taskAction !== "create") {
+		return {
+			status: "error",
+			error: `Unsupported task action: ${String(request.taskAction)}`,
+		};
+	}
+	if (!isNonEmptyString(request.request)) {
+		return {
+			status: "error",
+			error: "Malformed task create request: request is required",
+		};
+	}
+	const args = ["task", "create", "--request", request.request];
+	appendFlag(args, "--project", asOptionalString(request.projectId));
+	return { status: "ok", args };
+}
+
 function appendBooleanFlag(
 	args: string[],
 	name: string,
@@ -221,4 +401,8 @@ function appendNumericFlag(
 
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === "string" && value.trim().length > 0;
+}
+
+function asOptionalString(value: unknown): string | undefined {
+	return isNonEmptyString(value) ? value : undefined;
 }
