@@ -1,11 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-	type ServerDatabase,
-	initializeServerDatabase,
-} from "../src/features/server/db";
-
+import { type ServerDatabase, initializeServerDatabase } from "../src/db";
 export interface DrizzleServerTestDatabase {
 	db: ServerDatabase["db"];
 	path: string;

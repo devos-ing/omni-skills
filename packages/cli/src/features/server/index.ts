@@ -1,5 +1,4 @@
 export { createReadRepositories } from "./repositories";
-export * from "./db";
 export type {
 	AgentRecord,
 	CommandHistoryRecord,

@@ -34,10 +34,8 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"@electric-sql/pglite": "^0.3.14",
 		"@linear/sdk": "^83.0.0",
 		"adhdai-server": "workspace:*",
-		"drizzle-orm": "^0.44.7",
 		"pino": "^10.3.1",
 		"pino-pretty": "^13.1.3"
 	}
