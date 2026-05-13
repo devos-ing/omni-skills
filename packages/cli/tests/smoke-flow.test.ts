@@ -165,12 +165,72 @@ describe("deterministic workflow smoke flow", () => {
 
 		await h.run({ issueArg: "ENG-8" });
 
-		expect((await h.state("default", "ENG-8"))?.stage).toBe("blocked");
+		const run = await h.state("default", "ENG-8");
+		expect(run?.stage).toBe("blocked");
+		expect(run?.failedStage).toBe("planning");
 		expect(h.linear("default").canceled).toEqual(["lin_ENG-8"]);
 		expect(h.notifications).toContainEqual({
 			type: "blocked",
 			issueKey: "ENG-8",
 		});
+	});
+
+	it("retries a blocked planning failure from planning on the next run", async () => {
+		const h = await createSmokeHarness();
+		h.addIssue("default", issue("ENG-12"));
+		const blocked = state(h.project("default"), "ENG-12", "blocked");
+		blocked.failedStage = "planning";
+		blocked.planSummary = "invalid old plan";
+		blocked.successGoal = "stale goal";
+		blocked.complexityScore = 9;
+		blocked.reviewMode = "human";
+		blocked.lastError = "planner parse failed";
+		await h.presetState("default", blocked);
+		const agent = h.agent("default");
+		agent.plans.push(result(simplePlan, "retry-session"));
+		agent.resumes.push(result("implemented"));
+		agent.reviews.push(result(passReview));
+
+		await h.run({ issueArg: "ENG-12" });
+
+		const run = await h.state("default", "ENG-12");
+		expect(run?.stage).toBe("done");
+		expect(run?.planSummary).toBe(simplePlan);
+		expect(run?.successGoal).toBe("Ship the simple task.");
+		expect(run?.complexityScore).toBe(3);
+	});
+
+	it("retries legacy blocked planner validation failures", async () => {
+		const h = await createSmokeHarness();
+		h.addIssue("default", issue("ENG-13"));
+		const blocked = state(h.project("default"), "ENG-13", "blocked");
+		blocked.planSummary = "`SUCCESS_GOAL: wrapped marker`";
+		blocked.successGoal = undefined;
+		blocked.lastError =
+			"Planner output must include SUCCESS_GOAL with a concise acceptance goal.";
+		await h.presetState("default", blocked);
+		const agent = h.agent("default");
+		agent.plans.push(result(simplePlan, "legacy-retry-session"));
+		agent.resumes.push(result("implemented"));
+		agent.reviews.push(result(passReview));
+
+		await h.run({ issueArg: "ENG-13" });
+
+		expect((await h.state("default", "ENG-13"))?.stage).toBe("done");
+	});
+
+	it("keeps blocked implementation failures terminal on resume", async () => {
+		const h = await createSmokeHarness();
+		h.addIssue("default", issue("ENG-14"));
+		const blocked = state(h.project("default"), "ENG-14", "blocked");
+		blocked.failedStage = "implementing";
+		blocked.lastError = "implementation failed";
+		await h.presetState("default", blocked);
+
+		await h.run({ issueArg: "ENG-14" });
+
+		expect((await h.state("default", "ENG-14"))?.stage).toBe("blocked");
+		expect(h.agent("default").plans).toHaveLength(0);
 	});
 
 	it("routes all-project targeted runs to the matching Linear project", async () => {

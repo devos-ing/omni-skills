@@ -137,6 +137,37 @@ export function transitionStage(
 	};
 }
 
+export function normalizeBlockedPlanningFailureForResume(
+	state: RunState,
+): RunState {
+	if (!shouldResumeBlockedPlanningFailure(state)) {
+		return state;
+	}
+	return {
+		...state,
+		stage: "planning",
+		planSummary: undefined,
+		successGoal: undefined,
+		complexityScore: undefined,
+		reviewMode: undefined,
+	};
+}
+
+export function shouldResumeBlockedPlanningFailure(state: RunState): boolean {
+	if (state.stage !== "blocked") {
+		return false;
+	}
+	if (state.failedStage === "planning") {
+		return true;
+	}
+	return (
+		!state.successGoal &&
+		Boolean(
+			state.lastError?.startsWith("Planner output must include SUCCESS_GOAL"),
+		)
+	);
+}
+
 export function applyRunLease(
 	state: RunState,
 	ownerId: string,

@@ -127,6 +127,7 @@ export interface RunState {
 	};
 	issue: IssueRef;
 	stage: WorkflowStage;
+	failedStage?: WorkflowStage;
 	codexSessionId?: string;
 	reviewSessionId?: string;
 	planSummary?: string;

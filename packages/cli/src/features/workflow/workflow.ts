@@ -17,6 +17,7 @@ import {
 	isRunLeaseExpired,
 	listRunStates,
 	loadRunState,
+	normalizeBlockedPlanningFailureForResume,
 	normalizeIssueKey,
 	projectErrorLogPath,
 	saveRunState,
@@ -801,6 +802,7 @@ async function processIssue(
 			startedAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
 		} satisfies RunState);
+	Object.assign(runState, normalizeBlockedPlanningFailureForResume(runState));
 
 	if (
 		options.reviewOnly &&
@@ -886,6 +888,7 @@ async function processIssue(
 		issueLogger.info({ stage: runState.stage }, "Issue workflow finished");
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
+		const failedStage = runState.stage;
 		runState.lastError = message;
 		if (runState.stage === "done") {
 			await saveRunState(config.workspacePath, runState);
@@ -898,6 +901,7 @@ async function processIssue(
 			);
 			return;
 		}
+		runState.failedStage = failedStage;
 		runState.stage = "blocked";
 		await saveRunState(config.workspacePath, runState);
 		await safeLinearMoveToCanceled(linear, runState.issue.id);

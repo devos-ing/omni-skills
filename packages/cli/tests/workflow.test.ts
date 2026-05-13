@@ -13,6 +13,7 @@ import {
 	agentChatLogPath,
 	applyRunLease,
 	isRunLeaseExpired,
+	normalizeBlockedPlanningFailureForResume,
 	transitionStage,
 } from "../src/features/workflow/state";
 import {
@@ -428,6 +429,63 @@ describe("review-only selection", () => {
 				statusMap,
 			),
 		).toBe("done");
+	});
+});
+
+describe("normalizeBlockedPlanningFailureForResume", () => {
+	it("resets blocked planning failures while preserving diagnostic fields", () => {
+		const state = {
+			...createRunState("ROY-70", "blocked", Date.now()),
+			failedStage: "planning" as const,
+			planSummary: "invalid plan",
+			successGoal: "stale goal",
+			complexityScore: 8,
+			reviewMode: "human" as const,
+			lastError: "Planner output must include SUCCESS_GOAL",
+			codexUsage: [
+				{
+					stage: "planning" as const,
+					inputTokens: 1,
+					outputTokens: 2,
+					totalTokens: 3,
+					recordedAt: "2026-05-13T00:00:00.000Z",
+				},
+			],
+		};
+
+		const normalized = normalizeBlockedPlanningFailureForResume(state);
+
+		expect(normalized.stage).toBe("planning");
+		expect(normalized.planSummary).toBeUndefined();
+		expect(normalized.successGoal).toBeUndefined();
+		expect(normalized.complexityScore).toBeUndefined();
+		expect(normalized.reviewMode).toBeUndefined();
+		expect(normalized.issue).toBe(state.issue);
+		expect(normalized.lastError).toBe(state.lastError);
+		expect(normalized.codexUsage).toBe(state.codexUsage);
+	});
+
+	it("resets legacy blocked planner validation failures", () => {
+		const state = {
+			...createRunState("ROY-71", "blocked", Date.now()),
+			planSummary: "`SUCCESS_GOAL: wrapped marker`",
+			lastError:
+				"Planner output must include SUCCESS_GOAL with a concise acceptance goal.",
+		};
+
+		expect(normalizeBlockedPlanningFailureForResume(state).stage).toBe(
+			"planning",
+		);
+	});
+
+	it("leaves non-planning blocked failures terminal", () => {
+		const state = {
+			...createRunState("ROY-72", "blocked", Date.now()),
+			failedStage: "implementing" as const,
+			lastError: "implementation failed",
+		};
+
+		expect(normalizeBlockedPlanningFailureForResume(state)).toBe(state);
 	});
 });
 
