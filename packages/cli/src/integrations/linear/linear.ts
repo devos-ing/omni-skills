@@ -52,49 +52,11 @@ type LinearSdkIssue = {
 	teamId?: string | null;
 	priority?: number | null;
 	priorityLabel?: string | null;
-	project: Promise<{ id?: string | null } | null>;
-	state: Promise<{ id: string; name: string } | null>;
-	creator: Promise<{ id?: string | null } | null>;
-	assignee: Promise<{ id?: string | null } | null>;
+	project?: Promise<{ id?: string | null } | null>;
+	state?: Promise<{ id: string; name: string } | null>;
+	creator?: Promise<{ id?: string | null } | null>;
+	assignee?: Promise<{ id?: string | null } | null>;
 	labels: () => Promise<{ nodes: LinearSdkIssueLabel[] }>;
-};
-
-type LinearSdkClientInstance = {
-	viewer: Promise<{
-		assignedIssues: (input: { first: number }) => Promise<{
-			nodes: LinearSdkIssue[];
-		}>;
-	}>;
-	issue: (identifier: string) => Promise<LinearSdkIssue | undefined>;
-	project: (id: string) => Promise<LinearSdkProject | undefined>;
-	updateIssue: (
-		issueId: string,
-		input: Record<string, unknown>,
-	) => Promise<unknown>;
-	createIssue: (input: unknown) => Promise<{
-		success: boolean;
-		issueId?: string | null;
-		issue?: Promise<LinearSdkIssue | null>;
-	}>;
-	createComment: (input: {
-		issueId: string;
-		body: string;
-	}) => Promise<unknown>;
-	workflowStates: (input: { first: number }) => Promise<{
-		nodes: LinearSdkWorkflowState[];
-	}>;
-	issueLabels: (input: { first: number }) => Promise<{
-		nodes: LinearSdkIssueLabel[];
-	}>;
-	createIssueLabel: (input: {
-		name: string;
-		teamId?: string;
-	}) => Promise<{
-		success: boolean;
-		issueLabelId?: string | null;
-		issueLabel?: Promise<LinearSdkIssueLabel | null>;
-	}>;
-	issueLabel: (id: string) => Promise<LinearSdkIssueLabel | null>;
 };
 
 const LINEAR_MAX_REQUESTS_PER_HOUR = 1800;
@@ -215,7 +177,7 @@ export function resolveSplitTaskTeamId(
 }
 
 export class LinearClient {
-	private client: LinearSdkClientInstance | null = null;
+	private readonly client: LinearSdkClient;
 	private resolvedStatusMap:
 		| ResolvedProjectConfig["linear"]["statusMap"]
 		| null = null;
@@ -232,7 +194,7 @@ export class LinearClient {
 		this.client = new LinearSdkClient({
 			apiKey: config.linear.apiKey,
 			apiUrl: config.linear.apiUrl,
-		}) as unknown as LinearSdkClientInstance;
+		});
 	}
 
 	async fetchWork(issueArg?: string): Promise<LinearIssue[]> {
