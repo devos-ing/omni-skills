@@ -13,10 +13,10 @@ ADHD.ai is a multi-project orchestration hub that pulls eligible Linear issues a
    - `packages/cli/src/integrations/github/github.ts`
    - `packages/cli/src/integrations/agent-adapters/codex.ts`
    - `packages/cli/src/integrations/agent-adapters/claude-code.ts`
-   - `packages/cli/src/integrations/cron/cron.ts`
    - `packages/cli/src/integrations/notifications/notifications.ts`
-4. `packages/cli/src/features/workflow/state.ts` owns run-state paths and legacy fallback behavior.
-5. `packages/cli/src/args.ts` and `packages/cli/src/index.ts` own CLI parsing and command dispatch with command handlers in `packages/cli/src/commands/`.
+4. Server-owned cron runtime and scheduling live under `packages/server/src/cron/` (entrypoint: `packages/server/src/cron/run-cron.ts`).
+5. `packages/cli/src/features/workflow/state.ts` owns run-state paths and legacy fallback behavior.
+6. `packages/cli/src/args.ts` and `packages/cli/src/index.ts` own CLI parsing and command dispatch with command handlers in `packages/cli/src/commands/`.
 
 ## Stage Model
 
