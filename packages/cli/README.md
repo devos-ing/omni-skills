@@ -36,17 +36,17 @@ bun run src/index.ts run --project <PROJECT_ID> --issue ENG-123
 # local polling mode
 bun run src/index.ts run --project <PROJECT_ID> --poll
 
-# unattended scheduled mode
-bun run src/index.ts cron
+# unattended scheduled mode (server-owned cron runner)
+bun run --filter adhdai-server cron
 
 # run the first enabled automation job once now
-bun run cron:once
+bun run --filter adhdai-server cron:once
 
 # run the hourly PR review job
-bun run review:hourly
+bun run --filter adhdai-server review:hourly
 
 # run the hourly PR review job once now
-bun run review:hourly:once
+bun run --filter adhdai-server review:hourly:once
 
 # create a release changeset
 bun run changeset

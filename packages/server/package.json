@@ -10,6 +10,10 @@
 	"scripts": {
 		"build": "vite build",
 		"start": "bun run ./src/index.ts",
+		"cron": "bun run ./src/cron/run-cron.ts",
+		"cron:once": "bun run ./src/cron/run-cron.ts --once",
+		"review:hourly": "bun run ./src/cron/run-cron.ts --job hourly-pr-review",
+		"review:hourly:once": "bun run ./src/cron/run-cron.ts --once --job hourly-pr-review",
 		"test": "bun test tests",
 		"typecheck": "bunx tsc --noEmit",
 		"check": "biome check ."

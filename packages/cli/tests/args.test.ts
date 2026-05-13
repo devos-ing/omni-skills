@@ -166,12 +166,10 @@ describe("parseArgs", () => {
 		});
 	});
 
-	it("parses cron command", () => {
-		const parsed = parseArgs(["bun", "adhd-ai", "cron", "--job", "weekday"]);
-		expect(parsed).toEqual({
-			kind: "cron",
-			jobId: "weekday",
-		});
+	it("rejects cron command", () => {
+		expect(() =>
+			parseArgs(["bun", "adhd-ai", "cron", "--job", "weekday"]),
+		).toThrow("Unknown command: cron");
 	});
 
 	it("parses setup command", () => {

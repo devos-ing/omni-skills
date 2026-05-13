@@ -52,13 +52,6 @@ export function parseArgs(argv: string[]): CliCommand {
 		};
 	}
 
-	if (command === "cron") {
-		const args = rest.slice(1);
-		const jobId = readFlagValue(args, "--job");
-		const once = args.includes("--once");
-		return { kind: "cron", jobId, ...(once ? { once } : {}) };
-	}
-
 	if (command === "setup") {
 		const args = rest.slice(1);
 		return { kind: "setup", check: args.includes("--check") };
