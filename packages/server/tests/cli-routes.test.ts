@@ -163,6 +163,7 @@ function createDeps(overrides?: {
 		: never;
 }): AppDeps {
 	return {
+		persistence: {} as AppDeps["persistence"],
 		cliExecutor: {
 			execute:
 				overrides?.execute ??
