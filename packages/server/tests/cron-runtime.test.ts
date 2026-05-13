@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import type { LoadedConfig } from "adhdai/features/config";
 import {
+	type CronJobConfig,
 	runCronJobOnce,
 	runCronSchedulerCycle,
 	selectCronJobs,
 } from "../src/cron";
-import type { CronJobConfig } from "../src/cron/cron.types";
 
 describe("selectCronJobs", () => {
 	it("filters disabled jobs and supports id selection", () => {
