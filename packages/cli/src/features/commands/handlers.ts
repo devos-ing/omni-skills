@@ -3,7 +3,6 @@ import type { LoadedConfig } from "../../features/config";
 import { getProjectById } from "../../features/config";
 import { runSetupCheck, runSetupWizard } from "../../features/setup";
 import { createAgentAdapter } from "../../integrations/agent-adapters";
-import { runCronJobOnce, runCronScheduler } from "../../integrations/cron";
 import { LinearClient } from "../../integrations/linear";
 import { formatWorkflowStageDisplay } from "../../utils/status";
 import {
@@ -37,15 +36,6 @@ export async function handleCommand(
 ): Promise<void> {
 	if (command.kind === "run") {
 		await runWorkflow(config, command.options);
-		return;
-	}
-
-	if (command.kind === "cron") {
-		if (command.once) {
-			await runCronJobOnce(config, { jobId: command.jobId });
-			return;
-		}
-		await runCronScheduler(config, { jobId: command.jobId });
 		return;
 	}
 
@@ -187,7 +177,6 @@ export function printHelp(): void {
 			"Commands:",
 			"  adhd-ai run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]",
 			"  adhd-ai run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
-			"  adhd-ai cron [--once] [--job <JOB_ID>]",
 			"  adhd-ai status --project <PROJECT_ID> --issue <LINEAR_KEY>",
 			"  adhd-ai projects",
 			"  adhd-ai task create --request <TEXT|-> [--project <PROJECT_ID>]",

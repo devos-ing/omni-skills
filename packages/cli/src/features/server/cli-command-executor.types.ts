@@ -4,7 +4,6 @@ export type SupportedCliAction =
 	| "run"
 	| "status"
 	| "projects"
-	| "cron"
 	| "setup"
 	| "skills"
 	| "task";
@@ -30,12 +29,6 @@ export interface StatusActionRequest {
 
 export interface ProjectsActionRequest {
 	action: "projects";
-}
-
-export interface CronActionRequest {
-	action: "cron";
-	jobId?: string;
-	once?: boolean;
 }
 
 export interface SetupActionRequest {
@@ -92,7 +85,6 @@ export type SupportedCliCommandRequest =
 	| RunActionRequest
 	| StatusActionRequest
 	| ProjectsActionRequest
-	| CronActionRequest
 	| SetupActionRequest
 	| SkillsActionRequest
 	| TaskCreateActionRequest;

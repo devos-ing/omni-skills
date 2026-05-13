@@ -47,8 +47,8 @@ bun run packages/cli/src/index.ts run --project <PROJECT_ID> --issue ENG-123
 # local polling mode
 bun run packages/cli/src/index.ts run --project <PROJECT_ID> --poll
 
-# unattended scheduled mode
-bun run packages/cli/src/index.ts cron
+# unattended scheduled mode (server-owned cron runner)
+bun run --filter adhdai-server cron
 
 # run the first enabled automation job once now
 bun run cron:once

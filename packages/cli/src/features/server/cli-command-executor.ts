@@ -239,33 +239,6 @@ function resolveInvocation(
 			},
 		};
 	}
-	if (request.action === "cron") {
-		if (request.once !== undefined && typeof request.once !== "boolean") {
-			return {
-				status: "error",
-				error: "Malformed cron request: once must be a boolean",
-			};
-		}
-		if (request.jobId !== undefined && !isNonEmptyString(request.jobId)) {
-			return {
-				status: "error",
-				error: "Malformed cron request: jobId must be a non-empty string",
-			};
-		}
-		return {
-			status: "ok",
-			invocation: {
-				command,
-				args: [
-					...baseArgs,
-					...buildCronArgs({
-						once: request.once,
-						jobId: request.jobId,
-					}),
-				],
-			},
-		};
-	}
 	if (request.action === "setup") {
 		if (request.check !== undefined && typeof request.check !== "boolean") {
 			return {
@@ -345,13 +318,6 @@ function buildStatusArgs(
 		"--issue",
 		request.issueKey,
 	];
-}
-
-function buildCronArgs(request: { once?: boolean; jobId?: string }): string[] {
-	const args = ["cron"];
-	appendBooleanFlag(args, "--once", request.once);
-	appendFlag(args, "--job", request.jobId);
-	return args;
 }
 
 function buildSetupArgs(request: { check?: boolean }): string[] {

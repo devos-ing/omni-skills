@@ -71,6 +71,30 @@ describe("CliCommandExecutor", () => {
 		expect(history[0]?.status).toBe("rejected");
 	});
 
+	it("rejects cron action without execution", async () => {
+		let callCount = 0;
+		const runCommandFn: RunCommandFn = async () => {
+			callCount += 1;
+			return { code: 0, stdout: "", stderr: "" };
+		};
+		const executor = new CliCommandExecutor({
+			cwd: "/tmp/work",
+			command: "bun",
+			baseArgs: ["run", "./packages/cli/src/index.ts"],
+			runCommandFn,
+		});
+
+		const result = await executor.execute({
+			action: "cron",
+			once: true,
+			jobId: "weekday",
+		} as unknown as { action: string });
+
+		expect(result.status).toBe("rejected");
+		expect(result.error).toContain("Unsupported CLI action");
+		expect(callCount).toBe(0);
+	});
+
 	it("rejects malformed status action without execution", async () => {
 		let callCount = 0;
 		const runCommandFn: RunCommandFn = async () => {
@@ -153,41 +177,6 @@ describe("CliCommandExecutor", () => {
 		expect(history[0]?.error).toBe("spawn EACCES");
 	});
 
-	it("executes cron action with structured argv", async () => {
-		const calls: Array<{ command: string; args: string[] }> = [];
-		const runCommandFn: RunCommandFn = async (command, args) => {
-			calls.push({ command, args });
-			return { code: 0, stdout: "ok", stderr: "" };
-		};
-		const executor = new CliCommandExecutor({
-			cwd: "/tmp/work",
-			command: "bun",
-			baseArgs: ["run", "./packages/cli/src/index.ts"],
-			runCommandFn,
-		});
-
-		const result = await executor.execute({
-			action: "cron",
-			once: true,
-			jobId: "weekday",
-		});
-
-		expect(result.status).toBe("succeeded");
-		expect(calls).toEqual([
-			{
-				command: "bun",
-				args: [
-					"run",
-					"./packages/cli/src/index.ts",
-					"cron",
-					"--once",
-					"--job",
-					"weekday",
-				],
-			},
-		]);
-	});
-
 	it("executes setup action with structured argv", async () => {
 		const calls: Array<{ command: string; args: string[] }> = [];
 		const runCommandFn: RunCommandFn = async (command, args) => {
@@ -215,7 +204,7 @@ describe("CliCommandExecutor", () => {
 		]);
 	});
 
-	it("rejects malformed cron and setup requests without execution", async () => {
+	it("rejects malformed setup requests without execution", async () => {
 		let callCount = 0;
 		const runCommandFn: RunCommandFn = async () => {
 			callCount += 1;
@@ -228,25 +217,11 @@ describe("CliCommandExecutor", () => {
 			runCommandFn,
 		});
 
-		const malformedCronJobId = await executor.execute({
-			action: "cron",
-			jobId: ["bad"],
-		} as unknown as { action: string });
-		const malformedCronOnce = await executor.execute({
-			action: "cron",
-			once: "yes",
-		} as unknown as { action: string });
 		const malformedSetupCheck = await executor.execute({
 			action: "setup",
 			check: "false",
 		} as unknown as { action: string });
 
-		expect(malformedCronJobId.status).toBe("rejected");
-		expect(malformedCronJobId.error).toContain(
-			"jobId must be a non-empty string",
-		);
-		expect(malformedCronOnce.status).toBe("rejected");
-		expect(malformedCronOnce.error).toContain("once must be a boolean");
 		expect(malformedSetupCheck.status).toBe("rejected");
 		expect(malformedSetupCheck.error).toContain("check must be a boolean");
 		expect(callCount).toBe(0);

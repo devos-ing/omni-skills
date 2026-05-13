@@ -31,7 +31,6 @@ export type TaskCommand = {
 
 export type CliCommand =
 	| { kind: "run"; options: RunOptions }
-	| { kind: "cron"; jobId?: string; once?: boolean }
 	| { kind: "status"; issueKey: string; projectId: string }
 	| { kind: "projects" }
 	| { kind: "skills"; command: SkillsCommand }
