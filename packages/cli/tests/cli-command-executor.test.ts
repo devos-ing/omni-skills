@@ -71,7 +71,7 @@ describe("CliCommandExecutor", () => {
 		expect(history[0]?.status).toBe("rejected");
 	});
 
-	it("rejects cron action without execution", async () => {
+	it("rejects unknown action without execution", async () => {
 		let callCount = 0;
 		const runCommandFn: RunCommandFn = async () => {
 			callCount += 1;
@@ -85,9 +85,7 @@ describe("CliCommandExecutor", () => {
 		});
 
 		const result = await executor.execute({
-			action: "cron",
-			once: true,
-			jobId: "weekday",
+			action: "unknown-action",
 		} as unknown as { action: string });
 
 		expect(result.status).toBe("rejected");

@@ -1,7 +1,4 @@
-import type {
-	CronJobSchedule,
-	CronScheduleDayOfWeek,
-} from "adhdai/features/types";
+import type { CronJobSchedule, CronScheduleDayOfWeek } from "./cron.types";
 
 const SCHEDULER_MIN_SLEEP_MS = 250;
 const SCHEDULER_MAX_SLEEP_MS = 60000;

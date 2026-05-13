@@ -1,6 +1,6 @@
 # Agent-Driven Development Hub (ADHD.ai)
 
-ADHD.ai turns Linear issues into an agent-driven engineering workflow: plan -> implement -> review/test. It can run one issue at a time, poll for new work, or run scheduled automation sweeps across projects.
+ADHD.ai turns Linear issues into an agent-driven engineering workflow: plan -> implement -> review/test. It can run one issue at a time or poll for new work across projects.
 
 For non-technical operators, start with [docs/NON_TECHNICAL_GUIDE.md](docs/NON_TECHNICAL_GUIDE.md).
 
@@ -36,18 +36,6 @@ bun run src/index.ts run --project <PROJECT_ID> --issue ENG-123
 # local polling mode
 bun run src/index.ts run --project <PROJECT_ID> --poll
 
-# unattended scheduled mode (server-owned cron runner)
-bun run --filter adhdai-server cron
-
-# run the first enabled automation job once now
-bun run --filter adhdai-server cron:once
-
-# run the hourly PR review job
-bun run --filter adhdai-server review:hourly
-
-# run the hourly PR review job once now
-bun run --filter adhdai-server review:hourly:once
-
 # create a release changeset
 bun run changeset
 
@@ -80,7 +68,7 @@ After linking/installing the package bin, you can also use `adhd-ai ...` directl
 2. ADHD.ai plans the task.
 3. ADHD.ai implements code changes and updates PR context.
 4. ADHD.ai runs review/testing and loops on failures until `done` or `blocked`.
-5. Review-only automations squash-merge completed PRs with `COMPLEXITY_SCORE < 5`; scores `>= 5` trigger a human approval email.
+5. Completed runs with `COMPLEXITY_SCORE < 5` can be squash-merged by automation; scores `>= 5` trigger a human approval email.
 
 ## Configuration Notes
 
@@ -90,7 +78,7 @@ After linking/installing the package bin, you can also use `adhd-ai ...` directl
 - Guided setup stores local secrets in `.piv-loop/config/env.sqlite` (and writes `.env` for compatibility).
 - Docker-isolated Codex execution status and caveats (ROY-95): [docs/RELIABILITY.md#docker-isolated-codex-execution](docs/RELIABILITY.md#docker-isolated-codex-execution)
 
-For full config shape, polling, automations/cron compatibility, env vars, and routing behavior, use:
+For full config shape, polling, env vars, and routing behavior, use:
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/PLANS.md](docs/PLANS.md)

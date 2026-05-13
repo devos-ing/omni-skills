@@ -147,55 +147,6 @@ export interface PollingConfig {
 	staleRunTimeoutMs: number;
 }
 
-export type CronScheduleDayOfWeek =
-	| "sun"
-	| "mon"
-	| "tue"
-	| "wed"
-	| "thu"
-	| "fri"
-	| "sat";
-
-export type CronJobSchedule =
-	| {
-			frequency: "minute";
-			every?: number;
-	  }
-	| {
-			frequency: "hourly";
-			every?: number;
-			minute?: number;
-	  }
-	| {
-			frequency: "daily";
-			time: string;
-	  }
-	| {
-			frequency: "weekly";
-			dayOfWeek: CronScheduleDayOfWeek;
-			time: string;
-	  };
-
-export interface CronJobSkillOverrides {
-	plan?: string;
-	implement?: string;
-	reviewTest?: string;
-	githubComment?: string;
-}
-
-export interface CronJobConfig {
-	id: string;
-	name?: string;
-	enabled?: boolean;
-	schedule: CronJobSchedule;
-	run: import("../workflow/workflow-state.types").RunOptions;
-	skills?: CronJobSkillOverrides;
-}
-
-export interface CronConfig {
-	jobs: CronJobConfig[];
-}
-
 export interface NotificationEmailConfig {
 	enabled?: boolean;
 	resendApiKey?: string;
@@ -220,8 +171,6 @@ export interface ResolvedNotificationConfig {
 
 export type AdhdAiRootConfig = DeepPartial<ProjectRuntimeConfig> & {
 	polling?: DeepPartial<PollingConfig>;
-	automations?: DeepPartial<CronConfig>;
-	cron?: DeepPartial<CronConfig>;
 	notifications?: DeepPartial<NotificationConfig>;
 	projects: ProjectConfig[];
 };

@@ -24,14 +24,7 @@ export function resolveProjects(
 function stripProjects(
 	root: AdhdAiRootConfig,
 ): DeepPartial<ProjectRuntimeConfig> {
-	const {
-		projects: _,
-		polling: __,
-		automations: ___,
-		cron: ____,
-		notifications: _____,
-		...rest
-	} = root;
+	const { projects: _, polling: __, notifications: ___, ...rest } = root;
 	return rest;
 }
 

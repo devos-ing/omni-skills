@@ -166,10 +166,10 @@ describe("parseArgs", () => {
 		});
 	});
 
-	it("rejects cron command", () => {
-		expect(() =>
-			parseArgs(["bun", "adhd-ai", "cron", "--job", "weekday"]),
-		).toThrow("Unknown command: cron");
+	it("rejects unknown command", () => {
+		expect(() => parseArgs(["bun", "adhd-ai", "unknown", "--option"])).toThrow(
+			"Unknown command: unknown",
+		);
 	});
 
 	it("parses setup command", () => {

@@ -1,5 +1,4 @@
 import type { LoadedConfig } from "adhdai/features/config";
-import type { CronJobConfig } from "adhdai/features/types";
 import { logger, normalizeError } from "adhdai/utils/logger";
 import { sleep } from "bun";
 import { applyCronJobSkillOverrides, selectCronJobs } from "./cron-jobs";
@@ -8,6 +7,7 @@ import { runCronWorkflow } from "./cron-workflow";
 import type {
 	CronCycleDeps,
 	CronCycleState,
+	CronJobConfig,
 	CronSchedulerDependencies,
 	RunCronOptions,
 } from "./cron.types";
@@ -17,7 +17,7 @@ export async function runCronScheduler(
 	options: RunCronOptions,
 	deps: CronSchedulerDependencies = {},
 ): Promise<never> {
-	const jobs = selectCronJobs(config, options.jobId);
+	const jobs = selectCronJobs(options.jobs ?? [], options.jobId);
 	const now = deps.now ?? (() => new Date());
 	const sleepFn = deps.sleep ?? sleep;
 	const runWorkflow = deps.runWorkflow ?? runCronWorkflow;

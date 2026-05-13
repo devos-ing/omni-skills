@@ -403,8 +403,6 @@ function loadedConfig({
 			exitWhenIdle: true,
 			staleRunTimeoutMs: 3600000,
 		},
-		automations: { jobs: [] },
-		cron: { jobs: [] },
 		notifications: {
 			email: {
 				enabled: false,

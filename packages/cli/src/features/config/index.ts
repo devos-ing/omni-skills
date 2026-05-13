@@ -3,7 +3,6 @@ import type {
 	ResolvedProjectConfig,
 } from "../../features/types";
 import type { LoadedConfig } from "./config.types";
-import { resolveAutomations } from "./cron-resolution";
 import {
 	buildEnvBase,
 	buildEnvNotifications,
@@ -20,7 +19,6 @@ import {
 import { resolveProjects } from "./project-resolution";
 import { loadSqliteEnv, saveSqliteEnv, sqliteEnvDbPath } from "./sqlite-env";
 import {
-	validateCron,
 	validateNotifications,
 	validatePolling,
 	validateProjects,
@@ -38,8 +36,6 @@ export async function loadConfig(cwd: string): Promise<LoadedConfig> {
 
 	const projects = resolveProjects(cwd, envBase, root);
 	const polling = resolvePolling(envPolling, root.polling);
-	const automations = resolveAutomations(root.automations, root.cron);
-	const cron = automations;
 	const notifications = resolveNotifications(
 		envNotifications,
 		root.notifications,
@@ -47,10 +43,9 @@ export async function loadConfig(cwd: string): Promise<LoadedConfig> {
 
 	validateProjects(projects);
 	validatePolling(polling);
-	validateCron(automations);
 	validateNotifications(notifications);
 
-	return { projects, polling, automations, cron, notifications };
+	return { projects, polling, notifications };
 }
 
 export function getProjectById(

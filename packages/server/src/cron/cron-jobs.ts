@@ -1,16 +1,16 @@
 import path from "node:path";
 import type { LoadedConfig } from "adhdai/features/config";
-import type { CronJobConfig } from "adhdai/features/types";
+import type { CronJobConfig } from "./cron.types";
 
 export function selectCronJobs(
-	config: LoadedConfig,
+	jobs: CronJobConfig[],
 	jobId: string | undefined,
 ): CronJobConfig[] {
-	const jobs = enabledCronJobs(config);
+	const enabledJobs = enabledCronJobs(jobs);
 	if (!jobId) {
-		return jobs;
+		return enabledJobs;
 	}
-	const selected = jobs.find((job) => job.id === jobId);
+	const selected = enabledJobs.find((job) => job.id === jobId);
 	if (!selected) {
 		throw new Error(`Automation job '${jobId}' not found or disabled`);
 	}
@@ -18,11 +18,11 @@ export function selectCronJobs(
 }
 
 export function selectCronJobForImmediateRun(
-	config: LoadedConfig,
+	jobs: CronJobConfig[],
 	jobId: string | undefined,
 ): CronJobConfig {
-	const jobs = selectCronJobs(config, jobId);
-	const selected = jobs[0];
+	const selectedJobs = selectCronJobs(jobs, jobId);
+	const selected = selectedJobs[0];
 	if (!selected) {
 		throw new Error("No enabled automation jobs found");
 	}
@@ -71,10 +71,8 @@ export function applyCronJobSkillOverrides(
 	};
 }
 
-function enabledCronJobs(config: LoadedConfig): CronJobConfig[] {
-	return (config.automations?.jobs ?? config.cron.jobs).filter(
-		(job) => job.enabled !== false,
-	);
+function enabledCronJobs(jobs: CronJobConfig[]): CronJobConfig[] {
+	return jobs.filter((job) => job.enabled !== false);
 }
 
 function resolveJobSkillPath(

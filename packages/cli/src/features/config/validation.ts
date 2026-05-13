@@ -1,11 +1,7 @@
 import type {
-	CronConfig,
-	CronJobSchedule,
-	CronScheduleDayOfWeek,
 	PollingConfig,
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
-	RunOptions,
 } from "../../features/types";
 
 export function validateProjects(projects: ResolvedProjectConfig[]): void {
@@ -40,18 +36,6 @@ export function validatePolling(polling: PollingConfig): void {
 		polling.staleRunTimeoutMs <= 0
 	) {
 		throw new Error("Polling stale run timeout must be a positive integer");
-	}
-}
-
-export function validateCron(cron: CronConfig): void {
-	const seen = new Set<string>();
-	for (const job of cron.jobs) {
-		if (seen.has(job.id)) {
-			throw new Error(`Duplicate cron job id: ${job.id}`);
-		}
-		seen.add(job.id);
-		validateCronSchedule(job.id, job.schedule);
-		validateCronRun(job.id, job.run);
 	}
 }
 
@@ -115,91 +99,6 @@ function validateProject(project: ResolvedProjectConfig): void {
 			`Missing Linear status ids for project '${project.id}': ${requiredStateIds
 				.map(([key]) => key)
 				.join(", ")}`,
-		);
-	}
-}
-
-function validateCronSchedule(jobId: string, schedule: CronJobSchedule): void {
-	if (schedule.frequency === "minute") {
-		const every = schedule.every ?? 1;
-		if (!Number.isInteger(every) || every <= 0 || every > 59) {
-			throw new Error(
-				`Cron job '${jobId}' minute schedule.every must be between 1 and 59`,
-			);
-		}
-		return;
-	}
-	if (schedule.frequency === "hourly") {
-		const every = schedule.every ?? 1;
-		const minute = schedule.minute ?? 0;
-		if (!Number.isInteger(every) || every <= 0 || every > 24) {
-			throw new Error(
-				`Cron job '${jobId}' hourly schedule.every must be between 1 and 24`,
-			);
-		}
-		if (!Number.isInteger(minute) || minute < 0 || minute > 59) {
-			throw new Error(
-				`Cron job '${jobId}' hourly schedule.minute must be between 0 and 59`,
-			);
-		}
-		return;
-	}
-	if (schedule.frequency === "daily") {
-		assertValidTime(jobId, schedule.time);
-		return;
-	}
-	assertValidDayOfWeek(jobId, schedule.dayOfWeek);
-	assertValidTime(jobId, schedule.time);
-}
-
-function validateCronRun(jobId: string, run: RunOptions): void {
-	if (run.projectId && run.allProjects) {
-		throw new Error(
-			`Cron job '${jobId}' run cannot use projectId with allProjects`,
-		);
-	}
-	if (
-		run.concurrency !== undefined &&
-		(!Number.isInteger(run.concurrency) || run.concurrency <= 0)
-	) {
-		throw new Error(
-			`Cron job '${jobId}' run.concurrency must be a positive integer`,
-		);
-	}
-	if (run.reviewOnly && run.issueArg) {
-		throw new Error(
-			`Cron job '${jobId}' run cannot use issueArg with reviewOnly`,
-		);
-	}
-}
-
-function assertValidTime(jobId: string, time: string): void {
-	if (!/^\d{2}:\d{2}$/.test(time)) {
-		throw new Error(`Cron job '${jobId}' time must be in HH:mm 24-hour format`);
-	}
-	const [hourRaw, minuteRaw] = time.split(":");
-	const hour = Number(hourRaw);
-	const minute = Number(minuteRaw);
-	if (
-		!Number.isInteger(hour) ||
-		!Number.isInteger(minute) ||
-		hour < 0 ||
-		hour > 23 ||
-		minute < 0 ||
-		minute > 59
-	) {
-		throw new Error(`Cron job '${jobId}' time must be in HH:mm 24-hour format`);
-	}
-}
-
-function assertValidDayOfWeek(
-	jobId: string,
-	dayOfWeek: CronScheduleDayOfWeek,
-): void {
-	const allowed = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-	if (!allowed.includes(dayOfWeek)) {
-		throw new Error(
-			`Cron job '${jobId}' weekly dayOfWeek must be one of: ${allowed.join(", ")}`,
 		);
 	}
 }

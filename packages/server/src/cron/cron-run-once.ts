@@ -15,7 +15,8 @@ export async function runCronJobOnce(
 	options: RunCronJobOnceOptions,
 	deps: CronJobRunDependencies = {},
 ): Promise<void> {
-	const job = selectCronJobForImmediateRun(config, options.jobId);
+	const jobs = options.jobs ?? [];
+	const job = selectCronJobForImmediateRun(jobs, options.jobId);
 	const runWorkflow = deps.runWorkflow ?? runCronWorkflow;
 
 	logger.info({ jobId: job.id }, "Starting one-time automation job run");

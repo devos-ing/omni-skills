@@ -1,23 +1,25 @@
 import { describe, expect, it } from "bun:test";
 import type { LoadedConfig } from "adhdai/features/config";
-import type { CronJobConfig } from "adhdai/features/types";
 import {
 	runCronJobOnce,
 	runCronSchedulerCycle,
 	selectCronJobs,
 } from "../src/cron";
+import type { CronJobConfig } from "../src/cron/cron.types";
 
 describe("selectCronJobs", () => {
 	it("filters disabled jobs and supports id selection", () => {
-		const config = createLoadedConfig([
+		const configuredJobs: CronJobConfig[] = [
 			{ id: "a", schedule: { frequency: "minute" }, run: {}, enabled: true },
 			{ id: "b", schedule: { frequency: "minute" }, run: {}, enabled: false },
-		]);
+		];
 
-		expect(selectCronJobs(config, undefined).map((job) => job.id)).toEqual([
+		expect(
+			selectCronJobs(configuredJobs, undefined).map((job) => job.id),
+		).toEqual(["a"]);
+		expect(selectCronJobs(configuredJobs, "a").map((job) => job.id)).toEqual([
 			"a",
 		]);
-		expect(selectCronJobs(config, "a").map((job) => job.id)).toEqual(["a"]);
 	});
 });
 
@@ -44,7 +46,7 @@ describe("runCronSchedulerCycle", () => {
 			release = resolve;
 		});
 
-		await runCronSchedulerCycle(createLoadedConfig(jobs), jobs, state, {
+		await runCronSchedulerCycle(createLoadedConfig(), jobs, state, {
 			now: () => now,
 			runWorkflow: async () => {
 				called += 1;
@@ -79,7 +81,7 @@ describe("runCronSchedulerCycle", () => {
 		};
 		let called = 0;
 
-		await runCronSchedulerCycle(createLoadedConfig(jobs), jobs, state, {
+		await runCronSchedulerCycle(createLoadedConfig(), jobs, state, {
 			now: () => now,
 			runWorkflow: async () => {
 				called += 1;
@@ -116,8 +118,8 @@ describe("runCronJobOnce", () => {
 		let capturedReview = "";
 
 		await runCronJobOnce(
-			createLoadedConfig(jobs),
-			{ jobId: "enabled" },
+			createLoadedConfig(),
+			{ jobId: "enabled", jobs },
 			{
 				runWorkflow: async (config, options) => {
 					calls.push(options.projectId ?? "");
@@ -133,28 +135,18 @@ describe("runCronJobOnce", () => {
 		expect(capturedImplement).toBe("/tmp/absolute-implement.md");
 		expect(capturedReview).toBe("/tmp/skills/default-review.md");
 		await expect(
-			runCronJobOnce(createLoadedConfig(jobs), { jobId: "missing" }),
+			runCronJobOnce(createLoadedConfig(), { jobId: "missing", jobs }),
 		).rejects.toThrow("Automation job 'missing' not found or disabled");
 		await expect(
-			runCronJobOnce(createLoadedConfig(jobs), { jobId: "disabled" }),
+			runCronJobOnce(createLoadedConfig(), { jobId: "disabled", jobs }),
 		).rejects.toThrow("Automation job 'disabled' not found or disabled");
 		await expect(
-			runCronJobOnce(
-				createLoadedConfig([
-					{
-						id: "disabled-only",
-						enabled: false,
-						schedule: { frequency: "minute" },
-						run: {},
-					},
-				]),
-				{},
-			),
+			runCronJobOnce(createLoadedConfig(), { jobs: [] }),
 		).rejects.toThrow("No enabled automation jobs found");
 	});
 });
 
-function createLoadedConfig(jobs: CronJobConfig[]): LoadedConfig {
+function createLoadedConfig(): LoadedConfig {
 	return {
 		projects: [
 			{
@@ -203,8 +195,6 @@ function createLoadedConfig(jobs: CronJobConfig[]): LoadedConfig {
 			exitWhenIdle: true,
 			staleRunTimeoutMs: 3600000,
 		},
-		automations: { jobs },
-		cron: { jobs },
 		notifications: {
 			email: {
 				enabled: false,

@@ -47,8 +47,6 @@ export async function createSmokeHarness(): Promise<SmokeHarness> {
 			exitWhenIdle: true,
 			staleRunTimeoutMs: 1000,
 		},
-		automations: { jobs: [] },
-		cron: { jobs: [] },
 		notifications: { email: { enabled: true, to: ["ops@example.invalid"] } },
 	};
 	const allIssues = new Map<string, LinearIssue>();

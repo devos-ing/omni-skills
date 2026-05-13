@@ -1,4 +1,5 @@
 import { loadConfig } from "adhdai/features/config";
+import { loadCronJobsFromConfig } from "./cron-config";
 import { runCronJobOnce, runCronScheduler } from "./index";
 
 interface CronRunnerArgs {
@@ -22,11 +23,12 @@ function parseArgs(argv: string[]): CronRunnerArgs {
 async function main(): Promise<void> {
 	const parsed = parseArgs(process.argv);
 	const config = await loadConfig(process.cwd());
+	const jobs = await loadCronJobsFromConfig(process.cwd());
 	if (parsed.once) {
-		await runCronJobOnce(config, { jobId: parsed.jobId });
+		await runCronJobOnce(config, { jobId: parsed.jobId, jobs });
 		return;
 	}
-	await runCronScheduler(config, { jobId: parsed.jobId });
+	await runCronScheduler(config, { jobId: parsed.jobId, jobs });
 }
 
 if (import.meta.main) {
