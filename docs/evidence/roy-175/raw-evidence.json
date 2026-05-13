@@ -1,0 +1,78 @@
+{
+	"logs": [],
+	"inflight": {
+		"ENG-201": {
+			"issueKey": "ENG-201",
+			"stage": "implementing",
+			"startedAt": "2026-05-13T17:01:28.495Z",
+			"updatedAt": "2026-05-13T17:01:28.620Z",
+			"lease": {
+				"ownerId": "76353-1778691688495-1615",
+				"acquiredAt": "2026-05-13T17:01:28.495Z",
+				"heartbeatAt": "2026-05-13T17:01:28.620Z",
+				"expiresAt": "2026-05-13T17:01:29.620Z"
+			},
+			"codexSessionId": "plan-session-1",
+			"workspacePath": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8",
+			"executionWorkspace": {
+				"mode": "git-worktree",
+				"path": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8/.piv-loop/projects/default/worktrees/eng-201",
+				"branch": "codex/eng-201-eng-201",
+				"createdAt": "2026-05-13T17:01:28.496Z"
+			}
+		},
+		"ENG-202": {
+			"issueKey": "ENG-202",
+			"stage": "implementing",
+			"startedAt": "2026-05-13T17:01:28.495Z",
+			"updatedAt": "2026-05-13T17:01:28.620Z",
+			"lease": {
+				"ownerId": "76353-1778691688495-33743",
+				"acquiredAt": "2026-05-13T17:01:28.495Z",
+				"heartbeatAt": "2026-05-13T17:01:28.620Z",
+				"expiresAt": "2026-05-13T17:01:29.620Z"
+			},
+			"codexSessionId": "plan-session-2",
+			"workspacePath": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8",
+			"executionWorkspace": {
+				"mode": "git-worktree",
+				"path": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8/.piv-loop/projects/default/worktrees/eng-202",
+				"branch": "codex/eng-202-eng-202",
+				"createdAt": "2026-05-13T17:01:28.496Z"
+			}
+		}
+	},
+	"final": {
+		"ENG-201": {
+			"issueKey": "ENG-201",
+			"stage": "done",
+			"startedAt": "2026-05-13T17:01:28.495Z",
+			"updatedAt": "2026-05-13T17:01:28.876Z",
+			"codexSessionId": "plan-session-1",
+			"reviewSessionId": "review-session-2",
+			"workspacePath": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8",
+			"executionWorkspace": {
+				"mode": "git-worktree",
+				"path": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8/.piv-loop/projects/default/worktrees/eng-201",
+				"branch": "codex/eng-201-eng-201",
+				"createdAt": "2026-05-13T17:01:28.496Z"
+			}
+		},
+		"ENG-202": {
+			"issueKey": "ENG-202",
+			"stage": "done",
+			"startedAt": "2026-05-13T17:01:28.495Z",
+			"updatedAt": "2026-05-13T17:01:28.876Z",
+			"codexSessionId": "plan-session-2",
+			"reviewSessionId": "review-session-1",
+			"workspacePath": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8",
+			"executionWorkspace": {
+				"mode": "git-worktree",
+				"path": "/var/folders/nl/s1w15yxd52dfk72brb3v2kww0000gn/T/roy175-evidence-mdUVa8/.piv-loop/projects/default/worktrees/eng-202",
+				"branch": "codex/eng-202-eng-202",
+				"createdAt": "2026-05-13T17:01:28.496Z"
+			}
+		}
+	},
+	"chatFiles": []
+}
