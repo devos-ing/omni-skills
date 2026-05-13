@@ -10,6 +10,7 @@
 	},
 	"exports": {
 		"./features/config": "./src/features/config/index.ts",
+		"./features/server/cli-command-executor": "./src/features/server/cli-command-executor.ts",
 		"./features/types": "./src/features/types.ts",
 		"./features/workflow/workflow": "./src/features/workflow/workflow.ts",
 		"./utils/logger": "./src/utils/logger.ts"
