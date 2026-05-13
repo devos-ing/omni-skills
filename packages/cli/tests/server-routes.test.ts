@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { createReadRepositories } from "../src/features/server/repositories";
-import { handleServerRequest } from "../src/features/server/routes";
+import {
+	READ_ONLY_SERVER_PATHS,
+	handleServerRequest,
+} from "../src/features/server/routes";
 import {
 	type TestDatabase,
 	createServerTestDatabase,
@@ -21,13 +24,7 @@ describe("server routes", () => {
 		testDatabase = await createServerTestDatabase();
 		const repositories = createReadRepositories(testDatabase.path);
 
-		for (const pathname of [
-			"/api/token-usage",
-			"/api/jobs",
-			"/api/agents",
-			"/api/skills",
-			"/api/command-history",
-		]) {
+		for (const pathname of READ_ONLY_SERVER_PATHS) {
 			const response = await handleServerRequest(
 				new Request(`http://localhost${pathname}`),
 				{ repositories },

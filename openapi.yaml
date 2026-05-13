@@ -1,0 +1,669 @@
+openapi: 3.1.0
+info:
+  title: ADHD.ai CLI-Backed Server API
+  version: 0.1.0
+  description: >
+    OpenAPI contract for ADHD.ai server endpoints that execute CLI workflows and
+    expose read-only workflow history and telemetry tables.
+servers:
+  - url: http://localhost:3001
+tags:
+  - name: CLI Execution
+  - name: Read Models
+paths:
+  /api/cli/run:
+    post:
+      tags: [CLI Execution]
+      summary: Start a workflow run command
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/status:
+    post:
+      tags: [CLI Execution]
+      summary: Query status for a project and issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/stop:
+    post:
+      tags: [CLI Execution]
+      summary: Stop a currently running workflow process
+      description: Planned contract endpoint; server implementation may arrive in a sibling issue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/projects:
+    post:
+      tags: [CLI Execution]
+      summary: List configured projects through CLI command
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectsActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/setup:
+    post:
+      tags: [CLI Execution]
+      summary: Run setup or setup checks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/task/create:
+    post:
+      tags: [CLI Execution]
+      summary: Create task intake item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/skills/list:
+    post:
+      tags: [CLI Execution]
+      summary: List skills
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillsListActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/skills/add:
+    post:
+      tags: [CLI Execution]
+      summary: Add a skill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillsAddActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/skills/update:
+    post:
+      tags: [CLI Execution]
+      summary: Update a skill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillsUpdateActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/skills/remove:
+    post:
+      tags: [CLI Execution]
+      summary: Remove a skill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillsRemoveActionRequest'
+      responses:
+        '200':
+          description: CLI command execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CliCommandExecutionResult'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypedError'
+  /api/cli/history:
+    get:
+      tags: [CLI Execution]
+      summary: Return in-memory CLI execution history
+      responses:
+        '200':
+          description: Most recent command executions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CliCommandExecutionHistoryEntry'
+  /api/token-usage:
+    get:
+      tags: [Read Models]
+      summary: Read token usage records
+      responses:
+        '200':
+          description: Token usage records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenUsageRecord'
+  /api/jobs:
+    get:
+      tags: [Read Models]
+      summary: Read workflow jobs
+      responses:
+        '200':
+          description: Workflow job rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobRecord'
+  /api/agents:
+    get:
+      tags: [Read Models]
+      summary: Read configured agent records
+      responses:
+        '200':
+          description: Agent rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentRecord'
+  /api/skills:
+    get:
+      tags: [Read Models]
+      summary: Read persisted skill records
+      responses:
+        '200':
+          description: Skill rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkillRecord'
+  /api/command-history:
+    get:
+      tags: [Read Models]
+      summary: Read persisted command history records
+      responses:
+        '200':
+          description: Command history rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommandHistoryRecord'
+components:
+  schemas:
+    TypedError:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: string
+    RunActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          const: run
+        projectId:
+          type: string
+        issueKey:
+          type: string
+        allProjects:
+          type: boolean
+        poll:
+          type: boolean
+        noExitWhenIdle:
+          type: boolean
+        concurrency:
+          type: integer
+          minimum: 1
+        pollIntervalMs:
+          type: integer
+          minimum: 1
+        maxPollCycles:
+          type: integer
+          minimum: 1
+        isolatedWorktrees:
+          type: boolean
+    StatusActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, projectId, issueKey]
+      properties:
+        action:
+          type: string
+          const: status
+        projectId:
+          type: string
+          minLength: 1
+        issueKey:
+          type: string
+          minLength: 1
+    StopActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, projectId, issueKey]
+      properties:
+        action:
+          type: string
+          const: stop
+        projectId:
+          type: string
+          minLength: 1
+        issueKey:
+          type: string
+          minLength: 1
+    ProjectsActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          const: projects
+    SetupActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          const: setup
+        check:
+          type: boolean
+    TaskCreateActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, taskAction, request]
+      properties:
+        action:
+          type: string
+          const: task
+        taskAction:
+          type: string
+          const: create
+        request:
+          type: string
+          minLength: 1
+        projectId:
+          type: string
+    SkillsListActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, skillsAction]
+      properties:
+        action:
+          type: string
+          const: skills
+        skillsAction:
+          type: string
+          const: list
+        projectId:
+          type: string
+    SkillsAddActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, skillsAction, title, description, content]
+      properties:
+        action:
+          type: string
+          const: skills
+        skillsAction:
+          type: string
+          const: add
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        projectId:
+          type: string
+    SkillsUpdateActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, skillsAction, name]
+      properties:
+        action:
+          type: string
+          const: skills
+        skillsAction:
+          type: string
+          const: update
+        name:
+          type: string
+          minLength: 1
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        projectId:
+          type: string
+      anyOf:
+        - required: [title]
+        - required: [description]
+        - required: [content]
+    SkillsRemoveActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action, skillsAction, name]
+      properties:
+        action:
+          type: string
+          const: skills
+        skillsAction:
+          type: string
+          const: remove
+        name:
+          type: string
+          minLength: 1
+        projectId:
+          type: string
+    CliCommandInvocation:
+      type: object
+      additionalProperties: false
+      required: [command, args]
+      properties:
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+    CommandResult:
+      type: object
+      additionalProperties: false
+      required: [code, stdout, stderr]
+      properties:
+        code:
+          type: integer
+        stdout:
+          type: string
+        stderr:
+          type: string
+    CliCommandExecutionResult:
+      type: object
+      additionalProperties: false
+      required: [status, request]
+      properties:
+        status:
+          type: string
+          enum: [succeeded, failed, rejected]
+        request:
+          oneOf:
+            - $ref: '#/components/schemas/RunActionRequest'
+            - $ref: '#/components/schemas/StatusActionRequest'
+            - $ref: '#/components/schemas/ProjectsActionRequest'
+            - $ref: '#/components/schemas/SetupActionRequest'
+            - $ref: '#/components/schemas/TaskCreateActionRequest'
+            - $ref: '#/components/schemas/SkillsListActionRequest'
+            - $ref: '#/components/schemas/SkillsAddActionRequest'
+            - $ref: '#/components/schemas/SkillsUpdateActionRequest'
+            - $ref: '#/components/schemas/SkillsRemoveActionRequest'
+            - $ref: '#/components/schemas/StopActionRequest'
+        invocation:
+          $ref: '#/components/schemas/CliCommandInvocation'
+        commandResult:
+          $ref: '#/components/schemas/CommandResult'
+        error:
+          type: string
+    CliCommandExecutionHistoryEntry:
+      type: object
+      additionalProperties: false
+      required: [requestedAt, finishedAt, request, status]
+      properties:
+        requestedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        request:
+          oneOf:
+            - $ref: '#/components/schemas/RunActionRequest'
+            - $ref: '#/components/schemas/StatusActionRequest'
+            - $ref: '#/components/schemas/ProjectsActionRequest'
+            - $ref: '#/components/schemas/SetupActionRequest'
+            - $ref: '#/components/schemas/TaskCreateActionRequest'
+            - $ref: '#/components/schemas/SkillsListActionRequest'
+            - $ref: '#/components/schemas/SkillsAddActionRequest'
+            - $ref: '#/components/schemas/SkillsUpdateActionRequest'
+            - $ref: '#/components/schemas/SkillsRemoveActionRequest'
+            - $ref: '#/components/schemas/StopActionRequest'
+        status:
+          type: string
+          enum: [succeeded, failed, rejected]
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+        exitCode:
+          type: integer
+        stdout:
+          type: string
+        stderr:
+          type: string
+        error:
+          type: string
+    TokenUsageRecord:
+      type: object
+      additionalProperties: false
+      required: [id, runId, stage, inputTokens, outputTokens, totalTokens, recordedAt]
+      properties:
+        id:
+          type: string
+        runId:
+          type: string
+        stage:
+          type: string
+        inputTokens:
+          type: integer
+        outputTokens:
+          type: integer
+        totalTokens:
+          type: integer
+        recordedAt:
+          type: string
+    JobRecord:
+      type: object
+      additionalProperties: false
+      required: [id, projectId, issueKey, stage, status, createdAt]
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        issueKey:
+          type: string
+        stage:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+    AgentRecord:
+      type: object
+      additionalProperties: false
+      required: [id, name, backend, model, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        backend:
+          type: string
+        model:
+          type: string
+        createdAt:
+          type: string
+    SkillRecord:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, source, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+        updatedAt:
+          type: string
+    CommandHistoryRecord:
+      type: object
+      additionalProperties: false
+      required: [id, command, exitCode, executedAt]
+      properties:
+        id:
+          type: string
+        command:
+          type: string
+        exitCode:
+          type: integer
+        executedAt:
+          type: string

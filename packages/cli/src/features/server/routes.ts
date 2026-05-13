@@ -2,6 +2,14 @@ import type { ServerRouteDeps } from "./routes.types";
 
 type RouteHandler = (deps: ServerRouteDeps) => unknown;
 
+export const READ_ONLY_SERVER_PATHS = [
+	"/api/token-usage",
+	"/api/jobs",
+	"/api/agents",
+	"/api/skills",
+	"/api/command-history",
+] as const;
+
 const routes: Record<string, RouteHandler> = {
 	"/api/token-usage": (deps) => deps.repositories.listTokenUsage(),
 	"/api/jobs": (deps) => deps.repositories.listJobs(),
