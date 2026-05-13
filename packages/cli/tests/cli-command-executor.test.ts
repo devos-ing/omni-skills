@@ -323,6 +323,48 @@ describe("CliCommandExecutor", () => {
 		]);
 	});
 
+	it("executes task create action with answers payload", async () => {
+		const calls: Array<{ command: string; args: string[] }> = [];
+		const runCommandFn: RunCommandFn = async (command, args) => {
+			calls.push({ command, args });
+			return { code: 0, stdout: "ok", stderr: "" };
+		};
+		const executor = new CliCommandExecutor({
+			cwd: "/tmp/work",
+			command: "bun",
+			baseArgs: ["run", "./packages/cli/src/index.ts"],
+			runCommandFn,
+		});
+
+		const answers = [
+			{ question: "Which project?", answer: "web" },
+			{ question: "Priority?", answer: "high" },
+		];
+		const result = await executor.execute({
+			action: "task",
+			taskAction: "create",
+			request: "Build intake flow",
+			answers,
+		});
+
+		expect(result.status).toBe("succeeded");
+		expect(calls).toEqual([
+			{
+				command: "bun",
+				args: [
+					"run",
+					"./packages/cli/src/index.ts",
+					"task",
+					"create",
+					"--request",
+					"Build intake flow",
+					"--answers-json",
+					JSON.stringify(answers),
+				],
+			},
+		]);
+	});
+
 	it("executes skills list action with structured argv", async () => {
 		const calls: Array<{ command: string; args: string[] }> = [];
 		const runCommandFn: RunCommandFn = async (command, args) => {
@@ -537,6 +579,18 @@ describe("CliCommandExecutor", () => {
 			request: "Build a better setup flow",
 			projectId: 42,
 		} as unknown as { action: string });
+		const malformedTaskAnswersShape = await executor.execute({
+			action: "task",
+			taskAction: "create",
+			request: "Build a better setup flow",
+			answers: "nope",
+		} as unknown as { action: string });
+		const malformedTaskAnswersItem = await executor.execute({
+			action: "task",
+			taskAction: "create",
+			request: "Build a better setup flow",
+			answers: [{ question: "Who?" }],
+		} as unknown as { action: string });
 		const malformedRunFields = await executor.execute({
 			action: "run",
 			projectId: ["bad"],
@@ -573,6 +627,14 @@ describe("CliCommandExecutor", () => {
 		expect(malformedTaskProject.status).toBe("rejected");
 		expect(malformedTaskProject.error).toContain(
 			"projectId must be a non-empty string",
+		);
+		expect(malformedTaskAnswersShape.status).toBe("rejected");
+		expect(malformedTaskAnswersShape.error).toContain(
+			"answers must be an array",
+		);
+		expect(malformedTaskAnswersItem.status).toBe("rejected");
+		expect(malformedTaskAnswersItem.error).toContain(
+			"answers[0].answer must be a non-empty string",
 		);
 		expect(malformedRunFields.status).toBe("rejected");
 		expect(malformedRunFields.error).toContain(

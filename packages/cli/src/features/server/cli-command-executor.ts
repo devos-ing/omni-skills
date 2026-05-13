@@ -523,9 +523,58 @@ function resolveTaskArgs(
 	if (projectIdValidation.status !== "ok") {
 		return projectIdValidation;
 	}
+	const answersValidation = validateOptionalTaskAnswers(request.answers);
+	if (answersValidation.status !== "ok") {
+		return answersValidation;
+	}
 	const args = ["task", "create", "--request", request.request];
 	appendFlag(args, "--project", projectIdValidation.value);
+	if (answersValidation.value) {
+		args.push("--answers-json", JSON.stringify(answersValidation.value));
+	}
 	return { status: "ok", args };
+}
+
+function validateOptionalTaskAnswers(value: unknown):
+	| {
+			status: "ok";
+			value: Array<{ question: string; answer: string }> | undefined;
+	  }
+	| { status: "error"; error: string } {
+	if (value === undefined) {
+		return { status: "ok", value: undefined };
+	}
+	if (!Array.isArray(value)) {
+		return {
+			status: "error",
+			error: "Malformed task create request: answers must be an array",
+		};
+	}
+	const answers: Array<{ question: string; answer: string }> = [];
+	for (const [index, item] of value.entries()) {
+		if (typeof item !== "object" || item === null) {
+			return {
+				status: "error",
+				error: `Malformed task create request: answers[${index}] must be an object`,
+			};
+		}
+		const question = (item as Record<string, unknown>).question;
+		const answer = (item as Record<string, unknown>).answer;
+		if (!isNonEmptyString(question)) {
+			return {
+				status: "error",
+				error: `Malformed task create request: answers[${index}].question must be a non-empty string`,
+			};
+		}
+		if (!isNonEmptyString(answer)) {
+			return {
+				status: "error",
+				error: `Malformed task create request: answers[${index}].answer must be a non-empty string`,
+			};
+		}
+		answers.push({ question, answer });
+	}
+	return { status: "ok", value: answers };
 }
 
 function appendBooleanFlag(

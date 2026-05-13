@@ -27,6 +27,7 @@ export type TaskCommand = {
 	action: "create";
 	projectId?: string;
 	request?: string;
+	answers?: Array<{ question: string; answer: string }>;
 };
 
 export type CliCommand =

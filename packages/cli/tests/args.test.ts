@@ -287,6 +287,7 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "Build a better setup flow",
 				projectId: "default",
+				answers: undefined,
 			},
 		});
 	});
@@ -300,6 +301,7 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "-",
 				projectId: undefined,
+				answers: undefined,
 			},
 		});
 	});
@@ -311,6 +313,7 @@ describe("parseArgs", () => {
 				action: "create",
 				request: undefined,
 				projectId: undefined,
+				answers: undefined,
 			},
 		});
 	});
@@ -334,8 +337,47 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "Build a better setup flow",
 				projectId: undefined,
+				answers: undefined,
 			},
 		});
+	});
+
+	it("parses task create answers JSON", () => {
+		expect(
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"task",
+				"create",
+				"--request",
+				"Create task",
+				"--answers-json",
+				'[{"question":"Who is this for?","answer":"CLI users"}]',
+			]),
+		).toEqual({
+			kind: "task",
+			command: {
+				action: "create",
+				request: "Create task",
+				projectId: undefined,
+				answers: [{ question: "Who is this for?", answer: "CLI users" }],
+			},
+		});
+	});
+
+	it("rejects invalid task create answers JSON", () => {
+		expect(() =>
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"task",
+				"create",
+				"--request",
+				"Create task",
+				"--answers-json",
+				"not-json",
+			]),
+		).toThrow("task create --answers-json must be valid JSON");
 	});
 
 	it("rejects skills add without required flags", () => {

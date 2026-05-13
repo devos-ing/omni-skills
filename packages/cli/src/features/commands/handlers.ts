@@ -155,6 +155,8 @@ export async function handleCommand(
 			return runTaskIntake(project, agent, linear, {
 				request,
 				askQuestion,
+				providedAnswers: command.command.answers,
+				nonInteractive: Boolean(command.command.answers),
 			});
 		});
 		if (result.status === "created") {
@@ -202,7 +204,7 @@ export function printHelp(): void {
 			"  adhd-ai run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
 			"  adhd-ai status --project <PROJECT_ID> --issue <LINEAR_KEY>",
 			"  adhd-ai projects",
-			"  adhd-ai task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>]",
+			"  adhd-ai task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--answers-json <JSON_ARRAY>]",
 			"  adhd-ai skills list [--project <PROJECT_ID>]",
 			"  adhd-ai skills add --title <TITLE> --description <TEXT> --content <TEXT> [--project <PROJECT_ID>]",
 			"  adhd-ai skills update <NAME> [--title <TITLE>] [--description <TEXT>] [--content <TEXT>] [--project <PROJECT_ID>]",

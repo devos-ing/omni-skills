@@ -14,6 +14,8 @@ const DEFAULT_MAX_CLARIFICATION_ROUNDS = 5;
 export interface RunTaskIntakeOptions {
 	request: string;
 	maxClarificationRounds?: number;
+	providedAnswers?: TaskIntakeAnswer[];
+	nonInteractive?: boolean;
 	askQuestion(question: string): Promise<string>;
 }
 
@@ -30,6 +32,14 @@ export async function runTaskIntake(
 	const maxClarificationRounds =
 		options.maxClarificationRounds ?? DEFAULT_MAX_CLARIFICATION_ROUNDS;
 	const answers: TaskIntakeAnswer[] = [];
+	const providedAnswers = new Map<string, string>();
+	for (const answer of options.providedAnswers ?? []) {
+		const question = answer.question.trim();
+		const response = answer.answer.trim();
+		if (question.length > 0 && response.length > 0) {
+			providedAnswers.set(question, response);
+		}
+	}
 	let clarificationRounds = 0;
 
 	while (true) {
@@ -51,6 +61,17 @@ export async function runTaskIntake(
 		}
 		clarificationRounds += 1;
 		for (const question of decision.questions) {
+			const providedAnswer = providedAnswers.get(question);
+			if (providedAnswer) {
+				answers.push({
+					question,
+					answer: providedAnswer,
+				});
+				continue;
+			}
+			if (options.nonInteractive) {
+				return { status: "needs_info", questions: decision.questions };
+			}
 			answers.push({
 				question,
 				answer: await options.askQuestion(question),

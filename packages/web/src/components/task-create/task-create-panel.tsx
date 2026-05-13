@@ -41,12 +41,16 @@ export function TaskCreatePanel(): ReactElement {
 		return "Enter a requirement to create a task.";
 	}, [createTask.data, createTask.isPending, errorMessage]);
 
-	async function submitRequest(nextRequest: string): Promise<void> {
+	async function submitRequest(
+		nextRequest: string,
+		nextAnswers?: ClarificationAnswer[],
+	): Promise<void> {
 		setErrorMessage(null);
 		try {
 			const response = await createTask.mutateAsync({
 				request: nextRequest,
 				projectId: projectId.trim() || undefined,
+				answers: nextAnswers,
 			});
 			if (response.status === "needs_info") {
 				setActiveQuestions(response.questions);
@@ -84,14 +88,7 @@ export function TaskCreatePanel(): ReactElement {
 	}
 
 	async function handleClarificationSubmit(): Promise<void> {
-		const questionPrompt = [
-			request.trim(),
-			"",
-			...answers.map(
-				(entry) => `Q: ${entry.question}\nA: ${entry.answer.trim()}`,
-			),
-		].join("\n");
-		await submitRequest(questionPrompt);
+		await submitRequest(request.trim(), answers);
 	}
 
 	return (
