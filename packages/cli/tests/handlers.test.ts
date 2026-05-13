@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { handleCommand } from "../src/commands/handlers";
+import {
+	handleCommand,
+	resolveTaskCreateRequest,
+} from "../src/commands/handlers";
 import type { LoadedConfig } from "../src/features/config";
 import type { ResolvedProjectConfig, RunState } from "../src/features/types";
 import { saveRunState } from "../src/features/workflow/state";
@@ -64,6 +67,27 @@ describe("handleCommand status output", () => {
 		};
 		expect(parsed.stage).toBe("planning");
 		expect(parsed.stageDisplay).toBe("planning 🧭");
+	});
+});
+
+describe("resolveTaskCreateRequest", () => {
+	it("uses prompted request when missing", async () => {
+		const request = await resolveTaskCreateRequest({
+			request: undefined,
+			askQuestion: async () => "Build a better setup flow",
+			readStdin: async () => "",
+		});
+		expect(request).toBe("Build a better setup flow");
+	});
+
+	it("rejects empty prompted request", async () => {
+		await expect(
+			resolveTaskCreateRequest({
+				request: undefined,
+				askQuestion: async () => "   ",
+				readStdin: async () => "",
+			}),
+		).rejects.toThrow("task create requires a non-empty request");
 	});
 });
 

@@ -304,10 +304,38 @@ describe("parseArgs", () => {
 		});
 	});
 
-	it("rejects task create without a request", () => {
-		expect(() => parseArgs(["bun", "adhd-ai", "task", "create"])).toThrow(
-			"task create requires --request <VALUE>",
-		);
+	it("parses task create without request", () => {
+		expect(parseArgs(["bun", "adhd-ai", "task", "create"])).toEqual({
+			kind: "task",
+			command: {
+				action: "create",
+				request: undefined,
+				projectId: undefined,
+			},
+		});
+	});
+
+	it("parses task create positional request", () => {
+		expect(
+			parseArgs([
+				"bun",
+				"adhd-ai",
+				"task",
+				"create",
+				"Build",
+				"a",
+				"better",
+				"setup",
+				"flow",
+			]),
+		).toEqual({
+			kind: "task",
+			command: {
+				action: "create",
+				request: "Build a better setup flow",
+				projectId: undefined,
+			},
+		});
 	});
 
 	it("rejects skills add without required flags", () => {

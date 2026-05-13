@@ -26,7 +26,7 @@ export type SkillsCommand =
 export type TaskCommand = {
 	action: "create";
 	projectId?: string;
-	request: string;
+	request?: string;
 };
 
 export type CliCommand =

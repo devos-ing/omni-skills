@@ -19,6 +19,25 @@ import { runWorkflow } from "../workflow/workflow";
 type SetupCommand = Extract<CliCommand, { kind: "setup" }>;
 type RunnableCommand = Exclude<CliCommand, { kind: "help" } | SetupCommand>;
 
+export async function resolveTaskCreateRequest(options: {
+	request?: string;
+	askQuestion(question: string): Promise<string>;
+	readStdin(): Promise<string>;
+}): Promise<string> {
+	let request = options.request;
+	if (request === "-") {
+		request = await options.readStdin();
+	}
+	if (!request) {
+		request = await options.askQuestion("Enter task request");
+	}
+	const trimmedRequest = request.trim();
+	if (!trimmedRequest) {
+		throw new Error("task create requires a non-empty request");
+	}
+	return trimmedRequest;
+}
+
 export async function handleSetupCommand(
 	command: SetupCommand,
 	cwd: string,
@@ -125,15 +144,19 @@ export async function handleCommand(
 		if (!project) {
 			throw new Error("No project is configured");
 		}
-		const request =
-			command.command.request === "-"
-				? await readStdinText()
-				: command.command.request;
 		const agent = createAgentAdapter(project);
 		const linear = new LinearClient(project);
-		const result = await withQuestionReader((askQuestion) =>
-			runTaskIntake(project, agent, linear, { request, askQuestion }),
-		);
+		const result = await withQuestionReader(async (askQuestion) => {
+			const request = await resolveTaskCreateRequest({
+				request: command.command.request,
+				askQuestion,
+				readStdin: readStdinText,
+			});
+			return runTaskIntake(project, agent, linear, {
+				request,
+				askQuestion,
+			});
+		});
 		if (result.status === "created") {
 			process.stdout.write(
 				`Created Linear task ${result.issue.identifier}: ${result.issue.url}\n`,
@@ -179,7 +202,7 @@ export function printHelp(): void {
 			"  adhd-ai run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
 			"  adhd-ai status --project <PROJECT_ID> --issue <LINEAR_KEY>",
 			"  adhd-ai projects",
-			"  adhd-ai task create --request <TEXT|-> [--project <PROJECT_ID>]",
+			"  adhd-ai task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>]",
 			"  adhd-ai skills list [--project <PROJECT_ID>]",
 			"  adhd-ai skills add --title <TITLE> --description <TEXT> --content <TEXT> [--project <PROJECT_ID>]",
 			"  adhd-ai skills update <NAME> [--title <TITLE>] [--description <TEXT>] [--content <TEXT>] [--project <PROJECT_ID>]",
