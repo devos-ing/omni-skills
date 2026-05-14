@@ -1,4 +1,8 @@
-import { CliCommandExecutor } from "adhdai/features/server/cli-command-executor";
+import path from "node:path";
+import {
+	CliCommandExecutor,
+	initializeServerDatabase,
+} from "adhdai/features/server";
 import { createHandleRequest } from "./app";
 import { initializeServerDatabase } from "./db";
 

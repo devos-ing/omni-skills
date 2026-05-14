@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createReadRepositories } from "../src/features/server/repositories";
+import { createReadRepositories } from "../src/repositories";
 import {
 	type TestDatabase,
 	createServerTestDatabase,
 	seedServerTestDatabase,
-} from "./server-test-helpers";
+} from "./server-db-test-helpers";
 
 let testDatabase: TestDatabase | undefined;
 
@@ -18,21 +18,21 @@ afterEach(async () => {
 describe("read repositories", () => {
 	it("returns empty lists when tables are empty", async () => {
 		testDatabase = await createServerTestDatabase();
-		const repositories = createReadRepositories(testDatabase.path);
+		const repositories = createReadRepositories(testDatabase.database);
 
-		expect(repositories.listTokenUsage()).toEqual([]);
-		expect(repositories.listJobs()).toEqual([]);
-		expect(repositories.listAgents()).toEqual([]);
-		expect(repositories.listSkills()).toEqual([]);
-		expect(repositories.listCommandHistory()).toEqual([]);
+		expect(await repositories.listTokenUsage()).toEqual([]);
+		expect(await repositories.listJobs()).toEqual([]);
+		expect(await repositories.listAgents()).toEqual([]);
+		expect(await repositories.listSkills()).toEqual([]);
+		expect(await repositories.listCommandHistory()).toEqual([]);
 	});
 
 	it("returns seeded rows with expected mapping", async () => {
 		testDatabase = await createServerTestDatabase();
-		seedServerTestDatabase(testDatabase.path);
-		const repositories = createReadRepositories(testDatabase.path);
+		await seedServerTestDatabase(testDatabase.database);
+		const repositories = createReadRepositories(testDatabase.database);
 
-		expect(repositories.listTokenUsage()).toEqual([
+		expect(await repositories.listTokenUsage()).toEqual([
 			{
 				id: "tu-1",
 				runId: "run-1",
@@ -43,7 +43,7 @@ describe("read repositories", () => {
 				recordedAt: "2026-05-12T00:00:00.000Z",
 			},
 		]);
-		expect(repositories.listJobs()).toEqual([
+		expect(await repositories.listJobs()).toEqual([
 			{
 				id: "job-1",
 				projectId: "default",
@@ -53,7 +53,7 @@ describe("read repositories", () => {
 				createdAt: "2026-05-12T00:01:00.000Z",
 			},
 		]);
-		expect(repositories.listAgents()).toEqual([
+		expect(await repositories.listAgents()).toEqual([
 			{
 				id: "agent-1",
 				name: "codex-main",
@@ -62,7 +62,7 @@ describe("read repositories", () => {
 				createdAt: "2026-05-12T00:02:00.000Z",
 			},
 		]);
-		expect(repositories.listSkills()).toEqual([
+		expect(await repositories.listSkills()).toEqual([
 			{
 				id: "skill-1",
 				name: "backend-standard",
@@ -71,7 +71,7 @@ describe("read repositories", () => {
 				updatedAt: "2026-05-12T00:03:00.000Z",
 			},
 		]);
-		expect(repositories.listCommandHistory()).toEqual([
+		expect(await repositories.listCommandHistory()).toEqual([
 			{
 				id: "cmd-1",
 				command: "bun test",

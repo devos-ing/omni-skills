@@ -41,9 +41,9 @@ export interface CommandHistoryRecord {
 }
 
 export interface ReadRepositories {
-	listTokenUsage(): TokenUsageRecord[];
-	listJobs(): JobRecord[];
-	listAgents(): AgentRecord[];
-	listSkills(): SkillRecord[];
-	listCommandHistory(): CommandHistoryRecord[];
+	listTokenUsage(): Promise<TokenUsageRecord[]>;
+	listJobs(): Promise<JobRecord[]>;
+	listAgents(): Promise<AgentRecord[]>;
+	listSkills(): Promise<SkillRecord[]>;
+	listCommandHistory(): Promise<CommandHistoryRecord[]>;
 }

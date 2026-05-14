@@ -1,14 +1,11 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createReadRepositories } from "../src/features/server/repositories";
-import {
-	READ_ONLY_SERVER_PATHS,
-	handleServerRequest,
-} from "../src/features/server/routes";
+import { createReadRepositories } from "../src/repositories";
+import { READ_ONLY_SERVER_PATHS, handleServerRequest } from "../src/routes";
 import {
 	type TestDatabase,
 	createServerTestDatabase,
 	seedServerTestDatabase,
-} from "./server-test-helpers";
+} from "./server-db-test-helpers";
 
 let testDatabase: TestDatabase | undefined;
 
@@ -22,7 +19,7 @@ afterEach(async () => {
 describe("server routes", () => {
 	it("returns empty arrays for read-only endpoints with empty tables", async () => {
 		testDatabase = await createServerTestDatabase();
-		const repositories = createReadRepositories(testDatabase.path);
+		const repositories = createReadRepositories(testDatabase.database);
 
 		for (const pathname of READ_ONLY_SERVER_PATHS) {
 			const response = await handleServerRequest(
@@ -36,8 +33,8 @@ describe("server routes", () => {
 
 	it("returns seeded records for each endpoint", async () => {
 		testDatabase = await createServerTestDatabase();
-		seedServerTestDatabase(testDatabase.path);
-		const repositories = createReadRepositories(testDatabase.path);
+		await seedServerTestDatabase(testDatabase.database);
+		const repositories = createReadRepositories(testDatabase.database);
 
 		const tokenUsageResponse = await handleServerRequest(
 			new Request("http://localhost/api/token-usage"),
@@ -75,7 +72,7 @@ describe("server routes", () => {
 
 	it("returns not found and method not allowed when appropriate", async () => {
 		testDatabase = await createServerTestDatabase();
-		const repositories = createReadRepositories(testDatabase.path);
+		const repositories = createReadRepositories(testDatabase.database);
 
 		const notFoundResponse = await handleServerRequest(
 			new Request("http://localhost/api/unknown"),

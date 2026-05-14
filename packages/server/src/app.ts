@@ -5,10 +5,12 @@ import { handleTasksRoute } from "./http/tasks-routes";
 
 export function createHandleRequest(deps: AppDeps): RouteHandler {
 	return async (request) => {
-		const { pathname } = new URL(request.url);
-
-		if (pathname === "/health" && request.method === "GET") {
-			return Response.json({ status: "ok" });
+		if (matchesPath(request, "/health")) {
+			const methodResult = ensureMethod(request, "GET");
+			if (methodResult.status === "error") {
+				return methodResult.response;
+			}
+			return jsonSuccess({ status: "ok" });
 		}
 
 		const cliResponse = await handleCliRoute(
@@ -34,16 +36,17 @@ export function createHandleRequest(deps: AppDeps): RouteHandler {
 			return taskResponse;
 		}
 
-		return new Response("Not Found", { status: 404 });
+		return notFoundResponse();
 	};
 }
 
 export const handleRequest: RouteHandler = (request) => {
-	const { pathname } = new URL(request.url);
-
-	if (pathname === "/health" && request.method === "GET") {
-		return Response.json({ status: "ok" });
+	if (matchesPath(request, "/health")) {
+		if (request.method !== "GET") {
+			return methodNotAllowedResponse();
+		}
+		return jsonSuccess({ status: "ok" });
 	}
 
-	return new Response("Not Found", { status: 404 });
+	return notFoundResponse();
 };

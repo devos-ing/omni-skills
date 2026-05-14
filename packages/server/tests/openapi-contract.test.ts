@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { READ_ONLY_SERVER_PATHS } from "../src/features/server/routes";
+import { READ_ONLY_SERVER_PATHS } from "../src/routes";
 
 function extractOpenApiPathKeys(openApiDocument: string): Set<string> {
 	const pathsSection = openApiDocument.match(

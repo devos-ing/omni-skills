@@ -1,6 +1,6 @@
 import type { ServerRouteDeps } from "./routes.types";
 
-type RouteHandler = (deps: ServerRouteDeps) => unknown;
+type RouteHandler = (deps: ServerRouteDeps) => Promise<unknown>;
 
 export const READ_ONLY_SERVER_PATHS = [
 	"/api/token-usage",
@@ -37,7 +37,7 @@ export async function handleServerRequest(
 	}
 
 	try {
-		return json(handler(deps), 200);
+		return json(await handler(deps), 200);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		return json({ error: message }, 500);
