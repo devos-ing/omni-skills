@@ -15,6 +15,8 @@ Planning output should remain concise and implementation-focused, including:
 
 1. CLI-to-server workflow coverage:
    [docs/cli-server-workflow-coverage.md](/Users/roy/Desktop/SourceCode/agentic/show-me-ur-agents/.devos/projects/adhd-47ea7f022b5d/worktrees/roy-146/docs/cli-server-workflow-coverage.md)
+2. Server-owned poller design (ROY-222):
+   [docs/RELIABILITY.md#server-owned-poller-design-roy-222](/Users/roy/Desktop/SourceCode/agentic/show-me-ur-agents/.devos/projects/adhd-47ea7f022b5d/worktrees/roy-222/docs/RELIABILITY.md)
 
 ## Operating Commands
 

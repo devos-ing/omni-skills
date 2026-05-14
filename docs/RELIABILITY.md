@@ -57,6 +57,76 @@ devos.ing combines queue behavior, per-issue leases, and execution-path locking 
 3. Stale in-progress runs are eligible for requeue only after lease expiry and timeout.
 4. `--all-projects --issue` must resolve to one unique project mapping.
 
+## Server-Owned Poller Design (ROY-222)
+
+This section defines a server-owned polling and dispatch workflow that can replace CLI polling over time, without removing CLI polling in this task.
+
+### Scope
+
+1. Design only: no runtime poller implementation change in this issue.
+2. Preserve existing CLI workflow and parsing contracts.
+3. Use structured command invocation boundaries only (no raw shell command strings).
+
+### Poll Sources
+
+1. Linear issues: same logical source currently consumed by CLI workflow polling.
+2. Internal tasks: server-owned tasks persisted in internal tables (for example `board_tasks`).
+
+### Eligibility Rules
+
+1. Linear work is eligible when it matches configured project routing and workflow-eligible states/labels.
+2. Internal work is eligible when task status, priority, assignment, and project context indicate it is ready for automation.
+3. Skip candidates that are already claimed, actively running, completed, blocked for human review, or currently in retry backoff.
+4. Skip candidates with unresolved project routing ambiguity.
+
+### Claiming and Duplicate Prevention
+
+1. Claims must be durable and server-owned, not process-local.
+2. Claim identity should be normalized as `(source_type, source_id)` to handle both Linear issues and internal tasks.
+3. Claim record should include:
+4. `sourceType`, `sourceId`, `projectId`, `status`, `leaseOwnerId`, `claimedAt`, `heartbeatAt`, `leaseExpiresAt`, `attemptCount`, `nextRetryAt`, `lastError`, `updatedAt`.
+5. Claim transition semantics must use atomic insert/update behavior so only one poller instance can claim a unit of work.
+6. Overlap prevention in in-memory scheduler state is not enough; durable claim state is the duplicate-prevention source of truth.
+
+### Retry and Backoff
+
+1. Distinguish dispatch/infrastructure failures from completed CLI runs that return unsuccessful outcomes.
+2. Increase `attemptCount` on retry-eligible failures and schedule `nextRetryAt` with capped exponential backoff.
+3. Do not retry while current time is before `nextRetryAt`.
+4. Expire stale `in_progress` claims using a lease timeout model aligned with existing run-lease behavior.
+5. When reclaiming stale work, record the stale recovery event in logs.
+
+### Dispatch Contract
+
+1. Server dispatches through the existing `CliCommandExecutor` boundary (`devos/features/server/cli-command-executor`).
+2. Dispatch uses structured action payloads that resolve to argv arrays, never raw command strings.
+3. Linear dispatch request shape:
+4. `action: "run"` with explicit `projectId` and `issueKey`, and polling disabled for that invocation.
+5. Internal-task dispatch request shape:
+6. Adapter-owned structured request that maps task context into existing CLI workflow/task actions without introducing raw shell fields.
+7. Keep dispatch behind a dispatcher adapter interface so runtime can move from local process invocation to queue/worker execution later.
+
+### Configuration
+
+1. Global server poller enable/disable flag.
+2. Per-source enable flags (`linear`, `internalTasks`).
+3. Poll interval, claim batch size, dispatcher concurrency, lease timeout, retry/backoff policy, and optional project/source filters.
+4. Migration period keeps CLI polling available and configurable independently.
+
+### Observability
+
+1. Emit logs for each poll cycle: source counts, eligible counts, claim attempts, claim conflicts/skips, dispatch starts/results, retries scheduled, and stale-claim recoveries.
+2. Include stable identifiers (`sourceType`, `sourceId`, `projectId`, `attemptCount`) for troubleshooting.
+3. Do not log secrets, access tokens, or sensitive task content.
+
+### Migration Path
+
+1. Phase 1 (this issue): design/spec only.
+2. Phase 2: implement server poller behind disabled-by-default config.
+3. Phase 3: run server poller in shadow mode or single-source mode and compare behavior against current CLI polling outcomes.
+4. Phase 4: disable CLI polling via config/deployment once server dispatch reliability is proven.
+5. CLI polling removal is explicitly out of scope for this issue.
+
 ## Verification Signal Contract
 
 Review/testing output must preserve:
