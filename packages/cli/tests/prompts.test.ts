@@ -50,6 +50,11 @@ describe("buildImplementPrompt", () => {
 		expect(prompt).toContain(
 			"List the exact checks/tests run and their outcome.",
 		);
+		expect(prompt).toContain("## Checkpoints");
+		expect(prompt).toContain("Scope checkpoint");
+		expect(prompt).toContain("Implementation checkpoint");
+		expect(prompt).toContain("Validation checkpoint");
+		expect(prompt).toContain("Final checkpoint");
 	});
 });
 

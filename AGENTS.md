@@ -22,6 +22,15 @@ single workspace.
    - `SUMMARY: ...`
    - `BUGS_JSON: [...]`
 
+## Workflow Checkpoints
+
+- Before implementation edits, re-state the scoped plan and confirm the files or
+  modules expected to change.
+- After implementation edits and before validation, summarize the code changes
+  made and any tests added or updated.
+- After testing or checks, report pass/fail/blocker status, including skipped
+  commands and remaining risk.
+
 ## Package Ownership Map
 
 - `packages/cli/`: CLI parsing, config resolution, workflow orchestration,

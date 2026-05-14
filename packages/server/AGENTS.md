@@ -45,3 +45,12 @@ boundaries to CLI or shared behavior.
    - `bun run check`
    - `bun run typecheck`
    - `bun test`
+
+## Workflow Checkpoints
+
+- Before implementation edits, re-state the scoped plan and confirm the server
+  modules expected to change.
+- After implementation edits and before validation, summarize changed behavior
+  and any tests added or updated.
+- After checks run, report pass/fail/blocker status, skipped commands, and
+  remaining risk.

@@ -35,3 +35,12 @@ project-agnostic across all configured workspaces.
 3. Add tests for any new CLI flag, config shape, state path, integration
    behavior, or workflow stage transition.
 4. Prefer focused CLI tests under `packages/cli/tests/` for CLI package changes.
+
+## Workflow Checkpoints
+
+- Before implementation edits, re-state the scoped plan and confirm the CLI
+  modules expected to change.
+- After implementation edits and before validation, summarize changed behavior
+  and any tests added or updated.
+- After checks run, report pass/fail/blocker status, skipped commands, and
+  remaining risk.

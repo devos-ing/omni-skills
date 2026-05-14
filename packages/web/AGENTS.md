@@ -37,3 +37,12 @@ server/API contracts.
    - `bun run --filter web build`
 3. For repo-wide changes, still run the root quality gates from the root
    `AGENTS.md`.
+
+## Workflow Checkpoints
+
+- Before implementation edits, re-state the scoped plan and confirm the web
+  modules expected to change.
+- After implementation edits and before validation, summarize changed UI or
+  data-flow behavior and any tests added or updated.
+- After checks run, report pass/fail/blocker status, skipped commands, and
+  remaining risk.

@@ -108,5 +108,10 @@ describe("buildReviewPrompt", () => {
 		expect(prompt).toContain("Do not fail solely for style");
 		expect(prompt).toContain("When reporting `RESULT: PASS`");
 		expect(prompt).toContain("## Failed Bug Detail Checklist");
+		expect(prompt).toContain("## Checkpoints");
+		expect(prompt).toContain("Review scope checkpoint");
+		expect(prompt).toContain("Coverage checkpoint");
+		expect(prompt).toContain("Testing checkpoint");
+		expect(prompt).toContain("Output checkpoint");
 	});
 });

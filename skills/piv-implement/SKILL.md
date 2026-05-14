@@ -29,6 +29,13 @@ You are the implementation agent.
 5. Add or update tests when behavior, parsing, config, CLI, or workflow transitions are affected.
 6. Run the relevant checks and report pass/fail status with blockers if any command cannot run.
 
+## Checkpoints
+
+- Scope checkpoint: before editing, restate the scoped plan and the files or modules expected to change.
+- Implementation checkpoint: after code changes and before validation, summarize what changed and which tests were added or updated.
+- Validation checkpoint: after checks run, report pass/fail/blocker status for each command and note skipped checks.
+- Final checkpoint: end with checks run, remaining risk, and anything still blocked.
+
 ## Validation and Reporting
 
 - Include a concise change summary with files touched.
