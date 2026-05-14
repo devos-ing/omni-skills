@@ -8,13 +8,6 @@
 	"bin": {
 		"adhd": "dist/index.js"
 	},
-	"exports": {
-		"./features/config": "./src/features/config/index.ts",
-		"./features/server": "./src/features/server/index.ts",
-		"./features/types": "./src/features/types.ts",
-		"./features/workflow/workflow": "./src/features/workflow/workflow.ts",
-		"./utils/logger": "./src/utils/logger.ts"
-	},
 	"scripts": {
 		"build": "bun build ./src/index.ts --target bun --outdir dist",
 		"start": "bun run ./src/index.ts",
