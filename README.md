@@ -105,6 +105,7 @@ After linking/installing the package bin, you can also use `adhd-ai ...` directl
 For full config shape, polling, automations/cron compatibility, env vars, and routing behavior, use:
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [docs/workspace-cli-commands.md](docs/workspace-cli-commands.md)
 - [docs/PLANS.md](docs/PLANS.md)
 - [docs/RELIABILITY.md](docs/RELIABILITY.md)
 - [docs/SECURITY.md](docs/SECURITY.md)
