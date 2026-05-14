@@ -4,7 +4,7 @@ import type {
 	CliCommandRequest,
 	NotificationServerRequest,
 } from "adhdai/features/server";
-import type { BoardRepository } from "./board";
+import type { NotificationService } from "./notifications/notifications-service";
 
 export interface CliExecutor {
 	execute(request: CliCommandRequest): Promise<CliCommandExecutionResult>;
@@ -13,9 +13,7 @@ export interface CliExecutor {
 
 export interface AppDeps {
 	cliExecutor: CliExecutor;
-	notificationSender: {
-		sendNotification(request: NotificationServerRequest): Promise<void>;
-	};
+	notificationService: NotificationService;
 }
 
 export type RouteHandler = (request: Request) => Response | Promise<Response>;

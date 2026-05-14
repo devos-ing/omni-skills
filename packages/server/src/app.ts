@@ -3,7 +3,7 @@ import type {
 	NotificationServerRequest,
 } from "adhdai/features/server";
 import type { AppDeps, RouteHandler } from "./app.types";
-import { handleEntityCrudRequest, matchCrudRoute } from "./routes/entity-crud";
+import { parseNotificationRequest } from "./notifications/notifications-request";
 
 const UNSAFE_RAW_COMMAND_FIELDS = ["command", "cmd", "args", "argv", "shell"];
 const WORKSPACE_PROJECTS_ROUTE = /^\/api\/workspaces\/([^/]+)\/projects\/?$/;
@@ -124,6 +124,24 @@ export function createHandleRequest(deps: AppDeps): RouteHandler {
 			}
 			await deps.notificationSender.sendNotification(parsed.request);
 			return Response.json({ status: "accepted" }, { status: 202 });
+		}
+
+		if (pathname === "/api/notifications/email") {
+			if (request.method !== "POST") {
+				return Response.json({ error: "Method Not Allowed" }, { status: 405 });
+			}
+			const parsed = await parseNotificationRequest(request);
+			if (parsed.status === "error") {
+				return Response.json({ error: parsed.error }, { status: 400 });
+			}
+			const result = await deps.notificationService.send(parsed.request);
+			if (result.status === "config_error") {
+				return Response.json({ error: result.error }, { status: 503 });
+			}
+			if (result.status === "send_error") {
+				return Response.json({ error: result.error }, { status: 502 });
+			}
+			return Response.json({ status: "sent" }, { status: 200 });
 		}
 
 		return new Response("Not Found", { status: 404 });

@@ -399,8 +399,8 @@ function createDeps(overrides?: {
 				})),
 			getHistory: () => overrides?.history ?? [],
 		},
-		notificationSender: {
-			sendNotification: overrides?.sendNotification ?? (async () => {}),
+		notificationService: {
+			send: async () => ({ status: "ok" }),
 		},
 	};
 }

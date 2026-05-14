@@ -1,7 +1,11 @@
 import path from "node:path";
 import { CliCommandExecutor } from "adhdai/features/server/cli-command-executor";
 import { createHandleRequest } from "./app";
-import { createNotificationSender } from "./notifications/notification-sender";
+import {
+	createNotificationConfigFromEnv,
+	createNotificationService,
+} from "./notifications/notifications-service";
+import { createResendClient } from "./notifications/resend-client";
 
 const DEFAULT_SERVER_DB_PATH = path.join(
 	process.cwd(),
@@ -23,8 +27,9 @@ export async function startServer(port = 3000): Promise<Bun.Server<undefined>> {
 				command: "bun",
 				baseArgs: ["run", "./packages/cli/src/index.ts"],
 			}),
-			notificationSender: createNotificationSender({
-				resendApiKey: process.env.RESEND_API_KEY?.trim(),
+			notificationService: createNotificationService({
+				config: createNotificationConfigFromEnv(process.env),
+				resendClient: createResendClient(process.env.RESEND_API_KEY ?? ""),
 			}),
 		}),
 	});

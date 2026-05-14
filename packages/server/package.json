@@ -27,6 +27,7 @@
 	"dependencies": {
 		"@electric-sql/pglite": "^0.3.14",
 		"adhdai": "workspace:*",
-		"drizzle-orm": "^0.44.7"
+		"drizzle-orm": "^0.44.7",
+		"resend": "^6.2.0"
 	}
 }
