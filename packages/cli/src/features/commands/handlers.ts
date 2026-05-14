@@ -146,19 +146,27 @@ export async function handleCommand(
 		}
 		const agent = createAgentAdapter(project);
 		const linear = new LinearClient(project);
-		const result = await withQuestionReader(async (askQuestion) => {
-			const request = await resolveTaskCreateRequest({
-				request: command.command.request,
-				askQuestion,
-				readStdin: readStdinText,
-			});
-			return runTaskIntake(project, agent, linear, {
-				request,
-				askQuestion,
-				providedAnswers: command.command.answers,
-				nonInteractive: Boolean(command.command.answers),
-			});
-		});
+		const result = command.command.nonInteractive
+			? await runTaskIntake(project, agent, linear, {
+					request: resolveNonInteractiveTaskRequest(command.command.request),
+					maxClarificationRounds: command.command.maxClarificationRounds,
+					initialAnswers: command.command.clarificationAnswers,
+					allowInteractiveQuestions: false,
+					askQuestion: async () => "",
+				})
+			: await withQuestionReader(async (askQuestion) => {
+					const request = await resolveTaskCreateRequest({
+						request: command.command.request,
+						askQuestion,
+						readStdin: readStdinText,
+					});
+					return runTaskIntake(project, agent, linear, {
+						request,
+						maxClarificationRounds: command.command.maxClarificationRounds,
+						initialAnswers: command.command.clarificationAnswers,
+						askQuestion,
+					});
+				});
 		if (result.status === "created") {
 			process.stdout.write(
 				`Created Linear task ${result.issue.identifier}: ${result.issue.url}\n`,
@@ -194,6 +202,17 @@ export async function handleCommand(
 	process.stdout.write(`${JSON.stringify(statusDisplay, null, 2)}\n`);
 }
 
+function resolveNonInteractiveTaskRequest(request: string | undefined): string {
+	if (!request || request === "-") {
+		throw new Error("task create --non-interactive requires --request <TEXT>");
+	}
+	const trimmedRequest = request.trim();
+	if (!trimmedRequest) {
+		throw new Error("task create requires a non-empty request");
+	}
+	return trimmedRequest;
+}
+
 export function printHelp(): void {
 	process.stdout.write(
 		`${[
@@ -204,7 +223,7 @@ export function printHelp(): void {
 			"  adhd-ai run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
 			"  adhd-ai status --project <PROJECT_ID> --issue <LINEAR_KEY>",
 			"  adhd-ai projects",
-			"  adhd-ai task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--answers-json <JSON_ARRAY>]",
+			"  adhd-ai task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--non-interactive] [--max-clarification-rounds <N>] [--clarifications-json <JSON>]",
 			"  adhd-ai skills list [--project <PROJECT_ID>]",
 			"  adhd-ai skills add --title <TITLE> --description <TEXT> --content <TEXT> [--project <PROJECT_ID>]",
 			"  adhd-ai skills update <NAME> [--title <TITLE>] [--description <TEXT>] [--content <TEXT>] [--project <PROJECT_ID>]",

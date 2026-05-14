@@ -497,6 +497,13 @@ function resolveSkillsArgs(
 function resolveTaskArgs(
 	request: Record<string, unknown>,
 ): { status: "ok"; args: string[] } | { status: "error"; error: string } {
+	const unsafeTaskField = findUnsafeTaskCreateField(request);
+	if (unsafeTaskField) {
+		return {
+			status: "error",
+			error: `Malformed task create request: unsafe field '${unsafeTaskField}' is not allowed`,
+		};
+	}
 	if (!isNonEmptyString(request.taskAction)) {
 		return {
 			status: "error",
@@ -523,19 +530,52 @@ function resolveTaskArgs(
 	if (projectIdValidation.status !== "ok") {
 		return projectIdValidation;
 	}
-	const answersValidation = validateOptionalTaskAnswers(request.answers);
-	if (answersValidation.status !== "ok") {
-		return answersValidation;
+	const nonInteractiveValidation = validateOptionalBooleanField(
+		request.nonInteractive,
+		"task create",
+		"nonInteractive",
+	);
+	if (nonInteractiveValidation.status !== "ok") {
+		return nonInteractiveValidation;
+	}
+	if (nonInteractiveValidation.value === false) {
+		return {
+			status: "error",
+			error:
+				"Malformed task create request: nonInteractive must be true when provided",
+		};
+	}
+	const maxClarificationRoundsValidation = validateOptionalPositiveIntegerField(
+		request.maxClarificationRounds,
+		"task create",
+		"maxClarificationRounds",
+	);
+	if (maxClarificationRoundsValidation.status !== "ok") {
+		return maxClarificationRoundsValidation;
+	}
+	const clarificationAnswersValidation =
+		validateOptionalClarificationAnswersField(request.clarificationAnswers);
+	if (clarificationAnswersValidation.status !== "ok") {
+		return clarificationAnswersValidation;
 	}
 	const args = ["task", "create", "--request", request.request];
 	appendFlag(args, "--project", projectIdValidation.value);
-	if (answersValidation.value) {
-		args.push("--answers-json", JSON.stringify(answersValidation.value));
+	args.push("--non-interactive");
+	appendNumericFlag(
+		args,
+		"--max-clarification-rounds",
+		maxClarificationRoundsValidation.value,
+	);
+	if (clarificationAnswersValidation.value) {
+		args.push(
+			"--clarifications-json",
+			JSON.stringify(clarificationAnswersValidation.value),
+		);
 	}
 	return { status: "ok", args };
 }
 
-function validateOptionalTaskAnswers(value: unknown):
+function validateOptionalClarificationAnswersField(value: unknown):
 	| {
 			status: "ok";
 			value: Array<{ question: string; answer: string }> | undefined;
@@ -547,34 +587,48 @@ function validateOptionalTaskAnswers(value: unknown):
 	if (!Array.isArray(value)) {
 		return {
 			status: "error",
-			error: "Malformed task create request: answers must be an array",
+			error:
+				"Malformed task create request: clarificationAnswers must be an array",
 		};
 	}
 	const answers: Array<{ question: string; answer: string }> = [];
-	for (const [index, item] of value.entries()) {
-		if (typeof item !== "object" || item === null) {
+	for (const [index, entry] of value.entries()) {
+		if (!isRecord(entry)) {
 			return {
 				status: "error",
-				error: `Malformed task create request: answers[${index}] must be an object`,
+				error: `Malformed task create request: clarificationAnswers[${index}] must be an object`,
 			};
 		}
-		const question = (item as Record<string, unknown>).question;
-		const answer = (item as Record<string, unknown>).answer;
-		if (!isNonEmptyString(question)) {
+		if (!isNonEmptyString(entry.question)) {
 			return {
 				status: "error",
-				error: `Malformed task create request: answers[${index}].question must be a non-empty string`,
+				error: `Malformed task create request: clarificationAnswers[${index}].question must be a non-empty string`,
 			};
 		}
-		if (!isNonEmptyString(answer)) {
+		if (!isNonEmptyString(entry.answer)) {
 			return {
 				status: "error",
-				error: `Malformed task create request: answers[${index}].answer must be a non-empty string`,
+				error: `Malformed task create request: clarificationAnswers[${index}].answer must be a non-empty string`,
 			};
 		}
-		answers.push({ question, answer });
+		answers.push({
+			question: entry.question.trim(),
+			answer: entry.answer.trim(),
+		});
 	}
 	return { status: "ok", value: answers };
+}
+
+function findUnsafeTaskCreateField(
+	request: Record<string, unknown>,
+): string | undefined {
+	const unsafeFields = new Set(["stdin", "stdinMode", "interactive"]);
+	for (const field of unsafeFields) {
+		if (field in request) {
+			return field;
+		}
+	}
+	return undefined;
 }
 
 function appendBooleanFlag(
@@ -609,6 +663,10 @@ function appendNumericFlag(
 
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === "string" && value.trim().length > 0;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function validateOptionalStringField(

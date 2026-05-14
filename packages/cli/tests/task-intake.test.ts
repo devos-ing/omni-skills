@@ -230,6 +230,39 @@ describe("runTaskIntake", () => {
 		});
 		expect(created).toBe(false);
 	});
+
+	it("returns needs_info immediately in non-interactive mode", async () => {
+		let questionAsked = false;
+		const prompts: string[] = [];
+		const result = await runTaskIntake(
+			project(),
+			agent(
+				['RESULT: NEEDS_INFO\nQUESTIONS_JSON: ["Which project?"]'],
+				prompts,
+			),
+			{
+				createBacklogTask: async () => {
+					throw new Error("should not create");
+				},
+			},
+			{
+				request: "create task",
+				initialAnswers: [{ question: "Who?", answer: "CLI users" }],
+				allowInteractiveQuestions: false,
+				askQuestion: async () => {
+					questionAsked = true;
+					return "answer";
+				},
+			},
+		);
+		expect(result).toEqual({
+			status: "needs_info",
+			questions: ["Which project?"],
+		});
+		expect(questionAsked).toBe(false);
+		expect(prompts[0]).toContain("Q: Who?");
+		expect(prompts[0]).toContain("A: CLI users");
+	});
 });
 
 function agent(messages: string[], prompts: string[] = []) {

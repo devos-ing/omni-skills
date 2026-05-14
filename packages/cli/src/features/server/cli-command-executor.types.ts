@@ -79,7 +79,9 @@ export interface TaskCreateActionRequest {
 	taskAction: "create";
 	projectId?: string;
 	request: string;
-	answers?: Array<{ question: string; answer: string }>;
+	nonInteractive?: boolean;
+	maxClarificationRounds?: number;
+	clarificationAnswers?: Array<{ question: string; answer: string }>;
 }
 
 export type SupportedCliCommandRequest =

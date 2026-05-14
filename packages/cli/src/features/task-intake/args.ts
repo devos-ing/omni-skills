@@ -1,4 +1,4 @@
-import { readFlagValue } from "../../args-utils";
+import { readFlagValue, readOptionalPositiveInt } from "../../args-utils";
 import type { TaskCommand } from "../../args.types";
 
 export function parseTaskCommand(args: string[]): TaskCommand {
@@ -12,12 +12,66 @@ export function parseTaskCommand(args: string[]): TaskCommand {
 	const actionArgs = args.slice(1);
 	const request = readFlagValue(actionArgs, "--request");
 	const positionalRequest = request ?? readPositionalRequest(actionArgs);
+	const nonInteractive = actionArgs.includes("--non-interactive")
+		? true
+		: undefined;
+	const clarificationsJson = readFlagValue(actionArgs, "--clarifications-json");
+	const maxClarificationRounds = readOptionalPositiveInt(
+		actionArgs,
+		"--max-clarification-rounds",
+	);
 	return {
 		action: "create",
 		projectId: readFlagValue(actionArgs, "--project"),
 		request: positionalRequest,
-		answers: readAnswersJson(actionArgs),
+		nonInteractive,
+		maxClarificationRounds,
+		clarificationAnswers: parseClarificationAnswers(clarificationsJson),
 	};
+}
+
+function parseClarificationAnswers(
+	raw: string | undefined,
+): Array<{ question: string; answer: string }> | undefined {
+	if (raw === undefined) {
+		return undefined;
+	}
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		throw new Error("task create --clarifications-json must be valid JSON");
+	}
+	if (!Array.isArray(parsed)) {
+		throw new Error("task create --clarifications-json must be an array");
+	}
+	return parsed.map((entry, index) => {
+		if (!isRecord(entry)) {
+			throw new Error(
+				`task create --clarifications-json entry ${index} must be an object`,
+			);
+		}
+		const question = entry.question;
+		const answer = entry.answer;
+		if (typeof question !== "string" || question.trim().length === 0) {
+			throw new Error(
+				`task create --clarifications-json entry ${index} question must be a non-empty string`,
+			);
+		}
+		if (typeof answer !== "string" || answer.trim().length === 0) {
+			throw new Error(
+				`task create --clarifications-json entry ${index} answer must be a non-empty string`,
+			);
+		}
+		return {
+			question: question.trim(),
+			answer: answer.trim(),
+		};
+	});
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function readPositionalRequest(args: string[]): string | undefined {
@@ -27,7 +81,12 @@ function readPositionalRequest(args: string[]): string | undefined {
 		if (!token) {
 			continue;
 		}
-		if (token === "--request" || token === "--project") {
+		if (
+			token === "--request" ||
+			token === "--project" ||
+			token === "--clarifications-json" ||
+			token === "--max-clarification-rounds"
+		) {
 			index += 1;
 			continue;
 		}

@@ -287,7 +287,9 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "Build a better setup flow",
 				projectId: "default",
-				answers: undefined,
+				nonInteractive: undefined,
+				maxClarificationRounds: undefined,
+				clarificationAnswers: undefined,
 			},
 		});
 	});
@@ -301,7 +303,9 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "-",
 				projectId: undefined,
-				answers: undefined,
+				nonInteractive: undefined,
+				maxClarificationRounds: undefined,
+				clarificationAnswers: undefined,
 			},
 		});
 	});
@@ -313,7 +317,9 @@ describe("parseArgs", () => {
 				action: "create",
 				request: undefined,
 				projectId: undefined,
-				answers: undefined,
+				nonInteractive: undefined,
+				maxClarificationRounds: undefined,
+				clarificationAnswers: undefined,
 			},
 		});
 	});
@@ -337,12 +343,14 @@ describe("parseArgs", () => {
 				action: "create",
 				request: "Build a better setup flow",
 				projectId: undefined,
-				answers: undefined,
+				nonInteractive: undefined,
+				maxClarificationRounds: undefined,
+				clarificationAnswers: undefined,
 			},
 		});
 	});
 
-	it("parses task create answers JSON", () => {
+	it("parses non-interactive task create flags", () => {
 		expect(
 			parseArgs([
 				"bun",
@@ -350,22 +358,27 @@ describe("parseArgs", () => {
 				"task",
 				"create",
 				"--request",
-				"Create task",
-				"--answers-json",
-				'[{"question":"Who is this for?","answer":"CLI users"}]',
+				"Build task flow",
+				"--non-interactive",
+				"--max-clarification-rounds",
+				"2",
+				"--clarifications-json",
+				'[{"question":"Who?","answer":"CLI users"}]',
 			]),
 		).toEqual({
 			kind: "task",
 			command: {
 				action: "create",
-				request: "Create task",
+				request: "Build task flow",
 				projectId: undefined,
-				answers: [{ question: "Who is this for?", answer: "CLI users" }],
+				nonInteractive: true,
+				maxClarificationRounds: 2,
+				clarificationAnswers: [{ question: "Who?", answer: "CLI users" }],
 			},
 		});
 	});
 
-	it("rejects invalid task create answers JSON", () => {
+	it("rejects invalid task create clarifications json", () => {
 		expect(() =>
 			parseArgs([
 				"bun",
@@ -373,11 +386,11 @@ describe("parseArgs", () => {
 				"task",
 				"create",
 				"--request",
-				"Create task",
-				"--answers-json",
-				"not-json",
+				"Build task flow",
+				"--clarifications-json",
+				"{bad",
 			]),
-		).toThrow("task create --answers-json must be valid JSON");
+		).toThrow("task create --clarifications-json must be valid JSON");
 	});
 
 	it("rejects skills add without required flags", () => {

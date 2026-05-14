@@ -41,4 +41,36 @@ describe("cli executor boundary export", () => {
 		expect(result.status).toBe("succeeded");
 		expect(historyEntry.status).toBe("failed");
 	});
+
+	it("enforces non-interactive task create from server boundary", async () => {
+		const invocations: string[][] = [];
+		const executor = new CliCommandExecutor({
+			cwd: process.cwd(),
+			command: "bun",
+			baseArgs: ["run", "./packages/cli/src/index.ts"],
+			runCommandFn: async (_command, args) => {
+				invocations.push(args);
+				return { code: 0, stdout: "ok", stderr: "" };
+			},
+		});
+
+		const omittedFlag = await executor.execute({
+			action: "task",
+			taskAction: "create",
+			request: "Build task flow",
+		});
+		const explicitFalse = await executor.execute({
+			action: "task",
+			taskAction: "create",
+			request: "Build task flow",
+			nonInteractive: false,
+		});
+
+		expect(omittedFlag.status).toBe("succeeded");
+		expect(invocations[0]).toContain("--non-interactive");
+		expect(explicitFalse.status).toBe("rejected");
+		expect(explicitFalse.error).toContain(
+			"nonInteractive must be true when provided",
+		);
+	});
 });
