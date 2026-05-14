@@ -39,6 +39,14 @@ export function stateFilePath(
 	);
 }
 
+function legacyStateFilePath(cwd: string, issueKey: string): string {
+	return path.join(
+		cwd,
+		LEGACY_STATE_DIR,
+		`${normalizeIssueKey(issueKey)}.json`,
+	);
+}
+
 export function projectErrorLogPath(cwd: string, projectId: string): string {
 	return path.join(cwd, STATE_ROOT_DIR, projectId, "errors.log");
 }
@@ -82,11 +90,7 @@ export async function loadRunState(
 		if (projectId !== "default") {
 			return null;
 		}
-		const legacy = path.join(
-			cwd,
-			LEGACY_STATE_DIR,
-			`${normalizeIssueKey(issueKey)}.json`,
-		);
+		const legacy = legacyStateFilePath(cwd, issueKey);
 		try {
 			const raw = await readFile(legacy, "utf8");
 			return JSON.parse(raw) as RunState;
@@ -111,13 +115,28 @@ export async function deleteRunState(
 	projectId: string,
 	issueKey: string,
 ): Promise<boolean> {
-	const file = stateFilePath(cwd, projectId, issueKey);
-	try {
-		await rm(file);
-		return true;
-	} catch {
-		return false;
+	const files = [stateFilePath(cwd, projectId, issueKey)];
+	if (projectId === "default") {
+		files.push(legacyStateFilePath(cwd, issueKey));
 	}
+	let deleted = false;
+	for (const file of files) {
+		try {
+			await rm(file);
+			deleted = true;
+		} catch (error) {
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"code" in error &&
+				error.code === "ENOENT"
+			) {
+				continue;
+			}
+			throw error;
+		}
+	}
+	return deleted;
 }
 
 export async function listRunStates(

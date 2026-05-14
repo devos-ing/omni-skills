@@ -232,4 +232,25 @@ describe("state helpers", () => {
 		await expect(readFile(otherProjectPath, "utf8")).resolves.toBe("{}\n");
 		await expect(readFile(otherIssuePath, "utf8")).resolves.toBe("{}\n");
 	});
+
+	it("deletes legacy default run state fallback for the same issue only", async () => {
+		const cwd = await mkdtemp(path.join(os.tmpdir(), "adhd-legacy-run-state-"));
+		const targetLegacyPath = path.join(cwd, ".piv-loop/runs/ROY-215.json");
+		const otherLegacyPath = path.join(cwd, ".piv-loop/runs/ROY-999.json");
+		const otherProjectPath = path.join(
+			cwd,
+			".piv-loop/projects/api/runs/ROY-215.json",
+		);
+
+		await mkdir(path.dirname(targetLegacyPath), { recursive: true });
+		await mkdir(path.dirname(otherProjectPath), { recursive: true });
+		await writeFile(targetLegacyPath, "{}\n", "utf8");
+		await writeFile(otherLegacyPath, "{}\n", "utf8");
+		await writeFile(otherProjectPath, "{}\n", "utf8");
+
+		expect(await deleteRunState(cwd, "default", "roy-215")).toBe(true);
+		await expect(readFile(targetLegacyPath, "utf8")).rejects.toThrow();
+		await expect(readFile(otherLegacyPath, "utf8")).resolves.toBe("{}\n");
+		await expect(readFile(otherProjectPath, "utf8")).resolves.toBe("{}\n");
+	});
 });

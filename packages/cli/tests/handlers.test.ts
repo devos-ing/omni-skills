@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { mkdtemp } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
@@ -164,6 +164,71 @@ describe("handleCommand resume", () => {
 		expect(writes.join("")).toContain(
 			"Resumed issue and cleared run state for ROY-215 in project default",
 		);
+	});
+
+	it("clears legacy default run-state fallback for the requested issue", async () => {
+		const workspaceRoot = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-resume-legacy-handler-"),
+		);
+		const project = createProject("default", workspaceRoot);
+		const config: LoadedConfig = {
+			projects: [project],
+			polling: {
+				intervalMs: 30000,
+				maxCycles: 1,
+				exitWhenIdle: true,
+				staleRunTimeoutMs: 3600000,
+			},
+			notifications: {
+				email: {
+					enabled: false,
+					resendApiKey: undefined,
+					from: undefined,
+					to: [],
+				},
+			},
+		};
+		const legacyTarget = path.join(
+			workspaceRoot,
+			".piv-loop/runs/ROY-215.json",
+		);
+		const legacyOther = path.join(workspaceRoot, ".piv-loop/runs/ROY-999.json");
+		await mkdir(path.dirname(legacyTarget), { recursive: true });
+		await writeFile(legacyTarget, "{}\n", "utf8");
+		await writeFile(legacyOther, "{}\n", "utf8");
+
+		const originalFetch = LinearClient.prototype.fetchIssueByIdentifier;
+		const originalMarkStage = LinearClient.prototype.markStage;
+		LinearClient.prototype.fetchIssueByIdentifier = async (issueArg) =>
+			({
+				id: "lin_ROY-215",
+				identifier: issueArg,
+				title: "Resume test",
+				description: "",
+				url: "https://linear.app/roy/issue/ROY-215/resume-test",
+				state: { id: "state", name: "In Progress" },
+				labels: [],
+			}) as never;
+		LinearClient.prototype.markStage = async () => undefined;
+
+		try {
+			await handleCommand(
+				{
+					kind: "resume",
+					projectId: "default",
+					issueKey: "roy-215",
+				},
+				config,
+			);
+		} finally {
+			LinearClient.prototype.fetchIssueByIdentifier = originalFetch;
+			LinearClient.prototype.markStage = originalMarkStage;
+		}
+
+		expect(await loadRunState(workspaceRoot, "default", "ROY-215")).toBeNull();
+		expect(
+			await loadRunState(workspaceRoot, "default", "ROY-999"),
+		).not.toBeNull();
 	});
 
 	it("fails when the requested Linear issue does not exist", async () => {
