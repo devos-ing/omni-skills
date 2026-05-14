@@ -22,47 +22,248 @@ bun run src/index.ts run --project <PROJECT_ID>
 
 Use `bun run src/index.ts projects` to list available project IDs, then pass one of those values as `<PROJECT_ID>`.
 
-## Common Commands
+## Command Reference
+
+Use either `bun run src/index.ts ...` or `adhd ...` (after linking/installing
+the package bin).
+
+### Help
+
+Purpose: print CLI usage and available commands.
+
+Syntax:
 
 ```bash
-# setup and validation
-bun run src/index.ts setup
-bun run src/index.ts setup --check
+bun run src/index.ts help
+bun run src/index.ts --help
+bun run src/index.ts -h
+```
 
-# inspect configured projects
+Output shape:
+
+- Multi-line plain text usage guide.
+
+Usage notes:
+
+- No project config is required to render help.
+
+### setup
+
+Purpose: run guided environment setup, or validate setup prerequisites.
+
+Syntax:
+
+```bash
+bun run src/index.ts setup [--check]
+```
+
+Options:
+
+- `--check`: run setup validation checks without opening the interactive wizard.
+
+Output shape:
+
+- Human-readable setup/check logs written to stdout/stderr.
+
+Usage notes:
+
+- `setup` runs the interactive wizard.
+- `setup --check` performs validation only.
+
+### projects
+
+Purpose: list configured projects from runtime config.
+
+Syntax:
+
+```bash
 bun run src/index.ts projects
+```
 
-# run one issue
-bun run src/index.ts run --project <PROJECT_ID> --issue ENG-123
+Output shape:
 
-# local polling mode
-bun run src/index.ts run --project <PROJECT_ID> --poll
+- One tab-separated line per project:
+  `<id>\t<name>\texec=<executionPath>\tstate=<workspacePath>`
 
-# create a release changeset
-bun run changeset
+Usage notes:
 
-# apply version updates, run quality gates, and publish
-bun run publish:version
+- Useful for discovering valid values for `--project`.
 
-# push version commit and tags after publish
-git push --follow-tags
+### run
 
-# inspect run state for one issue
-bun run src/index.ts status --project <PROJECT_ID> --issue ENG-123
+Purpose: run workflow orchestration for one issue or project scope.
 
-# create a Linear backlog task from a loose request
-bun run src/index.ts task create --request "<REQUEST>" [--project <PROJECT_ID>]
-# read a longer request from stdin
-bun run src/index.ts task create --request - [--project <PROJECT_ID>]
+Syntax:
 
-# skills management
+```bash
+bun run src/index.ts run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
+bun run src/index.ts run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
+```
+
+Options:
+
+- `--project <PROJECT_ID>`: select one configured project.
+- `--all-projects`: run across all configured projects.
+- `--issue <LINEAR_KEY_OR_URL>`: scope run to a specific Linear issue.
+- `--poll`: continue polling for new work.
+- `--no-exit-when-idle`: disable automatic exit while idle.
+- `--concurrency <N>`: positive integer worker concurrency.
+- `--poll-interval-ms <MS>`: positive integer poll interval.
+- `--max-poll-cycles <N>`: positive integer max polling cycles.
+- `--isolated-worktrees`: enable isolated worktree mode.
+
+Output shape:
+
+- Streaming human-readable workflow logs and stage progress.
+
+Usage notes:
+
+- `--project` and `--all-projects` cannot be combined.
+- Numeric options must be positive integers.
+
+### status
+
+Purpose: inspect persisted run state for one project/issue pair.
+
+Syntax:
+
+```bash
+bun run src/index.ts status --project <PROJECT_ID> --issue <LINEAR_KEY>
+```
+
+Options:
+
+- `--project <PROJECT_ID>`: required project identifier.
+- `--issue <LINEAR_KEY>`: required issue key.
+
+Output shape:
+
+- If state exists: pretty-printed JSON object including persisted run fields plus
+  `stageDisplay`.
+- If state does not exist: `No run state found for <ISSUE_KEY> in project <PROJECT_ID>`.
+
+Usage notes:
+
+- Both `--project` and `--issue` are required.
+
+### task create
+
+Purpose: generate a Linear backlog issue from a loose request through task intake.
+
+Syntax:
+
+```bash
+bun run src/index.ts task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--non-interactive] [--max-clarification-rounds <N>] [--clarifications-json <JSON>]
+```
+
+Parameters and options:
+
+- `<REQUEST>`: optional positional request text.
+- `--request <TEXT|->`: request text; use `-` to read from stdin.
+- `--project <PROJECT_ID>`: optional project override (defaults to first configured project).
+- `--non-interactive`: disable interactive clarifying questions.
+- `--max-clarification-rounds <N>`: optional positive integer cap.
+- `--clarifications-json <JSON>`: optional JSON array of `{ "question": "...", "answer": "..." }`.
+
+Output shape:
+
+- On success: `Created Linear task <IDENTIFIER>: <URL>`.
+- On unresolved intake: a multi-line message starting with
+  `Task requirements are still unclear; no Linear issue was created.` and listing remaining questions.
+
+Usage notes:
+
+- In non-interactive mode, a non-empty request is required, provided either as positional `<REQUEST>` or `--request <TEXT>`.
+- In non-interactive mode, `--request -` is not allowed.
+- `--clarifications-json` must be valid JSON array entries with non-empty `question` and `answer` strings.
+
+### skills list
+
+Purpose: list skills for the selected project's skills root.
+
+Syntax:
+
+```bash
 bun run src/index.ts skills list [--project <PROJECT_ID>]
+```
+
+Output shape:
+
+- If skills exist: one tab-separated line per skill:
+  `<name>\t<title>\t<description|->`
+- If none exist: `No skills found in <skillsRootPath>`.
+
+Usage notes:
+
+- `--project` is optional; defaults to first configured project.
+
+### skills add
+
+Purpose: create a new skill document in the selected project.
+
+Syntax:
+
+```bash
 bun run src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+```
+
+Options:
+
+- `--title <TITLE>`: required skill title.
+- `--description <DESCRIPTION>`: required skill description.
+- `--content <CONTENT>`: required skill body content.
+- `--project <PROJECT_ID>`: optional project override.
+
+Output shape:
+
+- `Added skill <name> at <path>`.
+
+### skills update
+
+Purpose: update skill metadata/content by skill name.
+
+Syntax:
+
+```bash
 bun run src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+```
+
+Parameters and options:
+
+- `<NAME>`: required skill name.
+- `--title <TITLE>`: optional new title.
+- `--description <DESCRIPTION>`: optional new description.
+- `--content <CONTENT>`: optional new content.
+- `--project <PROJECT_ID>`: optional project override.
+
+Output shape:
+
+- `Updated skill <name> at <path>`.
+
+Usage notes:
+
+- At least one of `--title`, `--description`, or `--content` is required.
+
+### skills remove
+
+Purpose: remove a skill by name from the selected project.
+
+Syntax:
+
+```bash
 bun run src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
-After linking/installing the package bin, you can also use `adhd-ai ...` directly.
+Parameters and options:
+
+- `<NAME>`: required skill name.
+- `--project <PROJECT_ID>`: optional project override.
+
+Output shape:
+
+- `Removed skill <name> from <path>`.
+
+After linking/installing the package bin, you can also use `adhd ...` directly.
 
 ## Workflow Summary
 
