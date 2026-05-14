@@ -24,7 +24,7 @@ Use `bun run src/index.ts projects` to list available project IDs, then pass one
 
 ## Command Reference
 
-Use either `bun run src/index.ts ...` or `adhd-ai ...` (after linking/installing
+Use either `bun run src/index.ts ...` or `adhd ...` (after linking/installing
 the package bin).
 
 ### Help
@@ -262,7 +262,7 @@ Output shape:
 
 - `Removed skill <name> from <path>`.
 
-After linking/installing the package bin, you can also use `adhd-ai ...` directly.
+After linking/installing the package bin, you can also use `adhd ...` directly.
 
 ## Workflow Summary
 
