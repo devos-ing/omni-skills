@@ -11,6 +11,7 @@ import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import type { RouteHandler } from "./app.types";
 
+let nextFallbackPort = 41_000 + (process.pid % 1_000);
 const OPENAPI_SPEC_PATH = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
 	"../../..",
@@ -52,11 +53,18 @@ export function createExpressApp(handler: RouteHandler): Express {
 }
 
 export function listenExpressApp(app: Express, port: number): Promise<Server> {
+	const listenPort = port === 0 ? nextAvailableFallbackPort() : port;
 	return new Promise((resolve, reject) => {
-		const server = app.listen(port);
+		const server = app.listen(listenPort);
 		server.once("listening", () => resolve(server));
 		server.once("error", reject);
 	});
+}
+
+function nextAvailableFallbackPort(): number {
+	const port = nextFallbackPort;
+	nextFallbackPort += 1;
+	return port;
 }
 
 function toWebRequest(request: ExpressRequest): Request {
