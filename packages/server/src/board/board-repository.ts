@@ -69,6 +69,7 @@ export function createBoardRepository(
 			const taskRows = await db
 				.select({
 					id: boardTasksTable.id,
+					taskKey: boardTasksTable.taskKey,
 					projectId: boardTasksTable.projectId,
 					title: boardTasksTable.title,
 					content: boardTasksTable.content,

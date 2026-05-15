@@ -159,6 +159,7 @@ describe("project routes", () => {
 			.returning();
 		await testDatabase.db.insert(boardTasksTable).values({
 			id: "task-1",
+			taskKey: "TASK-000001",
 			projectId: project.id,
 			title: "Task",
 			content: "Body",

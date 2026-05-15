@@ -64,9 +64,6 @@ export function validateNotifications(
 }
 
 function validateProject(project: ResolvedProjectConfig): void {
-	if (!project.linear.apiKey) {
-		throw new Error(`LINEAR_API_KEY is required for project '${project.id}'`);
-	}
 	if (!project.executionPath) {
 		throw new Error(`Execution path is required for project '${project.id}'`);
 	}
@@ -89,16 +86,6 @@ function validateProject(project: ResolvedProjectConfig): void {
 	) {
 		throw new Error(
 			`Workflow isolated worktrees root cannot be empty for project '${project.id}'`,
-		);
-	}
-	const requiredStateIds = Object.entries(project.linear.statusMap).filter(
-		([, value]) => !value,
-	);
-	if (requiredStateIds.length > 0) {
-		throw new Error(
-			`Missing Linear status ids for project '${project.id}': ${requiredStateIds
-				.map(([key]) => key)
-				.join(", ")}`,
 		);
 	}
 }

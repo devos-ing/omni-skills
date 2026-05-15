@@ -1,5 +1,4 @@
 import type {
-	CreatedTaskRef,
 	HealthRequestOptions,
 	ProjectBoardTaskRecord,
 	TaskCreateRequest,
@@ -25,16 +24,6 @@ type RequestWithBase = (
 	body?: unknown,
 ) => Promise<unknown>;
 
-function parseCreatedTaskRef(payload: unknown): CreatedTaskRef {
-	const row = assertObjectRecord(payload, TASK_CHAT_CREATE_PATH);
-	return {
-		id: readString(row, "id", TASK_CHAT_CREATE_PATH),
-		identifier: readString(row, "identifier", TASK_CHAT_CREATE_PATH),
-		title: readString(row, "title", TASK_CHAT_CREATE_PATH),
-		url: readString(row, "url", TASK_CHAT_CREATE_PATH),
-	};
-}
-
 function parseQuestionList(payload: unknown): string[] {
 	if (!Array.isArray(payload)) {
 		throw new Error(
@@ -59,32 +48,16 @@ export function parseTaskCreateResponse(payload: unknown): TaskCreateResponse {
 	if (status === "created") {
 		return {
 			status,
-			issue: parseCreatedTaskRef(row.issue),
-			task:
-				row.task === undefined
-					? undefined
-					: parseProjectBoardTaskRecord(row.task),
+			task: parseProjectBoardTaskRecord(row.task),
 		};
 	}
 	if (status === "needs_info") {
 		return { status, questions: parseQuestionList(row.questions) };
 	}
-	if (status === "linear_error") {
-		return { status, error: readString(row, "error", TASK_CHAT_CREATE_PATH) };
-	}
 	if (status === "db_error") {
 		return {
 			status,
 			error: readString(row, "error", TASK_CHAT_CREATE_PATH),
-			issue: parseCreatedTaskRef(row.issue),
-		};
-	}
-	if (status === "link_error") {
-		return {
-			status,
-			error: readString(row, "error", TASK_CHAT_CREATE_PATH),
-			issue: parseCreatedTaskRef(row.issue),
-			task: parseProjectBoardTaskRecord(row.task),
 		};
 	}
 	throw new Error("Invalid /api/tasks/chat-create response field 'status'");
@@ -96,6 +69,7 @@ export function parseProjectBoardTaskRecord(
 	const row = assertObjectRecord(payload, TASKS_PATH);
 	return {
 		id: readString(row, "id", TASKS_PATH),
+		taskKey: readString(row, "taskKey", TASKS_PATH),
 		projectId: readNullableString(row, "projectId", TASKS_PATH),
 		title: readString(row, "title", TASKS_PATH),
 		content: readString(row, "content", TASKS_PATH),

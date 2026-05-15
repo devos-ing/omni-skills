@@ -6,7 +6,7 @@ import { createCliDaemonClient } from "./daemon/daemon-client";
 import { initializeServerDatabase } from "./db";
 import { createExpressApp, listenExpressApp } from "./express-server";
 import type { ServerInstance } from "./express-server.types";
-import { startLinearTaskPollingScheduler } from "./features/polling";
+import { startInternalTaskPollingScheduler } from "./features/polling";
 import {
 	logger,
 	normalizeError,
@@ -58,8 +58,9 @@ export async function startServer(
 			logger,
 		}),
 	);
-	const linearPolling = startLinearTaskPollingScheduler({
+	const taskPolling = startInternalTaskPollingScheduler({
 		config,
+		db: serverDatabase.db,
 		cliExecutor,
 		logger,
 	});
@@ -70,7 +71,7 @@ export async function startServer(
 		daemonUrl,
 	});
 	server.once("close", () => {
-		linearPolling.stop();
+		taskPolling.stop();
 		void cliStreamProxy.close();
 	});
 	const address = server.address();

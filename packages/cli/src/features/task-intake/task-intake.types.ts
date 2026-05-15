@@ -1,5 +1,3 @@
-import type { CreatedLinearIssueRef } from "../../integrations/linear";
-
 export interface TaskIntakeAnswer {
 	question: string;
 	answer: string;
@@ -14,8 +12,26 @@ export type TaskIntakeDecision =
 	| { result: "CLEAR"; task: TaskIntakeTask }
 	| { result: "NEEDS_INFO"; questions: string[] };
 
-export interface TaskIntakeLinearClient {
-	createBacklogTask(input: TaskIntakeTask): Promise<CreatedLinearIssueRef>;
+export interface TaskIntakeCreatedTask {
+	id: string;
+	taskKey: string;
+	projectId: string | null;
+	title: string;
+	content: string;
+	priority: number;
+	status: string;
+	dueDate: string | null;
+	creatorId: string;
+	linkedPr: string | null;
+	linearIssueId: string | null;
+	linearIdentifier: string | null;
+	linearUrl: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface TaskIntakeTaskCreator {
+	createTask(input: TaskIntakeTask): Promise<TaskIntakeCreatedTask>;
 }
 
 export interface RunTaskIntakeOptions {
@@ -31,7 +47,6 @@ export interface RunTaskIntakeOptions {
 export type TaskIntakeRunResult =
 	| {
 			status: "created";
-			issue: CreatedLinearIssueRef;
-			task: TaskIntakeTask;
+			task: TaskIntakeCreatedTask;
 	  }
 	| { status: "needs_info"; questions: string[] };

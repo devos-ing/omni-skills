@@ -198,6 +198,7 @@ describe("server drizzle schema", () => {
 		};
 		const task: NewBoardTaskRow = {
 			id: "task-1",
+			taskKey: "TASK-000001",
 			projectId: project.id,
 			title: "Design schema",
 			content: "Define persistent schema for board workflow",

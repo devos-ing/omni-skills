@@ -117,6 +117,7 @@ describe("read repositories", () => {
 		expect(await repositories.listBoardTasks()).toEqual([
 			{
 				id: "task-1",
+				taskKey: "TASK-000001",
 				projectId: "project-1",
 				title: "Document board APIs",
 				content: "Update OpenAPI and tests for board endpoints",

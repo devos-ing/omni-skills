@@ -21,6 +21,7 @@ const MIGRATIONS: Migration[] = [
 		id: "0007_nullable_board_task_project",
 		fileName: "0007_nullable_board_task_project.sql",
 	},
+	{ id: "0008_board_task_keys", fileName: "0008_board_task_keys.sql" },
 ];
 
 async function ensureMigrationsTable(client: PGlite): Promise<void> {

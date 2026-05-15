@@ -27,6 +27,7 @@ const createProjectSchema = z.object({
 const updateProjectSchema = createProjectSchema.partial();
 
 const createTaskSchema = z.object({
+	taskKey: nonEmptyString.optional(),
 	projectId: optionalNullableString,
 	title: nonEmptyString,
 	content: nonEmptyString,

@@ -6,8 +6,8 @@ import { buildTaskIntakePrompt } from "./prompts";
 import type {
 	RunTaskIntakeOptions,
 	TaskIntakeAnswer,
-	TaskIntakeLinearClient,
 	TaskIntakeRunResult,
+	TaskIntakeTaskCreator,
 } from "./task-intake.types";
 
 const DEFAULT_MAX_CLARIFICATION_ROUNDS = 5;
@@ -15,7 +15,7 @@ const DEFAULT_MAX_CLARIFICATION_ROUNDS = 5;
 export async function runTaskIntake(
 	config: ResolvedProjectConfig,
 	agent: Pick<AgentAdapter, "runTaskIntake">,
-	linear: TaskIntakeLinearClient,
+	taskCreator: TaskIntakeTaskCreator,
 	options: RunTaskIntakeOptions,
 ): Promise<TaskIntakeRunResult> {
 	const request = options.request.trim();
@@ -47,8 +47,8 @@ export async function runTaskIntake(
 			result.finalMessage || result.stdout,
 		);
 		if (decision.result === "CLEAR") {
-			const issue = await linear.createBacklogTask(decision.task);
-			return { status: "created", issue, task: decision.task };
+			const task = await taskCreator.createTask(decision.task);
+			return { status: "created", task };
 		}
 		if (clarificationRounds >= maxClarificationRounds) {
 			return { status: "needs_info", questions: decision.questions };

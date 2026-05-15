@@ -100,14 +100,9 @@ describe("runTaskIntake", () => {
 				'RESULT: CLEAR\nTASK_JSON: {"title":"Add task CLI","description":"Create Linear tasks from CLI."}',
 			]),
 			{
-				createBacklogTask: async (input) => {
+				createTask: async (input) => {
 					created.push(input.title);
-					return {
-						id: "lin_1",
-						identifier: "ROY-1",
-						title: input.title,
-						url: "https://linear.example/ROY-1",
-					};
+					return createdTask("task-1", "TASK-000001", input.title);
 				},
 			},
 			{ request: "task cli", askQuestion: async () => "" },
@@ -129,12 +124,8 @@ describe("runTaskIntake", () => {
 				prompts,
 			),
 			{
-				createBacklogTask: async (input) => ({
-					id: "lin_2",
-					identifier: "ROY-2",
-					title: input.title,
-					url: "https://linear.example/ROY-2",
-				}),
+				createTask: async (input) =>
+					createdTask("task-2", "TASK-000002", input.title),
 			},
 			{
 				request: "create task",
@@ -158,12 +149,8 @@ describe("runTaskIntake", () => {
 				prompts,
 			),
 			{
-				createBacklogTask: async (input) => ({
-					id: "lin_3",
-					identifier: "ROY-3",
-					title: input.title,
-					url: "https://linear.example/ROY-3",
-				}),
+				createTask: async (input) =>
+					createdTask("task-3", "TASK-000003", input.title),
 			},
 			{
 				request: "create task",
@@ -186,7 +173,7 @@ describe("runTaskIntake", () => {
 			project(),
 			agent(['RESULT: NEEDS_INFO\nQUESTIONS_JSON: ["Who is this for?"]']),
 			{
-				createBacklogTask: async () => {
+				createTask: async () => {
 					throw new Error("should not create");
 				},
 			},
@@ -213,7 +200,7 @@ describe("runTaskIntake", () => {
 				'RESULT: NEEDS_INFO\nQUESTIONS_JSON: ["Which workflow?"]',
 			]),
 			{
-				createBacklogTask: async () => {
+				createTask: async () => {
 					created = true;
 					throw new Error("should not create");
 				},
@@ -241,7 +228,7 @@ describe("runTaskIntake", () => {
 				prompts,
 			),
 			{
-				createBacklogTask: async () => {
+				createTask: async () => {
 					throw new Error("should not create");
 				},
 			},
@@ -271,6 +258,26 @@ function agent(messages: string[], prompts: string[] = []) {
 			prompts.push(prompt);
 			return { finalMessage: messages.shift() ?? "", stdout: "" };
 		},
+	};
+}
+
+function createdTask(id: string, taskKey: string, title: string) {
+	return {
+		id,
+		taskKey,
+		projectId: "default",
+		title,
+		content: "Task content",
+		priority: 1,
+		status: "planning",
+		dueDate: null,
+		creatorId: "member-1",
+		linkedPr: null,
+		linearIssueId: null,
+		linearIdentifier: null,
+		linearUrl: null,
+		createdAt: "2026-05-15T00:00:00.000Z",
+		updatedAt: "2026-05-15T00:00:00.000Z",
 	};
 }
 

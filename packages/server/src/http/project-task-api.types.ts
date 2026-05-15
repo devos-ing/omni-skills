@@ -15,6 +15,7 @@ export interface UpdateProjectPayload {
 }
 
 export interface CreateTaskPayload {
+	taskKey?: string;
 	projectId?: string | null;
 	title: string;
 	content: string;
@@ -29,6 +30,7 @@ export interface CreateTaskPayload {
 }
 
 export interface UpdateTaskPayload {
+	taskKey?: string;
 	projectId?: string | null;
 	title?: string;
 	content?: string;

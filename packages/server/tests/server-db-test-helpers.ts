@@ -111,6 +111,7 @@ export async function seedServerTestDatabase(
 	});
 	await database.db.insert(boardTasksTable).values({
 		id: "task-1",
+		taskKey: "TASK-000001",
 		projectId: "project-1",
 		title: "Document board APIs",
 		content: "Update OpenAPI and tests for board endpoints",

@@ -182,16 +182,13 @@ export function TaskCreateChatDialog({
 						<CheckCircle2 size={16} />
 						<a
 							className="font-medium underline-offset-4 hover:underline"
-							href={state.result.issue.url}
+							href={`#${state.result.task.id}`}
 							rel="noreferrer"
-							target="_blank"
 						>
-							{state.result.issue.identifier}
+							{state.result.task.taskKey}
 						</a>
 						<span className="text-emerald-200/80">
-							{state.result.task
-								? `Board task ${state.result.task.id}`
-								: "Project can be assigned later"}
+							Board task {state.result.task.id}
 						</span>
 					</div>
 				) : null}

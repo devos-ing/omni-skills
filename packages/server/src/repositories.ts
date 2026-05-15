@@ -185,11 +185,12 @@ export function createReadRepositories(
 		listBoardTasks: () =>
 			readRows(
 				database,
-				`SELECT id, project_id, title, content, priority, status, due_date, creator_id, linked_pr, linear_issue_id, linear_identifier, linear_url, created_at, updated_at
+				`SELECT id, task_key, project_id, title, content, priority, status, due_date, creator_id, linked_pr, linear_issue_id, linear_identifier, linear_url, created_at, updated_at
 				 FROM board_tasks
 				 ORDER BY id ASC`,
 				(row): BoardTaskRecord => ({
 					id: String(row.id),
+					taskKey: String(row.task_key),
 					projectId: row.project_id === null ? null : String(row.project_id),
 					title: String(row.title),
 					content: String(row.content),

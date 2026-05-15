@@ -22,6 +22,7 @@ export interface WorkspaceProjectSummary {
 
 export interface BoardTaskSummary {
 	id: string;
+	taskKey: string;
 	projectId: string | null;
 	title: string;
 	content: string;

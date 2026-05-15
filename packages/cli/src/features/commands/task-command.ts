@@ -2,7 +2,7 @@ import type { CliCommand } from "../../args";
 import type { LoadedConfig } from "../../features/config";
 import { getProjectById } from "../../features/config";
 import { createAgentAdapter } from "../../integrations/agent-adapters";
-import { LinearClient } from "../../integrations/linear";
+import { createBoardTaskCreator } from "../task-intake/board-task-creator";
 import { readStdinText, withQuestionReader } from "../task-intake/io";
 import { runTaskIntake } from "../task-intake/run";
 import type { TaskIntakeRunResult } from "../task-intake/task-intake.types";
@@ -42,9 +42,9 @@ export async function handleTaskCommand(
 		throw new Error("No project is configured");
 	}
 	const agent = createAgentAdapter(project);
-	const linear = new LinearClient(project);
+	const taskCreator = createBoardTaskCreator(project);
 	const result = command.command.nonInteractive
-		? await runTaskIntake(project, agent, linear, {
+		? await runTaskIntake(project, agent, taskCreator, {
 				request: resolveNonInteractiveTaskRequest(command.command.request),
 				maxClarificationRounds: command.command.maxClarificationRounds,
 				initialAnswers: command.command.clarificationAnswers,
@@ -57,7 +57,7 @@ export async function handleTaskCommand(
 					askQuestion,
 					readStdin: readStdinText,
 				});
-				return runTaskIntake(project, agent, linear, {
+				return runTaskIntake(project, agent, taskCreator, {
 					request,
 					maxClarificationRounds: command.command.maxClarificationRounds,
 					initialAnswers: command.command.clarificationAnswers,
@@ -77,7 +77,7 @@ function writeTaskCreateResult(
 	}
 	if (result.status === "created") {
 		process.stdout.write(
-			`Created Linear task ${result.issue.identifier}: ${result.issue.url}\n`,
+			`Created task ${result.task.taskKey}: ${result.task.title}\n`,
 		);
 		return;
 	}

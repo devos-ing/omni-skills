@@ -3,6 +3,7 @@ import { boardProjectsTable } from "./board-projects.schema";
 
 export const boardTasksTable = pgTable("board_tasks", {
 	id: text("id").primaryKey(),
+	taskKey: text("task_key").notNull(),
 	projectId: text("project_id").references(() => boardProjectsTable.id),
 	title: text("title").notNull(),
 	content: text("content").notNull(),

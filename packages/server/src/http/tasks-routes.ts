@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { CliExecutor } from "../app.types";
 import type { ServerDatabase } from "../db";
-import { boardProjectsTable, boardTasksTable } from "../db";
+import {
+	boardProjectsTable,
+	boardTasksTable,
+	generateBoardTaskKey,
+} from "../db";
 import {
 	badRequest,
 	isForeignKeyError,
@@ -55,6 +59,7 @@ export async function handleTasksRoute(
 					.insert(boardTasksTable)
 					.values({
 						id: crypto.randomUUID(),
+						taskKey: payload.value.taskKey ?? (await generateBoardTaskKey(db)),
 						projectId: payload.value.projectId ?? null,
 						title: payload.value.title,
 						content: payload.value.content,

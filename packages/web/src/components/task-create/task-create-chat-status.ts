@@ -9,7 +9,7 @@ export function getTaskCreateStatusText(input: {
 		return "Creating task and streaming logs...";
 	}
 	if (input.result) {
-		return `Created ${input.result.issue.identifier}`;
+		return `Created ${input.result.task.taskKey}`;
 	}
 	if (input.step === "clarifying") {
 		return "Answer the follow-up questions to finish creating the task.";

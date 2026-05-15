@@ -4,6 +4,7 @@ import type {
 	CliCommandRequest,
 } from "devos/features/server";
 import type { CliExecutor } from "../../app.types";
+import type { ServerDatabase } from "../../db";
 import type { ServerLogger } from "../../logger.types";
 
 export interface LinearTaskPollingSchedulerOptions {
@@ -36,3 +37,16 @@ export interface LinearTaskPollingScheduler {
 }
 
 export type LinearTaskPollingCommandResult = CliCommandExecutionResult;
+
+export interface InternalTaskPollingSchedulerOptions {
+	config: LoadedConfig;
+	db: ServerDatabase["db"];
+	cliExecutor: CliExecutor;
+	logger: ServerLogger;
+}
+
+export type InternalTaskPollingSchedulerDeps = LinearTaskPollingSchedulerDeps;
+export type InternalTaskPollingIntervalHandle = LinearTaskPollingIntervalHandle;
+export interface InternalTaskPollingScheduler {
+	stop: () => void;
+}

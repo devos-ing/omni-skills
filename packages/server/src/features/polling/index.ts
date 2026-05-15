@@ -1,5 +1,10 @@
+export { startInternalTaskPollingScheduler } from "./internal-task-polling";
 export { startLinearTaskPollingScheduler } from "./linear-task-polling";
 export type {
+	InternalTaskPollingIntervalHandle,
+	InternalTaskPollingScheduler,
+	InternalTaskPollingSchedulerDeps,
+	InternalTaskPollingSchedulerOptions,
 	LinearTaskPollingCommandRequest,
 	LinearTaskPollingCommandResult,
 	LinearTaskPollingIntervalHandle,

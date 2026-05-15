@@ -6,7 +6,6 @@ export type {
 	ApiClient,
 	ApiClientOptions,
 	CommandHistoryRecord,
-	CreatedTaskRef,
 	HealthRequestOptions,
 	HealthResponse,
 	HealthStatus,

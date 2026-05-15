@@ -2,15 +2,14 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { createBoardRepository } from "../src/board";
 import { boardTasksTable } from "../src/db";
 import type { BoardTaskRow } from "../src/db/board-tasks.types";
-import type { TaskChatCreateLinearIssue } from "../src/http/task-chat-create.types";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
 } from "./server-db-test-helpers";
 import {
 	createTaskChatCreateTestApp,
+	createdTaskChatBoardTask,
 	createdTaskChatIntake,
-	createdTaskChatIssue,
 	seedTaskChatProject,
 } from "./task-chat-create-test-helpers";
 
@@ -24,7 +23,7 @@ afterEach(async () => {
 });
 
 describe("chat task create route", () => {
-	it("creates and links a board task from structured task intake output", async () => {
+	it("returns a board task from structured task intake output", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		await seedTaskChatProject(testDatabase.db, "project-1");
 		const calls: unknown[] = [];
@@ -37,7 +36,9 @@ describe("chat task create route", () => {
 					request,
 					commandResult: {
 						code: 0,
-						stdout: `${JSON.stringify(createdTaskChatIntake())}\n`,
+						stdout: `${JSON.stringify(
+							createdTaskChatIntake({ projectId: null }),
+						)}\n`,
 						stderr: "",
 					},
 				};
@@ -59,22 +60,20 @@ describe("chat task create route", () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as {
 			status: string;
-			issue: TaskChatCreateLinearIssue;
 			task: BoardTaskRow;
 		};
 		expect(body.status).toBe("created");
-		expect(body.issue.identifier).toBe("ROY-1");
+		expect(body.task.taskKey).toBe("TASK-000001");
 		expect(body.task.title).toBe("Compose task creation");
 		expect(body.task.content).toBe("Create both task records.");
 		expect(body.task.status).toBe("planning");
-		expect(body.task.linkedPr).toBe("https://linear.example/ROY-1");
+		expect(body.task.linkedPr).toBeNull();
 		const board = await createBoardRepository(
 			testDatabase.db,
 		).getWorkspaceProjectBoard("owner-1", "project-1");
 		expect(
-			board?.statusColumns.find((column) => column.status === "planning")
-				?.tasks,
-		).toHaveLength(1);
+			board.statusColumns.find((column) => column.status === "planning")?.tasks,
+		).toHaveLength(0);
 		expect(calls).toEqual([
 			{
 				action: "task",
@@ -154,20 +153,15 @@ describe("chat task create route", () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as {
 			status: string;
-			issue: TaskChatCreateLinearIssue;
 			task: BoardTaskRow;
 		};
 		expect(body.status).toBe("created");
-		expect(body.issue).toEqual(createdTaskChatIssue());
+		expect(body.task).toEqual(createdTaskChatBoardTask({ projectId: null }));
 		expect(body.task.projectId).toBeNull();
 		expect(body.task.status).toBe("planning");
-		expect(body.task.linkedPr).toBe("https://linear.example/ROY-1");
+		expect(body.task.linkedPr).toBeNull();
 		const tasks = await testDatabase.db.select().from(boardTasksTable);
-		expect(tasks).toHaveLength(1);
-		expect(tasks[0]?.id).toBe(body.task.id);
-		expect(tasks[0]?.projectId).toBeNull();
-		expect(tasks[0]?.status).toBe("planning");
-		expect(tasks[0]?.linkedPr).toBe("https://linear.example/ROY-1");
+		expect(tasks).toHaveLength(0);
 		expect(calls).toEqual([
 			{
 				action: "task",
@@ -181,18 +175,14 @@ describe("chat task create route", () => {
 		]);
 	});
 
-	it("returns db_error when the board task cannot be created", async () => {
+	it("returns db_error when CLI task creation fails", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		const app = createTaskChatCreateTestApp(
 			testDatabase.db,
 			async (request) => ({
-				status: "succeeded",
+				status: "failed",
 				request,
-				commandResult: {
-					code: 0,
-					stdout: `${JSON.stringify(createdTaskChatIntake())}\n`,
-					stderr: "",
-				},
+				error: "Project not found",
 			}),
 		);
 
@@ -213,7 +203,7 @@ describe("chat task create route", () => {
 		expect(body.error).toBe("Project not found");
 	});
 
-	it("returns linear_error when task intake or Linear creation fails", async () => {
+	it("returns db_error when task intake fails", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		await seedTaskChatProject(testDatabase.db, "project-1");
 		const app = createTaskChatCreateTestApp(
@@ -221,7 +211,7 @@ describe("chat task create route", () => {
 			async (request) => ({
 				status: "failed",
 				request,
-				error: "Linear API rejected the issue",
+				error: "Task creation failed",
 			}),
 		);
 
@@ -238,8 +228,8 @@ describe("chat task create route", () => {
 
 		expect(response.status).toBe(200);
 		expect(await response.json()).toEqual({
-			status: "linear_error",
-			error: "Linear API rejected the issue",
+			status: "db_error",
+			error: "Task creation failed",
 		});
 	});
 });

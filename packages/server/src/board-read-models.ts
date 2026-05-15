@@ -105,6 +105,7 @@ export function createBoardReadModels(db: ServerDb): BoardReadModels {
 				tasks: tasks.map(
 					(task): ProjectBoardTaskRecord => ({
 						id: task.id,
+						taskKey: task.taskKey,
 						projectId: task.projectId,
 						title: task.title,
 						content: task.content,

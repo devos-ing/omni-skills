@@ -164,6 +164,12 @@ function buildTask(input: {
 }): NewBoardTaskRow {
 	return {
 		id: input.id,
+		taskKey:
+			input.id === "task-1"
+				? "TASK-000001"
+				: input.id === "task-2"
+					? "TASK-000002"
+					: "TASK-000003",
 		projectId: input.projectId,
 		title: `Task ${input.id}`,
 		content: "Task content",

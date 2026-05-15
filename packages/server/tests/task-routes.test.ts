@@ -186,6 +186,7 @@ describe("task routes", () => {
 			.insert(boardTasksTable)
 			.values({
 				id: "task-1",
+				taskKey: "TASK-000001",
 				projectId: "project-1",
 				title: "Task 1",
 				content: "Body",

@@ -1,13 +1,15 @@
 import type {
 	ParentIssueRef,
+	PlannedSplitTask,
 	PullRequestRef,
 	ResolvedNotificationEmailConfig,
 	ResolvedProjectConfig,
 	RunState,
+	WorkflowStage,
 } from "../../features/types";
 import type { AgentAdapter } from "../../integrations/agent-adapters";
 import type { RemoveWorktreeResult } from "../../integrations/github";
-import type { LinearClient } from "../../integrations/linear";
+import type { CreatedLinearIssueRef } from "../../integrations/linear";
 
 export interface WorkflowIssue {
 	id: string;
@@ -65,21 +67,33 @@ export interface IssueJobLogFields {
 	resumed?: true;
 }
 
-export type WorkflowLinearClient = Pick<
-	LinearClient,
-	| "fetchWork"
-	| "fetchIssueByIdentifier"
-	| "fetchReviewOnlyWork"
-	| "isAssignedState"
-	| "markStage"
-	| "markCanceled"
-	| "updateIssueDetails"
-	| "createBacklogTask"
-	| "createTodoIssueFromPlan"
-	| "applyStageLabel"
-	| "clearWorkflowStageLabels"
-	| "comment"
->;
+export interface WorkflowLinearClient {
+	fetchWork(issueArg?: string): Promise<WorkflowIssue[]>;
+	fetchIssueByIdentifier(issueArg: string): Promise<WorkflowIssue | null>;
+	fetchReviewOnlyWork(): Promise<WorkflowIssue[]>;
+	isAssignedState(stateId: string): Promise<boolean>;
+	markStage(
+		issueId: string,
+		stage: keyof ResolvedProjectConfig["linear"]["statusMap"],
+	): Promise<void>;
+	markCanceled(issueId: string): Promise<void>;
+	updateIssueDetails(
+		issueId: string,
+		title: string,
+		description: string,
+	): Promise<void>;
+	createBacklogTask(input: {
+		title: string;
+		description: string;
+	}): Promise<CreatedLinearIssueRef>;
+	createTodoIssueFromPlan(
+		parentIssue: ParentIssueRef,
+		task: PlannedSplitTask,
+	): Promise<CreatedLinearIssueRef>;
+	applyStageLabel(issueId: string, stage: WorkflowStage): Promise<void>;
+	clearWorkflowStageLabels(issueId: string): Promise<void>;
+	comment(issueId: string, body: string): Promise<void>;
+}
 
 export interface WorkflowRuntime {
 	createLinearClient(config: ResolvedProjectConfig): WorkflowLinearClient;

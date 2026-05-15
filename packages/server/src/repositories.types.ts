@@ -72,6 +72,7 @@ export interface BoardProjectRecord {
 
 export interface BoardTaskRecord {
 	id: string;
+	taskKey: string;
 	projectId: string | null;
 	title: string;
 	content: string;

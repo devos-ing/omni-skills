@@ -262,30 +262,24 @@ export function routeProjectsForIssueProjectId(
 	projects: ResolvedProjectConfig[],
 	issueProjectId: string | undefined,
 ): IssueProjectRoutingResult {
-	const scopedProjects = projects.filter((project) => project.linear.projectId);
-	const unscopedProjects = projects.filter(
-		(project) => !project.linear.projectId,
-	);
-
 	if (!issueProjectId) {
-		if (unscopedProjects.length > 1) {
+		if (projects.length > 1) {
 			return {
 				error:
-					"Target issue has no Linear project id and multiple unscoped projects are configured. Re-run with --project <PROJECT_ID>.",
+					"Target task has no project id and multiple projects are configured. Re-run with --project <PROJECT_ID>.",
 			};
 		}
 		return {
-			skipReason:
-				"Target issue has no Linear project id and cannot be safely routed in --all-projects mode.",
+			selectedProjectId: projects[0]?.id,
 		};
 	}
 
-	const explicitMatches = scopedProjects.filter(
-		(project) => project.linear.projectId === issueProjectId,
+	const explicitMatches = projects.filter(
+		(project) => project.id === issueProjectId,
 	);
 	if (explicitMatches.length > 1) {
 		return {
-			error: `Multiple projects are configured with linear.projectId='${issueProjectId}'. Re-run with --project <PROJECT_ID>.`,
+			error: `Multiple projects are configured with id='${issueProjectId}'. Re-run with --project <PROJECT_ID>.`,
 		};
 	}
 	if (explicitMatches.length === 1) {
@@ -293,14 +287,8 @@ export function routeProjectsForIssueProjectId(
 			selectedProjectId: explicitMatches[0]?.id,
 		};
 	}
-	if (unscopedProjects.length > 1) {
-		return {
-			error:
-				"No explicit linear.projectId match was found and multiple unscoped projects are configured. Re-run with --project <PROJECT_ID>.",
-		};
-	}
 	return {
-		skipReason: `No project configured for linear.projectId='${issueProjectId}'.`,
+		skipReason: `No project configured for task project id='${issueProjectId}'.`,
 	};
 }
 

@@ -126,6 +126,7 @@ describe("linear task reference fields", () => {
 			const migrated = await initializeServerDatabase(databasePath);
 			await migrated.db.insert(boardTasksTable).values({
 				id: "task-1",
+				taskKey: "TASK-000001",
 				projectId: "project-1",
 				title: "Task",
 				content: "Body",

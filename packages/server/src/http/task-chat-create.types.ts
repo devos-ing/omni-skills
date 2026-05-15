@@ -1,4 +1,4 @@
-import type { CreateTaskPayload } from "./project-task-api.types";
+import type { BoardTaskRow } from "../db";
 
 export interface TaskChatCreateAnswer {
 	question: string;
@@ -11,46 +11,17 @@ export interface TaskChatCreateRequest {
 	answers?: TaskChatCreateAnswer[];
 }
 
-export interface TaskChatCreateLinearIssue {
-	id: string;
-	identifier: string;
-	title: string;
-	url: string;
-}
-
-export interface TaskChatCreateResolvedTask {
-	title: string;
-	description: string;
-}
-
 export type TaskChatCreateIntakeResult =
 	| {
 			status: "created";
-			issue: TaskChatCreateLinearIssue;
-			task: TaskChatCreateResolvedTask;
+			task: BoardTaskRow;
 	  }
 	| { status: "needs_info"; questions: string[] };
 
 export type TaskChatCreateResponse =
 	| {
 			status: "created";
-			issue: TaskChatCreateLinearIssue;
-			task?: CreateTaskPayload & {
-				id: string;
-				createdAt: string;
-				updatedAt: string;
-			};
+			task: BoardTaskRow;
 	  }
 	| { status: "needs_info"; questions: string[] }
-	| { status: "linear_error"; error: string }
-	| { status: "db_error"; error: string; issue: TaskChatCreateLinearIssue }
-	| {
-			status: "link_error";
-			error: string;
-			issue: TaskChatCreateLinearIssue;
-			task: CreateTaskPayload & {
-				id: string;
-				createdAt: string;
-				updatedAt: string;
-			};
-	  };
+	| { status: "db_error"; error: string };

@@ -13,11 +13,11 @@ import {
 	squashMergePullRequest,
 	updateDraftPrFromWorktree,
 } from "../../integrations/github";
-import { LinearClient } from "../../integrations/linear";
 import {
 	sendHumanReviewRequiredEmail,
 	sendTaskOutcomeEmail,
 } from "../../integrations/notifications";
+import { createBoardTaskWorkflowClient } from "./board-task-workflow-client";
 import type { WorkflowRuntime } from "./workflow.types";
 export type { WorkflowLinearClient, WorkflowRuntime } from "./workflow.types";
 
@@ -25,7 +25,7 @@ export function createWorkflowRuntime(
 	overrides: Partial<WorkflowRuntime> = {},
 ): WorkflowRuntime {
 	return {
-		createLinearClient: (config) => new LinearClient(config),
+		createLinearClient: createBoardTaskWorkflowClient,
 		createAgentAdapter: createAgentAdapter,
 		ensureBaseBranchFresh,
 		ensureIssueWorktree,

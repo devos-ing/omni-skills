@@ -95,6 +95,7 @@ export interface WorkspaceProjectRecord {
 
 export interface ProjectBoardTaskRecord {
 	id: string;
+	taskKey: string;
 	projectId: string | null;
 	title: string;
 	content: string;
@@ -144,38 +145,16 @@ export interface TaskCreateRequest {
 	answers?: TaskCreateAnswer[];
 }
 
-export interface CreatedTaskRef {
-	id: string;
-	identifier: string;
-	title: string;
-	url: string;
-}
-
 export type TaskCreateResponse =
 	| {
 			status: "created";
-			issue: CreatedTaskRef;
-			task?: ProjectBoardTaskRecord;
+			task: ProjectBoardTaskRecord;
 	  }
 	| {
 			status: "needs_info";
 			questions: string[];
 	  }
-	| {
-			status: "linear_error";
-			error: string;
-	  }
-	| {
-			status: "db_error";
-			error: string;
-			issue: CreatedTaskRef;
-	  }
-	| {
-			status: "link_error";
-			error: string;
-			issue: CreatedTaskRef;
-			task: ProjectBoardTaskRecord;
-	  };
+	| { status: "db_error"; error: string };
 
 export interface ApiClientOptions {
 	baseUrl?: string;

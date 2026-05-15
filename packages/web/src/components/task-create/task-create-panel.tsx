@@ -31,7 +31,7 @@ export function TaskCreatePanel(): ReactElement {
 			return "Submitting task request...";
 		}
 		if (createTask.data?.status === "created") {
-			return `Created ${createTask.data.issue.identifier}`;
+			return `Created ${createTask.data.task.taskKey}`;
 		}
 		if (createTask.data?.status === "needs_info") {
 			return "Additional clarification required.";
@@ -192,10 +192,7 @@ export function TaskCreatePanel(): ReactElement {
 			) : null}
 			{createTask.data?.status === "created" ? (
 				<p style={{ marginBottom: 0 }}>
-					Task link:{" "}
-					<a href={createTask.data.issue.url} target="_blank" rel="noreferrer">
-						{createTask.data.issue.url}
-					</a>
+					Task key: {createTask.data.task.taskKey}
 				</p>
 			) : null}
 		</section>
