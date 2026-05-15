@@ -1,5 +1,6 @@
 import { createApiClient } from "./client";
 import type {
+	AgentRecord,
 	HealthResponse,
 	ProjectBoardRecord,
 	ProjectBoardTaskRecord,
@@ -15,6 +16,7 @@ const webClient = createWebApiClient();
 
 const healthResponsePromise: Promise<HealthResponse> = client.getHealth();
 const webHealthResponsePromise: Promise<HealthResponse> = webClient.getHealth();
+const agentRecordsPromise: Promise<AgentRecord[]> = webClient.listAgents();
 const taskCreateRequest: TaskCreateRequest = {
 	request: "Create a task from web UI",
 };
@@ -41,6 +43,7 @@ const deletedBoardTaskPromise: Promise<ProjectBoardTaskRecord> =
 
 void healthResponsePromise;
 void webHealthResponsePromise;
+void agentRecordsPromise;
 void taskCreateResponsePromise;
 void workspaceProjectsPromise;
 void projectBoardPromise;

@@ -1,24 +1,39 @@
 "use client";
 
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 
-import type { WorkflowTab } from "@/lib/agents/agent-monitor.types";
 import { useAgentMonitor } from "@/lib/agents/use-agent-monitor";
 
 import { AgentMonitorPanel } from "./agent-monitor-panel";
 
 export function AgentMonitorShell(): ReactElement {
-	const { health } = useAgentMonitor();
-	const [activeWorkflowTab, setActiveWorkflowTab] =
-		useState<WorkflowTab>("overview");
+	const { health, runtimes } = useAgentMonitor();
+	const [activeRuntimeTabId, setActiveRuntimeTabId] = useState<string | null>(
+		null,
+	);
 	const [showDetails, setShowDetails] = useState<boolean>(false);
+
+	useEffect(() => {
+		if (runtimes.tabs.length === 0) {
+			setActiveRuntimeTabId(null);
+			return;
+		}
+
+		setActiveRuntimeTabId((current) => {
+			if (current && runtimes.tabs.some((tab) => tab.id === current)) {
+				return current;
+			}
+			return runtimes.tabs[0]?.id ?? null;
+		});
+	}, [runtimes.tabs]);
 
 	return (
 		<AgentMonitorPanel
 			health={health}
-			activeWorkflowTab={activeWorkflowTab}
+			runtimes={runtimes}
+			activeRuntimeTabId={activeRuntimeTabId}
 			showDetails={showDetails}
-			onWorkflowTabChange={setActiveWorkflowTab}
+			onRuntimeTabChange={setActiveRuntimeTabId}
 			onToggleDetails={() => setShowDetails((value) => !value)}
 		/>
 	);
