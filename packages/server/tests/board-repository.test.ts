@@ -64,6 +64,7 @@ describe("board repository", () => {
 				projectId: "project-1",
 				status: "planning",
 				createdAt: "2026-05-14 00:02:00",
+				linearIdentifier: "ROY-233",
 			}),
 			buildTask({
 				id: "task-2",
@@ -99,6 +100,10 @@ describe("board repository", () => {
 			board?.statusColumns.find((column) => column.status === "testing")?.tasks
 				.length,
 		).toBe(0);
+		expect(
+			board?.statusColumns.find((column) => column.status === "planning")
+				?.tasks[0]?.linearIdentifier,
+		).toBe("ROY-233");
 	});
 
 	it("returns null for workspace/project mismatch and unknown projects", async () => {
@@ -155,6 +160,7 @@ function buildTask(input: {
 	projectId: string;
 	status: string;
 	createdAt: string;
+	linearIdentifier?: string;
 }): NewBoardTaskRow {
 	return {
 		id: input.id,
@@ -166,6 +172,11 @@ function buildTask(input: {
 		dueDate: null,
 		creatorId: "user-1",
 		linkedPr: null,
+		linearIssueId: input.linearIdentifier ? "lin-1" : null,
+		linearIdentifier: input.linearIdentifier ?? null,
+		linearUrl: input.linearIdentifier
+			? "https://linear.app/roy/issue/ROY-233/task"
+			: null,
 		createdAt: input.createdAt,
 		updatedAt: input.createdAt,
 	};

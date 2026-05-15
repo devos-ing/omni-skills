@@ -185,7 +185,7 @@ export function createReadRepositories(
 		listBoardTasks: () =>
 			readRows(
 				database,
-				`SELECT id, project_id, title, content, priority, status, due_date, creator_id, linked_pr, created_at, updated_at
+				`SELECT id, project_id, title, content, priority, status, due_date, creator_id, linked_pr, linear_issue_id, linear_identifier, linear_url, created_at, updated_at
 				 FROM board_tasks
 				 ORDER BY id ASC`,
 				(row): BoardTaskRecord => ({
@@ -199,6 +199,13 @@ export function createReadRepositories(
 						row.due_date === null ? null : normalizeTimestamp(row.due_date),
 					creatorId: String(row.creator_id),
 					linkedPr: row.linked_pr === null ? null : String(row.linked_pr),
+					linearIssueId:
+						row.linear_issue_id === null ? null : String(row.linear_issue_id),
+					linearIdentifier:
+						row.linear_identifier === null
+							? null
+							: String(row.linear_identifier),
+					linearUrl: row.linear_url === null ? null : String(row.linear_url),
 					createdAt: normalizeTimestamp(row.created_at),
 					updatedAt: normalizeTimestamp(row.updated_at),
 				}),

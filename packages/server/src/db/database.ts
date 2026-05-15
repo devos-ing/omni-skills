@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS board_tasks (
 	due_date timestamp,
 	creator_id text NOT NULL,
 	linked_pr text,
+	linear_issue_id text,
+	linear_identifier text,
+	linear_url text,
 	created_at timestamp NOT NULL,
 	updated_at timestamp NOT NULL
 );
@@ -170,6 +173,12 @@ ALTER TABLE token_usage
 ADD COLUMN IF NOT EXISTS task_id text REFERENCES board_tasks(id);
 ALTER TABLE token_usage
 ADD COLUMN IF NOT EXISTS task_execution_log_id text REFERENCES task_execution_logs(id);
+ALTER TABLE board_tasks
+ADD COLUMN IF NOT EXISTS linear_issue_id text;
+ALTER TABLE board_tasks
+ADD COLUMN IF NOT EXISTS linear_identifier text;
+ALTER TABLE board_tasks
+ADD COLUMN IF NOT EXISTS linear_url text;
 `;
 
 export async function initializeServerDatabase(

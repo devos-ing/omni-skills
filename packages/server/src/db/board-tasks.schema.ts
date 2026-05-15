@@ -13,6 +13,9 @@ export const boardTasksTable = pgTable("board_tasks", {
 	dueDate: timestamp("due_date", { mode: "string" }),
 	creatorId: text("creator_id").notNull(),
 	linkedPr: text("linked_pr"),
+	linearIssueId: text("linear_issue_id"),
+	linearIdentifier: text("linear_identifier"),
+	linearUrl: text("linear_url"),
 	createdAt: timestamp("created_at", { mode: "string" }).notNull(),
 	updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
 });

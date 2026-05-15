@@ -35,6 +35,9 @@ const createTaskSchema = z.object({
 	creatorId: nonEmptyString,
 	dueDate: optionalTimestamp,
 	linkedPr: optionalNullableString,
+	linearIssueId: optionalNullableString,
+	linearIdentifier: optionalNullableString,
+	linearUrl: optionalNullableString,
 });
 
 const updateTaskSchema = createTaskSchema.partial();

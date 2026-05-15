@@ -54,6 +54,9 @@ export async function handleTasksRoute(
 						dueDate: payload.value.dueDate ?? null,
 						creatorId: payload.value.creatorId,
 						linkedPr: payload.value.linkedPr ?? null,
+						linearIssueId: payload.value.linearIssueId ?? null,
+						linearIdentifier: payload.value.linearIdentifier ?? null,
+						linearUrl: payload.value.linearUrl ?? null,
 						createdAt: now,
 						updatedAt: now,
 					})
