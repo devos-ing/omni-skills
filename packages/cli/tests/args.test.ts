@@ -172,6 +172,12 @@ describe("parseArgs", () => {
 		);
 	});
 
+	it("parses daemon command", () => {
+		expect(parseArgs(["bun", "devos", "daemon"])).toEqual({
+			kind: "daemon",
+		});
+	});
+
 	it("parses setup command", () => {
 		expect(parseArgs(["bun", "devos", "setup"])).toEqual({
 			kind: "setup",

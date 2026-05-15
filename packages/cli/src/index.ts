@@ -6,6 +6,7 @@ import {
 	printHelp,
 } from "./commands/handlers";
 import { loadConfig } from "./features/config";
+import { runProductionDaemon } from "./features/daemon";
 import {
 	logger,
 	normalizeError,
@@ -23,6 +24,10 @@ async function main(): Promise<void> {
 	const cwd = process.cwd();
 	if (command.kind === "setup") {
 		await handleSetupCommand(command, cwd);
+		return;
+	}
+	if (command.kind === "daemon") {
+		process.exitCode = await runProductionDaemon({ cwd });
 		return;
 	}
 

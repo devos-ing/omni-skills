@@ -9,6 +9,8 @@ export interface RunCommandOptions {
 	env?: Record<string, string | undefined>;
 	streamStdout?: boolean;
 	streamStderr?: boolean;
+	onStdout?: (text: string) => void;
+	onStderr?: (text: string) => void;
 	stdinMode?: "ignore" | "pipe";
 	timeoutMs?: number;
 }

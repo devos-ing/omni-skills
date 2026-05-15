@@ -17,7 +17,11 @@ import { loadRunState, normalizeIssueKey } from "../workflow/state";
 import { runWorkflow } from "../workflow/workflow";
 
 type SetupCommand = Extract<CliCommand, { kind: "setup" }>;
-type RunnableCommand = Exclude<CliCommand, { kind: "help" } | SetupCommand>;
+type DaemonCommand = Extract<CliCommand, { kind: "daemon" }>;
+type RunnableCommand = Exclude<
+	CliCommand,
+	{ kind: "help" } | SetupCommand | DaemonCommand
+>;
 
 export async function resolveTaskCreateRequest(options: {
 	request?: string;
@@ -219,6 +223,7 @@ export function printHelp(): void {
 			"devos - devos.ing ADHD (Agentic Development Hub & Daemon) CLI orchestration workflow",
 			"",
 			"Commands:",
+			"  devos daemon",
 			"  devos run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]",
 			"  devos run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-idle]",
 			"  devos status --project <PROJECT_ID> --issue <LINEAR_KEY>",
@@ -232,6 +237,7 @@ export function printHelp(): void {
 			"  devos help",
 			"",
 			"Environment:",
+			"  PIV_SERVER_PORT, PORT, DEVOS_SERVER_BASE_URL for devos daemon",
 			"  LINEAR_API_KEY, LINEAR_STATUS_* state IDs, GITHUB_* repo settings",
 		].join("\n")}\n`,
 	);

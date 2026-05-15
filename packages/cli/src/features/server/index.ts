@@ -4,6 +4,8 @@ export type {
 	CliCommandExecutionResult,
 	CliCommandExecutorOptions,
 	CliCommandRequest,
+	CliCommandStreamEmit,
+	CliCommandStreamEvent,
 	RunCommandFn,
 	SupportedCliAction,
 	SupportedCliCommandRequest,

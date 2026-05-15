@@ -22,6 +22,7 @@ export async function runCommand(
 		child.stdout?.on("data", (chunk) => {
 			const text = chunk.toString();
 			stdout += text;
+			options.onStdout?.(text);
 			if (options.streamStdout) {
 				process.stdout.write(text);
 			}
@@ -29,6 +30,7 @@ export async function runCommand(
 		child.stderr?.on("data", (chunk) => {
 			const text = chunk.toString();
 			stderr += text;
+			options.onStderr?.(text);
 			if (options.streamStderr) {
 				process.stderr.write(text);
 			}

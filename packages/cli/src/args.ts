@@ -52,6 +52,10 @@ export function parseArgs(argv: string[]): CliCommand {
 		};
 	}
 
+	if (command === "daemon") {
+		return { kind: "daemon" };
+	}
+
 	if (command === "setup") {
 		const args = rest.slice(1);
 		return { kind: "setup", check: args.includes("--check") };

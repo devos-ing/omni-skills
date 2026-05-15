@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { CliCommandExecutor } from "../src/features/server/cli-command-executor";
 import type {
 	CliCommandExecutionResult,
+	CliCommandStreamEvent,
 	RunCommandFn,
 } from "../src/features/server/cli-command-executor.types";
 import { CLI_COMMAND_SIMULATION_MATRIX } from "./cli-command-executor-simulation-matrix";
@@ -71,6 +72,68 @@ describe("CliCommandExecutor", () => {
 		expect(history[0]?.status).toBe("failed");
 		expect(history[0]?.error).toBe("spawn EACCES");
 		expect(history[0]?.args).toEqual(["devos", "projects"]);
+	});
+
+	it("streams invocation, output, and completion events", async () => {
+		const events: CliCommandStreamEvent[] = [];
+		const runCommandFn: RunCommandFn = async (_command, _args, options) => {
+			options.onStdout?.("hello\n");
+			options.onStderr?.("warn\n");
+			return { code: 0, stdout: "hello\n", stderr: "warn\n" };
+		};
+		const executor = new CliCommandExecutor({
+			...DEFAULT_OPTIONS,
+			runCommandFn,
+		});
+
+		const result = await executor.executeStream(
+			{ action: "projects" },
+			(event) => events.push(event),
+		);
+
+		expect(result.status).toBe("succeeded");
+		expect(events.map((event) => event.type)).toEqual([
+			"start",
+			"stdout",
+			"stderr",
+			"complete",
+		]);
+		expect(events[0]).toMatchObject({
+			type: "start",
+			invocation: { command: "npx", args: ["devos", "projects"] },
+		});
+		expect(events[1]).toEqual({ type: "stdout", text: "hello\n" });
+		expect(events[2]).toEqual({ type: "stderr", text: "warn\n" });
+		expect(events[3]).toEqual({ type: "complete", result });
+		assertHistory(executor.getHistory()[0], result);
+	});
+
+	it("streams rejected requests without spawning", async () => {
+		let callCount = 0;
+		const events: CliCommandStreamEvent[] = [];
+		const runCommandFn: RunCommandFn = async () => {
+			callCount += 1;
+			return { code: 0, stdout: "", stderr: "" };
+		};
+		const executor = new CliCommandExecutor({
+			...DEFAULT_OPTIONS,
+			runCommandFn,
+		});
+
+		const result = await executor.executeStream(
+			{ action: "unknown-action" },
+			(event) => events.push(event),
+		);
+
+		expect(callCount).toBe(0);
+		expect(result.status).toBe("rejected");
+		expect(events.map((event) => event.type)).toEqual(["error", "complete"]);
+		expect(events[0]).toMatchObject({
+			type: "error",
+			error: "Unsupported CLI action: unknown-action",
+		});
+		expect(events[1]).toEqual({ type: "complete", result });
+		assertHistory(executor.getHistory()[0], result);
 	});
 
 	it("rejects unsupported and malformed requests without execution", async () => {

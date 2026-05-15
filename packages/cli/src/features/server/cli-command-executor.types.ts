@@ -125,6 +125,19 @@ export interface CliCommandExecutionResult {
 	error?: string;
 }
 
+export type CliCommandStreamEvent =
+	| {
+			type: "start";
+			request: CliCommandRequest;
+			invocation: CliCommandInvocation;
+	  }
+	| { type: "stdout"; text: string }
+	| { type: "stderr"; text: string }
+	| { type: "error"; error: string }
+	| { type: "complete"; result: CliCommandExecutionResult };
+
+export type CliCommandStreamEmit = (event: CliCommandStreamEvent) => void;
+
 export type RunCommandFn = (
 	command: string,
 	args: string[],
@@ -134,6 +147,8 @@ export type RunCommandFn = (
 		stdinMode?: "pipe" | "ignore" | "inherit";
 		streamStdout?: boolean;
 		streamStderr?: boolean;
+		onStdout?: (text: string) => void;
+		onStderr?: (text: string) => void;
 	},
 ) => Promise<CommandResult>;
 

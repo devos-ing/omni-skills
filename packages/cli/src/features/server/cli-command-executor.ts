@@ -5,6 +5,7 @@ import type {
 	CliCommandExecutorOptions,
 	CliCommandInvocation,
 	CliCommandRequest,
+	CliCommandStreamEmit,
 	SupportedCliCommandRequest,
 } from "./cli-command-executor.types";
 export type {
@@ -13,6 +14,8 @@ export type {
 	CliCommandExecutorOptions,
 	CliCommandInvocation,
 	CliCommandRequest,
+	CliCommandStreamEmit,
+	CliCommandStreamEvent,
 	RunCommandFn,
 	SupportedCliAction,
 	SupportedCliCommandRequest,
@@ -75,6 +78,68 @@ export class CliCommandExecutor {
 				invocation,
 				error: error instanceof Error ? error.message : String(error),
 			});
+		}
+	}
+
+	async executeStream(
+		request: CliCommandRequest,
+		emit: CliCommandStreamEmit,
+	): Promise<CliCommandExecutionResult> {
+		const requestedAt = new Date().toISOString();
+		const resolution = resolveInvocation(
+			request,
+			this.options.command,
+			this.options.baseArgs,
+		);
+		if (resolution.status !== "ok") {
+			const result = this.record({
+				requestedAt,
+				request,
+				status: "rejected",
+				error: resolution.error,
+			});
+			emit({ type: "error", error: resolution.error });
+			emit({ type: "complete", result });
+			return result;
+		}
+		const invocation = resolution.invocation;
+		emit({ type: "start", request, invocation });
+
+		try {
+			const commandResult = await (this.options.runCommandFn ?? runCommand)(
+				invocation.command,
+				invocation.args,
+				{
+					cwd: this.options.cwd,
+					env: this.options.env,
+					streamStdout: true,
+					streamStderr: true,
+					onStdout: (text) => emit({ type: "stdout", text }),
+					onStderr: (text) => emit({ type: "stderr", text }),
+				},
+			);
+			const status = commandResult.code === 0 ? "succeeded" : "failed";
+			const result = this.record({
+				requestedAt,
+				request,
+				status,
+				invocation,
+				commandResult,
+			});
+			emit({ type: "complete", result });
+			return result;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			const result = this.record({
+				requestedAt,
+				request,
+				status: "failed",
+				invocation,
+				error: message,
+			});
+			emit({ type: "error", error: message });
+			emit({ type: "complete", result });
+			return result;
 		}
 	}
 
