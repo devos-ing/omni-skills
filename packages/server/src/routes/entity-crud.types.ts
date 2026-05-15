@@ -1,18 +1,39 @@
 import type { AgentRow, SkillRow } from "../db";
+import type { AgentRecord } from "../repositories.types";
 
 export interface AgentCreatePayload {
 	id: string;
 	name: string;
+	description?: string;
+	logo?: string;
+	runtime?: string;
 	backend: string;
 	model: string;
+	concurrency?: number;
+	owner?: string;
 	createdAt: string;
+	updatedAt?: string;
+	skills?: string[];
+	recentWork?: string[];
+	activity?: string[];
+	instructions?: string;
 }
 
 export interface AgentUpdatePayload {
 	name?: string;
+	description?: string;
+	logo?: string;
+	runtime?: string;
 	backend?: string;
 	model?: string;
+	concurrency?: number;
+	owner?: string;
 	createdAt?: string;
+	updatedAt?: string;
+	skills?: string[];
+	recentWork?: string[];
+	activity?: string[];
+	instructions?: string;
 }
 
 export interface SkillCreatePayload {
@@ -37,5 +58,10 @@ export interface CrudRouteMatch {
 
 export interface CrudResponseResult {
 	status: number;
-	body?: AgentRow | SkillRow | AgentRow[] | SkillRow[] | { error: string };
+	body?:
+		| AgentRecord
+		| SkillRow
+		| AgentRecord[]
+		| SkillRow[]
+		| { error: string };
 }

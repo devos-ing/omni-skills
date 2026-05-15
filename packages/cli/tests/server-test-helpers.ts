@@ -20,7 +20,7 @@ export async function createServerTestDatabase(): Promise<TestDatabase> {
 			"CREATE TABLE jobs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, issue_key TEXT NOT NULL, stage TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL)",
 		);
 		db.run(
-			"CREATE TABLE agents (id TEXT PRIMARY KEY, name TEXT NOT NULL, backend TEXT NOT NULL, model TEXT NOT NULL, created_at TEXT NOT NULL)",
+			"CREATE TABLE agents (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, logo TEXT NOT NULL, runtime TEXT NOT NULL, backend TEXT NOT NULL, model TEXT NOT NULL, concurrency INTEGER NOT NULL, owner TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, skills TEXT NOT NULL, recent_work TEXT NOT NULL, activity TEXT NOT NULL, instructions TEXT NOT NULL)",
 		);
 		db.run(
 			"CREATE TABLE skills (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, source TEXT NOT NULL, updated_at TEXT NOT NULL)",
@@ -59,7 +59,7 @@ export function seedServerTestDatabase(dbPath: string): void {
 			"INSERT INTO jobs (id, project_id, issue_key, stage, status, created_at) VALUES ('job-1', 'default', 'ROY-129', 'implementing', 'in_progress', '2026-05-12T00:01:00.000Z')",
 		);
 		db.run(
-			"INSERT INTO agents (id, name, backend, model, created_at) VALUES ('agent-1', 'codex-main', 'codex', 'gpt-5', '2026-05-12T00:02:00.000Z')",
+			"INSERT INTO agents (id, name, description, logo, runtime, backend, model, concurrency, owner, created_at, updated_at, skills, recent_work, activity, instructions) VALUES ('agent-1', 'codex-main', 'Primary coding agent', 'https://example.com/codex.svg', 'codex', 'codex', 'gpt-5', 2, 'owner-1', '2026-05-12T00:02:00.000Z', '2026-05-12T00:03:00.000Z', '[\"adhd-plan\",\"adhd-implement\"]', '[\"ROY-228\"]', '[\"planning\"]', 'Keep responses implementation-focused.')",
 		);
 		db.run(
 			"INSERT INTO skills (id, name, description, source, updated_at) VALUES ('skill-1', 'backend-standard', 'Backend implementation guidance', 'folder', '2026-05-12T00:03:00.000Z')",

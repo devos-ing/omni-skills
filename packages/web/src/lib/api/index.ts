@@ -2,6 +2,7 @@ export { createApiClient } from "./client";
 export { createWebApiClient } from "./web-client";
 export type {
 	AgentRecord,
+	AgentUpdateRequest,
 	ApiClient,
 	ApiClientOptions,
 	CliDispatchStreamEvent,
@@ -28,6 +29,7 @@ export type {
 export type {
 	BoardTaskMutationInput,
 	BoardTaskUpdateMutationInput,
+	AgentUpdateMutationInput,
 	ServerStateQueryOptions,
 	TaskCreateMutationInput,
 } from "./queries.types";

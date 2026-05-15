@@ -46,6 +46,21 @@ export function readNullableString(
 	throw new Error(`Invalid ${endpoint} response field '${key}'`);
 }
 
+export function readStringArray(
+	record: Record<string, unknown>,
+	key: string,
+	endpoint: string,
+): string[] {
+	const value = record[key];
+	if (
+		Array.isArray(value) &&
+		value.every((entry) => typeof entry === "string")
+	) {
+		return value;
+	}
+	throw new Error(`Invalid ${endpoint} response field '${key}'`);
+}
+
 export function parseListResponse<T>(
 	payload: unknown,
 	endpoint: string,

@@ -36,6 +36,15 @@ paths:
       responses:
         '200':
           description: CLI dispatch result.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events for opt-in streamed dispatch.
         '400':
           $ref: '#/components/responses/TypedError'
   /api/token-usage:
@@ -324,6 +333,56 @@ paths:
           description: Workspace project board.
         '404':
           $ref: '#/components/responses/TypedError'
+  /api/inbox/messages:
+    get:
+      tags: [Read Models]
+      parameters:
+        - in: query
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: runId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Inbox messages scoped by workspace, user, and run.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InboxMessageRecord'
+        '400':
+          $ref: '#/components/responses/TypedError'
+    post:
+      tags: [Read Models]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboxMessageCreateRequest'
+      responses:
+        '201':
+          description: Created inbox message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxMessageRecord'
+        '400':
+          $ref: '#/components/responses/TypedError'
   /api/notifications:
     post:
       tags: [Notifications]
@@ -399,6 +458,9 @@ components:
         action:
           type: string
           minLength: 1
+        stream:
+          type: boolean
+          description: Return Server-Sent Events when true.
       additionalProperties: true
     AgentCreateRequest:
       type: object
@@ -505,6 +567,54 @@ components:
       allOf:
         - $ref: '#/components/schemas/TaskPatchFields'
         - minProperties: 1
+    InboxMessageCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [workspaceId, userId, runId, source, kind, body]
+      properties:
+        workspaceId: { type: string, minLength: 1 }
+        userId: { type: string, minLength: 1 }
+        runId: { type: string, minLength: 1 }
+        source: { type: string, minLength: 1 }
+        kind: { type: string, minLength: 1 }
+        body: { type: string, minLength: 1 }
+        taskId:
+          type: string
+          nullable: true
+        agentId:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        createdAt:
+          type: string
+    InboxMessageRecord:
+      type: object
+      additionalProperties: false
+      required:
+        [id, workspaceId, userId, runId, source, kind, body, taskId, agentId, metadata, createdAt]
+      properties:
+        id: { type: string, minLength: 1 }
+        workspaceId: { type: string, minLength: 1 }
+        userId: { type: string, minLength: 1 }
+        runId: { type: string, minLength: 1 }
+        source: { type: string, minLength: 1 }
+        kind: { type: string, minLength: 1 }
+        body: { type: string, minLength: 1 }
+        taskId:
+          type: string
+          nullable: true
+        agentId:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        createdAt:
+          type: string
     TaskPatchFields:
       type: object
       additionalProperties: false

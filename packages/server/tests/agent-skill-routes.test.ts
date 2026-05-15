@@ -25,9 +25,19 @@ describe("agent and skill CRUD routes", () => {
 		const payload: AgentCreatePayload = {
 			id: "agent-1",
 			name: "codex-main",
+			description: "Primary coding agent",
+			logo: "https://example.com/codex.svg",
+			runtime: "codex",
 			backend: "codex",
 			model: "gpt-5",
+			concurrency: 2,
+			owner: "roy",
 			createdAt: "2026-05-12 00:02:00",
+			updatedAt: "2026-05-12 00:03:00",
+			skills: ["adhd-plan", "adhd-implement"],
+			recentWork: ["ROY-228", "ROY-229"],
+			activity: ["planning", "implementing"],
+			instructions: "Keep responses implementation-focused.",
 		};
 
 		const createResponse = await app(
@@ -47,12 +57,18 @@ describe("agent and skill CRUD routes", () => {
 		expect(await readResponse.json()).toEqual(payload);
 
 		const updateResponse = await app(
-			jsonRequest("PATCH", "/api/agents/agent-1", { model: "gpt-5.1" }),
+			jsonRequest("PATCH", "/api/agents/agent-1", {
+				model: "gpt-5.1",
+				concurrency: 4,
+				skills: ["adhd-review"],
+			}),
 		);
 		expect(updateResponse.status).toBe(200);
 		expect(await updateResponse.json()).toEqual({
 			...payload,
 			model: "gpt-5.1",
+			concurrency: 4,
+			skills: ["adhd-review"],
 		});
 
 		const deleteResponse = await app(
@@ -66,6 +82,50 @@ describe("agent and skill CRUD routes", () => {
 		);
 		expect(readMissing.status).toBe(404);
 		expect(await readMissing.json()).toEqual({ error: "Not Found" });
+	});
+
+	it("accepts dialog-shaped agent patch with blank optional metadata", async () => {
+		const app = await createApp();
+		const createdAt = "2026-05-12 00:02:00";
+
+		const createResponse = await app(
+			jsonRequest("POST", "/api/agents", {
+				id: "agent-empty",
+				name: "codex-empty",
+				backend: "codex",
+				model: "gpt-5",
+				createdAt,
+			}),
+		);
+		expect(createResponse.status).toBe(201);
+		const createdAgent = (await createResponse.json()) as AgentCreatePayload;
+
+		const patchResponse = await app(
+			jsonRequest("PATCH", "/api/agents/agent-empty", {
+				name: createdAgent.name,
+				description: "",
+				logo: "",
+				runtime: createdAgent.runtime ?? "codex",
+				backend: createdAgent.backend,
+				model: "gpt-5.1",
+				concurrency: createdAgent.concurrency ?? 1,
+				owner: createdAgent.owner ?? "unassigned",
+				createdAt: createdAgent.createdAt,
+				updatedAt: createdAgent.updatedAt ?? createdAt,
+				skills: createdAgent.skills ?? [],
+				recentWork: createdAgent.recentWork ?? [],
+				activity: createdAgent.activity ?? [],
+				instructions: "",
+			}),
+		);
+		expect(patchResponse.status).toBe(200);
+		expect(await patchResponse.json()).toEqual({
+			...createdAgent,
+			description: "",
+			logo: "",
+			model: "gpt-5.1",
+			instructions: "",
+		});
 	});
 
 	it("creates, lists, reads, updates, and deletes skills", async () => {
@@ -138,6 +198,21 @@ describe("agent and skill CRUD routes", () => {
 			error: "Malformed request: missing required field 'createdAt'",
 		});
 
+		const wrongAgentFieldType = await app(
+			jsonRequest("POST", "/api/agents", {
+				id: "agent-1",
+				name: "codex-main",
+				backend: "codex",
+				model: "gpt-5",
+				createdAt: "2026-05-12 00:02:00",
+				skills: ["adhd-plan", 1],
+			}),
+		);
+		expect(wrongAgentFieldType.status).toBe(400);
+		expect(await wrongAgentFieldType.json()).toEqual({
+			error: "Malformed request: field 'skills' has invalid value",
+		});
+
 		const wrongType = await app(
 			jsonRequest("POST", "/api/skills", {
 				id: "skill-1",
@@ -179,7 +254,10 @@ describe("agent and skill CRUD routes", () => {
 		expect(await missingRead.json()).toEqual({ error: "Not Found" });
 
 		const missingPatch = await app(
-			jsonRequest("PATCH", "/api/agents/missing", { model: "gpt-5.1" }),
+			jsonRequest("PATCH", "/api/agents/missing", {
+				model: "gpt-5.1",
+				concurrency: 2,
+			}),
 		);
 		expect(missingPatch.status).toBe(404);
 		expect(await missingPatch.json()).toEqual({ error: "Not Found" });

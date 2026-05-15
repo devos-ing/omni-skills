@@ -19,6 +19,7 @@ import type {
 	WorkspaceProjectRecord,
 } from "./client.types";
 import type {
+	AgentUpdateMutationInput,
 	BoardTaskMutationInput,
 	BoardTaskUpdateMutationInput,
 	ServerStateQueryOptions,
@@ -42,6 +43,10 @@ export const serverStateQueryKeys = {
 
 export const taskCreationMutationKeys = {
 	createTask: ["task-creation", "create-task"] as const,
+};
+
+export const agentMutationKeys = {
+	updateAgent: ["agents", "update-agent"] as const,
 };
 
 export function useTokenUsageQuery(
@@ -81,6 +86,30 @@ export function useSkillsQuery(
 		queryKey: serverStateQueryKeys.skills,
 		queryFn: () => apiClient.listSkills(),
 		enabled: options?.enabled,
+	});
+}
+
+export function useUpdateAgentMutation(): UseMutationResult<
+	AgentRecord,
+	Error,
+	AgentUpdateMutationInput
+> {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationKey: agentMutationKeys.updateAgent,
+		mutationFn: ({ agentId, agent }) => apiClient.updateAgent(agentId, agent),
+		onSuccess: (updatedAgent) => {
+			queryClient.setQueryData<AgentRecord[] | undefined>(
+				serverStateQueryKeys.agents,
+				(current) =>
+					current?.map((agent) =>
+						agent.id === updatedAgent.id ? updatedAgent : agent,
+					),
+			);
+			queryClient.invalidateQueries({
+				queryKey: serverStateQueryKeys.agents,
+			});
+		},
 	});
 }
 

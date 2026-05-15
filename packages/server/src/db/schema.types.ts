@@ -8,6 +8,10 @@ export type {
 	CommandHistoryRow,
 	NewCommandHistoryRow,
 } from "./command-history.types";
+export type {
+	InboxMessageRow,
+	NewInboxMessageRow,
+} from "./inbox-messages.types";
 export type { JobRow, NewJobRow } from "./jobs.types";
 export type {
 	NewProjectCronJobRow,

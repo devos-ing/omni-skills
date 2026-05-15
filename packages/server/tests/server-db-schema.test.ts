@@ -9,6 +9,7 @@ import {
 	type NewBoardProjectRow,
 	type NewBoardTaskRow,
 	type NewCommandHistoryRow,
+	type NewInboxMessageRow,
 	type NewJobRow,
 	type NewProjectBoardRow,
 	type NewProjectCronJobRow,
@@ -24,6 +25,7 @@ import {
 	boardProjectsTable,
 	boardTasksTable,
 	commandHistoryTable,
+	inboxMessagesTable,
 	initializeServerDatabase,
 	jobsTable,
 	projectBoardsTable,
@@ -78,9 +80,19 @@ describe("server drizzle schema", () => {
 		const agent: NewAgentRow = {
 			id: "agent-1",
 			name: "codex-main",
+			description: "Primary coding agent",
+			logo: "https://example.com/codex.svg",
+			runtime: "codex",
 			backend: "codex",
 			model: "gpt-5",
+			concurrency: 2,
+			owner: "owner-1",
 			createdAt: "2026-05-12 00:02:00",
+			updatedAt: "2026-05-12 00:03:00",
+			skills: JSON.stringify(["adhd-plan", "adhd-implement"]),
+			recentWork: JSON.stringify(["ROY-228"]),
+			activity: JSON.stringify(["planning"]),
+			instructions: "Keep responses implementation-focused.",
 		};
 		const skill: NewSkillRow = {
 			id: "skill-1",
@@ -95,12 +107,26 @@ describe("server drizzle schema", () => {
 			exitCode: 0,
 			executedAt: "2026-05-12 00:04:00",
 		};
+		const inboxMessage: NewInboxMessageRow = {
+			id: "msg-1",
+			workspaceId: "workspace-1",
+			userId: "user-1",
+			runId: "run-1",
+			source: "agent_workflow_event",
+			kind: "task_status_update",
+			body: "Task moved to implementing",
+			taskId: null,
+			agentId: null,
+			metadata: '{"stage":"implementing"}',
+			createdAt: "2026-05-12 00:05:00",
+		};
 
 		await db.insert(tokenUsageTable).values(tokenUsage);
 		await db.insert(jobsTable).values(job);
 		await db.insert(agentsTable).values(agent);
 		await db.insert(skillsTable).values(skill);
 		await db.insert(commandHistoryTable).values(commandHistory);
+		await db.insert(inboxMessagesTable).values(inboxMessage);
 
 		const [tokenUsageRow] = await db
 			.select()
@@ -122,6 +148,10 @@ describe("server drizzle schema", () => {
 			.select()
 			.from(commandHistoryTable)
 			.where(eq(commandHistoryTable.id, commandHistory.id));
+		const [inboxMessageRow] = await db
+			.select()
+			.from(inboxMessagesTable)
+			.where(eq(inboxMessagesTable.id, inboxMessage.id));
 
 		expect(tokenUsageRow?.id).toBe(tokenUsage.id);
 		expect(tokenUsageRow?.runId).toBe(tokenUsage.runId);
@@ -136,6 +166,12 @@ describe("server drizzle schema", () => {
 		expect(agentRow).toEqual(agent);
 		expect(skillRow).toEqual(skill);
 		expect(commandHistoryRow).toEqual(commandHistory);
+		expect(inboxMessageRow).toEqual({
+			...inboxMessage,
+			taskId: inboxMessage.taskId ?? null,
+			agentId: inboxMessage.agentId ?? null,
+			metadata: inboxMessage.metadata ?? null,
+		});
 	});
 
 	it("supports project board workflow relationships", async () => {

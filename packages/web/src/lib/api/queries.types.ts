@@ -1,3 +1,5 @@
+import type { AgentUpdateRequest } from "./client.types";
+
 export interface ServerStateQueryOptions {
 	enabled?: boolean;
 }
@@ -22,4 +24,9 @@ export interface BoardTaskMutationInput {
 export interface BoardTaskUpdateMutationInput {
 	taskId: string;
 	task: Partial<BoardTaskMutationInput>;
+}
+
+export interface AgentUpdateMutationInput {
+	agentId: string;
+	agent: AgentUpdateRequest;
 }

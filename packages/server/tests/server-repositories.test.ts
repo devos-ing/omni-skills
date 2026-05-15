@@ -60,9 +60,19 @@ describe("read repositories", () => {
 			{
 				id: "agent-1",
 				name: "codex-main",
+				description: "Primary coding agent",
+				logo: "https://example.com/codex.svg",
+				runtime: "codex",
 				backend: "codex",
 				model: "gpt-5",
+				concurrency: 2,
+				owner: "owner-1",
 				createdAt: "2026-05-12T00:02:00.000Z",
+				updatedAt: "2026-05-12T00:03:00.000Z",
+				skills: ["adhd-plan", "adhd-implement"],
+				recentWork: ["ROY-228"],
+				activity: ["planning"],
+				instructions: "Keep responses implementation-focused.",
 			},
 		]);
 		expect(await repositories.listSkills()).toEqual([

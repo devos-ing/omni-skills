@@ -32,6 +32,24 @@ function normalizeTimestamp(value: string | number | Date | null): string {
 	return value;
 }
 
+function parseStringList(value: string | number | Date | null): string[] {
+	if (typeof value !== "string") {
+		return [];
+	}
+	try {
+		const parsed = JSON.parse(value) as unknown;
+		if (
+			!Array.isArray(parsed) ||
+			!parsed.every((entry) => typeof entry === "string")
+		) {
+			return [];
+		}
+		return parsed;
+	} catch {
+		return [];
+	}
+}
+
 async function readRows<T>(
 	database: ServerDatabase,
 	sql: string,
@@ -79,15 +97,25 @@ export function createReadRepositories(
 		listAgents: async () =>
 			readRows(
 				database,
-				`SELECT id, name, backend, model, created_at
+				`SELECT id, name, description, logo, runtime, backend, model, concurrency, owner, created_at, updated_at, skills, recent_work, activity, instructions
 				 FROM agents
 				 ORDER BY id ASC`,
 				(row): AgentRecord => ({
 					id: String(row.id),
 					name: String(row.name),
+					description: String(row.description),
+					logo: String(row.logo),
+					runtime: String(row.runtime),
 					backend: String(row.backend),
 					model: String(row.model),
+					concurrency: Number(row.concurrency),
+					owner: String(row.owner),
 					createdAt: normalizeTimestamp(row.created_at),
+					updatedAt: normalizeTimestamp(row.updated_at),
+					skills: parseStringList(row.skills),
+					recentWork: parseStringList(row.recent_work),
+					activity: parseStringList(row.activity),
+					instructions: String(row.instructions),
 				}),
 			),
 		listSkills: async () =>

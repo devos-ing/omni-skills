@@ -7,17 +7,17 @@ const stages = [
 		label: "Linear",
 		value: "ENG-123",
 		status: "eligible",
-		logs: ["ENG-123", "agent-ready", "core-platform"],
+		logs: ["issue ready", "workspace set", "rules matched"],
 		contract: {
 			result: "RESULT: PASS",
-			bugs: 'BUGS_JSON: [{"risk":"rules"}]',
+			bugs: 'BUGS_JSON: [{"watch":"scope"}]',
 		},
 	},
 	{
 		label: "Plan",
 		value: "strategy",
 		status: "ready",
-		logs: ["docs loaded", "skill attached", "plan approved"],
+		logs: ["docs loaded", "plan scoped", "approval ready"],
 		contract: {
 			result: "RESULT: PASS",
 			bugs: "BUGS_JSON: []",
@@ -27,17 +27,17 @@ const stages = [
 		label: "Implement",
 		value: "worktree",
 		status: "active",
-		logs: ["codex/eng-123", "worktree clean", "PR synced"],
+		logs: ["branch open", "changes staged", "PR synced"],
 		contract: {
 			result: "RESULT: ACTIVE",
-			bugs: 'BUGS_JSON: [{"watch":"audit"}]',
+			bugs: 'BUGS_JSON: [{"watch":"tests"}]',
 		},
 	},
 	{
 		label: "Review",
 		value: "PASS",
 		status: "verified",
-		logs: ["check pass", "types pass", "tests pass"],
+		logs: ["check pass", "types pass", "review pass"],
 		contract: {
 			result: "RESULT: PASS",
 			bugs: "BUGS_JSON: []",
@@ -52,10 +52,10 @@ export function HeroVisual(): ReactElement {
 	const activeStage = stages[activeStageIndex] ?? stages[defaultStageIndex];
 
 	return (
-		<div className="relative mx-auto w-full max-w-3xl lg:mx-0">
-			<div className="terminal-float absolute -left-5 top-8 hidden h-28 w-28 border-2 border-ink bg-copper/70 md:block" />
-			<div className="terminal-float absolute -right-3 bottom-8 hidden h-20 w-20 border-2 border-ink bg-circuit md:block [animation-delay:900ms]" />
-			<section className="relative border-2 border-ink bg-bone shadow-hard-ink">
+		<div className="relative mx-auto w-full max-w-[42rem] lg:mx-0">
+			<div className="terminal-float absolute -left-4 top-10 hidden h-20 w-20 border-2 border-ink bg-copper/70 md:block" />
+			<div className="terminal-float absolute -right-2 bottom-10 hidden h-16 w-16 border-2 border-ink bg-circuit md:block [animation-delay:900ms]" />
+			<section className="relative border-2 border-ink bg-bone shadow-[8px_8px_0_#10110d]">
 				<div className="flex items-center justify-between border-b-2 border-ink bg-ink px-4 py-3 text-bone">
 					<div className="flex items-center gap-2">
 						<span className="h-3 w-3 bg-circuit" />
@@ -63,7 +63,7 @@ export function HeroVisual(): ReactElement {
 						<span className="h-3 w-3 bg-bone" />
 					</div>
 					<p className="font-mono text-[11px] font-black uppercase tracking-[0.22em]">
-						run console
+						agent run
 					</p>
 				</div>
 				<div className="grid gap-0 md:grid-cols-[0.82fr_1fr]">
@@ -71,8 +71,8 @@ export function HeroVisual(): ReactElement {
 						<p className="font-mono text-[11px] font-black uppercase tracking-[0.18em] text-copper">
 							Current issue
 						</p>
-						<h2 className="mt-3 text-balance font-display text-3xl leading-none sm:text-4xl md:text-3xl">
-							Refactor billing events without losing audit history
+						<h2 className="mt-3 text-balance font-display text-3xl leading-none">
+							Refactor billing audit flow
 						</h2>
 						<div className="mt-5 grid gap-3">
 							{stages.map((stage, index) => {
@@ -87,6 +87,7 @@ export function HeroVisual(): ReactElement {
 												: "bg-paper"
 										}`}
 										key={stage.label}
+										onClick={() => setActiveStageIndex(index)}
 										onFocus={() => setActiveStageIndex(index)}
 										onMouseEnter={() => setActiveStageIndex(index)}
 										type="button"

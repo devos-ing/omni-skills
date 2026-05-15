@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 
 import { AgentMonitorShell } from "@/components/agent-monitor/agent-monitor-shell";
+import { AgentsPanel } from "@/components/agents/agents-panel";
 import { IssuesBoard } from "@/components/issues-board/issues-board";
 import { TaskCreatePanel } from "@/components/task-create/task-create-panel";
 import type { SidebarNavItem } from "@/components/web-shell/web-shell.types";
@@ -31,6 +32,22 @@ export function WebJobBoard({
 }: WebJobBoardProps): ReactElement {
 	if (activeKey === "issues") {
 		return <IssuesBoard createIssueRequest={createIssueRequest} />;
+	}
+	if (activeKey === "agents") {
+		return (
+			<section
+				style={{
+					padding: "clamp(0.75rem, 3vw, 1.25rem)",
+					display: "grid",
+					gap: "1rem",
+					alignContent: "start",
+					minHeight: "100vh",
+					minWidth: 0,
+				}}
+			>
+				<AgentsPanel />
+			</section>
+		);
 	}
 
 	const heading = activeKey.charAt(0).toUpperCase() + activeKey.slice(1);

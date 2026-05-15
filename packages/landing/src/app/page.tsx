@@ -7,6 +7,7 @@ import {
 	FeatureSection,
 	HeroSection,
 	HowItWorksSection,
+	RunCommandSection,
 } from "@/components/landing-sections";
 
 export default function HomePage(): ReactElement {
@@ -14,6 +15,7 @@ export default function HomePage(): ReactElement {
 		<main className="grain min-h-screen overflow-hidden">
 			<LandingHeader />
 			<HeroSection />
+			<RunCommandSection />
 			<HowItWorksSection />
 			<FeatureSection />
 			<FaqSection />

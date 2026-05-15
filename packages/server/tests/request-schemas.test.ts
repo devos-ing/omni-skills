@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+	parseCreateInboxMessagePayload,
+	parseInboxMessageScopeInput,
+} from "../src/http/inbox-message-schemas";
+import {
 	parseCreateProjectPayload,
 	parseCreateTaskPayload,
 	parseUpdateProjectPayload,
@@ -75,6 +79,43 @@ describe("request schemas", () => {
 			status: "error",
 			error:
 				"Malformed notification request: type must be 'task-outcome' or 'human-review-required'",
+		});
+	});
+
+	it("validates inbox message payload and scope contracts", () => {
+		expect(
+			parseCreateInboxMessagePayload({
+				workspaceId: "workspace-1",
+				userId: "user-1",
+				runId: "run-1",
+				source: "agent_workflow_event",
+				kind: "agent_message",
+				body: "Agent started implementing",
+				metadata: { step: "implement" },
+			}).ok,
+		).toBeTrue();
+		expect(
+			parseCreateInboxMessagePayload({ workspaceId: "workspace-1" }),
+		).toEqual({
+			ok: false,
+			error: "userId must be a non-empty string",
+		});
+		expect(
+			parseInboxMessageScopeInput({
+				workspaceId: "workspace-1",
+				userId: "user-1",
+				runId: "run-1",
+			}).ok,
+		).toBeTrue();
+		expect(
+			parseInboxMessageScopeInput({
+				workspaceId: "workspace-1",
+				userId: "",
+				runId: "run-1",
+			}),
+		).toEqual({
+			ok: false,
+			error: "userId must be a non-empty string",
 		});
 	});
 });

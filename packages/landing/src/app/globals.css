@@ -128,11 +128,13 @@ a {
 }
 
 .flow-node::after {
-	display: block;
-	margin-top: 1rem;
-	color: #10110d;
-	content: "↓";
-	font-weight: 900;
+	position: absolute;
+	right: 1.25rem;
+	bottom: -2px;
+	left: 1.25rem;
+	height: 4px;
+	content: "";
+	background: #b7ff4a;
 }
 
 .flow-node:last-child {
@@ -141,8 +143,7 @@ a {
 }
 
 .flow-node:last-child::after {
-	content: "↺";
-	color: #b7ff4a;
+	background: #b87333;
 }
 
 @keyframes rise {
@@ -206,32 +207,5 @@ a {
 	.plan-card:focus-visible,
 	.flow-node:hover {
 		transform: none;
-	}
-}
-
-@media (min-width: 768px) {
-	.flow-node::after {
-		position: absolute;
-		top: 50%;
-		right: -1.25rem;
-		z-index: 10;
-		display: grid;
-		width: 1.75rem;
-		height: 1.75rem;
-		margin-top: 0;
-		place-items: center;
-		border: 2px solid #10110d;
-		background: #b7ff4a;
-		content: "→";
-		transform: translateY(-50%);
-	}
-
-	.flow-node:last-child::after {
-		right: auto;
-		left: 50%;
-		top: auto;
-		bottom: -1.25rem;
-		content: "↺";
-		transform: translateX(-50%);
 	}
 }

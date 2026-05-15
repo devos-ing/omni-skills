@@ -2,6 +2,7 @@ export { boardProjectsTable } from "./board-projects.schema";
 export { boardTasksTable } from "./board-tasks.schema";
 export { agentsTable } from "./agents.schema";
 export { commandHistoryTable } from "./command-history.schema";
+export { inboxMessagesTable } from "./inbox-messages.schema";
 export { jobsTable } from "./jobs.schema";
 export { projectCronJobsTable } from "./project-cron-jobs.schema";
 export { projectBoardsTable } from "./project-boards.schema";

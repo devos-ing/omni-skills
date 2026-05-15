@@ -17,6 +17,8 @@ const IMPLEMENTED_ROUTES = [
 	["GET", "/api/tasks/{id}"],
 	["PATCH", "/api/tasks/{id}"],
 	["DELETE", "/api/tasks/{id}"],
+	["GET", "/api/inbox/messages"],
+	["POST", "/api/inbox/messages"],
 	["GET", "/api/agents"],
 	["POST", "/api/agents"],
 	["GET", "/api/agents/{id}"],

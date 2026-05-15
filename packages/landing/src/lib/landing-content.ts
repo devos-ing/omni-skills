@@ -3,67 +3,52 @@ export const readmeUrl =
 	"https://github.com/1997roylee/show-me-ur-agents#readme";
 
 export const navItems = [
+	{ href: "#start", label: "Start" },
 	{ href: "#how", label: "How it works" },
 	{ href: "#features", label: "Features" },
 	{ href: "#faq", label: "FAQ" },
 ];
 
-export const workflowSteps = [
-	{
-		kicker: "01 / Route",
-		title: "Pull eligible Linear work",
-		body: "Project routing rules pick the right workspace, issue, and execution context before an agent starts touching code.",
-	},
-	{
-		kicker: "02 / Plan",
-		title: "Turn intent into a run plan",
-		body: "The planning stage builds a scoped implementation strategy from issue context, project config, and selected skills.",
-	},
-	{
-		kicker: "03 / Implement",
-		title: "Ship changes into PR context",
-		body: "The implementation agent works in the project workspace, updates code, and keeps pull request context synchronized.",
-	},
-	{
-		kicker: "04 / Verify",
-		title: "Review, test, and loop",
-		body: "Structured review output feeds failures back into implementation until the run is done or clearly blocked.",
-	},
-];
+export const runCommand = {
+	kicker: "Get started",
+	title: "Run the command, then connect your first workflow.",
+	body: "Interactive setup walks through configuration and checks your local environment before the first agent run.",
+	command: "npx devos setup",
+};
 
 export const workflowFlow = [
-	"Project board",
-	"Explore / Researching",
+	"Route",
+	"Explore",
 	"Plan",
-	"Implementation",
-	"Testing",
+	"Build",
+	"Review",
 	"Loop",
 ];
 
 export const features = [
 	{
-		title: "Auditable project routing",
-		body: "Route issues across many repositories without hard-coding behavior to a single workspace.",
+		title: "Project routing",
+		body: "Send each issue to the right repo and workspace.",
 	},
 	{
-		title: "Linear-native status sync",
-		body: "Comments, labels, status transitions, and issue state stay aligned with each workflow boundary.",
+		title: "Linear sync",
+		body: "Keep status, labels, and comments aligned.",
 	},
 	{
-		title: "PR-aware implementation",
-		body: "Agents preserve pull request context and can update draft PRs as review feedback arrives.",
+		title: "PR context",
+		body: "Carry review feedback back into the run.",
 	},
 	{
-		title: "Stable review contract",
-		body: "Review parsing stays machine-readable with RESULT, SUMMARY, and BUGS_JSON outputs.",
+		title: "Stable review",
+		body: "Parse RESULT, SUMMARY, and BUGS_JSON.",
 	},
 	{
-		title: "Polling and scheduled sweeps",
-		body: "Run one issue, poll for new work, or let server-owned cron automation sweep eligible queues.",
+		title: "Scheduled sweeps",
+		body: "Run one issue or sweep eligible queues.",
 	},
 	{
 		title: "Operator control",
-		body: "Humans can inspect stage, outcome, and risk while devos.ing handles the repetitive loop.",
+		body: "Inspect stage, outcome, and risk.",
 	},
 ];
 
@@ -71,32 +56,22 @@ export const faqs = [
 	{
 		question: "What is devos.ing?",
 		answer:
-			"devos.ing is ADHD: Agentic Development Hub & Daemon. It turns Linear issues into staged agent workflows for planning, implementation, review, and testing.",
+			"An agentic development hub for routing Linear issues through planning, build, review, and verification.",
 	},
 	{
 		question: "Does it replace engineers?",
 		answer:
-			"No. It removes repetitive coordination and execution loops while keeping operators in control of routing, review, and outcomes.",
+			"No. It handles repeatable workflow loops while engineers keep control of scope, review, and outcomes.",
 	},
 	{
 		question: "Which tools does it work with?",
 		answer:
-			"The current workflow centers on Linear, GitHub pull requests, CLI execution, server cron jobs, and agent adapters for Codex and Claude Code.",
+			"Linear, GitHub pull requests, CLI execution, server cron, Codex, and Claude Code.",
 	},
 	{
 		question: "Can it run unattended?",
 		answer:
-			"Yes. It can run one scoped issue, poll locally, or use scheduled server-owned automation sweeps across configured projects.",
-	},
-	{
-		question: "How does review stay reliable?",
-		answer:
-			"Review output follows a stable contract: RESULT, SUMMARY, and BUGS_JSON. Failures are fed back into implementation.",
-	},
-	{
-		question: "Where is run state stored?",
-		answer:
-			"Run state is owned by the workflow layer inside the configured workspace, with safe recovery paths for partial runs.",
+			"Yes. Run one scoped issue, poll locally, or let server automation sweep configured projects.",
 	},
 ];
 

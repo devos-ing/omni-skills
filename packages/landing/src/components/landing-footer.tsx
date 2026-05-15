@@ -11,7 +11,7 @@ export function LandingFooter(): ReactElement {
 						devos.ing
 					</p>
 					<p className="mt-4 max-w-sm font-display text-3xl leading-tight">
-						Talk is cheap, show me your agent system.
+						Agent runs, routed and reviewed.
 					</p>
 				</div>
 				<div className="grid gap-8 sm:grid-cols-3">
@@ -34,7 +34,7 @@ export function LandingFooter(): ReactElement {
 				</div>
 			</div>
 			<div className="border-t border-bone/20 px-4 py-5 text-center font-mono text-[11px] uppercase tracking-[0.2em] text-bone/55">
-				Agentic Development Hub & Daemon
+				Agentic development hub
 			</div>
 		</footer>
 	);

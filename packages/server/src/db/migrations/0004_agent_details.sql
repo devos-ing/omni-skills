@@ -1,0 +1,39 @@
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS logo text NOT NULL DEFAULT '';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS runtime text;
+
+UPDATE agents
+SET runtime = backend
+WHERE runtime IS NULL OR runtime = '';
+
+ALTER TABLE agents
+ALTER COLUMN runtime SET NOT NULL;
+
+ALTER TABLE agents
+ALTER COLUMN runtime SET DEFAULT '';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS concurrency integer NOT NULL DEFAULT 1;
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS owner text NOT NULL DEFAULT 'unassigned';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS skills text NOT NULL DEFAULT '[]';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS recent_work text NOT NULL DEFAULT '[]';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS activity text NOT NULL DEFAULT '[]';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS instructions text NOT NULL DEFAULT '';

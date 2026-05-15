@@ -39,8 +39,8 @@ export async function startServer(
 	const serverDatabase = await initializeServerDatabase(databasePath);
 	const cliExecutor = new CliCommandExecutor({
 		cwd,
-		command: "bun",
-		baseArgs: ["run", "./packages/cli/src/index.ts"],
+		command: "npx",
+		baseArgs: ["devos"],
 	});
 	const app = createExpressApp(
 		createHandleRequest({

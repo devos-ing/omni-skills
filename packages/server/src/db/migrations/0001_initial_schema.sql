@@ -9,9 +9,19 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE TABLE IF NOT EXISTS agents (
 	id text PRIMARY KEY,
 	name text NOT NULL,
+	description text NOT NULL,
+	logo text NOT NULL,
+	runtime text NOT NULL,
 	backend text NOT NULL,
 	model text NOT NULL,
-	created_at timestamp NOT NULL
+	concurrency integer NOT NULL,
+	owner text NOT NULL,
+	created_at timestamp NOT NULL,
+	updated_at timestamp NOT NULL,
+	skills text NOT NULL,
+	recent_work text NOT NULL,
+	activity text NOT NULL,
+	instructions text NOT NULL
 );
 CREATE TABLE IF NOT EXISTS skills (
 	id text PRIMARY KEY,

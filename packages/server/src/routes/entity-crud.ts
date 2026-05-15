@@ -2,27 +2,24 @@ import { asc, eq } from "drizzle-orm";
 import type { ServerDatabase } from "../db";
 import { agentsTable, skillsTable } from "../db";
 import {
+	toAgentRecord,
+	toStoredAgentCreatePayload,
+	toStoredAgentUpdatePayload,
+	validateAgentCreatePayload,
+	validateAgentUpdatePayload,
+} from "./entity-crud-agent";
+import {
 	parseJsonBody,
 	validateCreatePayload,
 	validateUpdatePayload,
 } from "./entity-crud-validators";
 import type {
-	AgentCreatePayload,
-	AgentUpdatePayload,
 	CrudResponseResult,
 	CrudRouteMatch,
 	SkillCreatePayload,
 	SkillUpdatePayload,
 } from "./entity-crud.types";
 
-const AGENT_CREATE_FIELDS = [
-	"id",
-	"name",
-	"backend",
-	"model",
-	"createdAt",
-] as const;
-const AGENT_UPDATE_FIELDS = ["name", "backend", "model", "createdAt"] as const;
 const SKILL_CREATE_FIELDS = [
 	"id",
 	"name",
@@ -71,26 +68,22 @@ async function handleAgentRequest(
 				.select()
 				.from(agentsTable)
 				.orderBy(asc(agentsTable.id));
-			return { status: 200, body: rows };
+			return { status: 200, body: rows.map((row) => toAgentRecord(row)) };
 		}
 		if (request.method === "POST") {
 			const parsed = await parseJsonBody(request);
 			if (!parsed.ok) {
 				return { status: 400, body: { error: parsed.error } };
 			}
-			const validated = validateCreatePayload<AgentCreatePayload>(
-				parsed.value,
-				AGENT_CREATE_FIELDS,
-			);
+			const validated = validateAgentCreatePayload(parsed.value);
 			if (!validated.ok) {
 				return { status: 400, body: { error: validated.error } };
 			}
-			const payload = validated.value;
 			const [created] = await deps.db
 				.insert(agentsTable)
-				.values(payload)
+				.values(toStoredAgentCreatePayload(validated.value))
 				.returning();
-			return { status: 201, body: created };
+			return { status: 201, body: toAgentRecord(created) };
 		}
 		return { status: 405, body: { error: "Method Not Allowed" } };
 	}
@@ -103,7 +96,7 @@ async function handleAgentRequest(
 		if (!row) {
 			return { status: 404, body: { error: "Not Found" } };
 		}
-		return { status: 200, body: row };
+		return { status: 200, body: toAgentRecord(row) };
 	}
 
 	if (request.method === "PATCH") {
@@ -111,23 +104,19 @@ async function handleAgentRequest(
 		if (!parsed.ok) {
 			return { status: 400, body: { error: parsed.error } };
 		}
-		const validated = validateUpdatePayload<AgentUpdatePayload>(
-			parsed.value,
-			AGENT_UPDATE_FIELDS,
-		);
+		const validated = validateAgentUpdatePayload(parsed.value);
 		if (!validated.ok) {
 			return { status: 400, body: { error: validated.error } };
 		}
-		const payload = validated.value;
 		const [updated] = await deps.db
 			.update(agentsTable)
-			.set(payload)
+			.set(toStoredAgentUpdatePayload(validated.value))
 			.where(eq(agentsTable.id, id))
 			.returning();
 		if (!updated) {
 			return { status: 404, body: { error: "Not Found" } };
 		}
-		return { status: 200, body: updated };
+		return { status: 200, body: toAgentRecord(updated) };
 	}
 
 	if (request.method === "DELETE") {
