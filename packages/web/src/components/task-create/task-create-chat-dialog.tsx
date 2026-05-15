@@ -9,6 +9,7 @@ import type {
 	TaskCreateChatDialogProps,
 	TaskCreateChatState,
 } from "./task-create-chat-dialog.types";
+import { formatTaskCreateError } from "./task-create-chat-errors";
 import { TaskCreateLogPanel, createLogLine } from "./task-create-log-panel";
 import { createInitialState } from "./task-create-state";
 import { streamTaskCreate } from "./task-create-stream";

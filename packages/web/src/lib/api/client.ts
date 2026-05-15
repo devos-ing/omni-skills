@@ -4,8 +4,8 @@ import type {
 	ApiClientOptions,
 	HealthRequestOptions,
 } from "./client.types";
-import { encodePathSegment } from "./response-utils";
 import { createDispatchStreamApiMethods } from "./dispatch-stream-client";
+import { encodePathSegment } from "./response-utils";
 import { requestJson } from "./response-utils";
 import {
 	parseAgentRecord,
