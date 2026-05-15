@@ -72,6 +72,7 @@ export async function buildPlanPrompt(
 		"Do not invent a success goal when acceptance criteria are unclear; use NEEDS_INFO instead.",
 		"When including SPLIT_TASKS_JSON, write action-oriented task titles and clear descriptions that include expected behavior, implementation scope, and tests.",
 		"Create a concrete implementation plan and format the READY narrative with these headings in order: Title, Summary, Key Changes, Checkpoints (Steps), Test plan, Assumptions.",
+		"In Checkpoints (Steps), break meaningful requirements into ordered progress checkpoints; each checkpoint must name the implementation target and validation/progress signal.",
 		"Use Assumptions for explicit assumptions only; write None when there are no assumptions.",
 	].join("\n");
 }
@@ -95,7 +96,9 @@ export async function buildImplementPrompt(
 		"Plan summary:",
 		planSummary,
 		"",
-		"Implement the task in the current workspace and run relevant tests. End with a concise summary.",
+		"Before editing, restate the scoped plan and the ordered Checkpoints (Steps) list as your progress plan.",
+		"Implement the task checkpoint-by-checkpoint in the current workspace and run relevant tests.",
+		"End with a concise summary that lists completed checkpoints, blocked checkpoints if any, checks run, and remaining risk.",
 	].join("\n");
 }
 
@@ -178,10 +181,11 @@ export async function buildFixPrompt(
 		"",
 		"Fix-pass instructions:",
 		"- Address every bug in BUGS_JSON; treat each body as the repair checklist from review/testing.",
+		"- Break the repair work into checkpointed fixes, then report each bug-fix checkpoint as completed or blocked.",
 		"- Preserve unrelated user changes and avoid broad refactors outside the failing behavior.",
 		"- Add or update regression tests when the fix changes behavior or guards a reported failure.",
 		"- Run each listed verification command/check plus relevant repository checks for the touched code.",
-		"- End with a concise summary that names the bugs fixed and the checks that passed.",
+		"- End with a concise summary that names the bugs fixed, completed and blocked checkpoints, checks that passed, and remaining risk.",
 	].join("\n");
 }
 

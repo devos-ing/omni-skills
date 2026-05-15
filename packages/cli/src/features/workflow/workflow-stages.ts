@@ -5,6 +5,7 @@ import type {
 	WorkflowStage,
 } from "../../features/types";
 import { shouldSquashMergePullRequestForComplexityScore } from "./plan";
+import { matchesIssueStateConfigValue } from "./workflow-linear-state";
 import type { WorkflowLinearClient, WorkflowRuntime } from "./workflow-runtime";
 import type { WorkflowIssue } from "./workflow.types";
 
@@ -25,16 +26,6 @@ export function resolveReviewOnlyBootstrapStage(
 		return "done";
 	}
 	return "testing";
-}
-
-function matchesIssueStateConfigValue(
-	state: WorkflowIssue["state"],
-	configValue: string,
-): boolean {
-	const expected = configValue.trim().toLowerCase();
-	return (
-		state.id.toLowerCase() === expected || state.name.toLowerCase() === expected
-	);
 }
 
 export async function handleReceivedStage(

@@ -50,10 +50,15 @@ describe("buildFixPrompt", () => {
 		expect(prompt).toContain('"title": "Bug A"');
 		expect(prompt).toContain("Fix-pass instructions:");
 		expect(prompt).toContain("Address every bug in BUGS_JSON");
+		expect(prompt).toContain("Break the repair work into checkpointed fixes");
+		expect(prompt).toContain(
+			"report each bug-fix checkpoint as completed or blocked",
+		);
 		expect(prompt).toContain("Preserve unrelated user changes");
 		expect(prompt).toContain("Add or update regression tests");
 		expect(prompt).toContain("Run each listed verification command/check");
-		expect(prompt).toContain("names the bugs fixed and the checks that passed");
+		expect(prompt).toContain("completed and blocked checkpoints");
+		expect(prompt).toContain("remaining risk");
 	});
 });
 

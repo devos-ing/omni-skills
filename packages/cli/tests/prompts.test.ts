@@ -52,9 +52,14 @@ describe("buildImplementPrompt", () => {
 		);
 		expect(prompt).toContain("## Checkpoints");
 		expect(prompt).toContain("Scope checkpoint");
+		expect(prompt).toContain("Progress checkpoint");
 		expect(prompt).toContain("Implementation checkpoint");
 		expect(prompt).toContain("Validation checkpoint");
 		expect(prompt).toContain("Final checkpoint");
+		expect(prompt).toContain("ordered Checkpoints (Steps) list");
+		expect(prompt).toContain("completed and blocked items");
+		expect(prompt).toContain("completed checkpoints");
+		expect(prompt).toContain("blocked checkpoints");
 	});
 });
 
@@ -113,6 +118,12 @@ describe("buildPlanPrompt", () => {
 			expect(prompt).toContain(
 				"Title, Summary, Key Changes, Checkpoints (Steps), Test plan, Assumptions",
 			);
+			expect(prompt).toContain(
+				"break meaningful requirements into ordered progress checkpoints",
+			);
+			expect(prompt).toContain(
+				"implementation target and validation/progress signal",
+			);
 		} finally {
 			await rm(tmpDir, { recursive: true, force: true });
 		}
@@ -134,6 +145,11 @@ describe("buildPlanPrompt", () => {
 		expect(prompt).toContain("Surgical changes");
 		expect(prompt).toContain("Surface conflicts instead of averaging them");
 		expect(prompt).toContain("Checkpoint after every significant step");
+		expect(prompt).toContain("## Checkpoint Requirements");
+		expect(prompt).toContain("one checkpoint for each meaningful requirement");
+		expect(prompt).toContain(
+			"implementation target and the validation or progress signal",
+		);
 		expect(prompt).toContain("PLANNING_RESULT: READY");
 		expect(prompt).toContain('ISSUE_REFINEMENT_JSON: {"title"');
 		expect(prompt).toContain("`Checkpoints (Steps)`");

@@ -826,6 +826,156 @@ describe("runWorkflow parallel issue regression", () => {
 	});
 });
 
+describe("runWorkflow blocked Linear issue intake", () => {
+	it("moves an explicitly targeted blocked issue to backlog before continuing", async () => {
+		const workspacePath = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-workflow-blocked-explicit-"),
+		);
+		const config = createProject("default");
+		config.workspacePath = workspacePath;
+		config.executionPath = workspacePath;
+		const issue = {
+			...createWorkflowIssue("ENG-55", 1, "Urgent"),
+			state: { id: "state_canceled", name: "Canceled" },
+		};
+		const markStage = mock(async (_issueId: string, _stage: string) => {});
+
+		await runWorkflow(createLoadedConfig(config), { issueArg: "ENG-55" }, {
+			createLinearClient: () =>
+				({
+					fetchWork: mock(async () => [issue]),
+					isAssignedState: mock(async () => false),
+					markStage,
+					comment: mock(async () => {}),
+					clearWorkflowStageLabels: mock(async () => {}),
+					createTodoIssueFromPlan: mock(async () => ({
+						id: "lin_ENG-56",
+						identifier: "ENG-56",
+						title: "Child task",
+						url: "https://linear.example/ENG-56",
+					})),
+					updateIssueDetails: mock(async () => {}),
+				}) as unknown,
+			createAgentAdapter: () => createComplexPlanningAgent(),
+			ensureBaseBranchFresh: mock(async () => {}),
+			sendTaskOutcomeEmail: mock(async () => {}),
+		} as unknown as WorkflowRuntime);
+
+		expect(markStage.mock.calls[0]).toEqual(["ENG-55", "backlog"]);
+		expect(markStage).toHaveBeenCalledWith("ENG-55", "planning");
+	});
+
+	it("moves a blocked issue with local run state to backlog", async () => {
+		const workspacePath = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-workflow-blocked-stale-"),
+		);
+		const config = createProject("default");
+		config.workspacePath = workspacePath;
+		config.executionPath = workspacePath;
+		const state = createRunState("ENG-56", "planning", Date.now() - 60000);
+		await saveRunState(workspacePath, state);
+		const issue = {
+			...createWorkflowIssue("ENG-56", 1, "Urgent"),
+			id: state.issue.id,
+			state: { id: "state_canceled", name: "Canceled" },
+		};
+		const markStage = mock(async (_issueId: string, _stage: string) => {});
+
+		await runWorkflow(createLoadedConfig(config), { issueArg: "ENG-56" }, {
+			createLinearClient: () =>
+				({
+					fetchWork: mock(async () => [issue]),
+					isAssignedState: mock(async () => false),
+					markStage,
+					comment: mock(async () => {}),
+					clearWorkflowStageLabels: mock(async () => {}),
+					createTodoIssueFromPlan: mock(async () => ({
+						id: "lin_ENG-57",
+						identifier: "ENG-57",
+						title: "Child task",
+						url: "https://linear.example/ENG-57",
+					})),
+					updateIssueDetails: mock(async () => {}),
+				}) as unknown,
+			createAgentAdapter: () => createComplexPlanningAgent(),
+			ensureBaseBranchFresh: mock(async () => {}),
+			sendTaskOutcomeEmail: mock(async () => {}),
+		} as unknown as WorkflowRuntime);
+
+		expect(markStage.mock.calls[0]).toEqual([state.issue.id, "backlog"]);
+	});
+
+	it("keeps skipping non-blocked in-progress issues without local state", async () => {
+		const workspacePath = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-workflow-in-progress-skip-"),
+		);
+		const config = createProject("default");
+		config.workspacePath = workspacePath;
+		config.executionPath = workspacePath;
+		const ensureBaseBranchFresh = mock(async () => {});
+		const markStage = mock(async (_issueId: string, _stage: string) => {});
+
+		await runWorkflow(createLoadedConfig(config), {}, {
+			createLinearClient: () =>
+				({
+					fetchWork: mock(async () => [
+						{
+							...createWorkflowIssue("ENG-57", 2, "High"),
+							state: { id: "state_in_progress", name: "In Progress" },
+						},
+					]),
+					isAssignedState: mock(async () => false),
+					markStage,
+				}) as unknown,
+			createAgentAdapter: mock(() => ({}) as AgentAdapter),
+			ensureBaseBranchFresh,
+		} as unknown as WorkflowRuntime);
+
+		expect(ensureBaseBranchFresh).not.toHaveBeenCalled();
+		expect(markStage).not.toHaveBeenCalled();
+	});
+
+	it("does not move review-only blocked candidates back to backlog", async () => {
+		const workspacePath = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-workflow-blocked-review-only-"),
+		);
+		const config = createProject("default");
+		config.workspacePath = workspacePath;
+		config.executionPath = workspacePath;
+		const state = createRunState("ENG-58", "done", Date.now() - 60000);
+		state.pullRequest = {
+			branch: "codex/eng-58",
+			title: "ENG-58",
+			url: "https://github.com/acme/repo/pull/58",
+		};
+		await saveRunState(workspacePath, state);
+		const issue = {
+			...createWorkflowIssue("ENG-58", 1, "Urgent"),
+			id: state.issue.id,
+			state: { id: "state_canceled", name: "Canceled" },
+		};
+		const markStage = mock(async (_issueId: string, _stage: string) => {});
+
+		await runWorkflow(createLoadedConfig(config), { reviewOnly: true }, {
+			createLinearClient: () =>
+				({
+					fetchIssueByIdentifier: mock(async () => issue),
+					fetchReviewOnlyWork: mock(async () => []),
+					isAssignedState: mock(async () => false),
+					markStage,
+					clearWorkflowStageLabels: mock(async () => {}),
+					comment: mock(async () => {}),
+				}) as unknown,
+			createAgentAdapter: mock(() => ({}) as AgentAdapter),
+			squashMergePullRequest: mock(async () => true),
+			sendTaskOutcomeEmail: mock(async () => {}),
+		} as unknown as WorkflowRuntime);
+
+		expect(markStage).toHaveBeenCalledWith(state.issue.id, "done");
+		expect(markStage).not.toHaveBeenCalledWith(state.issue.id, "backlog");
+	});
+});
+
 describe("stale run retry helpers", () => {
 	it("flags retryable stages", () => {
 		expect(shouldRetryRunStage("received")).toBe(true);
@@ -2426,6 +2576,52 @@ describe("prepareImplementationBranchForStage", () => {
 		).rejects.toThrow("does not match expected branch");
 	});
 });
+
+function createLoadedConfig(config: ResolvedProjectConfig): LoadedConfig {
+	return {
+		projects: [config],
+		polling: {
+			intervalMs: 1,
+			maxCycles: 1,
+			exitWhenIdle: true,
+			staleRunTimeoutMs: 1,
+		},
+		notifications: {
+			email: {
+				enabled: false,
+				resendApiKey: undefined,
+				from: undefined,
+				to: [],
+			},
+		},
+	};
+}
+
+function createComplexPlanningAgent(): AgentAdapter {
+	return {
+		runPlan: mock(async () => ({
+			finalMessage: [
+				"PLANNING_RESULT: READY",
+				"SUCCESS_GOAL: Split the blocked issue into a child task.",
+				"COMPLEXITY: COMPLEX",
+				"COMPLEXITY_SCORE: 4",
+				"SPLIT_TASKS_JSON:",
+				JSON.stringify([
+					{
+						title: "Child task",
+						description: "Implement the child task.",
+					},
+				]),
+			].join("\n"),
+			stdout: "",
+			sessionId: "plan-session",
+		})),
+		runTaskIntake: mock(async () => ({ finalMessage: "", stdout: "" })),
+		resume: mock(async () => ({ finalMessage: "", stdout: "" })),
+		runReview: mock(async () => ({ finalMessage: "", stdout: "" })),
+		runGithubComment: mock(async () => ({ finalMessage: "", stdout: "" })),
+	};
+}
 
 function createProject(
 	id: string,

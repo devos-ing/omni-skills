@@ -30,6 +30,10 @@ import {
 	tryAcquireRunLease,
 } from "./workflow-lease";
 import {
+	isBlockedLinearIssueState,
+	matchesIssueStateConfigValue,
+} from "./workflow-linear-state";
+import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
 	dedupeIssuesByKey,
 	processIssueQueueBounded,
@@ -764,7 +768,16 @@ async function processIssue(
 		return;
 	}
 	const isAssignedState = await linear.isAssignedState(issue.state.id);
-	if (!existing && !isAssignedState && !options.reviewOnly) {
+	const isBlockedState = isBlockedLinearIssueState(
+		issue.state,
+		config.linear.statusMap,
+	);
+	if (
+		!existing &&
+		!isAssignedState &&
+		!options.reviewOnly &&
+		!(options.issueArg && isBlockedState)
+	) {
 		issueLogger.info(
 			{ issueState: issue.state.name, issueStateId: issue.state.id },
 			"Skipping in-progress issue without resumable local run state",
@@ -853,6 +866,13 @@ async function processIssue(
 			return;
 		}
 		issueLogger.info({ leaseOwnerId }, "Issue lease acquired");
+		if (!options.reviewOnly && isBlockedState) {
+			await linear.markStage(issue.id, "backlog");
+			issueLogger.info(
+				{ issueState: issue.state.name, issueStateId: issue.state.id },
+				"Moved blocked Linear issue back to backlog before execution",
+			);
+		}
 		const executionConfig =
 			isolatedWorktreesEnabled && !config.dryRun && runState.stage !== "done"
 				? await withExecutionPathLock(config.executionPath, async () => {
@@ -976,16 +996,6 @@ export function resolvePollingSettings(
 
 export async function sleep(ms: number): Promise<void> {
 	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function matchesIssueStateConfigValue(
-	state: WorkflowIssue["state"],
-	configValue: string,
-): boolean {
-	const expected = configValue.trim().toLowerCase();
-	return (
-		state.id.toLowerCase() === expected || state.name.toLowerCase() === expected
-	);
 }
 
 export function buildIssueJobLogFields(

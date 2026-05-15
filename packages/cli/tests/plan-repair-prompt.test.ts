@@ -15,6 +15,10 @@ describe("buildPlannerRepairPrompt", () => {
 		expect(prompt).toContain(
 			"Title, Summary, Key Changes, Checkpoints (Steps), Test plan, Assumptions",
 		);
+		expect(prompt).toContain("requirement-level progress checkpoints");
+		expect(prompt).toContain(
+			"implementation target and validation/progress signal",
+		);
 		expect(prompt).toContain("Do not wrap the full response");
 		expect(prompt).toContain("missing routing markers");
 	});
