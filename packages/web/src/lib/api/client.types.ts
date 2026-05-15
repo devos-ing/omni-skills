@@ -201,8 +201,10 @@ export type CliDispatchStreamHandler = (event: CliDispatchStreamEvent) => void;
 
 export interface ApiClientOptions {
 	baseUrl?: string;
+	wsUrl?: string;
 	fetchFn?: typeof fetch;
 	headers?: HeadersInit;
+	WebSocketImpl?: typeof WebSocket;
 }
 
 export interface ApiClient {

@@ -42,6 +42,9 @@ export async function handleCliRoute(
 			"CLI dispatch executed",
 		);
 		if (parsed.stream) {
+			if (!cliExecutor.executeStream) {
+				return badRequestResponse("CLI streaming is not configured");
+			}
 			return createDispatchStreamResponse(cliExecutor, parsed.request);
 		}
 		const result = await cliExecutor.execute(parsed.request);
@@ -128,7 +131,7 @@ function createDispatchStreamResponse(
 					controller.close();
 				}
 			};
-			void cliExecutor.executeStream(request, emit).catch((error) => {
+			void cliExecutor.executeStream?.(request, emit).catch((error) => {
 				if (closed) {
 					return;
 				}

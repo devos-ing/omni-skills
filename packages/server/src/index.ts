@@ -1,8 +1,8 @@
 import path from "node:path";
 import { loadConfig } from "devos/features/config";
-import { CliCommandExecutor } from "devos/features/server/cli-command-executor";
 import { createHandleRequest } from "./app";
 import { createBoardRepository } from "./board";
+import { createCliDaemonClient } from "./daemon/daemon-client";
 import { initializeServerDatabase } from "./db";
 import { createExpressApp, listenExpressApp } from "./express-server";
 import type { ServerInstance } from "./express-server.types";
@@ -19,6 +19,7 @@ import {
 } from "./notifications/notifications-service";
 import { createResendClient } from "./notifications/resend-client";
 import { createReadRepositories } from "./repositories";
+import { attachCliStreamProxy } from "./ws/cli-stream-proxy";
 
 const DEFAULT_SERVER_DB_PATH = path.join(
 	process.cwd(),
@@ -27,6 +28,7 @@ const DEFAULT_SERVER_DB_PATH = path.join(
 	"server-db",
 );
 const DEFAULT_SERVER_PORT = 3001;
+const DEFAULT_CLI_DAEMON_WS_URL = "ws://127.0.0.1:3002";
 
 export async function startServer(
 	port = resolveServerPort(process.env),
@@ -35,13 +37,11 @@ export async function startServer(
 		process.env.PIV_SERVER_DATABASE_PATH ?? DEFAULT_SERVER_DB_PATH;
 	const cwd = process.cwd();
 	const config = await loadConfig(cwd);
-	logger.info({ port, databasePath, cwd }, "Starting server");
+	const daemonUrl =
+		process.env.DEVOS_CLI_DAEMON_WS_URL ?? DEFAULT_CLI_DAEMON_WS_URL;
+	logger.info({ port, databasePath, cwd, daemonUrl }, "Starting server");
 	const serverDatabase = await initializeServerDatabase(databasePath);
-	const cliExecutor = new CliCommandExecutor({
-		cwd,
-		command: "npx",
-		baseArgs: ["devos"],
-	});
+	const cliExecutor = createCliDaemonClient({ url: daemonUrl });
 	const app = createExpressApp(
 		createHandleRequest({
 			db: serverDatabase.db,
@@ -64,8 +64,14 @@ export async function startServer(
 		logger,
 	});
 	const server = await listenExpressApp(app, port);
+	const cliStreamProxy = attachCliStreamProxy({
+		server,
+		path: "/api/cli/stream",
+		daemonUrl,
+	});
 	server.once("close", () => {
 		linearPolling.stop();
+		void cliStreamProxy.close();
 	});
 	const address = server.address();
 	const listeningPort = typeof address === "object" ? address?.port : port;

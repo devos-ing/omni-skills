@@ -98,6 +98,18 @@ Use `bun run dev:server` or `bun run dev:web` when you only need one side of the
 
 Use `devos daemon` to run the production API server and web UI together in the foreground after production artifacts already exist. The command starts the server on `PIV_SERVER_PORT=3001` and the web UI on `PORT=3000` by default, with the web UI proxying to `DEVOS_SERVER_BASE_URL=http://127.0.0.1:3001`. Override those environment variables before starting when needed.
 
+To run the full local development stack in Docker, use:
+
+```bash
+docker compose up
+```
+
+The Compose stack starts the web UI at `http://localhost:3000`, the API server health endpoint at `http://localhost:3001/health`, and the landing site at `http://localhost:3002`. Stop it with:
+
+```bash
+docker compose down
+```
+
 ## Workflow Summary
 
 1. Create or assign a Linear issue.

@@ -3,6 +3,7 @@ export type {
 	CliCommandExecutionHistoryEntry,
 	CliCommandExecutionResult,
 	CliCommandExecutorOptions,
+	CliCommandInvocation,
 	CliCommandRequest,
 	CliCommandStreamEmit,
 	CliCommandStreamEvent,

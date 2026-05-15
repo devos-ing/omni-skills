@@ -59,35 +59,11 @@ describe("web api client task create", () => {
 	});
 
 	it("streams CLI dispatch events with an opt-in payload", async () => {
-		const calls: Array<{ url: string; headers: Headers; body: unknown }> = [];
-		const fetchFn = (async (input: URL | RequestInfo, init?: RequestInit) => {
-			calls.push({
-				url: String(input),
-				headers: new Headers(init?.headers),
-				body: init?.body ? JSON.parse(String(init.body)) : undefined,
-			});
-			return new Response(
-				new ReadableStream<Uint8Array>({
-					start(controller) {
-						const encoder = new TextEncoder();
-						controller.enqueue(
-							encoder.encode(
-								[
-									'event: stdout\ndata: {"text":"hello"}\n',
-									'event: complete\ndata: {"result":{"status":"succeeded","request":{"action":"projects"}}}\n',
-									"",
-								].join("\n"),
-							),
-						);
-						controller.close();
-					},
-				}),
-				{ status: 200, headers: { "content-type": "text/event-stream" } },
-			);
-		}) as typeof fetch;
+		const calls: Array<{ url: string; body: unknown }> = [];
+		const WebSocketImpl = createMockWebSocket(calls);
 		const client = createApiClient({
 			baseUrl: "http://localhost:3000",
-			fetchFn,
+			WebSocketImpl,
 		});
 		const events: unknown[] = [];
 
@@ -96,9 +72,12 @@ describe("web api client task create", () => {
 		);
 
 		expect(calls).toHaveLength(1);
-		expect(calls[0]?.url).toBe("http://localhost:3000/api/cli/dispatch");
-		expect(calls[0]?.headers.get("accept")).toBe("text/event-stream");
-		expect(calls[0]?.body).toEqual({ action: "projects", stream: true });
+		expect(calls[0]?.url).toBe("ws://localhost:3000/api/cli/stream");
+		expect(calls[0]?.body).toEqual({
+			type: "command",
+			requestId: expect.any(String),
+			request: { action: "projects" },
+		});
 		expect(events).toEqual([
 			{ type: "stdout", text: "hello" },
 			{
@@ -108,3 +87,50 @@ describe("web api client task create", () => {
 		]);
 	});
 });
+
+function createMockWebSocket(
+	calls: Array<{ url: string; body: unknown }>,
+): typeof WebSocket {
+	class MockWebSocket {
+		private listeners = new Map<string, Array<(event: MessageEvent) => void>>();
+
+		constructor(private readonly url: string) {
+			queueMicrotask(() => this.emit("open", {}));
+		}
+
+		addEventListener(event: string, listener: (event: MessageEvent) => void) {
+			this.listeners.set(event, [
+				...(this.listeners.get(event) ?? []),
+				listener,
+			]);
+		}
+
+		send(body: string): void {
+			const parsed = JSON.parse(body);
+			calls.push({ url: this.url, body: parsed });
+			const requestId = parsed.requestId;
+			this.emit("message", {
+				data: JSON.stringify({ type: "stdout", requestId, text: "hello" }),
+			});
+			this.emit("message", {
+				data: JSON.stringify({
+					type: "complete",
+					requestId,
+					result: {
+						status: "succeeded",
+						request: { action: "projects" },
+					},
+				}),
+			});
+		}
+
+		close(): void {}
+
+		private emit(event: string, payload: Partial<MessageEvent>): void {
+			for (const listener of this.listeners.get(event) ?? []) {
+				listener(payload as MessageEvent);
+			}
+		}
+	}
+	return MockWebSocket as unknown as typeof WebSocket;
+}

@@ -2,6 +2,7 @@ import type { AgentUpdateRequest } from "./client.types";
 
 export interface ServerStateQueryOptions {
 	enabled?: boolean;
+	refetchIntervalMs?: number | false;
 }
 
 export interface TaskCreateMutationInput {

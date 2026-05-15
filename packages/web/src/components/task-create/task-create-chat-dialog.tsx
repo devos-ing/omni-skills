@@ -3,48 +3,33 @@
 import { CheckCircle2, RotateCcw, Send, X } from "lucide-react";
 import { type ReactElement, useMemo, useState } from "react";
 
-import { useCreateTaskMutation } from "@/lib/api/queries";
 import { cn } from "@/lib/utils";
 
 import type {
 	TaskCreateChatDialogProps,
 	TaskCreateChatState,
 } from "./task-create-chat-dialog.types";
-import { formatTaskCreateError } from "./task-create-chat-errors";
-
-function createInitialState(defaultProjectId: string): TaskCreateChatState {
-	return {
-		request: "",
-		projectId: defaultProjectId,
-		answers: [],
-		questions: [],
-		step: "request",
-		errorMessage: null,
-		result: null,
-	};
-}
+import { TaskCreateLogPanel, createLogLine } from "./task-create-log-panel";
+import { createInitialState } from "./task-create-state";
+import { streamTaskCreate } from "./task-create-stream";
 
 export function TaskCreateChatDialog({
 	defaultProjectId,
 	onClose,
 }: TaskCreateChatDialogProps): ReactElement {
-	const createTask = useCreateTaskMutation();
 	const [state, setState] = useState<TaskCreateChatState>(() =>
 		createInitialState(defaultProjectId),
 	);
-	const canSubmitRequest =
-		state.request.trim().length > 0 &&
-		state.projectId.trim().length > 0 &&
-		!createTask.isPending;
+	const [isStreaming, setIsStreaming] = useState(false);
+	const canSubmitRequest = state.request.trim().length > 0 && !isStreaming;
 	const canSubmitAnswers =
 		state.answers.length > 0 &&
 		state.answers.every((answer) => answer.answer.trim().length > 0) &&
-		state.projectId.trim().length > 0 &&
-		!createTask.isPending;
+		!isStreaming;
 
 	const statusText = useMemo(() => {
-		if (createTask.isPending) {
-			return "Creating task...";
+		if (isStreaming) {
+			return "Creating task and streaming logs...";
 		}
 		if (state.result) {
 			return `Created ${state.result.issue.identifier}`;
@@ -53,15 +38,29 @@ export function TaskCreateChatDialog({
 			return "Answer the follow-up questions to finish creating the task.";
 		}
 		return "Describe the task you want created.";
-	}, [createTask.isPending, state.result, state.step]);
+	}, [isStreaming, state.result, state.step]);
 
 	async function submitTask(nextAnswers = state.answers): Promise<void> {
-		setState((current) => ({ ...current, errorMessage: null }));
+		setIsStreaming(true);
+		setState((current) => ({
+			...current,
+			errorMessage: null,
+			logs: [
+				...current.logs,
+				createLogLine("system", "Started task creation stream."),
+			],
+		}));
 		try {
-			const response = await createTask.mutateAsync({
+			const response = await streamTaskCreate({
 				request: state.request.trim(),
 				projectId: state.projectId.trim(),
 				answers: nextAnswers.length > 0 ? nextAnswers : undefined,
+				onLog: (stream, text) => {
+					setState((current) => ({
+						...current,
+						logs: [...current.logs, createLogLine(stream, text)],
+					}));
+				},
 			});
 			if (response.status === "needs_info") {
 				setState((current) => ({
@@ -95,6 +94,8 @@ export function TaskCreateChatDialog({
 				errorMessage:
 					error instanceof Error ? error.message : "Failed to create task",
 			}));
+		} finally {
+			setIsStreaming(false);
 		}
 	}
 
@@ -142,7 +143,7 @@ export function TaskCreateChatDialog({
 						<span>Request</span>
 						<textarea
 							className="issue-input min-h-32 resize-y"
-							disabled={state.step === "created"}
+							disabled={state.step === "created" || isStreaming}
 							onChange={(event) =>
 								setState({ ...state, request: event.target.value })
 							}
@@ -154,7 +155,7 @@ export function TaskCreateChatDialog({
 						<span>Project ID</span>
 						<input
 							className="issue-input"
-							disabled={state.step === "created"}
+							disabled={state.step === "created" || isStreaming}
 							onChange={(event) =>
 								setState({ ...state, projectId: event.target.value })
 							}
@@ -197,6 +198,7 @@ export function TaskCreateChatDialog({
 						</span>
 					</div>
 				) : null}
+				<TaskCreateLogPanel logs={state.logs} />
 				{state.errorMessage ? (
 					<p className="m-0 rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
 						{state.errorMessage}

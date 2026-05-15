@@ -1,4 +1,9 @@
 import { spawn } from "node:child_process";
+import {
+	formatCliDaemonWsUrl,
+	resolveCliDaemonPort,
+	startCliCommandDaemon,
+} from "./command-daemon";
 import type {
 	DaemonChild,
 	DaemonServiceCommand,
@@ -16,8 +21,14 @@ export function buildDaemonCommands(
 ): DaemonServiceCommand[] {
 	const serverPort = env.PIV_SERVER_PORT ?? DEFAULT_SERVER_PORT;
 	const webPort = env.PORT ?? DEFAULT_WEB_PORT;
+	const cliDaemonPort = resolveCliDaemonPort(env);
+	const cliDaemonWsUrl =
+		env.DEVOS_CLI_DAEMON_WS_URL ?? formatCliDaemonWsUrl(cliDaemonPort);
 	const serverBaseUrl =
 		env.DEVOS_SERVER_BASE_URL ?? `http://127.0.0.1:${serverPort}`;
+	const serverWsUrl =
+		env.NEXT_PUBLIC_DEVOS_SERVER_WS_URL ??
+		`ws://127.0.0.1:${serverPort}/api/cli/stream`;
 	const baseEnv = { ...env, NODE_ENV: "production" };
 
 	return [
@@ -25,7 +36,11 @@ export function buildDaemonCommands(
 			name: "server",
 			command: "bun",
 			args: ["run", "--filter", "devos-server", "start"],
-			env: { ...baseEnv, PIV_SERVER_PORT: serverPort },
+			env: {
+				...baseEnv,
+				PIV_SERVER_PORT: serverPort,
+				DEVOS_CLI_DAEMON_WS_URL: cliDaemonWsUrl,
+			},
 		},
 		{
 			name: "web",
@@ -35,6 +50,7 @@ export function buildDaemonCommands(
 				...baseEnv,
 				PORT: webPort,
 				DEVOS_SERVER_BASE_URL: serverBaseUrl,
+				NEXT_PUBLIC_DEVOS_SERVER_WS_URL: serverWsUrl,
 			},
 		},
 	];
@@ -46,6 +62,10 @@ export async function runProductionDaemon(
 	const cwd = options.cwd ?? process.cwd();
 	const spawnChild = options.spawnChild ?? spawnDaemonChild;
 	const signalTarget = options.signalTarget ?? process;
+	const commandDaemon = (options.startCommandDaemon ?? startCliCommandDaemon)({
+		cwd,
+		env: options.env,
+	});
 	const children = buildDaemonCommands(options.env).map((service) =>
 		spawnChild(service.command, service.args, {
 			cwd,
@@ -54,12 +74,13 @@ export async function runProductionDaemon(
 		}),
 	);
 
-	return superviseDaemonChildren(children, signalTarget);
+	return superviseDaemonChildren(children, signalTarget, commandDaemon);
 }
 
 function superviseDaemonChildren(
 	children: DaemonChild[],
 	signalTarget: DaemonSignalTarget,
+	commandDaemon: { stop(): Promise<void> },
 ): Promise<number> {
 	return new Promise((resolve) => {
 		let resolved = false;
@@ -73,6 +94,7 @@ function superviseDaemonChildren(
 			for (const signal of SIGNALS) {
 				signalTarget.off(signal, signalHandlers[signal]);
 			}
+			void commandDaemon.stop();
 			resolve(code);
 		};
 

@@ -13,7 +13,7 @@ import type { ReadRepositories } from "./repositories.types";
 
 export interface CliExecutor {
 	execute(request: CliCommandRequest): Promise<CliCommandExecutionResult>;
-	executeStream(
+	executeStream?(
 		request: CliCommandRequest,
 		emit: CliCommandStreamEmit,
 	): Promise<CliCommandExecutionResult>;

@@ -1,3 +1,5 @@
+import type { CliCommandDaemon } from "./command-daemon.types";
+
 export type DaemonServiceName = "server" | "web";
 
 export interface DaemonServiceCommand {
@@ -43,4 +45,8 @@ export interface RunProductionDaemonOptions {
 	env?: NodeJS.ProcessEnv;
 	spawnChild?: DaemonSpawn;
 	signalTarget?: DaemonSignalTarget;
+	startCommandDaemon?: (options: {
+		cwd: string;
+		env?: NodeJS.ProcessEnv;
+	}) => CliCommandDaemon;
 }

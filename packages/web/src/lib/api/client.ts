@@ -18,6 +18,7 @@ type RequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 	const baseUrl = options.baseUrl ?? "";
+	const wsUrl = options.wsUrl ?? deriveWsUrl(baseUrl);
 	const fetchFn = options.fetchFn ?? fetch;
 	const headers = options.headers;
 	const requestWithBase = (
@@ -29,9 +30,8 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 		requestJson(baseUrl, path, method, fetchFn, headers, requestOptions, body);
 	const boardApiMethods = createBoardApiMethods(requestWithBase);
 	const dispatchStreamApiMethods = createDispatchStreamApiMethods(
-		baseUrl,
-		fetchFn,
-		headers,
+		wsUrl,
+		options.WebSocketImpl,
 	);
 	const taskApiMethods = createTaskApiMethods(requestWithBase);
 
@@ -92,4 +92,17 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 		updateBoardTask: taskApiMethods.updateBoardTask,
 		deleteBoardTask: taskApiMethods.deleteBoardTask,
 	};
+}
+
+function deriveWsUrl(baseUrl: string): string {
+	if (!baseUrl) {
+		return "/api/cli/stream";
+	}
+	if (baseUrl.startsWith("http://")) {
+		return `${baseUrl.replace(/^http:\/\//, "ws://")}/api/cli/stream`;
+	}
+	if (baseUrl.startsWith("https://")) {
+		return `${baseUrl.replace(/^https:\/\//, "wss://")}/api/cli/stream`;
+	}
+	return `${baseUrl}/api/cli/stream`;
 }

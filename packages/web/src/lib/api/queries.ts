@@ -28,6 +28,7 @@ import type {
 import { createWebApiClient } from "./web-client";
 
 const apiClient = createWebApiClient();
+const DEFAULT_POLL_INTERVAL_MS = 5000;
 
 export const serverStateQueryKeys = {
 	tokenUsage: ["server-state", "token-usage"] as const,
@@ -56,6 +57,7 @@ export function useTokenUsageQuery(
 		queryKey: serverStateQueryKeys.tokenUsage,
 		queryFn: () => apiClient.listTokenUsage(),
 		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -66,6 +68,7 @@ export function useJobsQuery(
 		queryKey: serverStateQueryKeys.jobs,
 		queryFn: () => apiClient.listJobs(),
 		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -76,6 +79,7 @@ export function useAgentsQuery(
 		queryKey: serverStateQueryKeys.agents,
 		queryFn: () => apiClient.listAgents(),
 		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -86,6 +90,7 @@ export function useSkillsQuery(
 		queryKey: serverStateQueryKeys.skills,
 		queryFn: () => apiClient.listSkills(),
 		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -120,6 +125,7 @@ export function useCommandHistoryQuery(
 		queryKey: serverStateQueryKeys.commandHistory,
 		queryFn: () => apiClient.listCommandHistory(),
 		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -147,6 +153,7 @@ export function useWorkspaceProjectsQuery(
 		queryKey: serverStateQueryKeys.workspaceProjects(workspaceId),
 		queryFn: () => apiClient.listWorkspaceProjects(workspaceId ?? ""),
 		enabled: Boolean(workspaceId) && options?.enabled !== false,
+		refetchInterval: resolveRefetchInterval(options),
 	});
 }
 
@@ -160,7 +167,14 @@ export function useProjectBoardQuery(
 		queryFn: () =>
 			apiClient.getProjectBoard(workspaceId ?? "", projectId ?? ""),
 		enabled: Boolean(workspaceId && projectId) && options?.enabled !== false,
+		refetchInterval: resolveRefetchInterval(options),
 	});
+}
+
+function resolveRefetchInterval(
+	options?: ServerStateQueryOptions,
+): number | false {
+	return options?.refetchIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
 }
 
 export function useCreateBoardTaskMutation(

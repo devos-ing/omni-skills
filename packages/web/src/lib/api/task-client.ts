@@ -15,10 +15,11 @@ import {
 	requestJson,
 } from "./response-utils";
 
-export function parseTaskCreateResponse(payload: unknown): TaskCreateResponse {
-	const row = assertObjectRecord(payload, "/api/tasks/chat-create");
-	const status = row.status;
-	if (status === "created") {
+export function parseTaskCreateOutput(output: string): TaskCreateResponse {
+	const createdMatch = output.match(
+		/Created Linear task\s+([A-Za-z]+-\d+):\s+(\S+)/,
+	);
+	if (createdMatch) {
 		return {
 			status,
 			issue: parseCreatedTaskRef(row.issue),
@@ -77,6 +78,51 @@ function parseCreatedTaskRef(payload: unknown): CreatedTaskRef {
 		title: readString(row, "title", endpoint),
 		url: readString(row, "url", endpoint),
 	};
+}
+
+function parseNeedsInfoQuestions(output: string): string[] {
+	const questions: string[] = [];
+	let inQuestionsSection = false;
+	for (const line of output.split("\n")) {
+		const trimmed = line.trim();
+		if (!inQuestionsSection && trimmed === "Remaining questions:") {
+			inQuestionsSection = true;
+			continue;
+		}
+		if (inQuestionsSection && trimmed.startsWith("- ")) {
+			questions.push(trimmed.slice(2).trim());
+		} else if (inQuestionsSection && trimmed.length > 0) {
+			break;
+		}
+	}
+	return questions.filter(Boolean);
+}
+
+export function parseTaskCreateResponse(payload: unknown): TaskCreateResponse {
+	const row = assertObjectRecord(payload, "/api/cli/dispatch");
+	const status = row.status;
+	if (status !== "succeeded" && status !== "failed" && status !== "rejected") {
+		throw new Error("Invalid /api/cli/dispatch response field 'status'");
+	}
+	const output =
+		typeof row.commandResult === "object" &&
+		row.commandResult !== null &&
+		"stdout" in row.commandResult &&
+		typeof row.commandResult.stdout === "string"
+			? row.commandResult.stdout
+			: "";
+	if (status !== "succeeded") {
+		const error =
+			typeof row.error === "string" ? row.error : "Task create failed";
+		return { status: "error", error, rawOutput: output };
+	}
+	return parseTaskCreateOutput(output);
+}
+
+export function parseTaskCreateDispatchResult(
+	payload: unknown,
+): TaskCreateResponse {
+	return parseTaskCreateResponse(payload);
 }
 
 export function parseProjectBoardTaskRecord(

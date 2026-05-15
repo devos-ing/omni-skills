@@ -18,6 +18,7 @@ describe("buildDaemonCommands", () => {
 				command: "bun",
 				args: ["run", "--filter", "devos-server", "start"],
 				env: {
+					DEVOS_CLI_DAEMON_WS_URL: "ws://127.0.0.1:3002",
 					NODE_ENV: "production",
 					PIV_SERVER_PORT: "3001",
 				},
@@ -30,6 +31,7 @@ describe("buildDaemonCommands", () => {
 					NODE_ENV: "production",
 					PORT: "3000",
 					DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
+					NEXT_PUBLIC_DEVOS_SERVER_WS_URL: "ws://127.0.0.1:3001/api/cli/stream",
 				},
 			},
 		]);
@@ -41,16 +43,19 @@ describe("buildDaemonCommands", () => {
 			PIV_SERVER_PORT: "4101",
 			PORT: "4102",
 			DEVOS_SERVER_BASE_URL: "https://api.example.test",
+			DEVOS_CLI_DAEMON_PORT: "4103",
 		});
 
 		expect(commands[0]?.env).toMatchObject({
 			NODE_ENV: "production",
 			PIV_SERVER_PORT: "4101",
+			DEVOS_CLI_DAEMON_WS_URL: "ws://127.0.0.1:4103",
 		});
 		expect(commands[1]?.env).toMatchObject({
 			NODE_ENV: "production",
 			PORT: "4102",
 			DEVOS_SERVER_BASE_URL: "https://api.example.test",
+			NEXT_PUBLIC_DEVOS_SERVER_WS_URL: "ws://127.0.0.1:4101/api/cli/stream",
 		});
 	});
 });
@@ -64,6 +69,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
+			startCommandDaemon: harness.startCommandDaemon,
 		});
 
 		expect(harness.calls).toEqual([
@@ -80,6 +86,7 @@ describe("runProductionDaemon", () => {
 		]);
 		harness.children[0]?.emit("close", 0, null);
 		await expect(done).resolves.toBe(0);
+		expect(harness.commandDaemonStopped).toBe(true);
 	});
 
 	it("stops the sibling when one service exits", async () => {
@@ -89,6 +96,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
+			startCommandDaemon: harness.startCommandDaemon,
 		});
 
 		harness.children[0]?.emit("close", 7, null);
@@ -106,6 +114,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
+			startCommandDaemon: harness.startCommandDaemon,
 		});
 
 		harness.signalTarget.emitSignal("SIGINT");
@@ -124,6 +133,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
+			startCommandDaemon: harness.startCommandDaemon,
 		});
 
 		harness.children[0]?.emit("error", new Error("spawn EACCES"));
@@ -165,6 +175,10 @@ function createDaemonHarness(): {
 	children: FakeDaemonChild[];
 	signalTarget: FakeSignalTarget;
 	spawnChild: DaemonSpawn;
+	startCommandDaemon: NonNullable<
+		Parameters<typeof runProductionDaemon>[0]
+	>["startCommandDaemon"];
+	commandDaemonStopped: boolean;
 } {
 	const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
 	const children: FakeDaemonChild[] = [];
@@ -175,10 +189,18 @@ function createDaemonHarness(): {
 		return child;
 	};
 
-	return {
+	const harness = {
 		calls,
 		children,
+		commandDaemonStopped: false,
 		signalTarget: new FakeSignalTarget(),
 		spawnChild,
+		startCommandDaemon: () => ({
+			port: 3002,
+			stop: async () => {
+				harness.commandDaemonStopped = true;
+			},
+		}),
 	};
+	return harness;
 }
