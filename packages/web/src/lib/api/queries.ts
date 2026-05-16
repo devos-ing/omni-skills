@@ -35,6 +35,8 @@ export const serverStateQueryKeys = {
 	skills: ["server-state", "skills"] as const,
 	commandHistory: ["server-state", "command-history"] as const,
 	boardTasks: ["server-state", "board-tasks"] as const,
+	boardTask: (taskId: string) =>
+		["server-state", "board-task", taskId] as const,
 };
 
 export const taskCreationMutationKeys = {
@@ -135,6 +137,18 @@ export function useBoardTasksQuery(
 	});
 }
 
+export function useBoardTaskQuery(
+	taskId: string,
+	options?: ServerStateQueryOptions,
+): UseQueryResult<ProjectBoardTaskRecord, Error> {
+	return useQuery({
+		queryKey: serverStateQueryKeys.boardTask(taskId),
+		queryFn: () => apiClient.getBoardTask(taskId),
+		enabled: Boolean(taskId) && options?.enabled !== false,
+		refetchInterval: resolveRefetchInterval(options),
+	});
+}
+
 export function useCreateTaskMutation(): UseMutationResult<
 	TaskCreateResponse,
 	Error,
@@ -166,9 +180,23 @@ export function useCreateBoardTaskMutation(): UseMutationResult<
 	return useMutation({
 		mutationKey: ["board-task", "create"] as const,
 		mutationFn: (input) => apiClient.createBoardTask(input),
-		onSuccess: async () => {
+		onSuccess: async (updatedTask) => {
+			queryClient.setQueryData<ProjectBoardTaskRecord>(
+				serverStateQueryKeys.boardTask(updatedTask.id),
+				updatedTask,
+			);
+			queryClient.setQueryData<ProjectBoardTaskRecord[] | undefined>(
+				serverStateQueryKeys.boardTasks,
+				(current) =>
+					current?.map((task) =>
+						task.id === updatedTask.id ? updatedTask : task,
+					),
+			);
 			await queryClient.invalidateQueries({
 				queryKey: serverStateQueryKeys.boardTasks,
+			});
+			await queryClient.invalidateQueries({
+				queryKey: serverStateQueryKeys.boardTask(updatedTask.id),
 			});
 		},
 	});

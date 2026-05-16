@@ -107,6 +107,10 @@ export interface TaskApiMethods {
 	listBoardTasks(
 		options?: HealthRequestOptions,
 	): Promise<ProjectBoardTaskRecord[]>;
+	getBoardTask(
+		taskId: string,
+		options?: HealthRequestOptions,
+	): Promise<ProjectBoardTaskRecord>;
 	createTaskFromChat(
 		request: TaskCreateRequest,
 		options?: HealthRequestOptions,
@@ -137,6 +141,10 @@ export function createTaskApiMethods(
 				TASKS_PATH,
 				parseProjectBoardTaskRecord,
 			);
+		},
+		async getBoardTask(taskId, options) {
+			const payload = await requestWithBase(taskPath(taskId), "GET", options);
+			return parseProjectBoardTaskRecord(payload);
 		},
 		async createTaskFromChat(request, options) {
 			const payload = await requestWithBase(

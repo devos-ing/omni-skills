@@ -23,7 +23,19 @@ export interface StatusPresentation {
 	tone: string;
 }
 
-export interface OpenIssueRequest {
+export interface IssueDragState {
 	taskId: string;
-	requestId: number;
+	status: string;
 }
+
+export interface IssueDetailDraft {
+	title: string;
+	content: string;
+	priority: string;
+	status: string;
+	creatorId: string;
+	dueDate: string;
+	linkedPr: string;
+}
+
+export type IssueDetailSaveState = "idle" | "saving" | "saved" | "error";

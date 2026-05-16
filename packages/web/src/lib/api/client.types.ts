@@ -184,6 +184,10 @@ export interface ApiClient {
 	listBoardTasks(
 		options?: HealthRequestOptions,
 	): Promise<ProjectBoardTaskRecord[]>;
+	getBoardTask(
+		taskId: string,
+		options?: HealthRequestOptions,
+	): Promise<ProjectBoardTaskRecord>;
 	listWorkspaceProjects(
 		workspaceId: string,
 		options?: HealthRequestOptions,

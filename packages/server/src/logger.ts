@@ -39,11 +39,39 @@ export function setupServerProcessErrorHandlers(): void {
 
 export function normalizeError(input: unknown): Record<string, unknown> {
 	if (input instanceof Error) {
-		return {
+		const normalized: Record<string, unknown> = {
 			name: input.name,
 			message: input.message,
 			stack: input.stack,
 		};
+		const databaseError = normalizeServerDatabaseInitializationFields(input);
+		if (databaseError) {
+			normalized.databasePath = databaseError.databasePath;
+			normalized.phase = databaseError.phase;
+		}
+		if (input.cause) {
+			normalized.cause = normalizeError(input.cause);
+		}
+		return normalized;
 	}
 	return { message: String(input) };
+}
+
+function normalizeServerDatabaseInitializationFields(
+	error: Error,
+): { databasePath: string; phase: string } | undefined {
+	const maybeDatabaseError = error as Error & {
+		databasePath?: unknown;
+		phase?: unknown;
+	};
+	if (
+		typeof maybeDatabaseError.databasePath === "string" &&
+		typeof maybeDatabaseError.phase === "string"
+	) {
+		return {
+			databasePath: maybeDatabaseError.databasePath,
+			phase: maybeDatabaseError.phase,
+		};
+	}
+	return undefined;
 }

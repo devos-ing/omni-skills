@@ -1,4 +1,3 @@
-import path from "node:path";
 import { loadConfig } from "devos/features/config";
 import { createHandleRequest } from "./app";
 import { createBoardRepository } from "./board";
@@ -19,28 +18,36 @@ import {
 } from "./notifications/notifications-service";
 import { createResendClient } from "./notifications/resend-client";
 import { createReadRepositories } from "./repositories";
+import {
+	resolveServerDatabasePath,
+	resolveServerWorkspacePath,
+} from "./startup-paths";
 import { attachCliStreamProxy } from "./ws/cli-stream-proxy";
 
-const DEFAULT_SERVER_DB_PATH = path.join(
-	process.cwd(),
-	".devos",
-	"config",
-	"server-db",
-);
 const DEFAULT_SERVER_PORT = 3001;
 const DEFAULT_CLI_DAEMON_WS_URL = "ws://127.0.0.1:3002";
 
 export async function startServer(
 	port = resolveServerPort(process.env),
 ): Promise<ServerInstance> {
-	const databasePath =
-		process.env.PIV_SERVER_DATABASE_PATH ?? DEFAULT_SERVER_DB_PATH;
 	const cwd = process.cwd();
-	const config = await loadConfig(cwd);
+	const workspacePath = resolveServerWorkspacePath(process.env);
+	const config = await loadConfig(workspacePath);
+	const databasePath = resolveServerDatabasePath(
+		process.env,
+		workspacePath,
+		config,
+	);
 	const daemonUrl =
 		process.env.DEVOS_CLI_DAEMON_WS_URL ?? DEFAULT_CLI_DAEMON_WS_URL;
-	logger.info({ port, databasePath, cwd, daemonUrl }, "Starting server");
-	const serverDatabase = await initializeServerDatabase(databasePath);
+	const pgliteDebug = resolvePgliteDebug(process.env);
+	logger.info(
+		{ port, databasePath, cwd, workspacePath, daemonUrl },
+		"Starting server",
+	);
+	const serverDatabase = await initializeServerDatabase(databasePath, {
+		pgliteDebug,
+	});
 	const cliExecutor = createCliDaemonClient({ url: daemonUrl });
 	const app = createExpressApp(
 		createHandleRequest({
@@ -77,7 +84,7 @@ export async function startServer(
 	const address = server.address();
 	const listeningPort = typeof address === "object" ? address?.port : port;
 	logger.info(
-		{ port: listeningPort ?? port, databasePath, cwd },
+		{ port: listeningPort ?? port, databasePath, cwd, workspacePath },
 		"Server started",
 	);
 	return server;
@@ -92,13 +99,20 @@ if (import.meta.main) {
 }
 
 function resolveServerPort(env: NodeJS.ProcessEnv): number {
-	const rawPort = env.PIV_SERVER_PORT ?? env.PORT;
-	if (!rawPort) {
-		return DEFAULT_SERVER_PORT;
-	}
+	const rawPort = DEFAULT_SERVER_PORT;
+	// if (!rawPort) {
+	// 	return DEFAULT_SERVER_PORT;
+	// }
 	const port = Number(rawPort);
 	if (!Number.isInteger(port) || port <= 0) {
 		throw new Error("Server port must be a positive integer");
 	}
 	return port;
+}
+
+function resolvePgliteDebug(env: NodeJS.ProcessEnv): 1 | undefined {
+	if (env.PIV_PGLITE_DEBUG === "1") {
+		return 1;
+	}
+	return undefined;
 }

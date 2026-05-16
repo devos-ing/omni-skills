@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, CheckCircle2, Circle, MoreHorizontal, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 
 import type {
@@ -9,10 +9,11 @@ import type {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+import { IssueColumn } from "./issue-board-column";
 import { IssuesBoardSkeleton } from "./issues-board-skeleton";
-import { getStatusLabel, isAgentTask } from "./issues-board-utils";
-import { STATUS_ORDER, STATUS_PRESENTATION } from "./issues-board.constants";
-import type { IssueTab } from "./issues-board.types";
+import { getStatusLabel } from "./issues-board-utils";
+import { STATUS_ORDER } from "./issues-board.constants";
+import type { IssueDragState, IssueTab } from "./issues-board.types";
 
 export function BoardHeader({
 	activeTab,
@@ -105,15 +106,33 @@ export function ColumnToggles({
 
 export function BoardContent({
 	columns,
+	dragError,
+	dragOverStatus,
+	dragState,
 	error,
 	isLoading,
 	onCreateIssue,
+	onDropStatusEnter,
+	onDropStatusLeave,
+	onTaskDragEnd,
+	onTaskDragStart,
+	onTaskDrop,
+	onTaskPointerDrop,
 	onOpenIssue,
 }: {
 	columns: ProjectBoardStatusColumn[];
+	dragError: string | null;
+	dragOverStatus: string | null;
+	dragState: IssueDragState | null;
 	error: Error | null;
 	isLoading: boolean;
 	onCreateIssue: (status: string) => void;
+	onDropStatusEnter: (status: string) => void;
+	onDropStatusLeave: (status: string) => void;
+	onTaskDragEnd: () => void;
+	onTaskDragStart: (task: ProjectBoardTaskRecord) => void;
+	onTaskDrop: (status: string) => void;
+	onTaskPointerDrop: (task: ProjectBoardTaskRecord, status: string) => void;
 	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
 }): ReactElement {
 	if (isLoading) {
@@ -126,15 +145,30 @@ export function BoardContent({
 		return <BoardState label="No columns selected" />;
 	}
 	return (
-		<div className="flex h-[calc(100dvh-10.5rem)] gap-4 overflow-x-auto px-5 py-4">
-			{columns.map((column) => (
-				<IssueColumn
-					column={column}
-					key={column.status}
-					onCreateIssue={onCreateIssue}
-					onOpenIssue={onOpenIssue}
-				/>
-			))}
+		<div className="flex h-[calc(100dvh-10.5rem)] flex-col">
+			{dragError ? (
+				<p className="mx-5 mt-3 rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+					{dragError}
+				</p>
+			) : null}
+			<div className="flex min-h-0 flex-1 gap-4 overflow-x-auto px-5 py-4">
+				{columns.map((column) => (
+					<IssueColumn
+						column={column}
+						dragOverStatus={dragOverStatus}
+						dragState={dragState}
+						key={column.status}
+						onCreateIssue={onCreateIssue}
+						onDropStatusEnter={onDropStatusEnter}
+						onDropStatusLeave={onDropStatusLeave}
+						onOpenIssue={onOpenIssue}
+						onTaskDragEnd={onTaskDragEnd}
+						onTaskDragStart={onTaskDragStart}
+						onTaskDrop={onTaskDrop}
+						onTaskPointerDrop={onTaskPointerDrop}
+					/>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -144,90 +178,5 @@ function BoardState({ label }: { label: string }): ReactElement {
 		<div className="grid min-h-[24rem] place-items-center text-sm text-zinc-500">
 			{label}
 		</div>
-	);
-}
-
-function IssueColumn({
-	column,
-	onCreateIssue,
-	onOpenIssue,
-}: {
-	column: ProjectBoardStatusColumn;
-	onCreateIssue: (status: string) => void;
-	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
-}): ReactElement {
-	const tone = STATUS_PRESENTATION[column.status]?.tone ?? "bg-[#17181c]";
-	return (
-		<section
-			className={cn(
-				"flex h-full w-[23rem] shrink-0 flex-col rounded-lg border p-3",
-				tone,
-			)}
-		>
-			<header className="mb-4 flex items-center justify-between gap-3">
-				<div className="flex items-center gap-2">
-					<Circle className="text-zinc-500" size={15} />
-					<h2 className="m-0 text-sm font-semibold">
-						{getStatusLabel(column.status)}
-					</h2>
-					<span className="text-sm text-zinc-500">{column.tasks.length}</span>
-				</div>
-				<div className="flex items-center gap-1">
-					<button className="issue-icon-button" type="button">
-						<MoreHorizontal size={16} />
-					</button>
-					<button
-						aria-label={`Add ${getStatusLabel(column.status)} issue`}
-						className="issue-icon-button"
-						onClick={() => onCreateIssue(column.status)}
-						type="button"
-					>
-						<Plus size={16} />
-					</button>
-				</div>
-			</header>
-			<div className="grid content-start gap-3 overflow-y-auto pr-1">
-				{column.tasks.length === 0 ? (
-					<p className="mt-16 text-center text-sm text-zinc-500">No issues</p>
-				) : (
-					column.tasks.map((task) => (
-						<IssueCard key={task.id} onOpenIssue={onOpenIssue} task={task} />
-					))
-				)}
-			</div>
-		</section>
-	);
-}
-
-function IssueCard({
-	task,
-	onOpenIssue,
-}: {
-	task: ProjectBoardTaskRecord;
-	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
-}): ReactElement {
-	return (
-		<button
-			className="rounded-lg border border-zinc-800 bg-[#1b1c21] p-3 text-left shadow-sm hover:border-zinc-700"
-			onClick={() => onOpenIssue(task)}
-			type="button"
-		>
-			<p className="mb-2 text-xs font-medium text-zinc-500">{task.id}</p>
-			<h3 className="m-0 line-clamp-2 text-sm font-semibold text-zinc-100">
-				{task.title}
-			</h3>
-			<p className="mb-3 mt-2 line-clamp-2 text-sm text-zinc-500">
-				{task.content}
-			</p>
-			<div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-				<span className="rounded-md bg-zinc-800 px-2 py-1">
-					P{task.priority}
-				</span>
-				<span className="rounded-md bg-zinc-800 px-2 py-1">
-					{task.creatorId}
-				</span>
-				{isAgentTask(task) ? <Bot size={14} /> : <CheckCircle2 size={14} />}
-			</div>
-		</button>
 	);
 }

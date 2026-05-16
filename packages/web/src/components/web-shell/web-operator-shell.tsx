@@ -10,7 +10,6 @@ import {
 	useState,
 } from "react";
 
-import type { OpenIssueRequest } from "@/components/issues-board/issues-board.types";
 import type {
 	SidebarDisplayMode,
 	SidebarNavItem,
@@ -68,8 +67,6 @@ export function WebOperatorShell({
 	const [isCompactViewport, setIsCompactViewport] = useState<boolean>(false);
 	const [createIssueRequest, setCreateIssueRequest] = useState(0);
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
-	const [openIssueRequest, setOpenIssueRequest] =
-		useState<OpenIssueRequest | null>(null);
 	const searchTasksQuery = useBoardTasksQuery({
 		enabled: isSearchOpen,
 		refetchIntervalMs: false,
@@ -106,11 +103,7 @@ export function WebOperatorShell({
 
 	const openIssue = useCallback(
 		(taskId: string) => {
-			router.push("/issues");
-			setOpenIssueRequest((current) => ({
-				taskId,
-				requestId: (current?.requestId ?? 0) + 1,
-			}));
+			router.push(`/issues/${encodeURIComponent(taskId)}`);
 		},
 		[router],
 	);
@@ -128,11 +121,10 @@ export function WebOperatorShell({
 	const issueActionsValue = useMemo<OperatorIssueActionsContextValue>(
 		() => ({
 			createIssueRequest,
-			openIssueRequest,
 			requestNewIssue: createIssue,
 			requestOpenIssue: openIssue,
 		}),
-		[createIssue, createIssueRequest, openIssue, openIssueRequest],
+		[createIssue, createIssueRequest, openIssue],
 	);
 
 	return (

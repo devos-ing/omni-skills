@@ -88,6 +88,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 			return parseServerList.commandHistory(payload);
 		},
 		listBoardTasks: taskApiMethods.listBoardTasks,
+		getBoardTask: taskApiMethods.getBoardTask,
 		createTask: taskApiMethods.createTaskFromChat,
 		createBoardTask: taskApiMethods.createBoardTask,
 		updateBoardTask: taskApiMethods.updateBoardTask,

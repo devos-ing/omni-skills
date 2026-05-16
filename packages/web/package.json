@@ -4,9 +4,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "next dev --webpack",
+		"dev": "next dev",
 		"dev:turbopack": "next dev",
-		"build": "next build --webpack",
+		"build": "next build",
 		"start": "next start",
 		"typecheck": "tsc --noEmit"
 	},
