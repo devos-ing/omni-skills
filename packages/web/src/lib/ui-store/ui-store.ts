@@ -30,6 +30,7 @@ const createDefaultState = (): UiStoreState => ({
 	selectedWorkspaceId: null,
 	viewFilters: defaultViewFilters,
 	drafts: defaultDrafts,
+	pinnedIssues: [],
 	modal: defaultModalState,
 });
 
@@ -51,6 +52,19 @@ export const useUiStore = create<UiStore>((set) => ({
 	},
 	clearDrafts: () => {
 		set({ drafts: defaultDrafts });
+	},
+	pinIssue: (issue) => {
+		set((state) => ({
+			pinnedIssues: [
+				issue,
+				...state.pinnedIssues.filter((item) => item.id !== issue.id),
+			],
+		}));
+	},
+	unpinIssue: (issueId) => {
+		set((state) => ({
+			pinnedIssues: state.pinnedIssues.filter((item) => item.id !== issueId),
+		}));
 	},
 	openModal: (kind, contextId = null) => {
 		set({ modal: { kind, contextId } });

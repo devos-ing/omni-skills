@@ -12,13 +12,17 @@ import {
 import type { ProjectBoardTaskRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-import { isAgentTask } from "./issues-board-utils";
+import { getPriorityLabel, isAgentTask } from "./issues-board-utils";
 
 interface IssueCardProps {
 	isDragged: boolean;
 	task: ProjectBoardTaskRecord;
 	onDragEnd: () => void;
 	onDragStart: (task: ProjectBoardTaskRecord) => void;
+	onOpenContextMenu: (
+		task: ProjectBoardTaskRecord,
+		position: { x: number; y: number },
+	) => void;
 	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
 	onPointerDrop: (task: ProjectBoardTaskRecord, status: string) => void;
 }
@@ -28,6 +32,7 @@ export function IssueCard({
 	task,
 	onDragEnd,
 	onDragStart,
+	onOpenContextMenu,
 	onOpenIssue,
 	onPointerDrop,
 }: IssueCardProps): ReactElement {
@@ -82,13 +87,19 @@ export function IssueCard({
 		onOpenIssue(task);
 	}
 
+	function handleContextMenu(event: MouseEvent<HTMLDivElement>): void {
+		event.preventDefault();
+		onOpenContextMenu(task, { x: event.clientX, y: event.clientY });
+	}
+
 	return (
 		<div
 			className={cn(
-				"rounded-lg border border-zinc-800 bg-[#1b1c21] p-3 text-left shadow-sm transition hover:border-zinc-700",
+				"rounded-lg border border-zinc-800 bg-[#1b1c21] p-2.5 text-left shadow-sm transition hover:border-zinc-700",
 				isDragged && "opacity-50 ring-2 ring-zinc-600",
 			)}
 			draggable
+			onContextMenu={handleContextMenu}
 			onDragEnd={handleDragEnd}
 			onDragStart={handleDragStart}
 			onPointerDown={handlePointerDown}
@@ -100,21 +111,21 @@ export function IssueCard({
 				type="button"
 			>
 				<div className="mb-2 flex items-center justify-between gap-2 text-xs font-medium text-zinc-500">
-					<span>{task.id}</span>
+					<span className="truncate">{task.taskKey}</span>
 					<GripVertical aria-hidden="true" size={14} />
 				</div>
 				<h3 className="m-0 line-clamp-2 text-sm font-semibold text-zinc-100">
 					{task.title}
 				</h3>
-				<p className="mb-3 mt-2 line-clamp-2 text-sm text-zinc-500">
+				<p className="mb-2 mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-500">
 					{task.content}
 				</p>
 				<div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
 					<span className="rounded-md bg-zinc-800 px-2 py-1">
-						P{task.priority}
+						{getPriorityLabel(task.priority)}
 					</span>
 					<span className="rounded-md bg-zinc-800 px-2 py-1">
-						{task.creatorId}
+						{task.assigneeId ?? task.creatorId}
 					</span>
 					{isAgentTask(task) ? <Bot size={14} /> : <CheckCircle2 size={14} />}
 				</div>

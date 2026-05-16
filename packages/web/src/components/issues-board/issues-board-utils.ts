@@ -1,13 +1,27 @@
 import type {
 	ProjectBoardStatusColumn,
 	ProjectBoardTaskRecord,
-} from "@/lib/api";
+} from "../../lib/api";
 
-import { STATUS_ORDER, STATUS_PRESENTATION } from "./issues-board.constants";
+import {
+	PRIORITY_OPTIONS,
+	STATUS_ORDER,
+	STATUS_PRESENTATION,
+} from "./issues-board.constants";
 import type { IssueDraft, IssueTab } from "./issues-board.types";
 
+const LEGACY_PR_CREATED_STATUS = "pr_created";
+
 export function getStatusLabel(status: string): string {
-	return STATUS_PRESENTATION[status]?.label ?? status;
+	const normalized = normalizeBoardStatus(status);
+	return STATUS_PRESENTATION[normalized]?.label ?? normalized;
+}
+
+export function getPriorityLabel(priority: number): string {
+	return (
+		PRIORITY_OPTIONS.find((option) => option.value === priority)?.label ??
+		`P${priority}`
+	);
 }
 
 export function isAgentTask(task: ProjectBoardTaskRecord): boolean {
@@ -67,7 +81,7 @@ export function createEmptyDraft(status: string): IssueDraft {
 		title: "",
 		content: "",
 		priority: "1",
-		status,
+		status: normalizeBoardStatus(status),
 		dueDate: "",
 		linkedPr: "",
 		creatorId: "member-1",
@@ -79,7 +93,7 @@ export function createDraftFromTask(task: ProjectBoardTaskRecord): IssueDraft {
 		title: task.title,
 		content: task.content,
 		priority: String(task.priority),
-		status: task.status,
+		status: normalizeBoardStatus(task.status),
 		dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
 		linkedPr: task.linkedPr ?? "",
 		creatorId: task.creatorId,
@@ -109,9 +123,10 @@ export function buildStatusColumns(
 ): ProjectBoardStatusColumn[] {
 	const columns = new Map<string, ProjectBoardTaskRecord[]>();
 	for (const task of tasks) {
-		const items = columns.get(task.status) ?? [];
-		items.push(task);
-		columns.set(task.status, items);
+		const status = normalizeBoardStatus(task.status);
+		const items = columns.get(status) ?? [];
+		items.push({ ...task, status });
+		columns.set(status, items);
 	}
 	const knownColumns = STATUS_ORDER.map((status) => ({
 		status,
@@ -125,4 +140,8 @@ export function buildStatusColumns(
 
 function normalizeIndex(index: number): number {
 	return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
+export function normalizeBoardStatus(status: string): string {
+	return status === LEGACY_PR_CREATED_STATUS ? "reviewing" : status;
 }

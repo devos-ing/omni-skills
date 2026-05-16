@@ -10,7 +10,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 import { IssueCard } from "./issue-card";
-import { getStatusLabel, isAgentTask } from "./issues-board-utils";
+import { getStatusLabel } from "./issues-board-utils";
 import { STATUS_PRESENTATION } from "./issues-board.constants";
 import type { IssueDragState } from "./issues-board.types";
 
@@ -22,6 +22,10 @@ interface IssueColumnProps {
 	onDropStatusEnter: (status: string) => void;
 	onDropStatusLeave: (status: string) => void;
 	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
+	onOpenIssueMenu: (
+		task: ProjectBoardTaskRecord,
+		position: { x: number; y: number },
+	) => void;
 	onTaskDragEnd: () => void;
 	onTaskDragStart: (task: ProjectBoardTaskRecord) => void;
 	onTaskDrop: (status: string) => void;
@@ -36,6 +40,7 @@ export function IssueColumn({
 	onDropStatusEnter,
 	onDropStatusLeave,
 	onOpenIssue,
+	onOpenIssueMenu,
 	onTaskDragEnd,
 	onTaskDragStart,
 	onTaskDrop,
@@ -84,7 +89,7 @@ export function IssueColumn({
 		<section
 			data-issue-status={column.status}
 			className={cn(
-				"flex h-full w-[23rem] shrink-0 flex-col rounded-lg border p-3 transition",
+				"flex h-full w-[18rem] shrink-0 flex-col rounded-lg border p-2.5 transition",
 				tone,
 				isDropTarget && "border-zinc-400 ring-2 ring-zinc-500/50",
 			)}
@@ -125,6 +130,7 @@ export function IssueColumn({
 							key={task.id}
 							onDragEnd={onTaskDragEnd}
 							onDragStart={onTaskDragStart}
+							onOpenContextMenu={onOpenIssueMenu}
 							onOpenIssue={onOpenIssue}
 							onPointerDrop={onTaskPointerDrop}
 							task={task}

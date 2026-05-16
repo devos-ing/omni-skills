@@ -14,7 +14,7 @@ export function IssuesBoardSkeleton(): ReactElement {
 		<div className="flex h-[calc(100dvh-10.5rem)] gap-4 overflow-x-auto px-5 py-4">
 			{skeletonColumns.map((column) => (
 				<section
-					className={`h-full w-[min(20rem,calc(100vw-2.5rem))] shrink-0 rounded-lg border border-zinc-800 bg-[#17181c] p-3 md:w-[23rem] ${column.className}`}
+					className={`h-full w-[min(20rem,calc(100vw-2.5rem))] shrink-0 rounded-lg border border-zinc-800 bg-[#17181c] p-3 md:w-[20rem] ${column.className}`}
 					key={column.key}
 				>
 					<header className="mb-4 flex items-center justify-between gap-3">

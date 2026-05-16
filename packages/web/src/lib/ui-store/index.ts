@@ -5,6 +5,7 @@ export type {
 	UiDraftState,
 	UiModalKind,
 	UiModalState,
+	UiPinnedIssue,
 	UiStore,
 	UiStoreActions,
 	UiStoreState,

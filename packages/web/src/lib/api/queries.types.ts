@@ -19,6 +19,7 @@ export interface BoardTaskMutationInput {
 	priority: number;
 	status: string;
 	creatorId: string;
+	assigneeId?: string | null;
 	dueDate?: string | null;
 	linkedPr?: string | null;
 }

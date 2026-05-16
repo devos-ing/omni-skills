@@ -104,6 +104,7 @@ export interface ProjectBoardTaskRecord {
 	status: string;
 	dueDate: string | null;
 	creatorId: string;
+	assigneeId: string | null;
 	linkedPr: string | null;
 	linearIssueId: string | null;
 	linearIdentifier: string | null;
@@ -151,6 +152,7 @@ export interface TaskMutationRequest {
 	priority: number;
 	status: string;
 	creatorId: string;
+	assigneeId?: string | null;
 	dueDate?: string | null;
 	linkedPr?: string | null;
 }

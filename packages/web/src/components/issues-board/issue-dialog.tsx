@@ -13,7 +13,12 @@ import {
 	normalizeDueDate,
 } from "./issues-board-utils";
 import { DEFAULT_CREATOR_ID, STATUS_ORDER } from "./issues-board.constants";
-import type { IssueDialogMode, IssueDraft } from "./issues-board.types";
+import type {
+	IssueDialogMode,
+	IssueDraft,
+	IssuePriority,
+} from "./issues-board.types";
+import { PriorityDropdown } from "./priority-dropdown";
 
 interface IssueDialogProps {
 	mode: IssueDialogMode;
@@ -78,6 +83,10 @@ export function IssueDialog({
 			dueDate: normalizeDueDate(draft.dueDate),
 			linkedPr: draft.linkedPr.trim() || null,
 		});
+	}
+
+	function updatePriority(priority: IssuePriority): void {
+		setDraft({ ...draft, priority: String(priority) });
 	}
 
 	return (
@@ -145,13 +154,9 @@ export function IssueDialog({
 							</select>
 						</Field>
 						<Field label="Priority">
-							<input
-								className="issue-input"
-								onChange={(event) =>
-									setDraft({ ...draft, priority: event.target.value })
-								}
-								type="number"
+							<PriorityDropdown
 								value={draft.priority}
+								onChange={updatePriority}
 							/>
 						</Field>
 						<Field label="Creator">

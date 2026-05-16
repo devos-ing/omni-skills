@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Columns3, Filter, Plus, SlidersHorizontal } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 
 import type {
@@ -104,6 +104,51 @@ export function ColumnToggles({
 	);
 }
 
+export function BoardToolbar({
+	searchQuery,
+	sortNewestFirst,
+	taskCount,
+	onSearchChange,
+	onShowAll,
+	onToggleColumns,
+	onToggleSort,
+}: {
+	searchQuery: string;
+	sortNewestFirst: boolean;
+	taskCount: number;
+	onSearchChange: (value: string) => void;
+	onShowAll: () => void;
+	onToggleColumns: () => void;
+	onToggleSort: () => void;
+}): ReactElement {
+	return (
+		<div className="flex flex-wrap items-center gap-3 border-b border-zinc-900 px-5 py-3">
+			<input
+				aria-label="Search issues"
+				className="issue-input h-9 min-w-52 flex-1"
+				onChange={(event) => onSearchChange(event.target.value)}
+				placeholder="Search issues"
+				value={searchQuery}
+			/>
+			<ToolButton
+				icon={<Filter size={16} />}
+				label={`${taskCount} shown`}
+				onClick={onShowAll}
+			/>
+			<ToolButton
+				icon={<SlidersHorizontal size={16} />}
+				label={sortNewestFirst ? "Newest" : "Oldest"}
+				onClick={onToggleSort}
+			/>
+			<ToolButton
+				icon={<Columns3 size={16} />}
+				label="Columns"
+				onClick={onToggleColumns}
+			/>
+		</div>
+	);
+}
+
 export function BoardContent({
 	columns,
 	dragError,
@@ -119,6 +164,7 @@ export function BoardContent({
 	onTaskDrop,
 	onTaskPointerDrop,
 	onOpenIssue,
+	onOpenIssueMenu,
 }: {
 	columns: ProjectBoardStatusColumn[];
 	dragError: string | null;
@@ -134,6 +180,10 @@ export function BoardContent({
 	onTaskDrop: (status: string) => void;
 	onTaskPointerDrop: (task: ProjectBoardTaskRecord, status: string) => void;
 	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
+	onOpenIssueMenu: (
+		task: ProjectBoardTaskRecord,
+		position: { x: number; y: number },
+	) => void;
 }): ReactElement {
 	if (isLoading) {
 		return <IssuesBoardSkeleton />;
@@ -162,6 +212,7 @@ export function BoardContent({
 						onDropStatusEnter={onDropStatusEnter}
 						onDropStatusLeave={onDropStatusLeave}
 						onOpenIssue={onOpenIssue}
+						onOpenIssueMenu={onOpenIssueMenu}
 						onTaskDragEnd={onTaskDragEnd}
 						onTaskDragStart={onTaskDragStart}
 						onTaskDrop={onTaskDrop}

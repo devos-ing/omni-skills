@@ -23,7 +23,9 @@ import { STATUS_ORDER } from "./issues-board.constants";
 import type {
 	IssueDetailDraft,
 	IssueDetailSaveState,
+	IssuePriority,
 } from "./issues-board.types";
+import { PriorityDropdown } from "./priority-dropdown";
 
 const AUTOSAVE_DELAY_MS = 3000;
 
@@ -99,6 +101,10 @@ export function IssueDetailEditor({
 		updateDraft({ ...draft, [field]: event.target.value });
 	}
 
+	function updatePriority(priority: IssuePriority): void {
+		updateDraft({ ...draft, priority: String(priority) });
+	}
+
 	return (
 		<article className="grid gap-5">
 			<section className="rounded-lg border border-zinc-800 bg-[#18191d] p-5">
@@ -143,13 +149,7 @@ export function IssueDetailEditor({
 					</select>
 				</EditableField>
 				<EditableField label="Priority">
-					<input
-						aria-label="Priority"
-						className="issue-input"
-						onChange={(event) => updateField("priority", event)}
-						type="number"
-						value={draft.priority}
-					/>
+					<PriorityDropdown value={draft.priority} onChange={updatePriority} />
 				</EditableField>
 				<EditableField label="Creator">
 					<input

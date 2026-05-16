@@ -20,6 +20,12 @@ export interface UiDraftState {
 	commandInputDraft: string;
 }
 
+export interface UiPinnedIssue {
+	id: string;
+	taskKey: string;
+	title: string;
+}
+
 export type UiModalKind = "createRun" | "cancelRun" | "editWorkspace";
 
 export type UiModalState =
@@ -35,6 +41,7 @@ export interface UiStoreState {
 	selectedWorkspaceId: WorkspaceId | null;
 	viewFilters: UiViewFilters;
 	drafts: UiDraftState;
+	pinnedIssues: UiPinnedIssue[];
 	modal: UiModalState;
 }
 
@@ -44,6 +51,8 @@ export interface UiStoreActions {
 	resetViewFilters(): void;
 	updateDrafts(partial: Partial<UiDraftState>): void;
 	clearDrafts(): void;
+	pinIssue(issue: UiPinnedIssue): void;
+	unpinIssue(issueId: string): void;
 	openModal(kind: UiModalKind, contextId?: string | null): void;
 	closeModal(): void;
 	resetUiState(): void;

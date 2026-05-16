@@ -46,6 +46,7 @@ const taskMutationRequest: TaskMutationRequest = {
 	priority: 1,
 	status: "planning",
 	creatorId: "member-1",
+	assigneeId: "member-2",
 };
 const createdBoardTaskPromise: Promise<ProjectBoardTaskRecord> =
 	webClient.createBoardTask(taskMutationRequest);

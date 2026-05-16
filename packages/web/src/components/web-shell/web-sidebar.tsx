@@ -25,6 +25,7 @@ import type {
 	SidebarNavItem,
 } from "@/components/web-shell/web-shell.types";
 import { cn } from "@/lib/utils";
+import { SidebarPinnedIssues } from "./web-sidebar-pins";
 
 interface WebSidebarProps {
 	mode: SidebarDisplayMode;
@@ -76,7 +77,7 @@ export function WebSidebar({
 			aria-label="Primary navigation"
 			className="grid h-[100dvh] max-h-[100dvh] border-r border-zinc-900 bg-[#15161a] text-zinc-400"
 			style={{
-				width: isHidden ? "0" : isExpanded ? "17.5rem" : "6.5rem",
+				width: isHidden ? "0" : isExpanded ? "14rem" : "6.5rem",
 				opacity: isHidden ? 0 : 1,
 				pointerEvents: isHidden ? "none" : "auto",
 				transition: "width 180ms ease, opacity 120ms ease",
@@ -89,7 +90,7 @@ export function WebSidebar({
 					R
 				</span>
 				{isExpanded ? (
-					<strong className="truncate text-sm text-zinc-100">
+					<strong className="truncate text-xs font-medium text-zinc-100">
 						Roy Lee&apos;s Workspace
 					</strong>
 				) : null}
@@ -116,6 +117,7 @@ export function WebSidebar({
 					label="New Issue"
 					onClick={onNewIssue}
 				/>
+				<SidebarPinnedIssues isExpanded={isExpanded} />
 			</div>
 			<nav className="grid content-start gap-6 px-3">
 				<NavGroup
@@ -155,7 +157,9 @@ function NavGroup({
 	return (
 		<div className="grid gap-1">
 			{isExpanded ? (
-				<p className="mb-1 px-2 text-xs font-semibold text-zinc-500">{title}</p>
+				<p className="mb-1 px-2 text-[0.6875rem] font-medium text-zinc-500">
+					{title}
+				</p>
 			) : null}
 			{items.map((item) => {
 				const Icon = iconByKey[item.key];
@@ -164,7 +168,7 @@ function NavGroup({
 					<Link
 						aria-current={isActive ? "page" : undefined}
 						className={cn(
-							"flex h-10 items-center gap-3 rounded-md px-2 text-sm font-medium",
+							"flex h-10 items-center gap-3 rounded-md px-2 text-xs font-normal",
 							isActive
 								? "bg-zinc-800 text-zinc-100"
 								: "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200",
@@ -197,7 +201,7 @@ function SidebarAction({
 	return (
 		<button
 			className={cn(
-				"flex h-9 items-center gap-3 rounded-md px-2 text-sm text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200",
+				"flex h-9 items-center gap-3 rounded-md px-2 text-xs font-normal text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200",
 				!isExpanded && "justify-center",
 			)}
 			onClick={onClick}

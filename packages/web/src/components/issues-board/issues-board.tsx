@@ -1,10 +1,8 @@
 "use client";
 
-import { Columns3, Filter, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
-import { TaskCreateChatDialog } from "@/components/task-create/task-create-chat-dialog";
 import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
 import {
 	useBoardTasksQuery,
@@ -12,12 +10,12 @@ import {
 	useUpdateBoardTaskMutation,
 } from "@/lib/api/queries";
 
-import { IssueDialog } from "./issue-dialog";
+import { IssueBoardOverlays } from "./issue-board-overlays";
 import {
 	BoardContent,
 	BoardHeader,
+	BoardToolbar,
 	ColumnToggles,
-	ToolButton,
 } from "./issues-board-parts";
 import {
 	buildStatusColumns,
@@ -29,10 +27,12 @@ import {
 } from "./issues-board-utils";
 import { STATUS_ORDER } from "./issues-board.constants";
 import type {
+	IssueContextMenuState,
 	IssueDialogState,
 	IssueDragState,
 	IssueTab,
 } from "./issues-board.types";
+import { useIssueBoardTaskActions } from "./use-issue-board-task-actions";
 
 interface IssuesBoardProps {
 	createIssueRequest: number;
@@ -52,12 +52,17 @@ export function IssuesBoard({
 	const [dragState, setDragState] = useState<IssueDragState | null>(null);
 	const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 	const [dragError, setDragError] = useState<string | null>(null);
+	const [contextMenu, setContextMenu] = useState<IssueContextMenuState | null>(
+		null,
+	);
 	const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
 	const [mutationError, setMutationError] = useState<string | null>(null);
 
 	const tasksQuery = useBoardTasksQuery();
 	const createTask = useCreateBoardTaskMutation();
 	const updateTask = useUpdateBoardTaskMutation();
+	const { copyIssueLink, deleteIssue, pinIssueToSidebar, updateIssue } =
+		useIssueBoardTaskActions(setDragError);
 
 	useEffect(() => {
 		if (createIssueRequest > 0) {
@@ -98,6 +103,13 @@ export function IssuesBoard({
 
 	function openTaskDetail(taskId: string): void {
 		router.push(`/issues/${encodeURIComponent(taskId)}`);
+	}
+
+	function openIssueMenu(
+		task: ProjectBoardTaskRecord,
+		position: { x: number; y: number },
+	): void {
+		setContextMenu({ task, ...position });
 	}
 
 	function startTaskDrag(task: ProjectBoardTaskRecord): void {
@@ -177,30 +189,17 @@ export function IssuesBoard({
 				onTabChange={setActiveTab}
 				onCreateIssue={() => setIsChatDialogOpen(true)}
 			/>
-			<div className="flex flex-wrap items-center gap-3 border-b border-zinc-900 px-5 py-3">
-				<input
-					aria-label="Search issues"
-					className="issue-input h-9 min-w-52 flex-1"
-					onChange={(event) => setSearchQuery(event.target.value)}
-					placeholder="Search issues"
-					value={searchQuery}
-				/>
-				<ToolButton
-					icon={<Filter size={16} />}
-					label={`${taskCount} shown`}
-					onClick={() => setActiveTab("all")}
-				/>
-				<ToolButton
-					icon={<SlidersHorizontal size={16} />}
-					label={sortNewestFirst ? "Newest" : "Oldest"}
-					onClick={() => setSortNewestFirst((value) => !value)}
-				/>
-				<ToolButton
-					icon={<Columns3 size={16} />}
-					label="Columns"
-					onClick={() => toggleAllColumns(visibleStatuses, setVisibleStatuses)}
-				/>
-			</div>
+			<BoardToolbar
+				searchQuery={searchQuery}
+				sortNewestFirst={sortNewestFirst}
+				taskCount={taskCount}
+				onSearchChange={setSearchQuery}
+				onShowAll={() => setActiveTab("all")}
+				onToggleColumns={() =>
+					toggleAllColumns(visibleStatuses, setVisibleStatuses)
+				}
+				onToggleSort={() => setSortNewestFirst((value) => !value)}
+			/>
 			<ColumnToggles
 				visibleStatuses={visibleStatuses}
 				onToggle={(status) => toggleStatus(status, setVisibleStatuses)}
@@ -216,6 +215,7 @@ export function IssuesBoard({
 				onDropStatusLeave={leaveDropStatus}
 				onCreateIssue={(status) => setDialog({ mode: "create", status })}
 				onOpenIssue={(task) => openTaskDetail(task.id)}
+				onOpenIssueMenu={openIssueMenu}
 				onTaskDragEnd={endTaskDrag}
 				onTaskDragStart={startTaskDrag}
 				onTaskDrop={(status) => void dropTaskOnStatus(status)}
@@ -223,26 +223,22 @@ export function IssuesBoard({
 					void dropTaskFromPointer(task, status)
 				}
 			/>
-			{dialog ? (
-				<IssueDialog
-					defaultStatus={dialogStatus}
-					errorMessage={mutationError}
-					isDeleting={false}
-					isSaving={createTask.isPending || updateTask.isPending}
-					mode={dialog.mode}
-					onClose={() => setDialog(null)}
-					onSubmit={submitDialog}
-					projectId={dialog.mode === "edit" ? dialog.task.projectId : null}
-					task={dialog.mode === "edit" ? dialog.task : undefined}
-				/>
-			) : null}
-			{isChatDialogOpen ? (
-				<TaskCreateChatDialog
-					defaultBoardProjectId=""
-					key="all-issues-task-create"
-					onClose={() => setIsChatDialogOpen(false)}
-				/>
-			) : null}
+			<IssueBoardOverlays
+				contextMenu={contextMenu}
+				dialog={dialog}
+				dialogStatus={dialogStatus}
+				errorMessage={mutationError}
+				isChatDialogOpen={isChatDialogOpen}
+				isSaving={createTask.isPending || updateTask.isPending}
+				onCloseChatDialog={() => setIsChatDialogOpen(false)}
+				onCloseDialog={() => setDialog(null)}
+				onCloseMenu={() => setContextMenu(null)}
+				onCopyLink={copyIssueLink}
+				onDeleteIssue={(task) => void deleteIssue(task)}
+				onPinIssue={pinIssueToSidebar}
+				onSubmitDialog={submitDialog}
+				onUpdateIssue={(task, update) => void updateIssue(task, update)}
+			/>
 		</section>
 	);
 }

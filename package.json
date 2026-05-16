@@ -14,7 +14,7 @@
 		"build:server": "bun -e \"console.log('No server workspace package is present yet. Add the ROY-120 server package, then wire this script to its build command.')\"",
 		"build:web": "bun run --filter web build",
 		"dev:landing": "bun run --filter landing dev",
-		"dev:cli-daemon": "bun run ./packages/cli/src/index.ts daemon --cli-only",
+		"dev:daemon": "bun run ./packages/cli/src/index.ts daemon --cli-only",
 		"dev:server": "bun run --filter devos-server start",
 		"dev:web": "bun run --filter web dev",
 		"dev": "bun run ./scripts/dev.ts",
