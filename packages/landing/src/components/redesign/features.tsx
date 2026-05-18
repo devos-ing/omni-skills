@@ -12,32 +12,32 @@ const features = [
 	{
 		icon: Workflow,
 		title: "The agentic loop",
-		body: "Explore, plan, implement, test, and loop. A disciplined cycle every agent runs end to end.",
+		body: "Explore -> plan -> implement -> test -> loop. A disciplined cycle every agent runs, end to end.",
 	},
 	{
 		icon: KanbanSquare,
 		title: "Project board",
-		body: "A shared board where humans and agents pick up tasks with status, owner, and trail.",
+		body: "A shared board where humans and agents pick up tasks. Status, owner, and trail on every card.",
 	},
 	{
 		icon: Send,
 		title: "Telegram inbox",
-		body: "Status, approvals, and pause or resume in chat. Every notification is actionable.",
+		body: "Status, approvals, and pause/resume in chat. Every notification is actionable from your phone.",
 	},
 	{
 		icon: Cpu,
 		title: "Agent runtime",
-		body: "Isolated, stateful runs with fast starts. Scale from one to many in parallel.",
+		body: "Isolated, stateful runs with sub-second cold starts. Scale from one to thousands in parallel.",
 	},
 	{
 		icon: GitBranch,
-		title: "Branching and replay",
-		body: "Every run is a checkpointed graph. Branch, replay, and diff trajectories.",
+		title: "Branching & replay",
+		body: "Every run is a checkpointed graph. Branch, replay, and diff trajectories like git for behavior.",
 	},
 	{
 		icon: Shield,
-		title: "Policy guardrails",
-		body: "Per-agent permissions, spending caps, and human-in-the-loop approvals.",
+		title: "Policy & guardrails",
+		body: "Per-agent permissions, spending caps, and human-in-the-loop approvals. SOC 2 + HIPAA ready.",
 	},
 ];
 
@@ -61,7 +61,7 @@ export function Features(): ReactElement {
 					<h2 className="font-pixel text-[clamp(2.5rem,5vw,4rem)] uppercase leading-none">
 						Everything your agents need.{" "}
 						<span className="text-[var(--neon-pink)]">
-							Nothing they do not.
+							Nothing they don&apos;t.
 						</span>
 					</h2>
 				</div>

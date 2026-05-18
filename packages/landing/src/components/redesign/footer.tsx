@@ -4,52 +4,28 @@ const columns = [
 	{
 		title: "Product",
 		links: [
-			{ href: "#platform", label: "Workflow" },
+			{ href: "#flow", label: "Workflow" },
 			{ href: "#board", label: "Board" },
 			{ href: "#inbox", label: "Telegram inbox" },
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents",
-				label: "Changelog",
-			},
+			{ href: "#platform", label: "Changelog" },
 		],
 	},
 	{
 		title: "Developers",
 		links: [
 			{ href: "#docs", label: "Docs" },
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents#readme",
-				label: "CLI reference",
-			},
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents",
-				label: "Examples",
-			},
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents",
-				label: "GitHub",
-			},
+			{ href: "#start", label: "CLI reference" },
+			{ href: "#crew", label: "Examples" },
+			{ href: "https://github.com/1997roylee/devos.ing", label: "GitHub" },
 		],
 	},
 	{
 		title: "Community",
 		links: [
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents/discussions",
-				label: "Discussions",
-			},
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents/blob/main/README.md",
-				label: "Contributing",
-			},
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents/issues",
-				label: "Issues",
-			},
-			{
-				href: "https://github.com/1997roylee/show-me-ur-agents/blob/main/docs/PLANS.md",
-				label: "Roadmap",
-			},
+			{ href: "#inbox", label: "Discord" },
+			{ href: "#inbox", label: "Twitter" },
+			{ href: "#inbox", label: "Discussions" },
+			{ href: "#inbox", label: "Contributing" },
 		],
 	},
 ];
@@ -63,7 +39,7 @@ export function Footer(): ReactElement {
 						<div className="relative h-6 w-6 border-2 border-foreground bg-[var(--neon-pink)]">
 							<div className="-bottom-1 -right-1 absolute -z-10 h-6 w-6 border-2 border-foreground bg-[var(--neon-cyan)]" />
 						</div>
-						<span className="font-pixel text-xl">devos.ing</span>
+						<span className="font-pixel text-xl tracking-tight">devos.ing</span>
 					</div>
 					<p className="mt-4 max-w-xs text-muted-foreground text-sm">
 						Code is cheap, show me your agent system.
@@ -71,7 +47,7 @@ export function Footer(): ReactElement {
 				</div>
 				{columns.map((column) => (
 					<div key={column.title}>
-						<div className="mb-4 text-muted-foreground text-xs uppercase">
+						<div className="mb-4 text-muted-foreground text-xs uppercase tracking-[0.15em]">
 							{column.title}
 						</div>
 						<ul className="space-y-2.5 text-sm">
@@ -91,7 +67,7 @@ export function Footer(): ReactElement {
 			</div>
 			<div className="border-border/60 border-t">
 				<div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-center text-muted-foreground text-xs sm:flex-row sm:px-6 sm:text-left">
-					<div>2026 devos.ing / open source, runs locally</div>
+					<div>{"\u00A9"} 2026 devos.ing - open source, runs locally</div>
 					<div className="font-mono">v0.0.1 / MIT</div>
 				</div>
 			</div>

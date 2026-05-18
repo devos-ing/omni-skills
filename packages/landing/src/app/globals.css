@@ -14,9 +14,9 @@
 	--border: rgba(26, 11, 46, 0.18);
 	--neon-pink: #ff2e88;
 	--neon-cyan: #00e1ff;
-	--neon-yellow: #ffea00;
-	--neon-lime: #8cff00;
-	--neon-purple: #b026ff;
+	--neon-yellow: var(--neon-pink);
+	--neon-lime: var(--neon-cyan);
+	--neon-purple: var(--neon-pink);
 	background: var(--background);
 	color: var(--foreground);
 }
@@ -151,6 +151,32 @@ pre,
 	animation: tape 0.3s steps(2, end) infinite;
 }
 
+.crew-blink {
+	transform-origin: center;
+	animation: blink 3.6s steps(1, end) infinite;
+}
+
+.crew-led {
+	animation: led 1.2s steps(1, end) infinite;
+}
+
+.crew-bob {
+	animation: crew-bob 3.6s ease-in-out infinite;
+}
+
+.crew-sweep {
+	animation: crew-sweep 2.4s linear infinite;
+}
+
+.tg-dot {
+	animation: tg-dot 1s ease-in-out infinite;
+}
+
+.tg-pop {
+	transform-origin: bottom;
+	animation: tg-pop 220ms ease-out both;
+}
+
 @keyframes ticker {
 	to {
 		transform: translateX(-33%);
@@ -227,6 +253,53 @@ pre,
 	}
 }
 
+@keyframes crew-bob {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-5px);
+	}
+}
+
+@keyframes crew-sweep {
+	0% {
+		transform: translateY(-100%);
+	}
+
+	100% {
+		transform: translateY(100%);
+	}
+}
+
+@keyframes tg-dot {
+	0%,
+	80%,
+	100% {
+		opacity: 0.25;
+		transform: translateY(0);
+	}
+
+	40% {
+		opacity: 1;
+		transform: translateY(-2px);
+	}
+}
+
+@keyframes tg-pop {
+	0% {
+		opacity: 0;
+		transform: translateY(6px) scale(0.96);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;
@@ -240,6 +313,12 @@ pre,
 	.deco-spin-l,
 	.deco-spin-r,
 	.deco-tape,
+	.crew-blink,
+	.crew-led,
+	.crew-bob,
+	.crew-sweep,
+	.tg-dot,
+	.tg-pop,
 	.float-soft {
 		animation: none;
 	}

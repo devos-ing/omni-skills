@@ -10,7 +10,7 @@ export function Nav(): ReactElement {
 						<div className="relative h-6 w-6 border-2 border-foreground bg-[var(--neon-pink)]">
 							<div className="-bottom-1 -right-1 absolute -z-10 h-6 w-6 border-2 border-foreground bg-[var(--neon-cyan)]" />
 						</div>
-						<span className="font-pixel text-xl">devos.ing</span>
+						<span className="font-pixel text-xl tracking-tight">devos.ing</span>
 					</a>
 					<div className="hidden items-center gap-7 text-foreground/70 text-sm md:flex">
 						<a className="transition hover:text-foreground" href="#platform">
@@ -27,13 +27,21 @@ export function Nav(): ReactElement {
 						</a>
 					</div>
 				</div>
-				<a
-					className="group inline-flex items-center gap-1.5 border-2 border-foreground bg-[var(--neon-pink)] px-4 py-1.5 text-foreground text-sm shadow-retro-sm transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0_0_var(--foreground)]"
-					href="#start"
-				>
-					Get started
-					<ArrowUpRight className="h-3.5 w-3.5" />
-				</a>
+				<div className="flex items-center gap-3">
+					<a
+						className="hidden text-foreground/70 text-sm hover:text-foreground sm:inline"
+						href="/"
+					>
+						Sign in
+					</a>
+					<a
+						className="group inline-flex items-center gap-1.5 border-2 border-foreground bg-[var(--neon-pink)] px-4 py-1.5 text-foreground text-sm tracking-tight shadow-retro-sm transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0_0_var(--foreground)]"
+						href="#start"
+					>
+						Get started
+						<ArrowUpRight className="h-3.5 w-3.5" />
+					</a>
+				</div>
 			</div>
 		</nav>
 	);

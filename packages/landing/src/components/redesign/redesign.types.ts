@@ -18,17 +18,27 @@ export type AgentProfile = {
 	role: string;
 	icon: LucideIcon;
 	color: string;
+	dot?: string;
 	tools: string[];
 	command: string;
 	lines: AgentLine[];
 	metrics: Array<{ label: string; value: string }>;
 };
 
-export type WorkflowStep = {
+export type FlowStage = {
 	key: string;
+	label: string;
+	icon: LucideIcon;
+};
+
+export type FlowStep = {
 	icon: LucideIcon;
 	title: string;
 	body: string;
+};
+
+export type WorkflowStep = FlowStep & {
+	key: string;
 };
 
 export type BoardStatus =
@@ -58,4 +68,50 @@ export type ChatMessage = {
 	time: string;
 	body: ReactNode;
 	read?: boolean;
+	typingMs?: number;
+	delayMs?: number;
+};
+
+export type CrewTone = "pink" | "cyan";
+
+export type CrewBot = {
+	key: string;
+	name: string;
+	role: string;
+	tagline: string;
+	body: string;
+	badge: string;
+	icon: LucideIcon;
+	face: CrewTone;
+	visor: CrewTone;
+	stats: Array<{ label: string; value: string }>;
+};
+
+export type CornerPosition = "tl" | "tr" | "bl" | "br";
+
+export type PixelBotProps = {
+	face: CrewTone;
+	visor: CrewTone;
+	variant: number;
+	small?: boolean;
+};
+
+export type AgentTag = "SCOUT" | "ARCH" | "FORGE" | "PROBE" | "GATE";
+
+export type Skill = {
+	key: string;
+	name: string;
+	icon: LucideIcon;
+	description: string;
+	agents: AgentTag[];
+	example: string;
+};
+
+export type SkillBranch = {
+	key: string;
+	label: string;
+	icon: LucideIcon;
+	accent: CrewTone;
+	blurb: string;
+	skills: Skill[];
 };

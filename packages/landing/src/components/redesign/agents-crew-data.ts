@@ -1,0 +1,92 @@
+import {
+	Code2,
+	Compass,
+	FlaskConical,
+	ListTree,
+	ShieldCheck,
+} from "lucide-react";
+
+import type { CrewBot } from "@/components/redesign/redesign.types";
+
+export const crewBots: CrewBot[] = [
+	{
+		key: "explorer",
+		name: "SCOUT-01",
+		role: "EXPLORER",
+		tagline: "Reads the room before anyone codes.",
+		body: "Crawls the repo, docs, and prior tickets to build a citation-grade context bundle. Refuses to hallucinate.",
+		badge: "RECON",
+		icon: Compass,
+		face: "cyan",
+		visor: "pink",
+		stats: [
+			{ label: "SRC", value: "26" },
+			{ label: "HIT", value: "94%" },
+			{ label: "RUN", value: "12s" },
+		],
+	},
+	{
+		key: "planner",
+		name: "ARCH-02",
+		role: "PLANNER",
+		tagline: "Turns vibes into a typed plan.",
+		body: "Decomposes the goal into steps with owners, deps, and acceptance criteria. Pauses for human review before anything irreversible.",
+		badge: "STRAT",
+		icon: ListTree,
+		face: "pink",
+		visor: "cyan",
+		stats: [
+			{ label: "STEPS", value: "6" },
+			{ label: "DEPS", value: "OK" },
+			{ label: "RUN", value: "8s" },
+		],
+	},
+	{
+		key: "coder",
+		name: "FORGE-03",
+		role: "IMPLEMENTER",
+		tagline: "Writes code that fits your repo.",
+		body: "Spawns in an isolated branch, edits files, runs formatters, and opens a PR that follows your conventions - not generic boilerplate.",
+		badge: "BUILD",
+		icon: Code2,
+		face: "cyan",
+		visor: "cyan",
+		stats: [
+			{ label: "DIFF", value: "+412" },
+			{ label: "PR", value: "#1294" },
+			{ label: "RUN", value: "4m" },
+		],
+	},
+	{
+		key: "tester",
+		name: "PROBE-04",
+		role: "TESTER",
+		tagline: "Proves it actually works.",
+		body: "Runs unit, integration, and behavior tests in a sandbox. Failures loop back to the planner with a structured report - never silently swallowed.",
+		badge: "VERIFY",
+		icon: FlaskConical,
+		face: "pink",
+		visor: "pink",
+		stats: [
+			{ label: "PASS", value: "142" },
+			{ label: "COV", value: "+3%" },
+			{ label: "RUN", value: "2m" },
+		],
+	},
+	{
+		key: "reviewer",
+		name: "GATE-05",
+		role: "REVIEWER",
+		tagline: "Audits the diff before merge.",
+		body: "Reads the diff, design intent, and policy. Posts suggestions to the PR. Blockers page a human via Telegram; greens auto-merge.",
+		badge: "SHIP",
+		icon: ShieldCheck,
+		face: "cyan",
+		visor: "pink",
+		stats: [
+			{ label: "FLAG", value: "2" },
+			{ label: "BLOCK", value: "0" },
+			{ label: "RUN", value: "30s" },
+		],
+	},
+];

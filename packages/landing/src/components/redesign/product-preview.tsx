@@ -14,16 +14,20 @@ const agents: Record<AgentKey, AgentProfile> = {
 		role: "Decomposes goals into a typed plan",
 		icon: Brain,
 		color: "text-sky-600",
+		dot: "bg-sky-500",
 		tools: ["graph.build", "memory.read", "agents.dispatch"],
 		command: 'devos run "ship onboarding redesign"',
 		lines: [
 			{ tag: "you", text: 'devos run "ship onboarding redesign"' },
-			{ tag: "planner", text: "Loaded workspace context from repos and docs." },
 			{
 				tag: "planner",
-				text: "Decomposed into audit, spec, design, build, review, ship.",
+				text: "Loaded workspace context (12 repos, 4 design docs).",
 			},
-			{ tag: "planner", text: "Dispatching to researcher and coder. ETA 14m." },
+			{
+				tag: "planner",
+				text: "Decomposed into 6 steps: audit / spec / design / build / review / ship.",
+			},
+			{ tag: "planner", text: "Dispatching to researcher, coder. ETA 14m." },
 		],
 		metrics: [
 			{ label: "Steps", value: "6" },
@@ -36,21 +40,22 @@ const agents: Record<AgentKey, AgentProfile> = {
 		role: "Gathers grounded context from your stack",
 		icon: Search,
 		color: "text-violet-600",
-		tools: ["notion.query", "linear.search", "web.fetch"],
+		dot: "bg-violet-500",
+		tools: ["notion.query", "linear.search", "web.fetch", "memory.write"],
 		command: 'devos agent researcher --task "onboarding patterns"',
 		lines: [
 			{
 				tag: "you",
 				text: 'devos agent researcher --task "onboarding patterns"',
 			},
-			{ tag: "researcher", text: "Searched Notion and Linear history." },
+			{ tag: "researcher", text: "Searched Notion / 14 hits." },
 			{
 				tag: "researcher",
-				text: "Pulled reference patterns into a cited memo.",
+				text: "Pulled 12 reference patterns from Linear + Notion.",
 			},
 			{
 				tag: "researcher",
-				text: "Wrote context to memory://onboarding/refs#v3.",
+				text: "Synthesized memo -> memory://onboarding/refs#v3",
 			},
 		],
 		metrics: [
@@ -64,13 +69,14 @@ const agents: Record<AgentKey, AgentProfile> = {
 		role: "Writes, refactors, and tests code in your repo",
 		icon: Code2,
 		color: "text-amber-600",
+		dot: "bg-amber-500",
 		tools: ["repo.edit", "shell.exec", "tests.run", "pr.open"],
 		command: "devos agent coder --branch feat/onboarding",
 		lines: [
 			{ tag: "you", text: "devos agent coder --branch feat/onboarding" },
-			{ tag: "coder", text: "Edited eight files in apps/web." },
-			{ tag: "coder", text: "Ran 142 tests. All green." },
-			{ tag: "coder", text: "Opened PR #1294, ready for review." },
+			{ tag: "coder", text: "Edited 8 files in apps/web." },
+			{ tag: "coder", text: "Ran 142 tests / all green" },
+			{ tag: "coder", text: "Opened PR #1294 -> ready for review." },
 		],
 		metrics: [
 			{ label: "Files", value: "8" },
@@ -83,12 +89,13 @@ const agents: Record<AgentKey, AgentProfile> = {
 		role: "Audits diffs, design, and behavior",
 		icon: ShieldCheck,
 		color: "text-rose-600",
+		dot: "bg-rose-500",
 		tools: ["pr.diff", "design.compare", "policy.check"],
 		command: "devos agent reviewer --pr 1294",
 		lines: [
 			{ tag: "you", text: "devos agent reviewer --pr 1294" },
-			{ tag: "reviewer", text: "Diff: +412 / -187 across eight files." },
-			{ tag: "reviewer", text: "Two suggestions, zero blockers." },
+			{ tag: "reviewer", text: "Diff: +412 / -187 across 8 files." },
+			{ tag: "reviewer", text: "2 suggestions, 0 blockers." },
 			{ tag: "reviewer", text: "Awaiting human approval to merge." },
 		],
 		metrics: [
@@ -102,20 +109,21 @@ const agents: Record<AgentKey, AgentProfile> = {
 		role: "Ships to staging and production with guardrails",
 		icon: Rocket,
 		color: "text-emerald-600",
+		dot: "bg-emerald-500",
 		tools: ["ci.trigger", "flags.update", "rollout.canary"],
 		command: "devos agent deployer --env prod",
 		lines: [
 			{ tag: "you", text: "devos agent deployer --env prod" },
-			{ tag: "deployer", text: "Canary rollout to 5 percent. Health OK." },
+			{ tag: "deployer", text: "Canary rollout to 5% / health OK." },
 			{
 				tag: "deployer",
-				text: "Promoted to 100 percent. p95 latency down 4ms.",
+				text: "Promoted to 100%. p95 latency -4ms.",
 			},
-			{ tag: "deployer", text: "Posted release notes to the ship channel." },
+			{ tag: "deployer", text: "Posted release notes to #ship." },
 		],
 		metrics: [
-			{ label: "Canary", value: "5-100%" },
-			{ label: "p95", value: "-4ms" },
+			{ label: "Canary", value: "5->100%" },
+			{ label: "Delta p95", value: "-4ms" },
 			{ label: "Errors", value: "0" },
 		],
 	},
@@ -161,6 +169,9 @@ export function ProductPreview(): ReactElement {
 										<span className="truncate font-mono text-xs">
 											{profile.name}
 										</span>
+										{active === profile.name ? (
+											<span className="ml-auto h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+										) : null}
 									</button>
 								</li>
 							))}
@@ -221,7 +232,7 @@ export function ProductPreview(): ReactElement {
 								))}
 								<div className="flex items-center gap-2 pt-3 text-muted-foreground">
 									<span className="h-3 w-1.5 animate-pulse bg-foreground" />
-									<span>monitoring...</span>
+									<span>monitoring{"\u2026"}</span>
 								</div>
 							</div>
 						</div>
