@@ -41,6 +41,7 @@ describe("buildDaemonCommands", () => {
 				env: {
 					DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
 					DEVOS_SERVER_EVENTS_WS_URL: "ws://127.0.0.1:3001/daemon/events",
+					DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
 					NODE_ENV: "production",
 				},
 			},
@@ -74,18 +75,23 @@ describe("buildDaemonCommands", () => {
 			env: {
 				DEVOS_SERVER_BASE_URL: "https://api.example.test",
 				DEVOS_SERVER_EVENTS_WS_URL: "wss://api.example.test/daemon/events",
+				DEVOS_WORKFLOW_WS_URL: "wss://api.example.test/api/workflow",
 				NODE_ENV: "production",
 			},
 		});
 	});
 
-	it("preserves an explicit daemon events websocket url", () => {
+	it("preserves explicit workflow and daemon events websocket urls", () => {
 		const commands = buildDaemonCommands({
 			DEVOS_SERVER_EVENTS_WS_URL: "ws://events.example.test/socket",
+			DEVOS_WORKFLOW_WS_URL: "ws://workflow.example.test/socket",
 		});
 
 		expect(commands[2]?.env.DEVOS_SERVER_EVENTS_WS_URL).toBe(
 			"ws://events.example.test/socket",
+		);
+		expect(commands[2]?.env.DEVOS_WORKFLOW_WS_URL).toBe(
+			"ws://workflow.example.test/socket",
 		);
 	});
 
@@ -141,6 +147,7 @@ describe("runProductionDaemon", () => {
 		expect(harness.commandDaemonEnv).toMatchObject({
 			DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
 			DEVOS_SERVER_EVENTS_WS_URL: "ws://127.0.0.1:3001/daemon/events",
+			DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
 		});
 		harness.children[0]?.emit("close", 0, null);
 		await expect(done).resolves.toBe(0);

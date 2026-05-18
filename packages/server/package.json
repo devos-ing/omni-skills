@@ -6,7 +6,8 @@
 	"type": "module",
 	"exports": {
 		"./cron": "./src/cron/index.ts",
-		"./db": "./src/db/index.ts"
+		"./db": "./src/db/index.ts",
+		"./workflow-data": "./src/workflow-data/index.ts"
 	},
 	"scripts": {
 		"build": "vite build",

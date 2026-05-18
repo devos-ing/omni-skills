@@ -1,11 +1,8 @@
-import {
-	initializeServerDatabase,
-	recordPollingEvent,
-	recordPollingStatus,
-} from "devos-server/db";
+import type { WorkflowPollingRecordInput } from "devos-server/workflow-data";
 import type { ResolvedProjectConfig } from "../../features/types";
 import { logger, normalizeError } from "../../utils/logger";
 import type { PollingSettings } from "./workflow.types";
+import { createWorkflowDataClient } from "./workflow-data-client";
 
 const failureCounts = new Map<string, number>();
 
@@ -32,41 +29,26 @@ export async function recordCliPollingEvent(
 	}
 	const pollerId = `linear:${config.id}`;
 	try {
-		const database = await initializeServerDatabase(
-			config.server.database.databasePath,
-		);
-		try {
-			const consecutiveFailures = nextFailureCount(pollerId, input.state);
-			await recordPollingStatus({
-				db: database.db,
-				pollerId,
-				sourceType: "linear",
-				sourceId: config.id,
-				projectId: config.id,
-				state: input.state,
-				intervalMs: polling.intervalMs,
-				counts: input.counts,
-				consecutiveFailures,
-				lastError: input.lastError,
-				startedAt: input.startedAt,
-				finishedAt: input.finishedAt,
-				successAt: input.successAt,
-				errorAt: input.errorAt,
-			});
-			await recordPollingEvent({
-				db: database.db,
-				pollerId,
-				sourceType: "linear",
-				sourceId: config.id,
-				projectId: config.id,
-				level: input.level,
-				eventType: input.eventType,
-				message: input.message,
-				metadata: { cycle: input.cycle, ...(input.metadata ?? {}) },
-			});
-		} finally {
-			await database.close();
-		}
+		const payload: WorkflowPollingRecordInput = {
+			pollerId,
+			sourceType: "linear",
+			sourceId: config.id,
+			projectId: config.id,
+			state: input.state,
+			intervalMs: polling.intervalMs,
+			counts: input.counts,
+			consecutiveFailures: nextFailureCount(pollerId, input.state),
+			lastError: input.lastError,
+			startedAt: input.startedAt,
+			finishedAt: input.finishedAt,
+			successAt: input.successAt,
+			errorAt: input.errorAt,
+			level: input.level,
+			eventType: input.eventType,
+			message: input.message,
+			metadata: { cycle: input.cycle, ...(input.metadata ?? {}) },
+		};
+		await createWorkflowDataClient().request("polling.record", payload);
 	} catch (error) {
 		logger.error(
 			{ projectId: config.id, err: normalizeError(error) },

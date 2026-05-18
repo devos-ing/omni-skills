@@ -1,38 +1,17 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import {
-	type ServerDatabase,
-	boardProjectsTable,
-	boardTasksTable,
-	initializeServerDatabase,
-	projectBoardsTable,
-} from "devos-server/db";
-import { eq } from "drizzle-orm";
 import { createBoardTaskWorkflowClient } from "../src/features/workflow/board-task-workflow-client";
 import { project } from "./smoke-fixtures";
 
-interface TestDatabase {
-	database: ServerDatabase;
-	root: string;
-}
+const previousWebSocket = globalThis.WebSocket;
 
-let testDatabase: TestDatabase | undefined;
-
-afterEach(async () => {
-	if (!testDatabase) {
-		return;
-	}
-	await testDatabase.database.close();
-	await rm(testDatabase.root, { recursive: true, force: true });
-	testDatabase = undefined;
+afterEach(() => {
+	globalThis.WebSocket = previousWebSocket;
 });
 
 describe("BoardTaskWorkflowClient task creation", () => {
-	it("keeps backlog creation in planning and plan splits in todo", async () => {
-		const { config, databasePath } = await setupDatabase();
-		const client = createBoardTaskWorkflowClient(config);
+	it("creates backlog and planned tasks through workflow websocket", async () => {
+		const calls = installWorkflowSocket();
+		const client = createBoardTaskWorkflowClient(project("project-1"));
 		const backlog = await client.createBacklogTask({
 			title: "Backlog task",
 			description: "Keep in backlog.",
@@ -47,57 +26,67 @@ describe("BoardTaskWorkflowClient task creation", () => {
 			{ title: "Planned task", description: "Ready to run." },
 		);
 
-		expect((await readTask(databasePath, backlog.id))?.status).toBe("planning");
-		expect((await readTask(databasePath, todo.id))?.status).toBe("todo");
-		expect((await client.fetchWork()).map((task) => task.identifier)).toEqual([
-			todo.identifier,
+		expect(backlog.identifier).toBe("TASK-000001");
+		expect(todo.identifier).toBe("TASK-000002");
+		expect(calls.map((call) => call.action)).toEqual([
+			"tasks.createWorkflowTask",
+			"tasks.createWorkflowTask",
+		]);
+		expect(calls.map((call) => call.payload)).toMatchObject([
+			{ title: "Backlog task", status: "planning" },
+			{ title: "Planned task", status: "todo" },
 		]);
 	});
 });
 
-async function setupDatabase(): Promise<{
-	config: ReturnType<typeof project>;
-	databasePath: string;
-}> {
-	const root = await mkdtemp(path.join(os.tmpdir(), "devos-board-client-"));
-	const databasePath = path.join(root, "server.pgdata");
-	const database = await initializeServerDatabase(databasePath);
-	testDatabase = { database, root };
-	await database.db.insert(projectBoardsTable).values({
-		id: "board-1",
-		name: "Board",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-12T00:00:00.000Z",
-		updatedAt: "2026-05-12T00:00:00.000Z",
-	});
-	await database.db.insert(boardProjectsTable).values({
-		id: "project-1",
-		boardId: "board-1",
-		externalProjectId: null,
-		name: "Project",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-12T00:00:00.000Z",
-		updatedAt: "2026-05-12T00:00:00.000Z",
-	});
-	const config = project("project-1");
-	config.server.database.databasePath = databasePath;
-	return { config, databasePath };
-}
+function installWorkflowSocket(): Array<{ action: string; payload: unknown }> {
+	const calls: Array<{ action: string; payload: unknown }> = [];
+	globalThis.WebSocket = class FakeWorkflowSocket extends EventTarget {
+		constructor(_url: string) {
+			super();
+			queueMicrotask(() => this.dispatchEvent(new Event("open")));
+		}
 
-async function readTask(
-	databasePath: string,
-	id: string,
-): Promise<{ status: string } | undefined> {
-	const database = await initializeServerDatabase(databasePath);
-	try {
-		const [task] = await database.db
-			.select({ status: boardTasksTable.status })
-			.from(boardTasksTable)
-			.where(eq(boardTasksTable.id, id));
-		return task;
-	} finally {
-		await database.close();
-	}
+		send(message: string): void {
+			const body = JSON.parse(message) as {
+				requestId: string;
+				action: string;
+				payload: { title?: string; status?: string };
+			};
+			calls.push({ action: body.action, payload: body.payload });
+			const index = calls.length;
+			queueMicrotask(() => {
+				this.dispatchEvent(
+					new MessageEvent("message", {
+						data: JSON.stringify({
+							type: "workflow.response",
+							requestId: body.requestId,
+							action: body.action,
+							status: "ok",
+							payload: {
+								id: `task-${index}`,
+								taskKey: `TASK-00000${index}`,
+								projectId: "project-1",
+								title: body.payload.title,
+								content: "Task content",
+								priority: 1,
+								status: body.payload.status,
+								dueDate: null,
+								creatorId: "owner-1",
+								linkedPr: null,
+								linearIssueId: null,
+								linearIdentifier: null,
+								linearUrl: null,
+								createdAt: "2026-05-12T00:00:00.000Z",
+								updatedAt: "2026-05-12T00:00:00.000Z",
+							},
+						}),
+					}),
+				);
+			});
+		}
+
+		close(): void {}
+	} as unknown as typeof WebSocket;
+	return calls;
 }

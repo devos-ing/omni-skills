@@ -1,11 +1,5 @@
-import {
-	type ServerDb,
-	boardProjectsTable,
-	boardTasksTable,
-	generateBoardTaskKey,
-	initializeServerDatabase,
-} from "devos-server/db";
-import { eq } from "drizzle-orm";
+import type { WorkflowBoardTaskRecord } from "devos-server/workflow-data";
+import { createWorkflowDataClient } from "../workflow/workflow-data-client";
 import type { ResolvedProjectConfig } from "../types";
 import type {
 	TaskIntakeCreatedTask,
@@ -13,66 +7,47 @@ import type {
 	TaskIntakeTaskCreator,
 } from "./task-intake.types";
 
-const DEFAULT_TASK_CREATOR_ID = "member-1";
-const DEFAULT_TASK_PRIORITY = 1;
-const DEFAULT_TASK_STATUS = "planning";
-
 export function createBoardTaskCreator(
 	config: ResolvedProjectConfig,
 ): TaskIntakeTaskCreator {
+	const client = createWorkflowDataClient();
 	return {
 		async createTask(input) {
-			return createBoardTask(config, input);
+			const task = await client.request<WorkflowBoardTaskRecord>(
+				"tasks.createIntakeTask",
+				toCreatePayload(config, input),
+			);
+			return toCreatedTask(task);
 		},
 	};
 }
 
-async function createBoardTask(
-	config: ResolvedProjectConfig,
-	input: TaskIntakeTask,
-): Promise<TaskIntakeCreatedTask> {
-	const database = await initializeServerDatabase(
-		config.server.database.databasePath,
-	);
-	try {
-		const project = await resolveBoardProject(database.db, config.id);
-		const now = new Date().toISOString();
-		const [created] = await database.db
-			.insert(boardTasksTable)
-			.values({
-				id: crypto.randomUUID(),
-				taskKey: await generateBoardTaskKey(database.db),
-				projectId: project?.id ?? null,
-				title: input.title,
-				content: input.description,
-				priority: DEFAULT_TASK_PRIORITY,
-				status: DEFAULT_TASK_STATUS,
-				dueDate: null,
-				creatorId: project?.ownerId ?? DEFAULT_TASK_CREATOR_ID,
-				linkedPr: null,
-				linearIssueId: null,
-				linearIdentifier: null,
-				linearUrl: null,
-				createdAt: now,
-				updatedAt: now,
-			})
-			.returning();
-		if (!created) {
-			throw new Error("Board task was not created");
-		}
-		return created;
-	} finally {
-		await database.close();
-	}
+function toCreatePayload(config: ResolvedProjectConfig, input: TaskIntakeTask) {
+	return {
+		projectId: config.id,
+		title: input.title,
+		description: input.description,
+	};
 }
 
-async function resolveBoardProject(
-	db: ServerDb,
-	projectId: string,
-): Promise<{ id: string; ownerId: string } | null> {
-	const [project] = await db
-		.select({ id: boardProjectsTable.id, ownerId: boardProjectsTable.ownerId })
-		.from(boardProjectsTable)
-		.where(eq(boardProjectsTable.id, projectId));
-	return project ?? null;
+function toCreatedTask(
+	task: WorkflowBoardTaskRecord,
+): TaskIntakeCreatedTask {
+	return {
+		id: task.id,
+		taskKey: task.taskKey,
+		projectId: task.projectId,
+		title: task.title,
+		content: task.content,
+		priority: task.priority,
+		status: task.status,
+		dueDate: task.dueDate,
+		creatorId: task.creatorId,
+		linkedPr: task.linkedPr,
+		linearIssueId: task.linearIssueId,
+		linearIdentifier: task.linearIdentifier,
+		linearUrl: task.linearUrl,
+		createdAt: task.createdAt,
+		updatedAt: task.updatedAt,
+	};
 }

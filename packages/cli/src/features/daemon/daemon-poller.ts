@@ -111,12 +111,25 @@ export function buildAttachedPollerEnv(
 		DEVOS_SERVER_BASE_URL: serverBaseUrl,
 		DEVOS_SERVER_EVENTS_WS_URL:
 			env.DEVOS_SERVER_EVENTS_WS_URL ?? resolveServerEventsWsUrl(serverBaseUrl),
+		DEVOS_WORKFLOW_WS_URL:
+			env.DEVOS_WORKFLOW_WS_URL ?? resolveWorkflowWsUrl(serverBaseUrl),
 		DEVOS_WORKFLOW_PROGRESS_STREAM: "1",
 	};
 }
 
 function resolveServerEventsWsUrl(serverBaseUrl: string): string {
 	const url = new URL("/daemon/events", serverBaseUrl);
+	if (url.protocol === "http:") {
+		url.protocol = "ws:";
+	}
+	if (url.protocol === "https:") {
+		url.protocol = "wss:";
+	}
+	return url.toString();
+}
+
+function resolveWorkflowWsUrl(serverBaseUrl: string): string {
+	const url = new URL("/api/workflow", serverBaseUrl);
 	if (url.protocol === "http:") {
 		url.protocol = "ws:";
 	}

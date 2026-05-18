@@ -28,6 +28,8 @@ import {
 	attachDaemonEventsSocket,
 } from "./ws/daemon-events";
 import { attachRealtimeEventsSocket } from "./ws/realtime-events";
+import { WORKFLOW_DATA_WS_PATH } from "./workflow-data";
+import { attachWorkflowDataSocket } from "./workflow-data/workflow-data-socket";
 
 const DEFAULT_SERVER_PORT = 3001;
 const DEFAULT_CLI_DAEMON_WS_URL = "ws://127.0.0.1:3002";
@@ -89,10 +91,17 @@ export async function startServer(
 		db: serverDatabase.db,
 		realtimeEvents,
 	});
+	const workflowDataSocket = attachWorkflowDataSocket({
+		server,
+		path: WORKFLOW_DATA_WS_PATH,
+		db: serverDatabase.db,
+		realtimeEvents,
+	});
 	server.once("close", () => {
 		void cliStreamProxy.close();
 		void realtimeEventsSocket.close();
 		void daemonEventsSocket.close();
+		void workflowDataSocket.close();
 	});
 	const address = server.address();
 	const listeningPort = typeof address === "object" ? address?.port : port;

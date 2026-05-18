@@ -62,6 +62,7 @@ describe("runCliCommandDaemonOnly", () => {
 				env: expect.objectContaining({
 					DEVOS_SERVER_BASE_URL: "http://127.0.0.1:4101",
 					DEVOS_SERVER_EVENTS_WS_URL: "ws://127.0.0.1:4101/daemon/events",
+					DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:4101/api/workflow",
 					DEVOS_WORKFLOW_PROGRESS_STREAM: "1",
 				}),
 			},

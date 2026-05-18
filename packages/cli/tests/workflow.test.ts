@@ -2,11 +2,6 @@ import { describe, expect, it, mock } from "bun:test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-	initializeServerDatabase,
-	pollingEventsTable,
-	pollingStatusTable,
-} from "devos-server/db";
 import type { LoadedConfig } from "../src/features/config";
 import type {
 	IssueRef,
@@ -682,6 +677,7 @@ describe("processIssueQueueBounded", () => {
 
 describe("runWorkflow parallel issue regression", () => {
 	it("records CLI polling cycle status and events", async () => {
+		const { calls, restore } = installWorkflowPollingSocket();
 		const workspacePath = await mkdtemp(
 			path.join(os.tmpdir(), "adhd-workflow-polling-"),
 		);
@@ -696,32 +692,29 @@ describe("runWorkflow parallel issue regression", () => {
 				}) as unknown,
 		} as unknown as WorkflowRuntime;
 
-		await runWorkflow(createLoadedConfig(config), { poll: true }, runtime);
-
-		const database = await initializeServerDatabase(
-			config.server.database.databasePath,
-		);
 		try {
-			const [status] = await database.db.select().from(pollingStatusTable);
-			const events = await database.db.select().from(pollingEventsTable);
-			expect(status).toMatchObject({
-				id: "linear:default",
-				state: "stopped",
-				lastIssueCount: 0,
-				lastStaleRetryCount: 0,
-				consecutiveFailures: 0,
-			});
-			expect(events.map((event) => event.eventType)).toEqual([
+			await runWorkflow(createLoadedConfig(config), { poll: true }, runtime);
+
+			expect(calls.map((call) => call.eventType)).toEqual([
 				"cycle_started",
 				"cycle_completed",
 				"polling_stopped",
 			]);
+			expect(
+				calls.find((call) => call.eventType === "cycle_completed"),
+			).toMatchObject({
+				pollerId: "linear:default",
+				state: "success",
+				counts: { issueCount: 0, staleRetryCount: 0 },
+				consecutiveFailures: 0,
+			});
 		} finally {
-			await database.close();
+			restore();
 		}
 	});
 
 	it("records CLI polling errors without replacing project error logs", async () => {
+		const { calls, restore } = installWorkflowPollingSocket();
 		const workspacePath = await mkdtemp(
 			path.join(os.tmpdir(), "adhd-workflow-polling-error-"),
 		);
@@ -738,24 +731,22 @@ describe("runWorkflow parallel issue regression", () => {
 				}) as unknown,
 		} as unknown as WorkflowRuntime;
 
-		await runWorkflow(createLoadedConfig(config), { poll: true }, runtime);
-
-		const database = await initializeServerDatabase(
-			config.server.database.databasePath,
-		);
 		try {
-			const [status] = await database.db.select().from(pollingStatusTable);
-			const events = await database.db.select().from(pollingEventsTable);
+			await runWorkflow(createLoadedConfig(config), { poll: true }, runtime);
+
 			const errorLog = await readFile(
 				projectErrorLogPath(config.workspacePath, config.id),
 				"utf8",
 			);
-			expect(status?.lastError).toBe("Linear unavailable");
-			expect(status?.consecutiveFailures).toBe(1);
-			expect(events.map((event) => event.eventType)).toContain("cycle_failed");
+			expect(calls.find((call) => call.eventType === "cycle_failed")).toMatchObject(
+				{
+					lastError: "Linear unavailable",
+					consecutiveFailures: 1,
+				},
+			);
 			expect(errorLog).toContain("Linear unavailable");
 		} finally {
-			await database.close();
+			restore();
 		}
 	});
 
@@ -2832,6 +2823,52 @@ function createWorkflowIssue(
 		state: {
 			id: "state_assigned",
 			name: "Todo",
+		},
+	};
+}
+
+function installWorkflowPollingSocket(): {
+	calls: Array<Record<string, unknown>>;
+	restore(): void;
+} {
+	const previousWebSocket = globalThis.WebSocket;
+	const calls: Array<Record<string, unknown>> = [];
+	globalThis.WebSocket = class FakeWorkflowSocket extends EventTarget {
+		constructor(_url: string) {
+			super();
+			queueMicrotask(() => this.dispatchEvent(new Event("open")));
+		}
+
+		send(message: string): void {
+			const body = JSON.parse(message) as {
+				requestId: string;
+				action: string;
+				payload: Record<string, unknown>;
+			};
+			if (body.action === "polling.record") {
+				calls.push(body.payload);
+			}
+			queueMicrotask(() => {
+				this.dispatchEvent(
+					new MessageEvent("message", {
+						data: JSON.stringify({
+							type: "workflow.response",
+							requestId: body.requestId,
+							action: body.action,
+							status: "ok",
+							payload: { recorded: true },
+						}),
+					}),
+				);
+			});
+		}
+
+		close(): void {}
+	} as unknown as typeof WebSocket;
+	return {
+		calls,
+		restore() {
+			globalThis.WebSocket = previousWebSocket;
 		},
 	};
 }

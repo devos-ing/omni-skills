@@ -108,7 +108,7 @@ class FakeDaemonEventsSocket
 	extends EventEmitter
 	implements DaemonEventsSocket
 {
-	readyState = WebSocket.OPEN;
+	readyState: number = WebSocket.OPEN;
 	readonly sent: string[] = [];
 	private sendResolver: ((message: string) => void) | undefined;
 

@@ -1,56 +1,26 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import {
-	type ServerDatabase,
-	boardProjectsTable,
-	boardTasksTable,
-	initializeServerDatabase,
-	projectBoardsTable,
-	taskCommentsTable,
-	taskPullRequestsTable,
-} from "devos-server/db";
-import type { BoardTaskRow } from "devos-server/db";
-import { eq } from "drizzle-orm";
 import { createBoardTaskWorkflowClient } from "../src/features/workflow/board-task-workflow-client";
 import { project } from "./smoke-fixtures";
 
-interface TestDatabase {
-	database: ServerDatabase;
-	path: string;
-	root: string;
+interface WorkflowCall {
+	url: string;
+	body: {
+		requestId: string;
+		action: string;
+		payload?: unknown;
+	};
 }
 
-let testDatabase: TestDatabase | undefined;
+const previousWebSocket = globalThis.WebSocket;
 
-afterEach(async () => {
-	if (!testDatabase) {
-		return;
-	}
-	await testDatabase.database.close();
-	await rm(testDatabase.root, { recursive: true, force: true });
-	testDatabase = undefined;
+afterEach(() => {
+	globalThis.WebSocket = previousWebSocket;
 });
 
 describe("BoardTaskWorkflowClient", () => {
-	it("polls todo tasks and allows targeted task lookup by key", async () => {
-		const { database, config } = await setupDatabase();
-		await seedTask(database, {
-			id: "task-1",
-			taskKey: "TASK-000001",
-			status: "todo",
-		});
-		await seedTask(database, {
-			id: "task-2",
-			taskKey: "TASK-000002",
-			status: "planning",
-		});
-		await seedTask(database, {
-			id: "task-3",
-			taskKey: "TASK-000003",
-			projectId: "other-project",
-		});
+	it("polls tasks through workflow websocket frames", async () => {
+		const calls = installWorkflowSocket();
+		const config = project("project-1");
 		const client = createBoardTaskWorkflowClient(config);
 
 		expect((await client.fetchWork()).map((task) => task.identifier)).toEqual([
@@ -61,213 +31,127 @@ describe("BoardTaskWorkflowClient", () => {
 		).toEqual(["TASK-000002"]);
 		expect(await client.isAssignedState("todo")).toBe(true);
 		expect(await client.isAssignedState("planning")).toBe(false);
+		expect(calls.map((call) => call.body.action)).toEqual([
+			"tasks.list",
+			"tasks.list",
+		]);
 	});
 
-	it("updates task status and freshness when marking a stage", async () => {
-		const { database, config, databasePath } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
+	it("routes stage, comment, and PR mutations through workflow websocket", async () => {
+		const calls = installWorkflowSocket();
+		const config = project("project-1");
+		config.repo.owner = "acme";
+		config.repo.name = "project";
 		const client = createBoardTaskWorkflowClient(config);
 
 		await client.markStage("task-1", "implementing");
-
-		const task = await readTask(databasePath, "task-1");
-		const comments = await readComments(databasePath);
-		expect(task?.status).toBe("implementing");
-		expect(task?.updatedAt).not.toBe("2026-05-12T00:00:00.000Z");
-		expect(comments).toContainEqual(
-			expect.objectContaining({
-				authorType: "system",
-				comment: "changed status from `planning` to `implementing`",
-			}),
-		);
-	});
-
-	it("stores PR-created workflow stages as reviewing", async () => {
-		const { database, config, databasePath } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
-		const client = createBoardTaskWorkflowClient(config);
-
 		await client.markStage("task-1", "pr_created");
-
-		const task = await readTask(databasePath, "task-1");
-		expect(task?.status).toBe("reviewing");
-	});
-
-	it("persists task comments and bumps task freshness", async () => {
-		const { database, config, databasePath } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
-		const client = createBoardTaskWorkflowClient(config);
-
 		await client.comment("task-1", "Implementation started.");
-
-		const comments = await readComments(databasePath);
-		const task = await readTask(databasePath, "task-1");
-		expect(comments).toHaveLength(1);
-		expect(comments[0]?.taskId).toBe("task-1");
-		expect(comments[0]?.comment).toBe("Implementation started.");
-		expect(task?.updatedAt).not.toBe("2026-05-12T00:00:00.000Z");
-	});
-
-	it("links pull requests without duplicating task PR rows", async () => {
-		const { database, config, databasePath } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
-		const client = createBoardTaskWorkflowClient(config);
-		const pullRequest = {
+		await client.linkPullRequest?.("task-1", {
 			number: 42,
 			url: "https://github.com/acme/project/pull/42",
 			branch: "codex/task-000001",
 			title: "Task PR",
-		};
-
-		await client.linkPullRequest?.("task-1", pullRequest);
-		await client.linkPullRequest?.("task-1", pullRequest);
-
-		const task = await readTask(databasePath, "task-1");
-		const prs = await readPullRequests(databasePath);
-		const comments = await readComments(databasePath);
-		expect(task?.linkedPr).toBe(pullRequest.url);
-		expect(prs).toHaveLength(1);
-		expect(prs[0]?.repository).toBe("acme/project");
-		expect(prs[0]?.prNumber).toBe("42");
-		expect(prs[0]?.prUrl).toBe(pullRequest.url);
-		expect(comments).toHaveLength(1);
-		expect(comments[0]?.comment).toContain("changed linked PR");
-	});
-
-	it("returns review-only tasks with persisted pull request refs", async () => {
-		const { database, config } = await setupDatabase();
-		await seedTask(database, {
-			id: "task-1",
-			taskKey: "TASK-000001",
-			status: "reviewing",
-			linkedPr: "https://github.com/acme/project/pull/7",
 		});
-		const client = createBoardTaskWorkflowClient(config);
 
-		const [task] = await client.fetchReviewOnlyWork();
-
-		expect(task?.identifier).toBe("TASK-000001");
-		expect(task?.pullRequest?.url).toBe(
-			"https://github.com/acme/project/pull/7",
-		);
-		expect(task?.pullRequest?.number).toBe(7);
-		expect(task?.pullRequest?.branch).toBe("codex/task-000001");
-	});
-
-	it("normalizes legacy PR-created task state during review-only discovery", async () => {
-		const { database, config } = await setupDatabase();
-		await seedTask(database, {
-			id: "task-1",
-			taskKey: "TASK-000001",
-			status: "pr_created",
-			linkedPr: "https://github.com/acme/project/pull/8",
-		});
-		const client = createBoardTaskWorkflowClient(config);
-
-		const [task] = await client.fetchReviewOnlyWork();
-
-		expect(task?.state.id).toBe("reviewing");
-		expect(task?.state.name).toBe("reviewing");
-	});
-
-	it("notifies the server after daemon-owned task mutations", async () => {
-		const { database, config } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
-		const calls: Array<{ url: string; body: unknown }> = [];
-		const restore = installTaskNotificationMock(calls);
-		const client = createBoardTaskWorkflowClient(config);
-
-		try {
-			await client.markStage("task-1", "implementing");
-			await client.comment("task-1", "Implementation started.");
-			await client.linkPullRequest?.("task-1", {
-				number: 42,
-				url: "https://github.com/acme/project/pull/42",
-				branch: "codex/task-000001",
-				title: "Task PR",
-			});
-		} finally {
-			restore();
-		}
-
-		expect(calls).toEqual([
+		expect(calls.map((call) => call.body)).toMatchObject([
 			{
-				url: "ws://server.test/daemon/events",
-				body: { type: "task.changed", taskId: "task-1" },
+				action: "tasks.update",
+				payload: { taskId: "task-1", values: { status: "implementing" } },
 			},
 			{
-				url: "ws://server.test/daemon/events",
-				body: { type: "task.changed", taskId: "task-1" },
+				action: "tasks.update",
+				payload: { taskId: "task-1", values: { status: "reviewing" } },
 			},
 			{
-				url: "ws://server.test/daemon/events",
-				body: { type: "task.changed", taskId: "task-1" },
+				action: "tasks.addComment",
+				payload: { taskId: "task-1", body: "Implementation started." },
+			},
+			{
+				action: "tasks.linkPullRequest",
+				payload: {
+					taskId: "task-1",
+					repository: "acme/project",
+					pullRequest: { number: 42 },
+				},
 			},
 		]);
 	});
 
-	it("keeps workflow mutations successful when server notification fails", async () => {
-		const { database, config, databasePath } = await setupDatabase();
-		await seedTask(database, { id: "task-1", taskKey: "TASK-000001" });
-		const restore = installTaskNotificationMock([], "error");
-		const client = createBoardTaskWorkflowClient(config);
+	it("returns review-only tasks with websocket pull request refs", async () => {
+		installWorkflowSocket();
+		const client = createBoardTaskWorkflowClient(project("project-1"));
 
-		try {
-			await client.markStage("task-1", "implementing");
-		} finally {
-			restore();
-		}
+		const [task] = await client.fetchReviewOnlyWork();
 
-		const task = await readTask(databasePath, "task-1");
-		expect(task?.status).toBe("implementing");
+		expect(task?.identifier).toBe("TASK-000003");
+		expect(task?.pullRequest?.url).toBe(
+			"https://github.com/acme/project/pull/7",
+		);
+		expect(task?.pullRequest?.number).toBe(7);
 	});
 });
 
-async function setupDatabase() {
-	const root = await mkdtemp(path.join(os.tmpdir(), "devos-board-client-"));
-	const databasePath = path.join(root, "server.pgdata");
-	const database = await initializeServerDatabase(databasePath);
-	testDatabase = { database, path: databasePath, root };
-	await database.db.insert(projectBoardsTable).values({
-		id: "board-1",
-		name: "Board",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-12T00:00:00.000Z",
-		updatedAt: "2026-05-12T00:00:00.000Z",
-	});
-	await database.db.insert(boardProjectsTable).values({
-		id: "project-1",
-		boardId: "board-1",
-		externalProjectId: null,
-		name: "Project",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-12T00:00:00.000Z",
-		updatedAt: "2026-05-12T00:00:00.000Z",
-	});
-	await database.db.insert(boardProjectsTable).values({
-		id: "other-project",
-		boardId: "board-1",
-		externalProjectId: null,
-		name: "Other Project",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-12T00:00:00.000Z",
-		updatedAt: "2026-05-12T00:00:00.000Z",
-	});
-	const config = project("project-1");
-	config.server.database.databasePath = databasePath;
-	config.repo.owner = "acme";
-	config.repo.name = "project";
-	return { database, config, databasePath };
+function installWorkflowSocket(): WorkflowCall[] {
+	const calls: WorkflowCall[] = [];
+	globalThis.WebSocket = class FakeWorkflowSocket extends EventTarget {
+		constructor(readonly url: string) {
+			super();
+			queueMicrotask(() => this.dispatchEvent(new Event("open")));
+		}
+
+		send(message: string): void {
+			const body = JSON.parse(message) as WorkflowCall["body"];
+			calls.push({ url: this.url, body });
+			const payload = payloadForAction(body.action, body.payload);
+			queueMicrotask(() => {
+				this.dispatchEvent(
+					new MessageEvent("message", {
+						data: JSON.stringify({
+							type: "workflow.response",
+							requestId: body.requestId,
+							action: body.action,
+							status: "ok",
+							payload,
+						}),
+					}),
+				);
+			});
+		}
+
+		close(): void {}
+	} as unknown as typeof WebSocket;
+	return calls;
 }
 
-async function seedTask(
-	database: ServerDatabase,
-	overrides: Partial<BoardTaskRow>,
-) {
-	await database.db.insert(boardTasksTable).values({
+function payloadForAction(action: string, payload: unknown): unknown {
+	if (action === "tasks.list") {
+		return [
+			task({ id: "task-1", taskKey: "TASK-000001", status: "todo" }),
+			task({ id: "task-2", taskKey: "TASK-000002", status: "planning" }),
+			task({
+				id: "task-3",
+				taskKey: "TASK-000003",
+				status: "reviewing",
+				linkedPr: "https://github.com/acme/project/pull/7",
+				pullRequest: {
+					number: 7,
+					url: "https://github.com/acme/project/pull/7",
+					branch: "codex/task-000003",
+					title: "Task PR",
+				},
+			}),
+			task({ id: "task-4", taskKey: "TASK-000004", projectId: "other" }),
+		];
+	}
+	if (action === "tasks.update" && isRecord(payload)) {
+		return task({ id: String(payload.taskId), status: "implementing" });
+	}
+	return task({ id: "task-1", taskKey: "TASK-000001" });
+}
+
+function task(overrides: Record<string, unknown> = {}) {
+	return {
 		id: "task-1",
 		taskKey: "TASK-000001",
 		projectId: "project-1",
@@ -284,92 +168,9 @@ async function seedTask(
 		createdAt: "2026-05-12T00:00:00.000Z",
 		updatedAt: "2026-05-12T00:00:00.000Z",
 		...overrides,
-	});
-}
-
-async function readTask(databasePath: string, id: string) {
-	return withFreshDatabase(databasePath, async (database) => {
-		const [task] = await database.db
-			.select()
-			.from(boardTasksTable)
-			.where(eq(boardTasksTable.id, id));
-		return task;
-	});
-}
-
-async function readComments(databasePath: string) {
-	return withFreshDatabase(databasePath, (database) =>
-		database.db.select().from(taskCommentsTable),
-	);
-}
-
-async function readPullRequests(databasePath: string) {
-	return withFreshDatabase(databasePath, (database) =>
-		database.db.select().from(taskPullRequestsTable),
-	);
-}
-
-async function withFreshDatabase<T>(
-	databasePath: string,
-	run: (database: ServerDatabase) => Promise<T>,
-) {
-	const database = await initializeServerDatabase(databasePath);
-	try {
-		return await run(database);
-	} finally {
-		await database.close();
-	}
-}
-
-function installTaskNotificationMock(
-	calls: Array<{ url: string; body: unknown }>,
-	mode: "ack" | "error" = "ack",
-): () => void {
-	const previousBaseUrl = process.env.DEVOS_SERVER_BASE_URL;
-	const previousEventsUrl = process.env.DEVOS_SERVER_EVENTS_WS_URL;
-	const previousWebSocket = globalThis.WebSocket;
-	process.env.DEVOS_SERVER_BASE_URL = "http://server.test";
-	Reflect.deleteProperty(process.env, "DEVOS_SERVER_EVENTS_WS_URL");
-	class FakeWebSocket extends EventTarget {
-		constructor(readonly url: string) {
-			super();
-			queueMicrotask(() => this.dispatchEvent(new Event("open")));
-		}
-
-		send(message: string): void {
-			const body = JSON.parse(message) as { taskId?: string };
-			calls.push({ url: this.url, body });
-			if (mode === "error") {
-				queueMicrotask(() => this.dispatchEvent(new Event("error")));
-				return;
-			}
-			queueMicrotask(() => {
-				this.dispatchEvent(
-					new MessageEvent("message", {
-						data: JSON.stringify({
-							type: "task.changed.ack",
-							taskId: body.taskId,
-							status: "published",
-						}),
-					}),
-				);
-			});
-		}
-
-		close(): void {}
-	}
-	globalThis.WebSocket = FakeWebSocket as unknown as typeof WebSocket;
-	return () => {
-		if (previousBaseUrl === undefined) {
-			Reflect.deleteProperty(process.env, "DEVOS_SERVER_BASE_URL");
-		} else {
-			process.env.DEVOS_SERVER_BASE_URL = previousBaseUrl;
-		}
-		if (previousEventsUrl === undefined) {
-			Reflect.deleteProperty(process.env, "DEVOS_SERVER_EVENTS_WS_URL");
-		} else {
-			process.env.DEVOS_SERVER_EVENTS_WS_URL = previousEventsUrl;
-		}
-		globalThis.WebSocket = previousWebSocket;
 	};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
 }
