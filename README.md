@@ -154,3 +154,7 @@ bun test
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=1997roylee/show-me-ur-agents&type=Date)](https://star-history.com/#1997roylee/show-me-ur-agents&Date)
+
+## Local Test
+
+This is a local smoke test.
