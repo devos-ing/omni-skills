@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { withQuestionReader } from "../src/features/task-intake/io";
 import { parseTaskIntakeDecision } from "../src/features/task-intake/parser";
 import { buildTaskIntakePrompt } from "../src/features/task-intake/prompts";
 import { runTaskIntake } from "../src/features/task-intake/run";
@@ -249,6 +250,27 @@ describe("runTaskIntake", () => {
 		expect(questionAsked).toBe(false);
 		expect(prompts[0]).toContain("Q: Who?");
 		expect(prompts[0]).toContain("A: CLI users");
+	});
+});
+
+describe("withQuestionReader", () => {
+	it("routes interactive task questions through the prompt adapter", async () => {
+		const asked: string[] = [];
+		const result = await withQuestionReader(
+			async (askQuestion) => askQuestion("Who is this for?"),
+			{
+				text: async ({ message }) => {
+					asked.push(message);
+					return "CLI users";
+				},
+				password: async () => "",
+				confirm: async () => false,
+				select: async (options) => options.options[0]?.value ?? "",
+			},
+		);
+
+		expect(asked).toEqual(["Who is this for?"]);
+		expect(result).toBe("CLI users");
 	});
 });
 

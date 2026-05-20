@@ -1,6 +1,7 @@
 import type { CodexReasoningEffort } from "../../features/types";
 import type { CommandResult } from "../../utils/shell";
 import type { LoadedConfig } from "../config";
+import type { PromptAdapter } from "../prompts";
 
 export interface SetupDraft {
 	projectId: string;
@@ -79,4 +80,14 @@ export interface GitHubDefaults {
 	owner?: string;
 	name?: string;
 	baseBranch?: string;
+}
+
+export interface SetupDraftPromptDeps {
+	prompts: PromptAdapter;
+	inferGitHubDefaults?: (cwd: string) => Promise<GitHubDefaults>;
+}
+
+export interface SetupWizardDeps extends Partial<SetupDraftPromptDeps> {
+	runCommand?: SetupCheckDeps["runCommand"];
+	writeSetupFiles?: (cwd: string, draft: SetupDraft) => Promise<void>;
 }

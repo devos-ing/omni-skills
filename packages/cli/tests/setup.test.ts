@@ -3,6 +3,11 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import type { LoadedConfig } from "../src/features/config";
 import { loadSqliteEnv } from "../src/features/config";
+import { PromptCancelledError } from "../src/features/prompts";
+import type {
+	PromptAdapter,
+	SelectPromptOptions,
+} from "../src/features/prompts";
 import {
 	DEFAULT_LABEL_MAP,
 	DEFAULT_REASONING_EFFORTS,
@@ -10,6 +15,7 @@ import {
 	LINEAR_API_KEY_SETTINGS_URL,
 	type SetupDraft,
 	collectSetupChecks,
+	collectSetupDraft,
 	formatSetupChecks,
 	mergeEnvFile,
 	normalizeProjectId,
@@ -18,6 +24,7 @@ import {
 	renderLocalConfig,
 	renderSetupGitHubInstallPrompt,
 	renderSetupRtkInstallPrompt,
+	runSetupWizard,
 	writeSetupFiles,
 } from "../src/features/setup";
 import type { CommandResult } from "../src/utils/shell";
@@ -164,6 +171,81 @@ describe("setup helpers", () => {
 		expect(LINEAR_API_KEY_SETTINGS_URL).toBe(
 			"https://linear.app/settings/account/security",
 		);
+	});
+
+	it("maps typed onboarding prompts into the setup draft", async () => {
+		const draft = await collectSetupDraft("/tmp/demo", {
+			prompts: promptAdapter({
+				text: {
+					"Project name": "Demo Project",
+					"Project ID": "demo-project",
+					"Local repository path": "/tmp/demo",
+					"GitHub owner": "octo",
+					"GitHub repository name": "demo",
+					"GitHub base branch": "main",
+					"Linear project ID filter (optional)": "linear-project",
+					"Linear team ID filter (optional; inferred from project when possible)":
+						"linear-team",
+					"Resend sender email": "devos@example.com",
+					"Resend recipients (comma-separated)":
+						"alerts@example.com, ops@example.com",
+					"Planning model": "gpt-5.5",
+					"Implementation model": "gpt-5.3-codex",
+					"Review/testing model": "gpt-5.3-codex",
+				},
+				password: {
+					"Linear API key (create one: https://linear.app/settings/account/security)":
+						"lin_secret_123",
+					"Resend API key": "re_secret_123",
+				},
+				confirm: {
+					"Enable email notifications?": true,
+					"Enable GitHub and Linear Codex plugins?": false,
+				},
+				select: {
+					"Codex sandbox": "danger-full-access",
+					"Planning reasoning effort": "medium",
+					"Implementation reasoning effort": "low",
+					"Review/testing reasoning effort": "high",
+				},
+			}),
+			inferGitHubDefaults: async () => ({}),
+		});
+
+		expect(draft.linearApiKey).toBe("lin_secret_123");
+		expect(draft.notifications.email).toMatchObject({
+			enabled: true,
+			resendApiKey: "re_secret_123",
+			from: "devos@example.com",
+			to: ["alerts@example.com", "ops@example.com"],
+		});
+		expect(draft.codex.sandbox).toBe("danger-full-access");
+		expect(draft.codex.reasoningEfforts).toMatchObject({
+			plan: "medium",
+			implement: "low",
+			reviewTest: "high",
+			githubComment: "high",
+		});
+		expect(draft.codex.plugins).toEqual([]);
+	});
+
+	it("does not write setup files when onboarding prompts are cancelled", async () => {
+		let wroteFiles = false;
+		await expect(
+			runSetupWizard("/tmp/demo", {
+				runCommand: async () => okCommand(),
+				prompts: {
+					...promptAdapter({}),
+					text: async () => {
+						throw new PromptCancelledError();
+					},
+				},
+				writeSetupFiles: async () => {
+					wroteFiles = true;
+				},
+			}),
+		).rejects.toBeInstanceOf(PromptCancelledError);
+		expect(wroteFiles).toBe(false);
 	});
 
 	it("merges env updates without dropping unrelated values", () => {
@@ -496,5 +578,30 @@ function okCommand(): CommandResult {
 		code: 0,
 		stdout: "ok",
 		stderr: "",
+	};
+}
+
+function promptAdapter(values: {
+	text?: Record<string, string>;
+	password?: Record<string, string>;
+	confirm?: Record<string, boolean>;
+	select?: Record<string, string>;
+}): PromptAdapter {
+	return {
+		text: async ({ message, defaultValue }) =>
+			values.text?.[message] ?? defaultValue ?? "",
+		password: async ({ message }) => values.password?.[message] ?? "",
+		confirm: async ({ message, initialValue }) =>
+			values.confirm?.[message] ?? initialValue ?? false,
+		select: async <Value extends string>({
+			message,
+			options,
+			initialValue,
+		}: SelectPromptOptions<Value>) =>
+			options.find((option) => option.value === values.select?.[message])
+				?.value ??
+			initialValue ??
+			options[0]?.value ??
+			("" as Value),
 	};
 }

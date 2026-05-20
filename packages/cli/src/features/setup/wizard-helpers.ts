@@ -1,22 +1,11 @@
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type readline from "node:readline/promises";
 import type { CodexReasoningEffort } from "../../features/types";
 import { runCommand } from "../../utils/shell";
 import { safeRun } from "./checks-helpers";
 import { DEFAULT_BASE_BRANCH } from "./constants";
 import type { GitHubDefaults, SetupCheckDeps, SetupDraft } from "./setup.types";
-
-export async function ask(
-	io: readline.Interface,
-	label: string,
-	defaultValue: string,
-): Promise<string> {
-	const suffix = defaultValue ? ` [${defaultValue}]` : "";
-	const answer = await io.question(`${label}${suffix}: `);
-	return answer.trim() || defaultValue;
-}
 
 export async function readExistingFile(
 	filePath: string,
@@ -98,11 +87,6 @@ export function normalizeReasoningEffort(
 		return value;
 	}
 	return fallback;
-}
-
-export function parseYesNo(input: string): boolean {
-	const value = input.trim().toLowerCase();
-	return value === "" || value === "y" || value === "yes" || value === "true";
 }
 
 function parseGitHubRemote(

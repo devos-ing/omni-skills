@@ -7,6 +7,7 @@ import {
 	runCliCommandDaemonOnly,
 	runProductionDaemon,
 } from "./features/daemon";
+import { PromptCancelledError } from "./features/prompts";
 import {
 	logger,
 	normalizeError,
@@ -52,6 +53,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
+	if (error instanceof PromptCancelledError) {
+		process.exitCode = 1;
+		return;
+	}
 	const message = error instanceof Error ? error.message : String(error);
 	logger.error({ err: normalizeError(error) }, message);
 	process.exitCode = 1;

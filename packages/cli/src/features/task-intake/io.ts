@@ -1,4 +1,5 @@
-import { createInterface } from "node:readline/promises";
+import { clackPromptAdapter } from "../prompts";
+import type { PromptAdapter } from "../prompts";
 
 export async function readStdinText(): Promise<string> {
 	let input = "";
@@ -10,14 +11,7 @@ export async function readStdinText(): Promise<string> {
 
 export async function withQuestionReader<T>(
 	run: (askQuestion: (question: string) => Promise<string>) => Promise<T>,
+	prompts: PromptAdapter = clackPromptAdapter,
 ): Promise<T> {
-	const readline = createInterface({
-		input: process.stdin,
-		output: process.stdout,
-	});
-	try {
-		return await run((question) => readline.question(`${question}\n> `));
-	} finally {
-		readline.close();
-	}
+	return await run((question) => prompts.text({ message: question }));
 }
