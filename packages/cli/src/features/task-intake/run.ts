@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
+import type { AgentAdapter } from "adapters";
 import type { ResolvedProjectConfig } from "../types";
 import { parseTaskIntakeDecision } from "./parser";
 import { buildTaskIntakePrompt } from "./prompts";

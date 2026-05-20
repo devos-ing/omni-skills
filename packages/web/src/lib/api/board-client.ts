@@ -9,6 +9,7 @@ import {
 	assertObjectRecord,
 	encodePathSegment,
 	parseListResponse,
+	readNullableNumber,
 	readNullableString,
 	readString,
 } from "./response-utils";
@@ -26,6 +27,13 @@ function parseWorkspaceProjectRecord(payload: unknown): WorkspaceProjectRecord {
 		externalProjectId: readNullableString(row, "externalProjectId", endpoint),
 		name: readString(row, "name", endpoint),
 		description: readNullableString(row, "description", endpoint),
+		repoOwner: readNullableString(row, "repoOwner", endpoint),
+		repoName: readNullableString(row, "repoName", endpoint),
+		baseBranch: readNullableString(row, "baseBranch", endpoint),
+		localFolder: readNullableString(row, "localFolder", endpoint),
+		lead: readNullableString(row, "lead", endpoint),
+		category: readNullableString(row, "category", endpoint),
+		priority: readNullableNumber(row, "priority", endpoint),
 		createdAt: readString(row, "createdAt", endpoint),
 		updatedAt: readString(row, "updatedAt", endpoint),
 	};

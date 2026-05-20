@@ -61,6 +61,7 @@ import type {
 
 export { buildRunLeaseOwnerId } from "./workflow-lease";
 export { routeProjectsForIssueProjectId } from "./workflow-routing";
+import type { AgentAdapter } from "adapters";
 import type {
 	CodexUsageRecord,
 	PollingConfig,
@@ -71,7 +72,6 @@ import type {
 	RunState,
 	WorkflowStage,
 } from "../../features/types";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { issueBranchName } from "../../integrations/github";
 import { sortIssuesByPriority } from "../../integrations/linear";
 import { emitWorkflowProgress } from "../server";

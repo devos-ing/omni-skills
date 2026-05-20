@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { projectBoardsTable } from "./project-boards.schema";
 
 export const boardProjectsTable = pgTable("board_projects", {
@@ -9,6 +9,13 @@ export const boardProjectsTable = pgTable("board_projects", {
 	externalProjectId: text("external_project_id"),
 	name: text("name").notNull(),
 	description: text("description"),
+	repoOwner: text("repo_owner"),
+	repoName: text("repo_name"),
+	baseBranch: text("base_branch"),
+	localFolder: text("local_folder"),
+	lead: text("lead"),
+	category: text("category"),
+	priority: integer("priority"),
 	ownerId: text("owner_id").notNull(),
 	createdAt: timestamp("created_at", { mode: "string" }).notNull(),
 	updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),

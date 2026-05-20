@@ -1,55 +1,47 @@
 import { describe, expect, it } from "bun:test";
-import { CommanderError } from "commander";
-import { parseArgs } from "../src/args";
+import { captureWithRuntime, expectCommanderError } from "./args-test-helpers";
 
-function expectCommanderError(argv: string[]): {
-	error: CommanderError;
-	stderr: string;
-} {
-	let stderr = "";
-	try {
-		parseArgs(argv, {
-			writeErr: (message) => {
-				stderr += message;
+describe("createCliProgram daemon", () => {
+	it("runs daemon cli-only command", async () => {
+		const result = await captureWithRuntime([
+			"bun",
+			"devos",
+			"daemon",
+			"--cli-only",
+		]);
+
+		expect(result.calls).toEqual([
+			{
+				name: "daemonCliOnly",
+				payload: { cwd: "/tmp/devos-test" },
 			},
-			writeOut: () => {},
-		});
-	} catch (error) {
-		if (error instanceof CommanderError) {
-			return { error, stderr };
-		}
-	}
-	throw new Error(`Expected CommanderError for ${argv.join(" ")}`);
-}
-
-describe("parseArgs daemon", () => {
-	it("parses daemon cli-only command", () => {
-		expect(parseArgs(["bun", "devos", "daemon", "--cli-only"])).toEqual({
-			kind: "daemon",
-			cliOnly: true,
-		});
+		]);
 	});
 
-	it("parses daemon cli-only polling command", () => {
-		expect(
-			parseArgs([
-				"bun",
-				"devos",
-				"daemon",
-				"--cli-only",
-				"--poll-forever",
-				"--all-projects",
-			]),
-		).toEqual({
-			kind: "daemon",
-			cliOnly: true,
-			pollForever: true,
-			allProjects: true,
-		});
+	it("runs daemon cli-only polling command", async () => {
+		const result = await captureWithRuntime([
+			"bun",
+			"devos",
+			"daemon",
+			"--cli-only",
+			"--poll-forever",
+			"--all-projects",
+		]);
+
+		expect(result.calls).toEqual([
+			{
+				name: "daemonCliOnly",
+				payload: {
+					cwd: "/tmp/devos-test",
+					pollForever: true,
+					allProjects: true,
+				},
+			},
+		]);
 	});
 
-	it("rejects daemon polling flags without cli-only", () => {
-		const result = expectCommanderError([
+	it("rejects daemon polling flags without cli-only", async () => {
+		const result = await expectCommanderError([
 			"bun",
 			"devos",
 			"daemon",
@@ -62,8 +54,8 @@ describe("parseArgs daemon", () => {
 		expect(result.stderr).toContain("Usage: devos daemon [options]");
 	});
 
-	it("rejects all-projects without poll-forever", () => {
-		const result = expectCommanderError([
+	it("rejects all-projects without poll-forever", async () => {
+		const result = await expectCommanderError([
 			"bun",
 			"devos",
 			"daemon",

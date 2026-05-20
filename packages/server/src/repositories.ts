@@ -164,7 +164,9 @@ export function createReadRepositories(
 		listBoardProjects: () =>
 			readRows(
 				database,
-				`SELECT id, board_id, external_project_id, name, description, owner_id, created_at, updated_at
+				`SELECT id, board_id, external_project_id, name, description,
+					 repo_owner, repo_name, base_branch, local_folder, lead, category,
+					 priority, owner_id, created_at, updated_at
 				 FROM board_projects
 				 ORDER BY id ASC`,
 				(row): BoardProjectRecord => ({
@@ -177,6 +179,14 @@ export function createReadRepositories(
 					name: String(row.name),
 					description:
 						row.description === null ? null : String(row.description),
+					repoOwner: row.repo_owner === null ? null : String(row.repo_owner),
+					repoName: row.repo_name === null ? null : String(row.repo_name),
+					baseBranch: row.base_branch === null ? null : String(row.base_branch),
+					localFolder:
+						row.local_folder === null ? null : String(row.local_folder),
+					lead: row.lead === null ? null : String(row.lead),
+					category: row.category === null ? null : String(row.category),
+					priority: row.priority === null ? null : Number(row.priority),
 					ownerId: String(row.owner_id),
 					createdAt: normalizeTimestamp(row.created_at),
 					updatedAt: normalizeTimestamp(row.updated_at),

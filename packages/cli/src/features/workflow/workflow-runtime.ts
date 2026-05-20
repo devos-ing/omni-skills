@@ -1,4 +1,4 @@
-import { createAgentAdapter } from "../../integrations/agent-adapters";
+import { createAgentAdapter } from "adapters";
 import {
 	commentOnPr,
 	createDraftPrFromWorktree,

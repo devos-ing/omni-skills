@@ -60,6 +60,18 @@ export function readNullableString(
 	throw new Error(`Invalid ${endpoint} response field '${key}'`);
 }
 
+export function readNullableNumber(
+	record: Record<string, unknown>,
+	key: string,
+	endpoint: string,
+): number | null {
+	const value = record[key];
+	if (value === null || typeof value === "number") {
+		return value;
+	}
+	throw new Error(`Invalid ${endpoint} response field '${key}'`);
+}
+
 export function readStringArray(
 	record: Record<string, unknown>,
 	key: string,

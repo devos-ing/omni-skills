@@ -16,6 +16,7 @@ import {
 	loadConfigOverride,
 	normalizeOverrideToRoot,
 } from "./overrides";
+import { applyDatabaseProjectMetadata } from "./project-metadata";
 import { resolveProjects } from "./project-resolution";
 import { loadSqliteEnv, saveSqliteEnv, sqliteEnvDbPath } from "./sqlite-env";
 import {
@@ -34,7 +35,9 @@ export async function loadConfig(cwd: string): Promise<LoadedConfig> {
 	assertNoProjectPolling(root.projects);
 	assertNoProjectNotifications(root.projects);
 
-	const projects = resolveProjects(cwd, envBase, root);
+	const projects = await applyDatabaseProjectMetadata(
+		resolveProjects(cwd, envBase, root),
+	);
 	const polling = resolvePolling(envPolling, root.polling);
 	const notifications = resolveNotifications(
 		envNotifications,

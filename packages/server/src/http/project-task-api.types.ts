@@ -4,6 +4,13 @@ export interface CreateProjectPayload {
 	ownerId: string;
 	externalProjectId?: string | null;
 	description?: string | null;
+	repoOwner?: string | null;
+	repoName?: string | null;
+	baseBranch?: string | null;
+	localFolder?: string | null;
+	lead?: string | null;
+	category?: string | null;
+	priority?: number | null;
 }
 
 export interface UpdateProjectPayload {
@@ -12,6 +19,13 @@ export interface UpdateProjectPayload {
 	ownerId?: string;
 	externalProjectId?: string | null;
 	description?: string | null;
+	repoOwner?: string | null;
+	repoName?: string | null;
+	baseBranch?: string | null;
+	localFolder?: string | null;
+	lead?: string | null;
+	category?: string | null;
+	priority?: number | null;
 }
 
 export interface CreateTaskPayload {

@@ -46,6 +46,16 @@ export async function collectSetupDraft(
 		"Project ID",
 		normalizeProjectId(projectName),
 	);
+	const projectDescription = await promptText(
+		prompts,
+		"Project description",
+		"",
+	);
+	const lead = await promptText(prompts, "Project lead", "");
+	const category = await promptText(prompts, "Project category", "");
+	const priority = normalizePriority(
+		await promptText(prompts, "Project priority", ""),
+	);
 	const executionPath = resolveUserPath(cwd);
 	const defaults = await inferDefaults(executionPath);
 	const sandbox = normalizeSandbox(
@@ -98,11 +108,15 @@ export async function collectSetupDraft(
 	return {
 		projectId: normalizeProjectId(projectId),
 		projectName: projectName.trim() || DEFAULT_PROJECT_NAME,
+		projectDescription: projectDescription.trim(),
 		workspacePath: executionPath,
 		executionPath,
 		repoOwner: defaults.owner ?? "",
 		repoName: defaults.name ?? "",
 		baseBranch: defaults.baseBranch ?? DEFAULT_BASE_BRANCH,
+		lead: lead.trim(),
+		category: category.trim(),
+		priority,
 		linearApiKey: process.env.LINEAR_API_KEY ?? "",
 		notifications: {
 			email: {
@@ -153,4 +167,13 @@ function promptReasoningEffort(
 		options: [...REASONING_EFFORT_OPTIONS],
 		initialValue,
 	});
+}
+
+function normalizePriority(value: string): number | null {
+	const trimmed = value.trim();
+	if (!trimmed) {
+		return null;
+	}
+	const parsed = Number(trimmed);
+	return Number.isInteger(parsed) ? parsed : null;
 }

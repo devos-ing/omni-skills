@@ -29,6 +29,7 @@
 	"dependencies": {
 		"@clack/prompts": "^1.4.0",
 		"@linear/sdk": "^83.0.0",
+		"adapters": "workspace:*",
 		"commander": "^14.0.3",
 		"devos-db": "workspace:*",
 		"devos-server": "workspace:*",

@@ -39,6 +39,13 @@ describe("project routes", () => {
 					name: "Core",
 					ownerId: "owner-1",
 					description: "desc",
+					repoOwner: "octo",
+					repoName: "core",
+					baseBranch: "main",
+					localFolder: "/tmp/core",
+					lead: "Roy",
+					category: "platform",
+					priority: 1,
 				}),
 			}),
 		);
@@ -46,8 +53,22 @@ describe("project routes", () => {
 		const created = (await createResponse.json()) as {
 			id: string;
 			name: string;
+			repoOwner: string | null;
+			repoName: string | null;
+			baseBranch: string | null;
+			localFolder: string | null;
+			lead: string | null;
+			category: string | null;
+			priority: number | null;
 		};
 		expect(created.name).toBe("Core");
+		expect(created.repoOwner).toBe("octo");
+		expect(created.repoName).toBe("core");
+		expect(created.baseBranch).toBe("main");
+		expect(created.localFolder).toBe("/tmp/core");
+		expect(created.lead).toBe("Roy");
+		expect(created.category).toBe("platform");
+		expect(created.priority).toBe(1);
 
 		const listResponse = await app(
 			new Request("http://localhost/api/projects", { method: "GET" }),
@@ -66,13 +87,16 @@ describe("project routes", () => {
 			new Request(`http://localhost/api/projects/${created.id}`, {
 				method: "PATCH",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ name: "Core Updated" }),
+				body: JSON.stringify({ name: "Core Updated", priority: 2 }),
 			}),
 		);
 		expect(updateResponse.status).toBe(200);
-		expect(((await updateResponse.json()) as { name: string }).name).toBe(
-			"Core Updated",
-		);
+		const updated = (await updateResponse.json()) as {
+			name: string;
+			priority: number | null;
+		};
+		expect(updated.name).toBe("Core Updated");
+		expect(updated.priority).toBe(2);
 
 		const deleteResponse = await app(
 			new Request(`http://localhost/api/projects/${created.id}`, {

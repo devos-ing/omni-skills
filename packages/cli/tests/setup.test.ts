@@ -8,6 +8,7 @@ import {
 	writeFile,
 } from "node:fs/promises";
 import path from "node:path";
+import { boardProjectsTable, eq, initializeServerDatabase } from "devos-db";
 import type { LoadedConfig } from "../src/features/config";
 import { loadSqliteEnv } from "../src/features/config";
 import { PromptCancelledError } from "../src/features/prompts";
@@ -43,11 +44,15 @@ import type { CommandResult } from "../src/utils/shell";
 const draft: SetupDraft = {
 	projectId: "demo-project",
 	projectName: "Demo Project",
+	projectDescription: "Demo description",
 	workspacePath: "/tmp/demo",
 	executionPath: "/tmp/demo",
 	repoOwner: "octo",
 	repoName: "demo",
 	baseBranch: "main",
+	lead: "Roy",
+	category: "ops",
+	priority: 1,
 	linearApiKey: "lin_secret_123",
 	notifications: {
 		email: {
@@ -93,6 +98,9 @@ describe("setup helpers", () => {
 		expect(env).not.toContain("LINEAR_API_KEY");
 		expect(env).toContain("RESEND_API_KEY=re_secret_123");
 		expect(localConfig).not.toContain("octo");
+		expect(localConfig).not.toContain("Demo Project");
+		expect(localConfig).not.toContain("Demo description");
+		expect(localConfig).not.toContain("/tmp/demo");
 		expect(localConfig).not.toContain('"repo"');
 		expect(localConfig).not.toContain('"baseBranch"');
 		expect(localConfig).not.toContain("lin_secret_123");
@@ -196,6 +204,10 @@ describe("setup helpers", () => {
 					text: {
 						"Project name": "Demo Project",
 						"Project ID": "demo-project",
+						"Project description": "Demo description",
+						"Project lead": "Roy",
+						"Project category": "ops",
+						"Project priority": "1",
 						"Planning model": "gpt-5.5",
 						"Implementation model": "gpt-5.3-codex",
 						"Review/testing model": "gpt-5.3-codex",
@@ -220,6 +232,10 @@ describe("setup helpers", () => {
 			expect(draft.repoOwner).toBe("octo");
 			expect(draft.repoName).toBe("demo");
 			expect(draft.baseBranch).toBe("main");
+			expect(draft.projectDescription).toBe("Demo description");
+			expect(draft.lead).toBe("Roy");
+			expect(draft.category).toBe("ops");
+			expect(draft.priority).toBe(1);
 			expect(draft.workspacePath).toBe("/tmp/demo");
 			expect(draft.executionPath).toBe("/tmp/demo");
 			expect(draft.linearApiKey).toBe("lin_secret_123");
@@ -322,18 +338,42 @@ describe("setup helpers", () => {
 		expect(merged).toContain("JWT_SECRET=jwt");
 	});
 
-	it("writes integration values to sqlite without saving them to env", async () => {
+	it("writes integration values to sqlite and project metadata to server DB", async () => {
 		const tempDir = await mkdtemp(path.join(process.cwd(), ".tmp-setup-test-"));
 		try {
 			await writeSetupFiles(tempDir, draft);
 			const sqliteEnv = await loadSqliteEnv(tempDir);
 			expect(sqliteEnv?.LINEAR_API_KEY).toBe("lin_secret_123");
-			expect(sqliteEnv?.GITHUB_REPO_OWNER).toBe("octo");
-			expect(sqliteEnv?.GITHUB_REPO_NAME).toBe("demo");
-			expect(sqliteEnv?.GITHUB_BASE_BRANCH).toBe("main");
+			expect(sqliteEnv?.GITHUB_REPO_OWNER).toBeUndefined();
+			expect(sqliteEnv?.GITHUB_REPO_NAME).toBeUndefined();
+			expect(sqliteEnv?.GITHUB_BASE_BRANCH).toBeUndefined();
 			expect(sqliteEnv?.RESEND_API_KEY).toBe("re_secret_123");
 			expect(sqliteEnv?.JWT_SECRET).toMatch(/^[A-Za-z0-9_-]+$/);
 			expect(sqliteEnv?.JWT_SECRET?.length).toBeGreaterThan(40);
+
+			const database = await initializeServerDatabase(
+				path.join(tempDir, ".devos", "config", "server-db"),
+			);
+			try {
+				const [project] = await database.db
+					.select()
+					.from(boardProjectsTable)
+					.where(eq(boardProjectsTable.id, draft.projectId));
+				expect(project).toMatchObject({
+					id: draft.projectId,
+					name: draft.projectName,
+					description: draft.projectDescription,
+					repoOwner: draft.repoOwner,
+					repoName: draft.repoName,
+					baseBranch: draft.baseBranch,
+					localFolder: draft.executionPath,
+					lead: draft.lead,
+					category: draft.category,
+					priority: draft.priority,
+				});
+			} finally {
+				await database.close();
+			}
 
 			const envPath = path.join(tempDir, ".env");
 			const envContent = await readFile(envPath, "utf8");

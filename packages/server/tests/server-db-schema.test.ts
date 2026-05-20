@@ -192,6 +192,13 @@ describe("server drizzle schema", () => {
 			externalProjectId: "ROY",
 			name: "ADHD Server",
 			description: "Server-side workflow work",
+			repoOwner: "octo",
+			repoName: "repo",
+			baseBranch: "main",
+			localFolder: "/tmp/repo",
+			lead: "Roy",
+			category: "platform",
+			priority: 1,
 			ownerId: "user-1",
 			createdAt: "2026-05-12 01:01:00",
 			updatedAt: "2026-05-12 01:01:00",
@@ -337,6 +344,13 @@ describe("server drizzle schema", () => {
 		);
 		expect(projectRow?.name).toBe(project.name);
 		expect(projectRow?.description).toBe(project.description ?? null);
+		expect(projectRow?.repoOwner).toBe(project.repoOwner ?? null);
+		expect(projectRow?.repoName).toBe(project.repoName ?? null);
+		expect(projectRow?.baseBranch).toBe(project.baseBranch ?? null);
+		expect(projectRow?.localFolder).toBe(project.localFolder ?? null);
+		expect(projectRow?.lead).toBe(project.lead ?? null);
+		expect(projectRow?.category).toBe(project.category ?? null);
+		expect(projectRow?.priority).toBe(project.priority ?? null);
 		expect(taskRow?.id).toBe(task.id);
 		expect(taskRow?.projectId).toBe(task.projectId ?? null);
 		expect(taskRow?.title).toBe(task.title);
@@ -486,6 +500,83 @@ describe("server drizzle schema", () => {
 				.where(eq(tokenUsageTable.id, "tu-old-2"));
 			expect(insertedRow?.taskId).toBeNull();
 			expect(insertedRow?.taskExecutionLogId).toBeNull();
+
+			await migrated.close();
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("migrates existing board projects with project metadata columns", async () => {
+		const tempDir = await mkdtemp(
+			path.join(os.tmpdir(), "adhd-server-pg-project-old-"),
+		);
+		const databasePath = path.join(tempDir, "db");
+
+		try {
+			const oldClient = new PGlite(databasePath);
+			await oldClient.exec(`
+				CREATE TABLE project_boards (
+					id text PRIMARY KEY,
+					name text NOT NULL,
+					description text,
+					owner_id text NOT NULL,
+					created_at timestamp NOT NULL,
+					updated_at timestamp NOT NULL
+				);
+				CREATE TABLE board_projects (
+					id text PRIMARY KEY,
+					board_id text NOT NULL REFERENCES project_boards(id),
+					external_project_id text,
+					name text NOT NULL,
+					description text,
+					owner_id text NOT NULL,
+					created_at timestamp NOT NULL,
+					updated_at timestamp NOT NULL
+				);
+				INSERT INTO project_boards (
+					id, name, description, owner_id, created_at, updated_at
+				) VALUES (
+					'board-old-1', 'Old Board', NULL, 'user-1',
+					'2026-05-20 00:00:00', '2026-05-20 00:00:00'
+				);
+				INSERT INTO board_projects (
+					id, board_id, external_project_id, name, description, owner_id,
+					created_at, updated_at
+				) VALUES (
+					'project-old-1', 'board-old-1', 'ROY', 'Old Project',
+					'Old description', 'user-1',
+					'2026-05-20 00:01:00', '2026-05-20 00:01:00'
+				);
+			`);
+			await oldClient.close();
+
+			const migrated = await initializeServerDatabase(databasePath);
+			await migrated.db
+				.update(boardProjectsTable)
+				.set({
+					repoOwner: "octo",
+					repoName: "repo",
+					baseBranch: "main",
+					localFolder: "/tmp/repo",
+					lead: "Roy",
+					category: "platform",
+					priority: 1,
+				})
+				.where(eq(boardProjectsTable.id, "project-old-1"));
+
+			const [project] = await migrated.db
+				.select()
+				.from(boardProjectsTable)
+				.where(eq(boardProjectsTable.id, "project-old-1"));
+
+			expect(project?.repoOwner).toBe("octo");
+			expect(project?.repoName).toBe("repo");
+			expect(project?.baseBranch).toBe("main");
+			expect(project?.localFolder).toBe("/tmp/repo");
+			expect(project?.lead).toBe("Roy");
+			expect(project?.category).toBe("platform");
+			expect(project?.priority).toBe(1);
 
 			await migrated.close();
 		} finally {

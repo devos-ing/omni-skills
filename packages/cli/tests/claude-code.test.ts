@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import type { ResolvedProjectConfig } from "../src/features/types";
-import type { AgentResult } from "../src/integrations/agent-adapters";
+import type { AgentResult } from "adapters";
 import {
 	ClaudeCodeAdapter,
 	extractSessionId,
 	extractUsage,
-} from "../src/integrations/agent-adapters/claude-code";
+} from "adapters/claude";
+import type { ResolvedProjectConfig } from "../src/features/types";
 
 const baseConfig: ResolvedProjectConfig = {
 	id: "default",

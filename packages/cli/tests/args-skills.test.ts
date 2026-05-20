@@ -1,93 +1,112 @@
 import { describe, expect, it } from "bun:test";
-import { parseArgs } from "../src/args";
-import { expectCommanderError } from "./args-test-helpers";
+import { captureWithRuntime, expectCommanderError } from "./args-test-helpers";
 
-describe("parseArgs skills", () => {
-	it("parses skills list command", () => {
-		expect(parseArgs(["bun", "devos", "skills", "list"])).toEqual({
-			kind: "skills",
-			command: {
-				action: "list",
-				projectId: undefined,
-			},
-		});
-	});
-
-	it("parses skills add command", () => {
+describe("createCliProgram skills", () => {
+	it("runs skills list command", async () => {
 		expect(
-			parseArgs([
-				"bun",
-				"devos",
-				"skills",
-				"add",
-				"--title",
-				"Backend Standard",
-				"--description",
-				"Rules",
-				"--content",
-				"Use consistent module boundaries.",
-				"--project",
-				"api",
-			]),
-		).toEqual({
-			kind: "skills",
-			command: {
-				action: "add",
-				title: "Backend Standard",
-				description: "Rules",
-				content: "Use consistent module boundaries.",
-				projectId: "api",
+			(await captureWithRuntime(["bun", "devos", "skills", "list"])).calls,
+		).toEqual([
+			{ name: "loadConfig" },
+			{
+				name: "skills",
+				payload: {
+					action: "list",
+					projectId: undefined,
+				},
 			},
-		});
+		]);
 	});
 
-	it("parses skills update command", () => {
+	it("runs skills add command", async () => {
 		expect(
-			parseArgs([
-				"bun",
-				"devos",
-				"skills",
-				"update",
-				"backend-standard",
-				"--description",
-				"Updated description",
-			]),
-		).toEqual({
-			kind: "skills",
-			command: {
-				action: "update",
-				name: "backend-standard",
-				title: undefined,
-				description: "Updated description",
-				content: undefined,
-				projectId: undefined,
+			(
+				await captureWithRuntime([
+					"bun",
+					"devos",
+					"skills",
+					"add",
+					"--title",
+					"Backend Standard",
+					"--description",
+					"Rules",
+					"--content",
+					"Use consistent module boundaries.",
+					"--project",
+					"api",
+				])
+			).calls,
+		).toEqual([
+			{ name: "loadConfig" },
+			{
+				name: "skills",
+				payload: {
+					action: "add",
+					title: "Backend Standard",
+					description: "Rules",
+					content: "Use consistent module boundaries.",
+					projectId: "api",
+				},
 			},
-		});
+		]);
 	});
 
-	it("parses skills remove command", () => {
+	it("runs skills update command", async () => {
 		expect(
-			parseArgs([
-				"bun",
-				"devos",
-				"skills",
-				"remove",
-				"backend-standard",
-				"--project",
-				"default",
-			]),
-		).toEqual({
-			kind: "skills",
-			command: {
-				action: "remove",
-				name: "backend-standard",
-				projectId: "default",
+			(
+				await captureWithRuntime([
+					"bun",
+					"devos",
+					"skills",
+					"update",
+					"backend-standard",
+					"--description",
+					"Updated description",
+				])
+			).calls,
+		).toEqual([
+			{ name: "loadConfig" },
+			{
+				name: "skills",
+				payload: {
+					action: "update",
+					name: "backend-standard",
+					title: undefined,
+					description: "Updated description",
+					content: undefined,
+					projectId: undefined,
+				},
 			},
-		});
+		]);
 	});
 
-	it("rejects skills add without required flags", () => {
-		const result = expectCommanderError([
+	it("runs skills remove command", async () => {
+		expect(
+			(
+				await captureWithRuntime([
+					"bun",
+					"devos",
+					"skills",
+					"remove",
+					"backend-standard",
+					"--project",
+					"default",
+				])
+			).calls,
+		).toEqual([
+			{ name: "loadConfig" },
+			{
+				name: "skills",
+				payload: {
+					action: "remove",
+					name: "backend-standard",
+					projectId: "default",
+				},
+			},
+		]);
+	});
+
+	it("rejects skills add without required flags", async () => {
+		const result = await expectCommanderError([
 			"bun",
 			"devos",
 			"skills",
@@ -101,8 +120,8 @@ describe("parseArgs skills", () => {
 		);
 	});
 
-	it("rejects skills update without any fields", () => {
-		const result = expectCommanderError([
+	it("rejects skills update without any fields", async () => {
+		const result = await expectCommanderError([
 			"bun",
 			"devos",
 			"skills",
@@ -115,8 +134,13 @@ describe("parseArgs skills", () => {
 		);
 	});
 
-	it("rejects unknown skills action", () => {
-		const result = expectCommanderError(["bun", "devos", "skills", "ship-it"]);
+	it("rejects unknown skills action", async () => {
+		const result = await expectCommanderError([
+			"bun",
+			"devos",
+			"skills",
+			"ship-it",
+		]);
 
 		expect(result.error.message).toBe("error: unknown command 'ship-it'");
 		expect(result.stderr).toContain("Usage: devos skills [options] [command]");

@@ -14,6 +14,7 @@ import {
 } from "./instance-config";
 import type { OnboardInstanceConfig } from "./instance-config.types";
 import { renderLocalConfig } from "./local-config";
+import { saveSetupProjectMetadata } from "./project-metadata";
 import type { SetupDraft } from "./setup.types";
 import { readExistingFile } from "./wizard-helpers";
 
@@ -33,6 +34,7 @@ export async function writeSetupFiles(
 	};
 	await writeFile(envPath, mergeEnvFile(existingEnv, envUpdates));
 	await saveSqliteEnv(cwd, databaseEnvUpdates);
+	await saveSetupProjectMetadata(cwd, draft);
 	await writeFile(configPath, renderLocalConfig(draft));
 	const instanceConfig = createInstanceConfig(cwd, new Date().toISOString());
 	await mkdir(path.dirname(instanceConfigPath), { recursive: true });

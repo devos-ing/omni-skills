@@ -1,7 +1,14 @@
 #!/usr/bin/env bun
 import { CommanderError } from "commander";
-import { type CliCommand, parseArgs } from "./args";
-import { handleCommand, handleOnboardCommand } from "./commands/handlers";
+import { type CliRuntime, createCliProgram } from "./args";
+import {
+	handleOnboardCommand,
+	handleProjectsCommand,
+	handleRunCommand,
+	handleSkillsCommand,
+	handleStatusCommand,
+} from "./commands/handlers";
+import { handleTaskCommand } from "./features/commands/task-command";
 import { loadConfig } from "./features/config";
 import {
 	runCliCommandDaemonOnly,
@@ -16,9 +23,25 @@ import {
 
 async function main(): Promise<void> {
 	setupProcessErrorHandlers();
-	let command: CliCommand;
+	const cwd = process.cwd();
+	const runtime: CliRuntime = {
+		cwd,
+		loadConfig: () => loadConfig(cwd),
+		handleOnboardCommand,
+		runCliCommandDaemonOnly,
+		runProductionDaemon,
+		handleRunCommand,
+		handleProjectsCommand,
+		handleStatusCommand,
+		handleSkillsCommand,
+		handleTaskCommand,
+	};
+	const program = createCliProgram(runtime);
 	try {
-		command = parseArgs(process.argv);
+		if (process.argv.slice(2).length === 0) {
+			program.help();
+		}
+		await program.parseAsync(process.argv);
 	} catch (error) {
 		if (error instanceof CommanderError) {
 			process.exitCode = error.exitCode;
@@ -26,30 +49,6 @@ async function main(): Promise<void> {
 		}
 		throw error;
 	}
-	if (command.kind === "help") {
-		return;
-	}
-
-	const cwd = process.cwd();
-	if (command.kind === "onboard") {
-		await handleOnboardCommand(command, cwd);
-		return;
-	}
-	if (command.kind === "daemon") {
-		if (command.cliOnly) {
-			process.exitCode = await runCliCommandDaemonOnly({
-				cwd,
-				pollForever: command.pollForever,
-				allProjects: command.allProjects,
-			});
-			return;
-		}
-		process.exitCode = await runProductionDaemon({ cwd });
-		return;
-	}
-
-	const config = await loadConfig(cwd);
-	await handleCommand(command, config);
 }
 
 main().catch((error) => {

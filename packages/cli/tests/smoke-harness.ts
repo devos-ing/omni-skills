@@ -1,6 +1,7 @@
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { AgentAdapter, AgentResult } from "adapters";
 import type { LoadedConfig } from "../src/features/config";
 import type {
 	LinearIssue,
@@ -14,10 +15,6 @@ import {
 	type WorkflowRuntime,
 	createWorkflowRuntime,
 } from "../src/features/workflow/workflow-runtime";
-import type {
-	AgentAdapter,
-	AgentResult,
-} from "../src/integrations/agent-adapters";
 import { pr, project } from "./smoke-fixtures";
 
 export interface SmokeHarness {

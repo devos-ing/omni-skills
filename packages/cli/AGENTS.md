@@ -17,7 +17,8 @@ project-agnostic across all configured workspaces.
 5. Keep integrations isolated in:
    - `packages/cli/src/integrations/linear/`
    - `packages/cli/src/integrations/github/`
-   - `packages/cli/src/integrations/agent-adapters/`
+   - `packages/agent-adapters/` for runtime agent adapters, with
+     compatibility re-exports under `packages/cli/src/integrations/agent-adapters/`
    - `packages/cli/src/integrations/notifications/`
 6. Keep CLI-facing server helpers in `packages/cli/src/features/server/` until
    they are intentionally moved behind an explicit shared/server boundary.

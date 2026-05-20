@@ -65,6 +65,13 @@ export interface BoardProjectRecord {
 	externalProjectId: string | null;
 	name: string;
 	description: string | null;
+	repoOwner: string | null;
+	repoName: string | null;
+	baseBranch: string | null;
+	localFolder: string | null;
+	lead: string | null;
+	category: string | null;
+	priority: number | null;
 	ownerId: string;
 	createdAt: string;
 	updatedAt: string;

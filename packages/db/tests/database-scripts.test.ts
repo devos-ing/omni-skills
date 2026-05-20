@@ -3,7 +3,7 @@ import { mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { boardTasksTable } from "devos-db/schema";
+import { boardProjectsTable, boardTasksTable } from "devos-db/schema";
 import { backupDatabase } from "../scripts/backup";
 import { migrateDatabase } from "../scripts/migrate";
 import { seedDatabase } from "../scripts/seed";
@@ -33,7 +33,7 @@ describe("database scripts", () => {
 				"SELECT id FROM schema_migrations ORDER BY id",
 			);
 			expect(migrations.rows.length).toBeGreaterThan(0);
-			expect(migrations.rows.at(-1)?.id).toBe("0010_polling_observability");
+			expect(migrations.rows.at(-1)?.id).toBe("0011_project_metadata");
 		} finally {
 			await client.close();
 		}
@@ -78,6 +78,7 @@ describe("database scripts", () => {
 	it("keeps schema package exports available", () => {
 		expect(boardTasksTable).toBeDefined();
 		expect(boardTasksTable.id).toBeDefined();
+		expect(boardProjectsTable.repoName).toBeDefined();
 	});
 });
 

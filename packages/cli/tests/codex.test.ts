@@ -1,12 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import path from "node:path";
+import { CodexAdapter, extractSessionId, extractUsage } from "adapters/codex";
+import { buildCodexRuntimeInvocation } from "adapters/codex/docker";
 import type { ResolvedProjectConfig } from "../src/features/types";
-import {
-	CodexAdapter,
-	extractSessionId,
-	extractUsage,
-} from "../src/integrations/agent-adapters/codex";
-import { buildCodexRuntimeInvocation } from "../src/integrations/agent-adapters/codex-docker";
 
 const config: ResolvedProjectConfig = {
 	id: "default",

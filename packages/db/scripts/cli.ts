@@ -40,7 +40,7 @@ export function readOptionValue(
 
 export function resolveDatabasePath(dbPath: string | undefined): string {
 	return path.resolve(
-		dbPath ?? process.env.PIV_SERVER_DATABASE_PATH ?? DEFAULT_DB_PATH,
+		dbPath || process.env.PIV_SERVER_DATABASE_PATH || DEFAULT_DB_PATH,
 	);
 }
 

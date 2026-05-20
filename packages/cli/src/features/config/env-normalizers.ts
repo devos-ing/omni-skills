@@ -1,3 +1,7 @@
+import {
+	type AgentBackend,
+	normalizeAgentBackend as normalizeKnownAgentBackend,
+} from "adapters";
 import type {
 	CodexReasoningEffort,
 	ResolvedProjectConfig,
@@ -124,13 +128,13 @@ export function normalizeBooleanEnvValue(
 
 export function normalizeAgentBackend(
 	value: string | undefined,
-): "codex" | "claude-code" | undefined {
+): AgentBackend | undefined {
 	if (!value) {
 		return undefined;
 	}
-	const normalized = value.trim().toLowerCase();
-	if (normalized === "codex" || normalized === "claude-code") {
-		return normalized;
+	const backend = normalizeKnownAgentBackend(value);
+	if (backend) {
+		return backend;
 	}
 	throw new Error(
 		`Invalid AGENT_BACKEND value: '${value}'. Must be 'codex' or 'claude-code'.`,

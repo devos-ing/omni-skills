@@ -22,6 +22,13 @@ const createProjectSchema = z.object({
 	ownerId: nonEmptyString,
 	externalProjectId: optionalNullableString,
 	description: optionalNullableString,
+	repoOwner: optionalNullableString,
+	repoName: optionalNullableString,
+	baseBranch: optionalNullableString,
+	localFolder: optionalNullableString,
+	lead: optionalNullableString,
+	category: optionalNullableString,
+	priority: z.number().int().nullable().optional(),
 });
 
 const updateProjectSchema = createProjectSchema.partial();

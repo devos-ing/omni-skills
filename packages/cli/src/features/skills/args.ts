@@ -1,23 +1,24 @@
 import type { Command } from "commander";
 import type {
-	CliCommand,
+	CliRuntime,
 	ProjectCommanderOptions,
 	SkillAddCommanderOptions,
 	SkillUpdateCommanderOptions,
+	SkillsCommand,
 } from "../../args.types";
 
 export function registerSkillsCommand(
 	program: Command,
-	setCommand: (command: CliCommand) => void,
+	runtime: CliRuntime,
 ): void {
 	const skills = program.command("skills").description("manage project skills");
 	skills
 		.command("list")
 		.option("--project <PROJECT_ID>")
-		.action((options: ProjectCommanderOptions) => {
-			setCommand({
-				kind: "skills",
-				command: { action: "list", projectId: options.project },
+		.action(async (options: ProjectCommanderOptions) => {
+			await handleSkills(runtime, {
+				action: "list",
+				projectId: options.project,
 			});
 		});
 	skills
@@ -26,16 +27,13 @@ export function registerSkillsCommand(
 		.requiredOption("--description <TEXT>")
 		.requiredOption("--content <TEXT>")
 		.option("--project <PROJECT_ID>")
-		.action((options: SkillAddCommanderOptions) => {
-			setCommand({
-				kind: "skills",
-				command: {
-					action: "add",
-					title: options.title,
-					description: options.description,
-					content: options.content,
-					projectId: options.project,
-				},
+		.action(async (options: SkillAddCommanderOptions) => {
+			await handleSkills(runtime, {
+				action: "add",
+				title: options.title,
+				description: options.description,
+				content: options.content,
+				projectId: options.project,
 			});
 		});
 	skills
@@ -45,7 +43,7 @@ export function registerSkillsCommand(
 		.option("--content <TEXT>")
 		.option("--project <PROJECT_ID>")
 		.action(
-			(
+			async (
 				name: string,
 				options: SkillUpdateCommanderOptions,
 				command: Command,
@@ -59,26 +57,32 @@ export function registerSkillsCommand(
 						"skills update requires at least one of --title, --description, or --content",
 					);
 				}
-				setCommand({
-					kind: "skills",
-					command: {
-						action: "update",
-						name,
-						title: options.title,
-						description: options.description,
-						content: options.content,
-						projectId: options.project,
-					},
+				await handleSkills(runtime, {
+					action: "update",
+					name,
+					title: options.title,
+					description: options.description,
+					content: options.content,
+					projectId: options.project,
 				});
 			},
 		);
 	skills
 		.command("remove <NAME>")
 		.option("--project <PROJECT_ID>")
-		.action((name: string, options: ProjectCommanderOptions) => {
-			setCommand({
-				kind: "skills",
-				command: { action: "remove", name, projectId: options.project },
+		.action(async (name: string, options: ProjectCommanderOptions) => {
+			await handleSkills(runtime, {
+				action: "remove",
+				name,
+				projectId: options.project,
 			});
 		});
+}
+
+async function handleSkills(
+	runtime: CliRuntime,
+	command: SkillsCommand,
+): Promise<void> {
+	const config = await runtime.loadConfig();
+	await runtime.handleSkillsCommand(config, command);
 }

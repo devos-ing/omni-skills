@@ -30,6 +30,10 @@ const MIGRATIONS: Migration[] = [
 		id: "0010_polling_observability",
 		fileName: "0010_polling_observability.sql",
 	},
+	{
+		id: "0011_project_metadata",
+		fileName: "0011_project_metadata.sql",
+	},
 ];
 
 async function ensureMigrationsTable(client: PGlite): Promise<void> {

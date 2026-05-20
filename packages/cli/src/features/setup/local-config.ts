@@ -5,9 +5,6 @@ export function renderLocalConfig(draft: SetupDraft): string {
 		projects: [
 			{
 				id: draft.projectId,
-				name: draft.projectName,
-				workspacePath: draft.workspacePath,
-				executionPath: draft.executionPath,
 				linear: {
 					projectId: draft.linearProjectId,
 					teamId: draft.linearTeamId,

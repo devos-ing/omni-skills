@@ -21,6 +21,13 @@ export interface RealtimeProjectRecord {
 	externalProjectId: string | null;
 	name: string;
 	description: string | null;
+	repoOwner: string | null;
+	repoName: string | null;
+	baseBranch: string | null;
+	localFolder: string | null;
+	lead: string | null;
+	category: string | null;
+	priority: number | null;
 	createdAt: string;
 	updatedAt: string;
 }

@@ -10,7 +10,7 @@
 ## Integration Boundary Layout
 
 1. External integrations are organized under `packages/cli/src/integrations/` by domain (`linear/`, `github/`, `cron/`, `notifications/`).
-2. Agent runtime adapters are isolated in `packages/cli/src/integrations/agent-adapters/`.
+2. Agent runtime adapters are isolated in `packages/agent-adapters/`.
 3. Workflow sequencing remains in `packages/cli/src/features/workflow/` and related stage/orchestrator modules.
 
 ## Parallel Processing Safety Model

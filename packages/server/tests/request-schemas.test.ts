@@ -22,6 +22,13 @@ describe("request schemas", () => {
 				name: "Website",
 				ownerId: "user-1",
 				description: null,
+				repoOwner: "octo",
+				repoName: "repo",
+				baseBranch: "main",
+				localFolder: "/tmp/repo",
+				lead: "Roy",
+				category: "platform",
+				priority: 1,
 			}).ok,
 		).toBeTrue();
 		expect(

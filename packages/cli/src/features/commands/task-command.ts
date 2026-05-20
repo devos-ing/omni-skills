@@ -1,4 +1,4 @@
-import type { CliCommand } from "../../args";
+import type { TaskCommand } from "../../args";
 import type { LoadedConfig } from "../../features/config";
 import { getProjectById } from "../../features/config";
 import { createAgentAdapter } from "../../integrations/agent-adapters";
@@ -6,65 +6,45 @@ import { createBoardTaskCreator } from "../task-intake/board-task-creator";
 import { readStdinText, withQuestionReader } from "../task-intake/io";
 import { runTaskIntake } from "../task-intake/run";
 import type { TaskIntakeRunResult } from "../task-intake/task-intake.types";
-
-type TaskCliCommand = Extract<CliCommand, { kind: "task" }>;
-
-export async function resolveTaskCreateRequest(options: {
-	request?: string;
-	askQuestion(question: string): Promise<string>;
-	readStdin(): Promise<string>;
-}): Promise<string> {
-	let request = options.request;
-	if (request === "-") {
-		request = await options.readStdin();
-	}
-	if (!request) {
-		request = await options.askQuestion("Enter task request");
-	}
-	const trimmedRequest = request.trim();
-	if (!trimmedRequest) {
-		throw new Error("task create requires a non-empty request");
-	}
-	return trimmedRequest;
-}
+import { resolveTaskCreateRequest } from "./task-command-request";
 
 export async function handleTaskCommand(
-	command: TaskCliCommand,
 	config: LoadedConfig,
+	command: TaskCommand,
 ): Promise<void> {
-	const project = command.command.projectId
-		? getProjectById(config, command.command.projectId)
+	const project = command.projectId
+		? getProjectById(config, command.projectId)
 		: config.projects[0];
-	if (command.command.projectId && !project) {
-		throw new Error(`Project '${command.command.projectId}' not found`);
+	if (command.projectId && !project) {
+		throw new Error(`Project '${command.projectId}' not found`);
 	}
 	if (!project) {
 		throw new Error("No project is configured");
 	}
 	const agent = createAgentAdapter(project);
 	const taskCreator = createBoardTaskCreator(project);
-	const result = command.command.nonInteractive
+	const result = command.nonInteractive
 		? await runTaskIntake(project, agent, taskCreator, {
-				request: resolveNonInteractiveTaskRequest(command.command.request),
-				maxClarificationRounds: command.command.maxClarificationRounds,
-				initialAnswers: command.command.clarificationAnswers,
+				request: resolveNonInteractiveTaskRequest(command.request),
+				maxClarificationRounds: command.maxClarificationRounds,
+				initialAnswers: command.clarificationAnswers,
 				allowInteractiveQuestions: false,
 				askQuestion: async () => "",
 			})
 		: await withQuestionReader(async (askQuestion) => {
 				const request = await resolveTaskCreateRequest({
-					request: command.command.request,
+					request: command.request,
 					askQuestion,
 					readStdin: readStdinText,
 				});
 				return runTaskIntake(project, agent, taskCreator, {
 					request,
-					maxClarificationRounds: command.command.maxClarificationRounds,
-					initialAnswers: command.command.clarificationAnswers,
+					maxClarificationRounds: command.maxClarificationRounds,
+					initialAnswers: command.clarificationAnswers,
 					askQuestion,
 				});
 			});
-	writeTaskCreateResult(result, command.command.json === true);
+	writeTaskCreateResult(result, command.json === true);
 }
 
 function writeTaskCreateResult(

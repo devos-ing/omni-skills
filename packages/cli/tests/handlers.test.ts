@@ -3,7 +3,7 @@ import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
-	handleCommand,
+	handleStatusCommand,
 	resolveTaskCreateRequest,
 } from "../src/commands/handlers";
 import type { LoadedConfig } from "../src/features/config";
@@ -16,7 +16,7 @@ afterEach(() => {
 	process.stdout.write = originalStdoutWrite;
 });
 
-describe("handleCommand status output", () => {
+describe("handleStatusCommand status output", () => {
 	it("includes stageDisplay while preserving stage", async () => {
 		const workspaceRoot = await mkdtemp(
 			path.join(os.tmpdir(), "adhd-handlers-"),
@@ -50,14 +50,10 @@ describe("handleCommand status output", () => {
 			return true;
 		}) as typeof process.stdout.write;
 
-		await handleCommand(
-			{
-				kind: "status",
-				projectId: "default",
-				issueKey: "roy-64",
-			},
-			config,
-		);
+		await handleStatusCommand(config, {
+			projectId: "default",
+			issueKey: "roy-64",
+		});
 
 		const parsed = JSON.parse(writes.join("")) as {
 			stage: string;

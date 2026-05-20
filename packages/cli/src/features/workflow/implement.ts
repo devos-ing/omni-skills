@@ -1,10 +1,10 @@
+import type { AgentAdapter } from "adapters";
 import type {
 	CodexUsageRecord,
 	ResolvedProjectConfig,
 	RunState,
 	WorkflowStage,
 } from "../../features/types";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
 import {
 	createDraftPrFromWorktree,
 	issueBranchName,

@@ -1,43 +1,29 @@
 import { Command } from "commander";
 import { parsePositiveInt } from "./args-utils";
 import type {
-	CliCommand,
 	CliParseOutput,
+	CliRuntime,
 	DaemonCommanderOptions,
 	OnboardCommanderOptions,
 	RunCommanderOptions,
 	StatusCommanderOptions,
 } from "./args.types";
+import type { LoadedConfig } from "./features/config";
 import { registerSkillsCommand } from "./features/skills/args";
 import { registerTaskCommand } from "./features/task-intake/args";
 
-export type { CliCommand, SkillsCommand, TaskCommand } from "./args.types";
+export type {
+	CliRuntime,
+	DaemonCommand,
+	OnboardCommand,
+	SkillsCommand,
+	StatusCommand,
+	TaskCommand,
+} from "./args.types";
 
-export function parseArgs(
-	argv: string[],
+export function createCliProgram(
+	runtime: CliRuntime,
 	output: CliParseOutput = {},
-): CliCommand {
-	let parsedCommand: CliCommand | undefined;
-	const program = createCliProgram((command) => {
-		parsedCommand = command;
-	}, output);
-
-	if (argv.slice(2).length === 0) {
-		program.help();
-	}
-
-	program.parse(argv, { from: "node" });
-	const command = parsedCommand;
-	if (!command) {
-		program.help();
-		throw new Error("Commander help did not exit");
-	}
-	return command;
-}
-
-function createCliProgram(
-	setCommand: (command: CliCommand) => void,
-	output: CliParseOutput,
 ): Command {
 	const program = new Command("devos")
 		.description(
@@ -49,26 +35,25 @@ function createCliProgram(
 	program.configureOutput(output);
 	program.helpCommand("help [command]", "display help for command");
 
-	registerRunCommand(program, setCommand);
-	registerDaemonCommand(program, setCommand);
-	registerOnboardCommand(program, setCommand);
-	registerStatusCommand(program, setCommand);
+	registerRunCommand(program, runtime);
+	registerDaemonCommand(program, runtime);
+	registerOnboardCommand(program, runtime);
+	registerStatusCommand(program, runtime);
 	program
 		.command("projects")
 		.description("list configured projects")
-		.action(() => {
-			setCommand({ kind: "projects" });
+		.action(async () => {
+			await withConfig(runtime, (config) =>
+				runtime.handleProjectsCommand(config),
+			);
 		});
-	registerTaskCommand(program, setCommand);
-	registerSkillsCommand(program, setCommand);
+	registerTaskCommand(program, runtime);
+	registerSkillsCommand(program, runtime);
 
 	return program;
 }
 
-function registerRunCommand(
-	program: Command,
-	setCommand: (command: CliCommand) => void,
-): void {
+function registerRunCommand(program: Command, runtime: CliRuntime): void {
 	program
 		.command("run")
 		.description("run workflow orchestration")
@@ -82,7 +67,7 @@ function registerRunCommand(
 		.option("--poll-interval-ms <MS>", "poll interval", parsePositiveInt)
 		.option("--max-poll-cycles <N>", "max polling cycles", parsePositiveInt)
 		.option("--isolated-worktrees", "enable isolated worktree mode")
-		.action((options: RunCommanderOptions, command: Command) => {
+		.action(async (options: RunCommanderOptions, command: Command) => {
 			if (options.project && options.allProjects) {
 				command.error("run command cannot use --project with --all-projects");
 			}
@@ -92,9 +77,8 @@ function registerRunCommand(
 				);
 			}
 			const isolatedWorktrees = options.isolatedWorktrees ? true : undefined;
-			setCommand({
-				kind: "run",
-				options: {
+			await withConfig(runtime, (config) =>
+				runtime.handleRunCommand(config, {
 					issueArg: options.issue,
 					projectId: options.project,
 					allProjects: options.allProjects === true,
@@ -105,22 +89,19 @@ function registerRunCommand(
 					pollIntervalMs: options.pollIntervalMs,
 					maxPollCycles: options.maxPollCycles,
 					...(isolatedWorktrees ? { isolatedWorktrees } : {}),
-				},
-			});
+				}),
+			);
 		});
 }
 
-function registerDaemonCommand(
-	program: Command,
-	setCommand: (command: CliCommand) => void,
-): void {
+function registerDaemonCommand(program: Command, runtime: CliRuntime): void {
 	program
 		.command("daemon")
 		.description("run the production or CLI-only daemon")
 		.option("--cli-only", "run only the CLI polling daemon")
 		.option("--poll-forever", "poll continuously in CLI-only mode")
 		.option("--all-projects", "poll all projects in CLI-only mode")
-		.action((options: DaemonCommanderOptions, command: Command) => {
+		.action(async (options: DaemonCommanderOptions, command: Command) => {
 			if ((options.pollForever || options.allProjects) && !options.cliOnly) {
 				command.error(
 					"daemon polling flags require --cli-only; use devos daemon for the full production daemon",
@@ -130,45 +111,52 @@ function registerDaemonCommand(
 				command.error("daemon --all-projects requires --poll-forever");
 			}
 			if (options.cliOnly) {
-				setCommand({
-					kind: "daemon",
-					cliOnly: true,
+				process.exitCode = await runtime.runCliCommandDaemonOnly({
+					cwd: runtime.cwd,
 					pollForever: options.pollForever ? true : undefined,
 					allProjects: options.allProjects ? true : undefined,
 				});
 				return;
 			}
-			setCommand({ kind: "daemon" });
+			process.exitCode = await runtime.runProductionDaemon({
+				cwd: runtime.cwd,
+			});
 		});
 }
 
-function registerOnboardCommand(
-	program: Command,
-	setCommand: (command: CliCommand) => void,
-): void {
+function registerOnboardCommand(program: Command, runtime: CliRuntime): void {
 	program
 		.command("onboard")
 		.description("run or validate guided onboarding")
 		.option("--check", "validate prerequisites without the wizard")
-		.action((options: OnboardCommanderOptions) => {
-			setCommand({ kind: "onboard", check: options.check === true });
+		.action(async (options: OnboardCommanderOptions) => {
+			await runtime.handleOnboardCommand(
+				{ check: options.check === true },
+				runtime.cwd,
+			);
 		});
 }
 
-function registerStatusCommand(
-	program: Command,
-	setCommand: (command: CliCommand) => void,
-): void {
+function registerStatusCommand(program: Command, runtime: CliRuntime): void {
 	program
 		.command("status")
 		.description("inspect persisted run state")
 		.requiredOption("--project <PROJECT_ID>", "configured project identifier")
 		.requiredOption("--issue <LINEAR_KEY>", "Linear issue key")
-		.action((options: StatusCommanderOptions) => {
-			setCommand({
-				kind: "status",
-				issueKey: options.issue ?? "",
-				projectId: options.project ?? "",
-			});
+		.action(async (options: StatusCommanderOptions) => {
+			await withConfig(runtime, (config) =>
+				runtime.handleStatusCommand(config, {
+					issueKey: options.issue ?? "",
+					projectId: options.project ?? "",
+				}),
+			);
 		});
+}
+
+async function withConfig(
+	runtime: CliRuntime,
+	action: (config: LoadedConfig) => Promise<void>,
+): Promise<void> {
+	const config = await runtime.loadConfig();
+	await action(config);
 }

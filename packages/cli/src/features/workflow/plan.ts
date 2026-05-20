@@ -1,9 +1,9 @@
+import type { AgentAdapter } from "adapters";
 import type {
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
 	RunState,
 } from "../../features/types";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
 import {
 	buildPlanComment,
 	buildPlanNeedsInfoComment,

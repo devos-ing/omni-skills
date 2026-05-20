@@ -1,3 +1,4 @@
+import { resolveAgentConfiguration } from "adapters";
 import type { AgentRow } from "devos-db";
 import { z } from "zod";
 import type { AgentRecord } from "../repositories.types";
@@ -56,7 +57,7 @@ export function validateAgentCreatePayload(
 	if (!result.success) {
 		return { ok: false, error: formatZodError(result.error) };
 	}
-	return { ok: true, value: result.data };
+	return normalizeAgentPayload(result.data);
 }
 
 export function validateAgentUpdatePayload(
@@ -72,7 +73,7 @@ export function validateAgentUpdatePayload(
 			error: "Malformed request: expected at least one field",
 		};
 	}
-	return { ok: true, value: result.data };
+	return normalizeAgentPayload(result.data);
 }
 
 export function toStoredAgentCreatePayload(
@@ -147,6 +148,33 @@ function parseStringList(value: string): string[] {
 		return [];
 	} catch {
 		return [];
+	}
+}
+
+function normalizeAgentPayload<
+	T extends { backend?: string; model?: string; runtime?: string },
+>(payload: T): ValidationResult<T> {
+	if (!payload.backend) {
+		return { ok: true, value: payload };
+	}
+	try {
+		const resolved = resolveAgentConfiguration(
+			{ backend: payload.backend, model: payload.model },
+			{ allowCustomModel: true },
+		);
+		return {
+			ok: true,
+			value: {
+				...payload,
+				backend: resolved.backend,
+				...(payload.model !== undefined ? { model: resolved.model } : {}),
+			},
+		};
+	} catch {
+		return {
+			ok: false,
+			error: "Malformed request: field 'backend' has invalid value",
+		};
 	}
 }
 

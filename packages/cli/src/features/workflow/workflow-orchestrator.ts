@@ -77,6 +77,7 @@ import type {
 } from "./workflow.types";
 
 export { buildRunLeaseOwnerId } from "./workflow-lease";
+import type { AgentAdapter } from "adapters";
 import type {
 	CodexUsageRecord,
 	ResolvedNotificationConfig,
@@ -84,7 +85,6 @@ import type {
 	RunOptions,
 	RunState,
 } from "../../features/types";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
 import { sortIssuesByPriority } from "../../integrations/linear";
 export type {
 	IssueProjectRoutingResult,

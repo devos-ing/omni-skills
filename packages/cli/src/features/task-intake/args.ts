@@ -1,10 +1,14 @@
 import { type Command, InvalidArgumentError } from "commander";
 import { parsePositiveInt } from "../../args-utils";
-import type { CliCommand, TaskCreateCommanderOptions } from "../../args.types";
+import type {
+	CliRuntime,
+	TaskCommand,
+	TaskCreateCommanderOptions,
+} from "../../args.types";
 
 export function registerTaskCommand(
 	program: Command,
-	setCommand: (command: CliCommand) => void,
+	runtime: CliRuntime,
 ): void {
 	const task = program.command("task").description("manage task intake");
 	task
@@ -24,10 +28,9 @@ export function registerTaskCommand(
 			parseClarificationAnswers,
 		)
 		.option("--json", "emit machine-readable output")
-		.action((requestTokens: string[], options: TaskCreateCommanderOptions) => {
-			setCommand({
-				kind: "task",
-				command: {
+		.action(
+			async (requestTokens: string[], options: TaskCreateCommanderOptions) => {
+				const command: TaskCommand = {
 					action: "create",
 					projectId: options.project,
 					request: options.request ?? joinRequest(requestTokens),
@@ -35,9 +38,11 @@ export function registerTaskCommand(
 					maxClarificationRounds: options.maxClarificationRounds,
 					clarificationAnswers: options.clarificationsJson,
 					json: options.json ? true : undefined,
-				},
-			});
-		});
+				};
+				const config = await runtime.loadConfig();
+				await runtime.handleTaskCommand(config, command);
+			},
+		);
 }
 
 function parseClarificationAnswers(

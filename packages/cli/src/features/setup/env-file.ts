@@ -64,15 +64,9 @@ export function buildEnvUpdates(
 }
 
 export function buildDatabaseEnvUpdates(
-	draft: Pick<
-		SetupDraft,
-		"baseBranch" | "linearApiKey" | "repoName" | "repoOwner"
-	>,
+	draft: Pick<SetupDraft, "linearApiKey">,
 ): Record<string, string | undefined> {
 	return {
-		GITHUB_REPO_OWNER: draft.repoOwner || undefined,
-		GITHUB_REPO_NAME: draft.repoName || undefined,
-		GITHUB_BASE_BRANCH: draft.baseBranch || undefined,
 		LINEAR_API_KEY: draft.linearApiKey || undefined,
 	};
 }

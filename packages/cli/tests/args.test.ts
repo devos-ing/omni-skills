@@ -1,10 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { parseArgs } from "../src/args";
-import { expectCommanderError } from "./args-test-helpers";
+import { captureWithRuntime, expectCommanderError } from "./args-test-helpers";
 
-describe("parseArgs help and core commands", () => {
-	it("prints root help when no command is provided", () => {
-		const result = expectCommanderError(["bun", "devos"]);
+describe("createCliProgram help and core commands", () => {
+	it("prints root help when no command is provided", async () => {
+		const result = await expectCommanderError(["bun", "devos"]);
 
 		expect(result.error.exitCode).toBe(0);
 		expect(result.stdout).toContain("Usage: devos [options] [command]");
@@ -13,9 +12,9 @@ describe("parseArgs help and core commands", () => {
 		expect(result.stderr).toBe("");
 	});
 
-	it("prints root help for help flags and command", () => {
-		const flagResult = expectCommanderError(["bun", "devos", "--help"]);
-		const commandResult = expectCommanderError(["bun", "devos", "help"]);
+	it("prints root help for help flags and command", async () => {
+		const flagResult = await expectCommanderError(["bun", "devos", "--help"]);
+		const commandResult = await expectCommanderError(["bun", "devos", "help"]);
 
 		expect(flagResult.error.exitCode).toBe(0);
 		expect(flagResult.stdout).toContain("Usage: devos [options] [command]");
@@ -23,16 +22,21 @@ describe("parseArgs help and core commands", () => {
 		expect(commandResult.stdout).toContain("Usage: devos [options] [command]");
 	});
 
-	it("prints subcommand help", () => {
-		const result = expectCommanderError(["bun", "devos", "run", "--help"]);
+	it("prints subcommand help", async () => {
+		const result = await expectCommanderError([
+			"bun",
+			"devos",
+			"run",
+			"--help",
+		]);
 
 		expect(result.error.exitCode).toBe(0);
 		expect(result.stdout).toContain("Usage: devos run [options]");
 		expect(result.stdout).toContain("--poll-forever");
 	});
 
-	it("parses status command", () => {
-		const parsed = parseArgs([
+	it("runs status command with loaded config", async () => {
+		const result = await captureWithRuntime([
 			"bun",
 			"devos",
 			"status",
@@ -42,15 +46,14 @@ describe("parseArgs help and core commands", () => {
 			"ABC-1",
 		]);
 
-		expect(parsed).toEqual({
-			kind: "status",
-			issueKey: "ABC-1",
-			projectId: "api",
-		});
+		expect(result.calls).toEqual([
+			{ name: "loadConfig" },
+			{ name: "status", payload: { issueKey: "ABC-1", projectId: "api" } },
+		]);
 	});
 
-	it("rejects status without required project", () => {
-		const result = expectCommanderError([
+	it("rejects status without required project", async () => {
+		const result = await expectCommanderError([
 			"bun",
 			"devos",
 			"status",
@@ -64,37 +67,50 @@ describe("parseArgs help and core commands", () => {
 		expect(result.stderr).toContain("Usage: devos status [options]");
 	});
 
-	it("parses daemon command", () => {
-		expect(parseArgs(["bun", "devos", "daemon"])).toEqual({
-			kind: "daemon",
-		});
+	it("runs production daemon command", async () => {
+		const result = await captureWithRuntime(["bun", "devos", "daemon"]);
+
+		expect(result.calls).toEqual([
+			{ name: "daemonProduction", payload: { cwd: "/tmp/devos-test" } },
+		]);
 	});
 
-	it("parses onboard commands", () => {
-		expect(parseArgs(["bun", "devos", "onboard"])).toEqual({
-			kind: "onboard",
-			check: false,
-		});
-		expect(parseArgs(["bun", "devos", "onboard", "--check"])).toEqual({
-			kind: "onboard",
-			check: true,
-		});
+	it("runs onboard commands without loading config", async () => {
+		expect(
+			(await captureWithRuntime(["bun", "devos", "onboard"])).calls,
+		).toEqual([
+			{
+				name: "onboard",
+				payload: { command: { check: false }, cwd: "/tmp/devos-test" },
+			},
+		]);
+		expect(
+			(await captureWithRuntime(["bun", "devos", "onboard", "--check"])).calls,
+		).toEqual([
+			{
+				name: "onboard",
+				payload: { command: { check: true }, cwd: "/tmp/devos-test" },
+			},
+		]);
 	});
 
-	it("parses projects command", () => {
-		expect(parseArgs(["bun", "devos", "projects"])).toEqual({
-			kind: "projects",
-		});
+	it("runs projects command with loaded config", async () => {
+		const result = await captureWithRuntime(["bun", "devos", "projects"]);
+
+		expect(result.calls).toEqual([
+			{ name: "loadConfig" },
+			{ name: "projects" },
+		]);
 	});
 
-	it("rejects unknown commands", () => {
-		const unknown = expectCommanderError([
+	it("rejects unknown commands", async () => {
+		const unknown = await expectCommanderError([
 			"bun",
 			"devos",
 			"unknown",
 			"--option",
 		]);
-		const legacySetup = expectCommanderError(["bun", "devos", "setup"]);
+		const legacySetup = await expectCommanderError(["bun", "devos", "setup"]);
 
 		expect(unknown.error.message).toBe("error: unknown command 'unknown'");
 		expect(unknown.stderr).toContain("Usage: devos [options] [command]");

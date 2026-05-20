@@ -11,6 +11,13 @@ export function toRealtimeProjectRecord(
 		externalProjectId: project.externalProjectId,
 		name: project.name,
 		description: project.description,
+		repoOwner: project.repoOwner,
+		repoName: project.repoName,
+		baseBranch: project.baseBranch,
+		localFolder: project.localFolder,
+		lead: project.lead,
+		category: project.category,
+		priority: project.priority,
 		createdAt: project.createdAt,
 		updatedAt: project.updatedAt,
 	};

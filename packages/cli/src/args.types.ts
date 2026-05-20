@@ -1,3 +1,4 @@
+import type { LoadedConfig } from "./features/config";
 import type { RunOptions } from "./features/types";
 
 export type CliParseOutput = {
@@ -89,17 +90,38 @@ export type TaskCommand = {
 	json?: boolean;
 };
 
-export type CliCommand =
-	| { kind: "run"; options: RunOptions }
-	| {
-			kind: "daemon";
-			cliOnly?: boolean;
-			pollForever?: boolean;
-			allProjects?: boolean;
-	  }
-	| { kind: "status"; issueKey: string; projectId: string }
-	| { kind: "projects" }
-	| { kind: "skills"; command: SkillsCommand }
-	| { kind: "task"; command: TaskCommand }
-	| { kind: "onboard"; check: boolean }
-	| { kind: "help" };
+export type OnboardCommand = { check: boolean };
+
+export type DaemonCommand = {
+	cliOnly?: boolean;
+	pollForever?: boolean;
+	allProjects?: boolean;
+};
+
+export type StatusCommand = {
+	issueKey: string;
+	projectId: string;
+};
+
+export type CliRuntime = {
+	cwd: string;
+	loadConfig(): Promise<LoadedConfig>;
+	handleOnboardCommand(command: OnboardCommand, cwd: string): Promise<void>;
+	runCliCommandDaemonOnly(options: {
+		cwd: string;
+		pollForever?: boolean;
+		allProjects?: boolean;
+	}): Promise<number>;
+	runProductionDaemon(options: { cwd: string }): Promise<number>;
+	handleRunCommand(config: LoadedConfig, options: RunOptions): Promise<void>;
+	handleProjectsCommand(config: LoadedConfig): Promise<void>;
+	handleStatusCommand(
+		config: LoadedConfig,
+		command: StatusCommand,
+	): Promise<void>;
+	handleSkillsCommand(
+		config: LoadedConfig,
+		command: SkillsCommand,
+	): Promise<void>;
+	handleTaskCommand(config: LoadedConfig, command: TaskCommand): Promise<void>;
+};

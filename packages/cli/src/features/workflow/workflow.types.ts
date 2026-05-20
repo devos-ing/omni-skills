@@ -1,3 +1,4 @@
+import type { AgentAdapter } from "adapters";
 import type {
 	ParentIssueRef,
 	PlannedSplitTask,
@@ -7,7 +8,6 @@ import type {
 	RunState,
 	WorkflowStage,
 } from "../../features/types";
-import type { AgentAdapter } from "../../integrations/agent-adapters";
 import type { RemoveWorktreeResult } from "../../integrations/github";
 import type { CreatedLinearIssueRef } from "../../integrations/linear";
 

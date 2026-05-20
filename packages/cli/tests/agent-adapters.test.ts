@@ -1,11 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { type AgentBackend, createAgentAdapter } from "adapters";
+import { ClaudeCodeAdapter } from "adapters/claude";
+import { CodexAdapter } from "adapters/codex";
 import type { ResolvedProjectConfig } from "../src/features/types";
-import { ClaudeCodeAdapter } from "../src/integrations/agent-adapters/claude-code";
-import { CodexAdapter } from "../src/integrations/agent-adapters/codex";
-import {
-	type AgentBackend,
-	createAgentAdapter,
-} from "../src/integrations/agent-adapters/index";
 
 function createConfig(
 	backend?: "codex" | "claude-code",

@@ -2,6 +2,7 @@ import { describe, expect, it, mock } from "bun:test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { AgentAdapter } from "adapters";
 import type { LoadedConfig } from "../src/features/config";
 import type {
 	IssueRef,
@@ -66,7 +67,6 @@ import {
 	prepareIsolatedExecutionWorkspace,
 	shouldUseIsolatedWorktree,
 } from "../src/features/workflow/workflow-worktree";
-import type { AgentAdapter } from "../src/integrations/agent-adapters";
 
 describe("resolvePollingSettings", () => {
 	const polling: PollingConfig = {

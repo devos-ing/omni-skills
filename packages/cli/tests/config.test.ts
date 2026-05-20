@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+	boardProjectsTable,
+	initializeServerDatabase,
+	projectBoardsTable,
+} from "devos-db";
+import {
 	loadConfig,
 	saveSqliteEnv,
 	sqliteEnvDbPath,
@@ -264,6 +269,62 @@ describe("loadConfig", () => {
 				"b@example.com",
 			]);
 		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("overlays project metadata from the server database when available", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		const database = await initializeServerDatabase(
+			path.join(tempDir, ".devos", "config", "server-db"),
+		);
+		try {
+			await database.db.insert(projectBoardsTable).values({
+				id: "local-board",
+				name: "Local Board",
+				description: null,
+				ownerId: "local",
+				createdAt: "2026-05-20T00:00:00.000Z",
+				updatedAt: "2026-05-20T00:00:00.000Z",
+			});
+			await database.db.insert(boardProjectsTable).values({
+				id: "default",
+				boardId: "local-board",
+				externalProjectId: "default",
+				name: "Database Project",
+				description: "From DB",
+				repoOwner: "octo",
+				repoName: "database-repo",
+				baseBranch: "trunk",
+				localFolder: path.join(tempDir, "repo"),
+				lead: "Roy",
+				category: "platform",
+				priority: 3,
+				ownerId: "local",
+				createdAt: "2026-05-20T00:00:00.000Z",
+				updatedAt: "2026-05-20T00:00:00.000Z",
+			});
+			await database.close();
+
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.name).toBe("Database Project");
+			expect(config.projects[0]?.workspacePath).toBe(
+				path.join(tempDir, "repo"),
+			);
+			expect(config.projects[0]?.executionPath).toBe(
+				path.join(tempDir, "repo"),
+			);
+			expect(config.projects[0]?.repo).toEqual({
+				owner: "octo",
+				name: "database-repo",
+				baseBranch: "trunk",
+			});
+		} finally {
+			if (!database.client.closed) {
+				await database.close();
+			}
 			await rm(tempDir, { recursive: true, force: true });
 		}
 	});
