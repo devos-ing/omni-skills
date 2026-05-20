@@ -1,11 +1,11 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "devos-db";
 import {
 	type ServerDatabase,
 	boardProjectsTable,
 	boardTasksTable,
 	projectBoardsTable,
 	taskAssigneesTable,
-} from "../db";
+} from "devos-db";
 import {
 	type BoardRepository,
 	type BoardStatusColumn,

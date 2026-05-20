@@ -1,6 +1,6 @@
 # DB Schema (Generated)
 
-Core server workflow schema lives in `packages/server/src/db/` and is initialized by `initializeServerDatabase`.
+Core server workflow schema lives in `packages/db/src/` and is initialized by `initializeServerDatabase`.
 
 ## Existing operational tables
 

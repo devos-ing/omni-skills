@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { EventEmitter } from "node:events";
 import type { IncomingMessage } from "node:http";
-import { WebSocket } from "ws";
 import {
 	boardTasksTable,
 	pollingEventsTable,
 	pollingStatusTable,
 	taskCommentsTable,
 	taskPullRequestsTable,
-} from "../src/db";
+} from "devos-db";
+import { WebSocket } from "ws";
 import type { RealtimeEventPayload } from "../src/realtime";
 import { WORKFLOW_DATA_WS_PATH } from "../src/workflow-data";
 import {

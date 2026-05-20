@@ -12,7 +12,7 @@ import {
 	projectBoardsTable,
 	skillsTable,
 	tokenUsageTable,
-} from "../src/db";
+} from "devos-db";
 
 export interface TestDatabase {
 	database: ServerDatabase;

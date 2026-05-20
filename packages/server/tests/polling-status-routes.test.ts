@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createHandleRequest } from "../src/app";
 import {
 	type ServerDatabase,
 	pollingEventsTable,
 	pollingStatusTable,
-} from "../src/db";
+} from "devos-db";
+import { createHandleRequest } from "../src/app";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

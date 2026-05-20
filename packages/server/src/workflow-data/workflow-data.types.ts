@@ -2,7 +2,7 @@ import type {
 	PollingEventLevel,
 	PollingState,
 	PollingStatusCounts,
-} from "../db";
+} from "devos-db";
 import type {
 	CreateTaskPayload,
 	UpdateTaskPayload,

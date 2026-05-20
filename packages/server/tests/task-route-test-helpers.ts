@@ -1,9 +1,9 @@
-import { createHandleRequest } from "../src/app";
 import {
 	type ServerDatabase,
 	boardProjectsTable,
 	projectBoardsTable,
-} from "../src/db";
+} from "devos-db";
+import { createHandleRequest } from "../src/app";
 import type { RealtimeEventPublisher } from "../src/realtime";
 
 export function createTaskRouteTestApp(

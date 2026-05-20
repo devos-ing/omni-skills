@@ -1,4 +1,4 @@
-import type { ServerDatabase } from "../db";
+import type { ServerDatabase } from "devos-db";
 import type { RealtimeEventPublisher } from "../realtime";
 import { createTaskRepository, createTaskService } from "../tasks";
 import {

@@ -2,17 +2,17 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { PGlite } from "@electric-sql/pglite";
-import { eq } from "drizzle-orm";
-import { createHandleRequest } from "../src/app";
-import { createBoardReadModels } from "../src/board-read-models";
+import { PGlite } from "devos-db";
+import { eq } from "devos-db";
 import {
 	type ServerDatabase,
 	boardProjectsTable,
 	boardTasksTable,
 	initializeServerDatabase,
 	projectBoardsTable,
-} from "../src/db";
+} from "devos-db";
+import { createHandleRequest } from "../src/app";
+import { createBoardReadModels } from "../src/board-read-models";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

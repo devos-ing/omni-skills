@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
-import type { ServerDatabase } from "../db";
-import { boardProjectsTable, projectBoardsTable } from "../db";
-import type { NewBoardProjectRow } from "../db";
+import { eq } from "devos-db";
+import type { ServerDatabase } from "devos-db";
+import { boardProjectsTable, projectBoardsTable } from "devos-db";
+import type { NewBoardProjectRow } from "devos-db";
 import type { ProjectRepository } from "./project-service.types";
 
 export function createProjectRepository(

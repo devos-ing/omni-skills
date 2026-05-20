@@ -1,9 +1,9 @@
-import { desc } from "drizzle-orm";
+import { desc } from "devos-db";
 import {
 	type ServerDatabase,
 	pollingEventsTable,
 	pollingStatusTable,
-} from "./db";
+} from "devos-db";
 import type {
 	PollingEventRecord,
 	PollingStatusRecord,

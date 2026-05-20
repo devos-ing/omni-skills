@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { AgentRow, BoardTaskRow, SkillRow } from "../src/db";
+import type { AgentRow, BoardTaskRow, SkillRow } from "devos-db";
 import { createProjectService } from "../src/projects";
 import type { ProjectRepository } from "../src/projects";
 import { createEntityCrudService } from "../src/routes/entity-crud-service";

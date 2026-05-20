@@ -3,7 +3,7 @@ import type {
 	TaskCommentRow,
 	TaskExecutionLogRow,
 	TaskExecutionStepRow,
-} from "../db";
+} from "devos-db";
 
 export type TaskActivityKind = "comment" | "created" | "execution";
 

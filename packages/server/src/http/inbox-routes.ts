@@ -1,4 +1,4 @@
-import type { ServerDatabase } from "../db";
+import type { ServerDatabase } from "devos-db";
 import { createInboxRepository, createInboxService } from "../inbox";
 import type { InboxServiceResult } from "../inbox";
 import type { RealtimeEventPublisher } from "../realtime";

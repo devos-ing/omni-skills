@@ -1,4 +1,8 @@
-import type { BoardTaskRow, NewBoardTaskRow, NewTaskCommentRow } from "../db";
+import type {
+	BoardTaskRow,
+	NewBoardTaskRow,
+	NewTaskCommentRow,
+} from "devos-db";
 import type {
 	CreateTaskPayload,
 	UpdateTaskPayload,

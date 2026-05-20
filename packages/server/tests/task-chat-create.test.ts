@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
+import { type BoardTaskRow, boardTasksTable } from "devos-db";
 import { createBoardRepository } from "../src/board";
-import { type BoardTaskRow, boardTasksTable } from "../src/db";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

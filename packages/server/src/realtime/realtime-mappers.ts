@@ -1,4 +1,4 @@
-import type { BoardProjectRow } from "../db";
+import type { BoardProjectRow } from "devos-db";
 import type { RealtimeProjectRecord } from "./realtime-events.types";
 
 export function toRealtimeProjectRecord(

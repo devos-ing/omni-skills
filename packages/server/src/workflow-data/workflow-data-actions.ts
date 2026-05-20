@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq } from "devos-db";
 import {
 	type ServerDatabase,
 	boardProjectsTable,
@@ -7,7 +7,7 @@ import {
 	recordPollingStatus,
 	taskCommentsTable,
 	taskPullRequestsTable,
-} from "../db";
+} from "devos-db";
 import type { RealtimeEventPublisher } from "../realtime";
 import type { createTaskService } from "../tasks";
 import type { BoardTaskApiRecord } from "../tasks/task-service.types";

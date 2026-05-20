@@ -1,8 +1,8 @@
+import { initializeServerDatabase } from "devos-db";
 import { loadConfig } from "devos/features/config";
 import { createHandleRequest } from "./app";
 import { createBoardRepository } from "./board";
 import { createCliDaemonClient } from "./daemon/daemon-client";
-import { initializeServerDatabase } from "./db";
 import { createExpressApp, listenExpressApp } from "./express-server";
 import type { ServerInstance } from "./express-server.types";
 import {

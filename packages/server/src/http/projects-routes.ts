@@ -1,4 +1,4 @@
-import type { ServerDatabase } from "../db";
+import type { ServerDatabase } from "devos-db";
 import { createProjectRepository, createProjectService } from "../projects";
 import type { ProjectServiceResult } from "../projects";
 import {

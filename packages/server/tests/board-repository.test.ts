@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { REQUIRED_BOARD_STATUSES, createBoardRepository } from "../src/board";
 import {
 	type NewBoardProjectRow,
 	type NewBoardTaskRow,
@@ -7,7 +6,8 @@ import {
 	boardProjectsTable,
 	boardTasksTable,
 	projectBoardsTable,
-} from "../src/db";
+} from "devos-db";
+import { REQUIRED_BOARD_STATUSES, createBoardRepository } from "../src/board";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

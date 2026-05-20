@@ -1,4 +1,4 @@
-import type { BoardProjectRow, NewBoardProjectRow } from "../db";
+import type { BoardProjectRow, NewBoardProjectRow } from "devos-db";
 import type {
 	CreateProjectPayload,
 	UpdateProjectPayload,

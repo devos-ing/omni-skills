@@ -1,7 +1,7 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+import type { ServerDatabase } from "devos-db";
 import type { RawData } from "ws";
-import type { ServerDatabase } from "../db";
 import type { RealtimeEventPublisher } from "../realtime";
 
 export interface WorkflowDataSocket {

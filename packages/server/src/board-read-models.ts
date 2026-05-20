@@ -1,17 +1,17 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "devos-db";
+import type { ServerDb } from "devos-db";
+import {
+	boardProjectsTable,
+	boardTasksTable,
+	projectBoardsTable,
+	taskAssigneesTable,
+} from "devos-db/schema";
 import type {
 	BoardReadModels,
 	ProjectBoardRecord,
 	ProjectBoardTaskRecord,
 	WorkspaceProjectRecord,
 } from "./app.types";
-import type { ServerDb } from "./db";
-import {
-	boardProjectsTable,
-	boardTasksTable,
-	projectBoardsTable,
-	taskAssigneesTable,
-} from "./db/schema";
 
 const LEGACY_PR_CREATED_STATUS = "pr_created";
 

@@ -1,4 +1,4 @@
-import type { BoardTaskRow } from "../db";
+import type { BoardTaskRow } from "devos-db";
 
 export interface TaskChatCreateAnswer {
 	question: string;

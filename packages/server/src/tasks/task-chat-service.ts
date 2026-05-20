@@ -1,6 +1,6 @@
+import type { BoardTaskRow } from "devos-db";
 import { z } from "zod";
 import type { CliExecutor } from "../app.types";
-import type { BoardTaskRow } from "../db";
 import type {
 	TaskChatCreateIntakeResult,
 	TaskChatCreateRequest,

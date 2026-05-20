@@ -1,4 +1,4 @@
-import type { AgentRow, SkillRow } from "../db";
+import type { AgentRow, SkillRow } from "devos-db";
 import type { AgentRecord } from "../repositories.types";
 import type {
 	AgentCreatePayload,

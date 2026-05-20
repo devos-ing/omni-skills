@@ -1,7 +1,7 @@
 import { cp, mkdtemp, rename, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { initializeServerDatabase } from "../packages/server/src/db";
+import { initializeServerDatabase } from "devos-db";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..");
 const DEFAULT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");

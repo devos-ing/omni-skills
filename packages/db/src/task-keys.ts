@@ -1,5 +1,5 @@
-import { boardTasksTable } from "./board-tasks.schema";
 import type { ServerDatabase } from "./database.types";
+import { boardTasksTable } from "./schema/board-tasks.schema";
 
 const TASK_KEY_PREFIX = "TASK";
 const TASK_KEY_WIDTH = 6;

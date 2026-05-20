@@ -1,6 +1,6 @@
-import { asc, eq } from "drizzle-orm";
-import type { ServerDatabase } from "../db";
-import { agentsTable, skillsTable } from "../db";
+import { asc, eq } from "devos-db";
+import type { ServerDatabase } from "devos-db";
+import { agentsTable, skillsTable } from "devos-db";
 import type { EntityCrudRepository } from "./entity-crud-service.types";
 
 export function createEntityCrudRepository(

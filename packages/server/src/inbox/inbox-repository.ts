@@ -1,6 +1,6 @@
-import { and, desc, eq } from "drizzle-orm";
-import type { InboxMessageRow, ServerDatabase } from "../db";
-import { inboxMessagesTable as table } from "../db";
+import { and, desc, eq } from "devos-db";
+import type { InboxMessageRow, ServerDatabase } from "devos-db";
+import { inboxMessagesTable as table } from "devos-db";
 import type {
 	CreateInboxMessageInput,
 	InboxMessageMetadata,

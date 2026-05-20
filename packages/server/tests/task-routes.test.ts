@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { boardTasksTable, taskTagsTable } from "../src/db";
+import { boardTasksTable, taskTagsTable } from "devos-db";
 import type { RealtimeEventPayload } from "../src/realtime";
 import {
 	type DrizzleServerTestDatabase,

@@ -2,10 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { PGlite } from "@electric-sql/pglite";
+import { PGlite } from "devos-db";
+import { initializeServerDatabase } from "devos-db";
 import { createHandleRequest } from "../src/app";
 import type { AppDeps } from "../src/app.types";
-import { initializeServerDatabase } from "../src/db";
 
 describe("agent migration routes", () => {
 	it("upgrades old agents tables before /api/agents reads", async () => {

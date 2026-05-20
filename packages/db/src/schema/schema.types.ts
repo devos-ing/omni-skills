@@ -17,7 +17,7 @@ import type {
 	taskPullRequestsTable,
 	taskTagsTable,
 	tokenUsageTable,
-} from "./schema";
+} from "./index";
 
 export type AgentRow = typeof agentsTable.$inferSelect;
 export type NewAgentRow = typeof agentsTable.$inferInsert;

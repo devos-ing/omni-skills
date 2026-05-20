@@ -1,5 +1,5 @@
+import type { AgentRow } from "devos-db";
 import { z } from "zod";
-import type { AgentRow } from "../db";
 import type { AgentRecord } from "../repositories.types";
 import type {
 	AgentCreatePayload,

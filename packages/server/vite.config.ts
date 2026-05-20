@@ -14,6 +14,7 @@ export default defineConfig({
 			external: [
 				/^node:/,
 				/^devos\//,
+				"devos-db",
 				"bun",
 				"express",
 				"express-openapi-validator",

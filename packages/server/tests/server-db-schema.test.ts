@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { PGlite } from "@electric-sql/pglite";
-import { eq } from "drizzle-orm";
+import { PGlite } from "devos-db";
+import { eq } from "devos-db";
 import {
 	type NewAgentRow,
 	type NewBoardProjectRow,
@@ -38,7 +38,7 @@ import {
 	taskPullRequestsTable,
 	taskTagsTable,
 	tokenUsageTable,
-} from "../src/db";
+} from "devos-db";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

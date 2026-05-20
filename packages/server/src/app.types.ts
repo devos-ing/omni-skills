@@ -1,3 +1,4 @@
+import type { ServerDatabase } from "devos-db";
 import type {
 	CliCommandExecutionHistoryEntry,
 	CliCommandExecutionResult,
@@ -6,7 +7,6 @@ import type {
 	NotificationServerRequest,
 } from "devos/features/server";
 import type { BoardRepository } from "./board";
-import type { ServerDatabase } from "./db";
 import type { ServerLogger } from "./logger.types";
 import type { NotificationService } from "./notifications/notifications-service";
 import type { RealtimeEventPublisher } from "./realtime";

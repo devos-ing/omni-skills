@@ -2,13 +2,13 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { eq } from "drizzle-orm";
+import { eq } from "devos-db";
 import {
 	ServerDatabaseInitializationError,
 	agentsTable,
 	initializeServerDatabase,
 	jobsTable,
-} from "../src/db";
+} from "devos-db";
 
 describe("server database initialization", () => {
 	it("initializes a fresh database from migrations only", async () => {

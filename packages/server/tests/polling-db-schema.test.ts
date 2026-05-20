@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { eq } from "drizzle-orm";
+import { eq } from "devos-db";
 import {
 	type NewPollingEventRow,
 	type NewPollingStatusRow,
 	pollingEventsTable,
 	pollingStatusTable,
-} from "../src/db";
+} from "devos-db";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,

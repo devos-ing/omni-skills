@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
+import type { ServerDatabase } from "devos-db";
 import { createHandleRequest } from "../src/app";
-import type { ServerDatabase } from "../src/db";
 import type {
 	RealtimeEventPayload,
 	RealtimeEventPublisher,

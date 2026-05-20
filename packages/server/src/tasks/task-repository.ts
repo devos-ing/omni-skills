@@ -1,5 +1,5 @@
-import { and, eq, inArray } from "drizzle-orm";
-import type { ServerDatabase } from "../db";
+import { and, eq, inArray } from "devos-db";
+import type { ServerDatabase } from "devos-db";
 import {
 	boardProjectsTable,
 	boardTasksTable,
@@ -8,8 +8,8 @@ import {
 	taskCommentsTable,
 	taskExecutionLogsTable,
 	taskExecutionStepsTable,
-} from "../db";
-import type { BoardTaskRow, NewBoardTaskRow } from "../db";
+} from "devos-db";
+import type { BoardTaskRow, NewBoardTaskRow } from "devos-db";
 import type { BoardTaskApiRecord, TaskRepository } from "./task-service.types";
 
 const HUMAN_ASSIGNEE_TYPE = "human";

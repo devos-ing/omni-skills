@@ -1,4 +1,4 @@
-import type { ServerDatabase } from "../db";
+import type { ServerDatabase } from "devos-db";
 import {
 	validateAgentCreatePayload,
 	validateAgentUpdatePayload,

@@ -9,8 +9,8 @@ const DEFAULT_DB_PATH = path.join(
 );
 const ROOT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");
 const DEFAULT_LIMIT = 20;
-const requireFromServer = createRequire(
-	path.join(REPO_ROOT, "packages", "server", "package.json"),
+const requireFromDb = createRequire(
+	path.join(REPO_ROOT, "packages", "db", "package.json"),
 );
 
 try {
@@ -129,7 +129,7 @@ function parseLimit(value: string) {
 }
 
 async function createClient(dbPath: string) {
-	const pglitePath = requireFromServer.resolve("@electric-sql/pglite");
+	const pglitePath = requireFromDb.resolve("@electric-sql/pglite");
 	const { PGlite } = await import(pglitePath);
 	return new PGlite(dbPath);
 }

@@ -1,5 +1,5 @@
-import type { BoardTaskRow, ServerDatabase } from "../db";
-import { taskPullRequestsTable } from "../db";
+import type { BoardTaskRow, ServerDatabase } from "devos-db";
+import { taskPullRequestsTable } from "devos-db";
 import type { BoardTaskApiRecord } from "../tasks/task-service.types";
 import type {
 	WorkflowBoardTaskRecord,

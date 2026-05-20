@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ServerDatabaseInitializationError } from "../src/db";
+import { ServerDatabaseInitializationError } from "devos-db";
 import { normalizeError } from "../src/logger";
 
 describe("server logger", () => {

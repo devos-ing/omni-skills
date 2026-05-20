@@ -1,11 +1,11 @@
-import { createHandleRequest } from "../src/app";
-import type { AppDeps } from "../src/app.types";
 import {
 	type BoardTaskRow,
 	type ServerDatabase,
 	boardProjectsTable,
 	projectBoardsTable,
-} from "../src/db";
+} from "devos-db";
+import { createHandleRequest } from "../src/app";
+import type { AppDeps } from "../src/app.types";
 
 export function createTaskChatCreateTestApp(
 	db: ServerDatabase["db"],

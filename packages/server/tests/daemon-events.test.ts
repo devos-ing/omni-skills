@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { EventEmitter } from "node:events";
 import type { IncomingMessage } from "node:http";
+import { boardTasksTable } from "devos-db";
 import { WebSocket } from "ws";
-import { boardTasksTable } from "../src/db";
 import type { RealtimeEventPayload } from "../src/realtime";
 import {
 	DAEMON_EVENTS_PATH,

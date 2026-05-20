@@ -1,6 +1,6 @@
+import type { ServerDatabase } from "devos-db";
 import { z } from "zod";
 import type { CliExecutor } from "../app.types";
-import type { ServerDatabase } from "../db";
 import type { RealtimeEventPublisher } from "../realtime";
 import { createTaskRepository, createTaskService } from "../tasks";
 import {
