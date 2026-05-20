@@ -149,6 +149,13 @@ function parseProject(value: unknown): WorkspaceProjectRecord {
 		externalProjectId: readNullableString(row, "externalProjectId"),
 		name: readString(row, "name"),
 		description: readNullableString(row, "description"),
+		repoOwner: readNullableString(row, "repoOwner"),
+		repoName: readNullableString(row, "repoName"),
+		baseBranch: readNullableString(row, "baseBranch"),
+		localFolder: readNullableString(row, "localFolder"),
+		lead: readNullableString(row, "lead"),
+		category: readNullableString(row, "category"),
+		priority: readNullableNumber(row, "priority"),
 		createdAt: readString(row, "createdAt"),
 		updatedAt: readString(row, "updatedAt"),
 	};
@@ -209,6 +216,17 @@ function readNullableString(
 ): string | null {
 	const value = record[key];
 	if (value === null || typeof value === "string") {
+		return value;
+	}
+	throw new Error(`Invalid realtime event field '${key}'`);
+}
+
+function readNullableNumber(
+	record: Record<string, unknown>,
+	key: string,
+): number | null {
+	const value = record[key];
+	if (value === null || typeof value === "number") {
 		return value;
 	}
 	throw new Error(`Invalid realtime event field '${key}'`);
