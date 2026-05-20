@@ -2,6 +2,11 @@
 
 Execution plans and plan artifacts are tracked under `docs/exec-plans/`.
 
+## Product Roadmaps
+
+1. Operator-first roadmap:
+   [docs/exec-plans/operator-first-roadmap.md](exec-plans/operator-first-roadmap.md)
+
 ## Workflow Plan Contract
 
 Planning output should remain concise and implementation-focused, including:

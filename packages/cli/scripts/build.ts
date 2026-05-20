@@ -9,6 +9,7 @@ interface BuildCliPackageOptions {
 }
 
 const packageRoot = path.resolve(import.meta.dir, "..");
+const serverDatabaseExport = "devos-server/db";
 
 export async function buildCliPackage(
 	options: BuildCliPackageOptions = {},
@@ -35,12 +36,22 @@ export async function copyPgliteRuntimeAssets(outdir: string): Promise<void> {
 export async function resolvePgliteRuntimeAssets(): Promise<
 	Array<{ fileName: (typeof PGLITE_RUNTIME_ASSETS)[number]; path: string }>
 > {
-	const pgliteEntry = await Bun.resolve("@electric-sql/pglite", packageRoot);
+	const pgliteEntry = await resolvePglitePackageEntry();
 	const pgliteDist = path.dirname(pgliteEntry);
 	return PGLITE_RUNTIME_ASSETS.map((fileName) => ({
 		fileName,
 		path: path.join(pgliteDist, fileName),
 	}));
+}
+
+export async function resolvePglitePackageEntry(
+	resolveModule: (specifier: string, parent: string) => Promise<string> = (
+		specifier,
+		parent,
+	) => Bun.resolve(specifier, parent),
+): Promise<string> {
+	const serverDbEntry = await resolveModule(serverDatabaseExport, packageRoot);
+	return resolveModule("@electric-sql/pglite", serverDbEntry);
 }
 
 function formatBuildErrors(logs: Array<{ message: string }>): string {
