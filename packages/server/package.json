@@ -27,6 +27,7 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"adapters": "workspace:*",
 		"devos-db": "workspace:*",
 		"devos": "workspace:*",
 		"express": "^5.2.1",

@@ -8,11 +8,11 @@ devos.ing is a multi-project orchestration hub that pulls eligible Linear issues
 
 1. `packages/cli/src/core/config.ts` is the only runtime config resolver for env vars and config files.
 2. `packages/cli/src/features/workflow/` owns stage transitions, retries, and orchestration order.
-3. Integration modules stay isolated under `packages/cli/src/integrations/` and `packages/cli/src/integrations/agent-adapters/`:
+3. Integration modules stay isolated under `packages/cli/src/integrations/`, while agent runtime adapters live in `packages/agent-adapters/`:
    - `packages/cli/src/integrations/linear/linear.ts`
    - `packages/cli/src/integrations/github/github.ts`
-   - `packages/cli/src/integrations/agent-adapters/codex.ts`
-   - `packages/cli/src/integrations/agent-adapters/claude-code.ts`
+   - `packages/agent-adapters/src/codex/index.ts`
+   - `packages/agent-adapters/src/claude/index.ts`
    - `packages/cli/src/integrations/notifications/notifications.ts`
 4. Server-owned cron runtime and scheduling live under `packages/server/src/cron/` (entrypoint: `packages/server/src/cron/run-cron.ts`).
 5. `packages/cli/src/features/workflow/state.ts` owns run-state paths and legacy fallback behavior.
@@ -57,8 +57,8 @@ flowchart TD
     state --> runFiles[.devos/projects/<project-id>/runs/*.json]
     state --> chatLogs[.devos/projects/<project-id>/chat-logs/*.json]
 
-    planning --> codexAdapter[packages/cli/src/integrations/agent-adapters/codex.ts]
-    planning --> claudeAdapter[packages/cli/src/integrations/agent-adapters/claude-code.ts]
+    planning --> codexAdapter[packages/agent-adapters/src/codex/index.ts]
+    planning --> claudeAdapter[packages/agent-adapters/src/claude/index.ts]
     implementing --> codexAdapter
     implementing --> claudeAdapter
     reviewTesting --> codexAdapter

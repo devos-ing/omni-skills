@@ -1,0 +1,239 @@
+import { describe, expect, it } from "bun:test";
+import type { AgentAdapterRuntimeConfig, AgentResult } from "../src";
+import {
+	agentConfigurationDoc,
+	availableAgentModels,
+	createAgentAdapter,
+	getAgentBackendDefinition,
+	listAgentBackends,
+	normalizeAgentBackend,
+	resolveAgentConfiguration,
+} from "../src";
+import {
+	ClaudeCodeAdapter,
+	extractSessionId as extractClaudeSessionId,
+	extractUsage as extractClaudeUsage,
+} from "../src/claude";
+import { CodexAdapter, extractSessionId, extractUsage } from "../src/codex";
+import { buildCodexRuntimeInvocation } from "../src/codex/docker";
+
+const config: AgentAdapterRuntimeConfig = {
+	workspacePath: "/tmp/work",
+	executionPath: "/tmp/work/repo",
+	codex: {
+		binary: "codex",
+		streamLogs: false,
+		model: "gpt-5.4",
+		reasoningEffort: "medium",
+		models: {
+			plan: "gpt-5.5",
+			implement: "gpt-5.3-codex",
+			reviewTest: "gpt-5.3-codex",
+			githubComment: "gpt-5.4-mini",
+		},
+		reasoningEfforts: {
+			plan: "high",
+			implement: "low",
+		},
+		fastModes: {
+			plan: true,
+			implement: false,
+			reviewTest: true,
+			githubComment: false,
+		},
+		plugins: ["github@openai-curated"],
+		skillsets: ["devos"],
+		configOverrides: {
+			"features.experimental_tools": "true",
+		},
+		sandbox: "workspace-write",
+		codexHome: "/tmp/codex",
+	},
+};
+
+describe("agent adapter factory", () => {
+	it("defaults to codex and honors backend overrides", () => {
+		expect(createAgentAdapter(config)).toBeInstanceOf(CodexAdapter);
+		expect(
+			createAgentAdapter({ ...config, agent: { backend: "claude-code" } }),
+		).toBeInstanceOf(ClaudeCodeAdapter);
+		expect(
+			createAgentAdapter(
+				{ ...config, agent: { backend: "claude-code" } },
+				"codex",
+			),
+		).toBeInstanceOf(CodexAdapter);
+	});
+
+	it("throws for unknown backend values", () => {
+		expect(() => createAgentAdapter(config, "not-a-backend" as never)).toThrow(
+			"Unknown agent backend: not-a-backend",
+		);
+	});
+
+	it("exposes backend definitions from the shared registry", () => {
+		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
+			["codex", "claude-code"],
+		);
+		expect(normalizeAgentBackend(" Claude-Code ")).toBe("claude-code");
+		const codexDefinition = getAgentBackendDefinition("codex");
+		expect(codexDefinition?.defaultModel).toBe("gpt-5.5");
+		expect(codexDefinition?.createAdapter(config)).toBeInstanceOf(CodexAdapter);
+	});
+
+	it("publishes model constants and configuration docs", () => {
+		expect(availableAgentModels.codex.map((model) => model.id)).toContain(
+			"gpt-5.3-codex",
+		);
+		expect(
+			availableAgentModels["claude-code"].map((model) => model.id),
+		).toEqual(["claude-sonnet-4-20250514", "claude-opus-4-20250514"]);
+		expect(agentConfigurationDoc.codex.defaults.models?.plan).toBe("gpt-5.5");
+		expect(
+			agentConfigurationDoc["claude-code"].env.map((field) => field.name),
+		).toContain("CLAUDE_CODE_MODEL");
+	});
+
+	it("resolves known and custom models without hard-blocking custom ids", () => {
+		const known = resolveAgentConfiguration({
+			backend: "codex",
+			model: "gpt-5.4-mini",
+		});
+		expect(known.isKnownModel).toBe(true);
+		expect(known.modelDefinition?.id).toBe("gpt-5.4-mini");
+
+		const custom = resolveAgentConfiguration({
+			backend: "codex",
+			model: "gpt-custom-future",
+		});
+		expect(custom).toMatchObject({
+			backend: "codex",
+			model: "gpt-custom-future",
+			isKnownModel: false,
+		});
+	});
+
+	it("can strictly reject custom models when requested", () => {
+		expect(() =>
+			resolveAgentConfiguration(
+				{ backend: "codex", model: "gpt-custom-future" },
+				{ allowCustomModel: false },
+			),
+		).toThrow("Unknown codex model: gpt-custom-future");
+	});
+});
+
+describe("codex adapter", () => {
+	it("extracts session ids and latest usage from jsonl output", () => {
+		const jsonl = [
+			`{"type":"thread.started","thread_id":"abc-123"}`,
+			`{"type":"turn.progress","usage":{"prompt_tokens":10,"completion_tokens":2}}`,
+			"not json",
+			`{"type":"turn.completed","usage":{"inputTokens":20,"outputTokens":5}}`,
+		].join("\n");
+
+		expect(extractSessionId(jsonl)).toBe("abc-123");
+		expect(extractUsage(jsonl)).toEqual({
+			inputTokens: 20,
+			outputTokens: 5,
+			totalTokens: 25,
+		});
+	});
+
+	it("builds stage-specific command arguments", async () => {
+		const adapter = new CodexAdapter(config);
+		const calls: string[][] = [];
+		(
+			adapter as unknown as {
+				runCodex: (args: string[]) => Promise<AgentResult>;
+			}
+		).runCodex = async (args: string[]) => {
+			calls.push(args);
+			return { finalMessage: "", stdout: "" };
+		};
+		(
+			adapter as unknown as { nextOutputFile: () => Promise<string> }
+		).nextOutputFile = async () => "/tmp/out.txt";
+
+		await adapter.runPlan("plan prompt");
+		await adapter.resume("session-1", "implement prompt");
+		await adapter.runGithubComment("comment prompt");
+
+		expect(calls[0]).toContain("gpt-5.5");
+		expect(calls[0]).toContain('model_reasoning_effort="high"');
+		expect(calls[0]).toContain('service_tier="fast"');
+		expect(calls[1]).toContain("gpt-5.3-codex");
+		expect(calls[1]).toContain('model_reasoning_effort="low"');
+		expect(calls[2]).toContain("gpt-5.4-mini");
+		expect(calls[2]).not.toContain('service_tier="fast"');
+	});
+
+	it("wraps codex args in docker when configured", () => {
+		const invocation = buildCodexRuntimeInvocation(
+			{
+				...config,
+				codex: {
+					...config.codex,
+					docker: { enabled: true, image: "codex:latest" },
+				},
+			},
+			[
+				"exec",
+				"--cd",
+				"/tmp/work/repo",
+				"--output-last-message",
+				"/tmp/work/.devos/tmp/out.txt",
+				"prompt",
+			],
+		);
+
+		expect(invocation.command).toBe("docker");
+		expect(invocation.args).toContain("codex:latest");
+		expect(invocation.args).toContain("/workspace/repo");
+		expect(invocation.args).toContain("/workspace/.devos/tmp/out.txt");
+	});
+});
+
+describe("claude code adapter", () => {
+	it("builds common args from generic agent config", () => {
+		const adapter = new ClaudeCodeAdapter({
+			...config,
+			agent: {
+				model: "claude-sonnet-4-20250514",
+				maxTurns: 7,
+				allowedTools: ["Bash", "Read", "Edit"],
+				permissionMode: "plan",
+			},
+		});
+		const args = (
+			adapter as unknown as { buildCommonArgs: () => string[] }
+		).buildCommonArgs();
+
+		expect(args).toEqual([
+			"--output-format",
+			"json",
+			"--permission-mode",
+			"plan",
+			"--model",
+			"claude-sonnet-4-20250514",
+			"--max-turns",
+			"7",
+			"--allowedTools",
+			"Bash",
+			"Read",
+			"Edit",
+		]);
+	});
+
+	it("extracts normalized result fields from json output", () => {
+		const json =
+			'{"session_id":"abc-123","result":"done","usage":{"input_tokens":3,"output_tokens":4,"total_tokens":7}}';
+
+		expect(extractClaudeSessionId(json)).toBe("abc-123");
+		expect(extractClaudeUsage(json)).toEqual({
+			inputTokens: 3,
+			outputTokens: 4,
+			totalTokens: 7,
+		});
+	});
+});
