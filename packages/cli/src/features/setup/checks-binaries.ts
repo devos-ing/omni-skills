@@ -133,4 +133,31 @@ export async function addBinaryChecks(
 			});
 		}
 	}
+
+	const cursorBackends = config.projects.filter(
+		(project) => project.agent?.backend === "cursor-agent",
+	);
+	if (cursorBackends.length > 0) {
+		const cursorBinary = cursorBackends[0]?.cursor?.binary ?? "cursor-agent";
+		const cursor = await safeRun(
+			commandRunner,
+			cursorBinary,
+			["--version"],
+			commandCwd,
+		);
+		checks.push(
+			cursor.code === 0
+				? {
+						name: "Cursor Agent binary",
+						status: "pass",
+						message: `${cursorBinary} is available`,
+					}
+				: {
+						name: "Cursor Agent binary",
+						status: "fail",
+						message:
+							"cursor-agent binary not found. Install Cursor Agent CLI and run: cursor-agent login",
+					},
+		);
+	}
 }

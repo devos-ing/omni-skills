@@ -19,7 +19,7 @@ export interface AgentAdapter {
 	runGithubComment(prompt: string): Promise<AgentResult>;
 }
 
-export type AgentBackend = "codex" | "claude-code";
+export type AgentBackend = "codex" | "claude-code" | "cursor-agent";
 
 export interface AgentAdapterRuntimeConfig {
 	workspacePath: string;
@@ -60,6 +60,13 @@ export interface AgentAdapterRuntimeConfig {
 			executionPath?: string;
 			codexHomePath?: string;
 		};
+	};
+	cursor?: {
+		binary: string;
+		streamLogs: boolean;
+		model?: string;
+		force?: boolean;
+		apiKey?: string;
 	};
 	agent?: {
 		backend?: AgentBackend;

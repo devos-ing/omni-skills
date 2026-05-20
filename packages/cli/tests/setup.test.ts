@@ -568,6 +568,41 @@ describe("setup helpers", () => {
 		});
 	});
 
+	it("reports cursor agent provider and binary failures", async () => {
+		const checks = await collectSetupChecks(
+			"/tmp/demo",
+			setupCheckDeps({
+				loadConfig: async () =>
+					loadedConfig({
+						linearApiKey: "lin_secret_123",
+						agentBackend: "cursor-agent",
+					}),
+				access: async () => {},
+				readFile: async () => "",
+				runCommand: async (command) =>
+					command === "cursor-agent"
+						? {
+								code: 1,
+								stdout: "",
+								stderr: "command not found: cursor-agent",
+							}
+						: okCommand(),
+			}),
+		);
+
+		expect(checks).toContainEqual({
+			name: "LLM provider",
+			status: "pass",
+			message: "configured: cursor-agent",
+		});
+		expect(checks).toContainEqual({
+			name: "Cursor Agent binary",
+			status: "fail",
+			message:
+				"cursor-agent binary not found. Install Cursor Agent CLI and run: cursor-agent login",
+		});
+	});
+
 	it("reports missing Linear API key", async () => {
 		const checks = await collectSetupChecks(
 			"/tmp/demo",
@@ -791,7 +826,7 @@ function loadedConfig({
 }: {
 	linearApiKey: string;
 	dockerEnabled?: boolean;
-	agentBackend?: "codex" | "claude-code";
+	agentBackend?: "codex" | "claude-code" | "cursor-agent";
 }): LoadedConfig {
 	return {
 		projects: [
@@ -822,6 +857,10 @@ function loadedConfig({
 								image: "codex:latest",
 							}
 						: undefined,
+				},
+				cursor: {
+					binary: "cursor-agent",
+					streamLogs: false,
 				},
 				github: {
 					useGhCli: true,

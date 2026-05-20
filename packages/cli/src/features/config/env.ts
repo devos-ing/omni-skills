@@ -150,6 +150,16 @@ export function buildEnvBase(
 				codexHomePath: normalizeOptionalValue(env.CODEX_DOCKER_CODEX_HOME_PATH),
 			},
 		},
+		cursor: {
+			binary: normalizeOptionalValue(env.CURSOR_AGENT_BINARY) ?? "cursor-agent",
+			streamLogs: env.PIV_DEV_MODE === "1" || env.PIV_PRINT_CODEX_LOGS === "1",
+			model: normalizeOptionalValue(env.CURSOR_AGENT_MODEL),
+			force: normalizeBooleanEnvValue(
+				env.CURSOR_AGENT_FORCE,
+				"CURSOR_AGENT_FORCE",
+			),
+			apiKey: normalizeOptionalValue(env.CURSOR_API_KEY),
+		},
 		skills: {
 			root: path.join(cwd, "skills"),
 			plan: path.join("piv-plan", "SKILL.md"),

@@ -9,6 +9,7 @@
 		"./claude": "./src/claude/index.ts",
 		"./claude-code": "./src/claude/index.ts",
 		"./codex": "./src/codex/index.ts",
+		"./cursor": "./src/cursor/index.ts",
 		"./codex/config": "./src/codex/config.ts",
 		"./codex/docker": "./src/codex/docker.ts",
 		"./codex/output": "./src/codex/output.ts",

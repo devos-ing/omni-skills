@@ -67,6 +67,10 @@ const envKeys = [
 	"CLAUDE_CODE_MODEL",
 	"CLAUDE_CODE_MAX_TURNS",
 	"CLAUDE_CODE_ALLOWED_TOOLS",
+	"CURSOR_AGENT_BINARY",
+	"CURSOR_AGENT_MODEL",
+	"CURSOR_AGENT_FORCE",
+	"CURSOR_API_KEY",
 	"PIV_SERVER_DATABASE_PATH",
 ] as const;
 
@@ -99,6 +103,8 @@ describe("loadConfig", () => {
 								key === "CODEX_DOCKER_CODEX_HOME_PATH" ||
 								key === "CLAUDE_CODE_MODEL" ||
 								key === "CLAUDE_CODE_ALLOWED_TOOLS" ||
+								key === "CURSOR_AGENT_MODEL" ||
+								key === "CURSOR_API_KEY" ||
 								key === "PIV_SERVER_DATABASE_PATH"
 							? ""
 							: key === "PIV_POLL_INTERVAL_MS"
@@ -108,17 +114,21 @@ describe("loadConfig", () => {
 									? ""
 									: key === "PIV_DEV_MODE" || key === "PIV_PRINT_CODEX_LOGS"
 										? "0"
-										: key === "PIV_EXIT_WHEN_IDLE"
-											? "1"
-											: key === "PIV_STALE_RUN_TIMEOUT_MS"
-												? "3600000"
-												: key === "PIV_ISSUE_CONCURRENCY"
+										: key === "CURSOR_AGENT_BINARY"
+											? "cursor-agent"
+											: key === "CURSOR_AGENT_FORCE"
+												? ""
+												: key === "PIV_EXIT_WHEN_IDLE"
 													? "1"
-													: key === "PIV_ISOLATED_WORKTREES"
-														? "0"
-														: key === "AGENT_BACKEND"
-															? ""
-															: key.toLowerCase();
+													: key === "PIV_STALE_RUN_TIMEOUT_MS"
+														? "3600000"
+														: key === "PIV_ISSUE_CONCURRENCY"
+															? "1"
+															: key === "PIV_ISOLATED_WORKTREES"
+																? "0"
+																: key === "AGENT_BACKEND"
+																	? ""
+																	: key.toLowerCase();
 		}
 	});
 
@@ -390,6 +400,12 @@ describe("loadConfig", () => {
 		expect(config.projects[0]?.agent?.backend).toBe("claude-code");
 	});
 
+	it("loads Cursor Agent backend from AGENT_BACKEND env", async () => {
+		process.env.AGENT_BACKEND = "cursor-agent";
+		const config = await loadConfig(process.cwd());
+		expect(config.projects[0]?.agent?.backend).toBe("cursor-agent");
+	});
+
 	it("defaults agent backend to undefined when not set", async () => {
 		process.env.AGENT_BACKEND = "";
 		const config = await loadConfig(process.cwd());
@@ -399,8 +415,25 @@ describe("loadConfig", () => {
 	it("rejects invalid AGENT_BACKEND value", async () => {
 		process.env.AGENT_BACKEND = "invalid-backend";
 		await expect(loadConfig(process.cwd())).rejects.toThrow(
-			"Invalid AGENT_BACKEND value: 'invalid-backend'",
+			"Must be 'codex', 'claude-code', or 'cursor-agent'",
 		);
+	});
+
+	it("loads Cursor Agent settings from env", async () => {
+		process.env.CURSOR_AGENT_BINARY = "custom-cursor-agent";
+		process.env.CURSOR_AGENT_MODEL = "gpt-5";
+		process.env.CURSOR_AGENT_FORCE = "true";
+		process.env.CURSOR_API_KEY = "cursor_secret";
+
+		const config = await loadConfig(process.cwd());
+
+		expect(config.projects[0]?.cursor).toEqual({
+			binary: "custom-cursor-agent",
+			streamLogs: false,
+			model: "gpt-5",
+			force: true,
+			apiKey: "cursor_secret",
+		});
 	});
 
 	it("loads Claude Code model from CLAUDE_CODE_MODEL env", async () => {

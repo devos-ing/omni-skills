@@ -23,6 +23,14 @@ import {
 	CODEX_DESCRIPTION,
 	CODEX_LABEL,
 } from "./codex/constants";
+import { CursorAgentAdapter, cursorConfigurationDoc } from "./cursor";
+import {
+	CURSOR_AVAILABLE_MODELS,
+	CURSOR_BACKEND,
+	CURSOR_DEFAULT_MODEL,
+	CURSOR_DESCRIPTION,
+	CURSOR_LABEL,
+} from "./cursor/constants";
 
 const agentBackendDefinitions = {
 	[CODEX_BACKEND]: {
@@ -42,6 +50,15 @@ const agentBackendDefinitions = {
 		availableModels: CLAUDE_AVAILABLE_MODELS,
 		configurationDoc: claudeConfigurationDoc,
 		createAdapter: (config) => new ClaudeCodeAdapter(config),
+	},
+	[CURSOR_BACKEND]: {
+		backend: CURSOR_BACKEND,
+		label: CURSOR_LABEL,
+		description: CURSOR_DESCRIPTION,
+		defaultModel: CURSOR_DEFAULT_MODEL,
+		availableModels: CURSOR_AVAILABLE_MODELS,
+		configurationDoc: cursorConfigurationDoc,
+		createAdapter: (config) => new CursorAgentAdapter(config),
 	},
 } satisfies Record<AgentBackend, AgentBackendDefinition>;
 

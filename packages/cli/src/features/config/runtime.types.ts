@@ -97,8 +97,15 @@ export interface ProjectRuntimeConfig {
 			codexHomePath?: string;
 		};
 	};
+	cursor?: {
+		binary: string;
+		streamLogs: boolean;
+		model?: string;
+		force?: boolean;
+		apiKey?: string;
+	};
 	agent?: {
-		backend?: "codex" | "claude-code";
+		backend?: "codex" | "claude-code" | "cursor-agent";
 		model?: string;
 		maxTurns?: number;
 		allowedTools?: string[];
