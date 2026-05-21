@@ -1,5 +1,5 @@
 import type { LoadedConfig } from "devos/features/config";
-import { logger, normalizeError } from "devos/utils/logger";
+import { logger, normalizeError } from "../../logger";
 import {
 	applyCronJobSkillOverrides,
 	selectCronJobForImmediateRun,

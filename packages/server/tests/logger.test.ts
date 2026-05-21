@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ServerDatabaseInitializationError } from "devos-db";
-import { normalizeError } from "../src/logger";
+import { createServerLogger, normalizeError } from "../src/logger";
 
 describe("server logger", () => {
 	it("normalizes server database initialization details", () => {
@@ -22,5 +22,25 @@ describe("server logger", () => {
 				message: "Aborted",
 			},
 		});
+	});
+
+	it("supports warning logs with human context fields", () => {
+		let output = "";
+		const logger = createServerLogger({
+			color: false,
+			env: {},
+			now: () => new Date("2026-05-21T10:00:00.000Z"),
+			stderr: {
+				write(chunk: string) {
+					output += chunk;
+				},
+			},
+		});
+
+		logger.warn({ jobId: "daily", skipped: true }, "Skipping cron run");
+
+		expect(output).toBe(
+			"2026-05-21T10:00:00.000Z WARN  Skipping cron run jobId=daily skipped=true\n",
+		);
 	});
 });
