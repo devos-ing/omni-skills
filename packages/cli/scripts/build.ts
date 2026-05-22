@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 
 export const PGLITE_RUNTIME_ASSETS = ["pglite.data", "pglite.wasm"] as const;
@@ -24,6 +24,19 @@ export async function buildCliPackage(
 		throw new Error(formatBuildErrors(result.logs));
 	}
 	await copyPgliteRuntimeAssets(outdir);
+	await copyMigrationFiles(outdir);
+}
+
+export async function copyMigrationFiles(outdir: string): Promise<void> {
+	const dbSrcDir = path.resolve(packageRoot, "../db/src/migrations");
+	const destDir = path.join(outdir, "migrations");
+	await mkdir(destDir, { recursive: true });
+	const files = await readdir(dbSrcDir);
+	for (const file of files) {
+		if (file.endsWith(".sql")) {
+			await copyFile(path.join(dbSrcDir, file), path.join(destDir, file));
+		}
+	}
 }
 
 export async function copyPgliteRuntimeAssets(outdir: string): Promise<void> {
