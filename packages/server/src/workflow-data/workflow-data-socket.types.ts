@@ -3,6 +3,7 @@ import type { Duplex } from "node:stream";
 import type { ServerDatabase } from "devos-db";
 import type { RawData } from "ws";
 import type { RealtimeEventPublisher } from "../realtime";
+import type { WorkflowCommandBroker } from "./workflow-command-broker.types";
 
 export interface WorkflowDataSocket {
 	readyState: number;
@@ -16,6 +17,7 @@ export interface WorkflowDataSocketOptions {
 	server: Server;
 	path: string;
 	db: ServerDatabase["db"];
+	commandBroker?: WorkflowCommandBroker;
 	realtimeEvents?: RealtimeEventPublisher;
 }
 

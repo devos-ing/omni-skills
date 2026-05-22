@@ -2,7 +2,6 @@ import { initializeServerDatabase } from "devos-db";
 import { loadServerStartupConfig } from "devos/features/config";
 import { createHandleRequest } from "./app";
 import { createBoardRepository } from "./board";
-import { createCliDaemonClient } from "./daemon/daemon-client";
 import { createExpressApp, listenExpressApp } from "./express-server";
 import type { ServerInstance } from "./express-server.types";
 import {
@@ -23,16 +22,11 @@ import {
 	resolveServerWorkspacePath,
 } from "./startup-paths";
 import { WORKFLOW_DATA_WS_PATH } from "./workflow-data";
+import { createWorkflowCommandBroker } from "./workflow-data/workflow-command-broker";
 import { attachWorkflowDataSocket } from "./workflow-data/workflow-data-socket";
-import { attachCliStreamProxy } from "./ws/cli-stream-proxy";
-import {
-	DAEMON_EVENTS_PATH,
-	attachDaemonEventsSocket,
-} from "./ws/daemon-events";
 import { attachRealtimeEventsSocket } from "./ws/realtime-events";
 
 const DEFAULT_SERVER_PORT = 3001;
-const DEFAULT_CLI_DAEMON_WS_URL = "ws://127.0.0.1:3002";
 
 export async function startServer(
 	port = resolveServerPort(process.env),
@@ -45,22 +39,17 @@ export async function startServer(
 		workspacePath,
 		config,
 	);
-	const daemonUrl =
-		process.env.DEVOS_CLI_DAEMON_WS_URL ?? DEFAULT_CLI_DAEMON_WS_URL;
 	const pgliteDebug = resolvePgliteDebug(process.env);
-	logger.info(
-		{ port, databasePath, cwd, workspacePath, daemonUrl },
-		"Starting server",
-	);
+	logger.info({ port, databasePath, cwd, workspacePath }, "Starting server");
 	const serverDatabase = await initializeServerDatabase(databasePath, {
 		pgliteDebug,
 	});
-	const cliExecutor = createCliDaemonClient({ url: daemonUrl });
+	const commandBroker = createWorkflowCommandBroker();
 	const realtimeEvents = createRealtimeEventBus();
 	const app = createExpressApp(
 		createHandleRequest({
 			db: serverDatabase.db,
-			cliExecutor,
+			cliExecutor: commandBroker,
 			boardRepository: createBoardRepository(serverDatabase.db),
 			notificationSender: createNotificationSender({
 				resendApiKey: process.env.RESEND_API_KEY,
@@ -75,32 +64,20 @@ export async function startServer(
 		{ logger },
 	);
 	const server = await listenExpressApp(app, port);
-	const cliStreamProxy = attachCliStreamProxy({
-		server,
-		path: "/api/cli/stream",
-		daemonUrl,
-	});
 	const realtimeEventsSocket = attachRealtimeEventsSocket({
 		server,
 		path: "/api/events",
 		eventBus: realtimeEvents,
 	});
-	const daemonEventsSocket = attachDaemonEventsSocket({
-		server,
-		path: DAEMON_EVENTS_PATH,
-		db: serverDatabase.db,
-		realtimeEvents,
-	});
 	const workflowDataSocket = attachWorkflowDataSocket({
 		server,
 		path: WORKFLOW_DATA_WS_PATH,
 		db: serverDatabase.db,
+		commandBroker,
 		realtimeEvents,
 	});
 	server.once("close", () => {
-		void cliStreamProxy.close();
 		void realtimeEventsSocket.close();
-		void daemonEventsSocket.close();
 		void workflowDataSocket.close();
 	});
 	const address = server.address();

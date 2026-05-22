@@ -1,27 +1,16 @@
 export {
 	buildDaemonCommands,
-	runCliCommandDaemonOnly,
 	runProductionDaemon,
 } from "./daemon";
 export {
-	DEFAULT_CLI_DAEMON_PORT,
-	buildCliCommandDaemonExecutorOptions,
-	buildDaemonActionLogContext,
-	formatCliDaemonWsUrl,
-	logDaemonActionReceived,
-	logDaemonStreamEvent,
-	logMalformedDaemonFrame,
-	resolveCliDaemonPort,
-	startCliCommandDaemon,
-} from "./command-daemon";
-export {
-	parseCliDaemonInboundFrame,
-	serializeCliDaemonFrame,
-} from "./command-daemon-protocol";
+	resolveServerBaseUrl,
+	resolveWebUrl,
+	resolveWorkflowWorkerUrl,
+	resolveWorkflowWsUrl,
+} from "./daemon-urls";
 export {
 	buildAttachedPollerEnv,
 	startAttachedWorkflowPoller,
-	superviseCliCommandDaemonWithPoller,
 } from "./daemon-poller";
 export {
 	renderCliOnlyDaemonStartup,
@@ -46,7 +35,6 @@ export type {
 	DaemonSignalTarget,
 	DaemonSpawn,
 	DaemonSpawnOptions,
-	RunCliCommandDaemonOnlyOptions,
 	RunProductionDaemonOptions,
 } from "./daemon.types";
 export type {
@@ -54,10 +42,23 @@ export type {
 	AttachedPollerSpawn,
 	AttachedPollerSpawnOptions,
 } from "./daemon-poller";
+export {
+	buildWorkflowCommandWorkerExecutorOptions,
+	handleWorkerMessage,
+	parseWorkerInboundFrame,
+	startWorkflowCommandWorker,
+} from "./workflow-command-worker";
+export {
+	buildWorkerActionLogContext,
+	logWorkerActionReceived,
+	logWorkerStreamEvent,
+} from "./workflow-command-worker-logging";
 export type {
-	CliCommandDaemon,
-	CliCommandDaemonLogger,
-	CliCommandDaemonOptions,
-	CliDaemonInboundFrame,
-	CliDaemonOutboundFrame,
-} from "./command-daemon.types";
+	WorkflowCommandWorker,
+	WorkflowCommandWorkerLogger,
+	WorkflowCommandWorkerOptions,
+	WorkflowCommandWorkerScheduler,
+	WorkflowCommandWorkerSchedulerHandle,
+	WorkflowCommandWorkerSocket,
+	WorkflowCommandWorkerWebSocketConstructor,
+} from "./workflow-command-worker.types";

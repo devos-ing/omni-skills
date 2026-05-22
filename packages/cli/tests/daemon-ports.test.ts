@@ -6,11 +6,10 @@ import {
 import { resolveDaemonPorts } from "../src/features/daemon/daemon-ports";
 
 describe("daemon port resolution", () => {
-	it("uses distinct default ports for web, server, and cli daemon", () => {
+	it("uses distinct default ports for web and server", () => {
 		expect(resolveDaemonPorts({})).toEqual({
 			serverPort: "3001",
 			webPort: "3000",
-			cliDaemonPort: 3002,
 		});
 	});
 
@@ -18,20 +17,6 @@ describe("daemon port resolution", () => {
 		expect(() =>
 			buildDaemonCommands({ PIV_SERVER_PORT: "4101", PORT: "4101" }),
 		).toThrow("server (PIV_SERVER_PORT) and web (PORT)");
-
-		expect(() =>
-			buildDaemonCommands({
-				PIV_SERVER_PORT: "4101",
-				DEVOS_CLI_DAEMON_PORT: "4101",
-			}),
-		).toThrow("server (PIV_SERVER_PORT) and cli (DEVOS_CLI_DAEMON_PORT)");
-
-		expect(() =>
-			buildDaemonCommands({
-				PORT: "4102",
-				DEVOS_CLI_DAEMON_PORT: "4102",
-			}),
-		).toThrow("web (PORT) and cli (DEVOS_CLI_DAEMON_PORT)");
 	});
 
 	it("rejects invalid server and web ports", () => {
@@ -44,15 +29,15 @@ describe("daemon port resolution", () => {
 	});
 
 	it("validates port conflicts before starting production daemon children", async () => {
-		let commandDaemonStarted = false;
+		let workflowWorkerStarted = false;
 		let childSpawned = false;
 
 		await expect(
 			runProductionDaemon({
 				env: { PIV_SERVER_PORT: "4101", PORT: "4101" },
-				startCommandDaemon: () => {
-					commandDaemonStarted = true;
-					return { port: 4103, stop: async () => {} };
+				startWorkflowWorker: () => {
+					workflowWorkerStarted = true;
+					return { workerId: "worker-1", stop: async () => {} };
 				},
 				spawnChild: () => {
 					childSpawned = true;
@@ -61,7 +46,7 @@ describe("daemon port resolution", () => {
 			}),
 		).rejects.toThrow("Daemon port conflict");
 
-		expect(commandDaemonStarted).toBe(false);
+		expect(workflowWorkerStarted).toBe(false);
 		expect(childSpawned).toBe(false);
 	});
 });

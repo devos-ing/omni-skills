@@ -53,7 +53,7 @@ describe("realtime events", () => {
 			shouldHandleRealtimeUpgrade(request("/api/events"), "/api/events"),
 		).toBe(true);
 		expect(
-			shouldHandleRealtimeUpgrade(request("/api/cli/stream"), "/api/events"),
+			shouldHandleRealtimeUpgrade(request("/api/workflow"), "/api/events"),
 		).toBe(false);
 	});
 });

@@ -19,12 +19,6 @@ export type RunCommanderOptions = {
 	isolatedWorktrees?: boolean;
 };
 
-export type DaemonCommanderOptions = {
-	cliOnly?: boolean;
-	pollForever?: boolean;
-	allProjects?: boolean;
-};
-
 export type OnboardCommanderOptions = {
 	check?: boolean;
 };
@@ -92,11 +86,7 @@ export type TaskCommand = {
 
 export type OnboardCommand = { check: boolean };
 
-export type DaemonCommand = {
-	cliOnly?: boolean;
-	pollForever?: boolean;
-	allProjects?: boolean;
-};
+export type DaemonCommand = Record<string, never>;
 
 export type StatusCommand = {
 	issueKey: string;
@@ -107,11 +97,6 @@ export type CliRuntime = {
 	cwd: string;
 	loadConfig(): Promise<LoadedConfig>;
 	handleOnboardCommand(command: OnboardCommand, cwd: string): Promise<void>;
-	runCliCommandDaemonOnly(options: {
-		cwd: string;
-		pollForever?: boolean;
-		allProjects?: boolean;
-	}): Promise<number>;
 	runProductionDaemon(options: { cwd: string }): Promise<number>;
 	handleRunCommand(config: LoadedConfig, options: RunOptions): Promise<void>;
 	handleProjectsCommand(config: LoadedConfig): Promise<void>;

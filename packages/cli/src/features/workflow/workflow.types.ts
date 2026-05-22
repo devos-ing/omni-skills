@@ -104,6 +104,7 @@ export interface WorkflowLinearClient {
 }
 
 export interface WorkflowRuntime {
+	sleep?(ms: number): Promise<void>;
 	createLinearClient(config: ResolvedProjectConfig): WorkflowLinearClient;
 	createAgentAdapter(config: ResolvedProjectConfig): AgentAdapter;
 	ensureBaseBranchFresh(config: ResolvedProjectConfig): Promise<void>;

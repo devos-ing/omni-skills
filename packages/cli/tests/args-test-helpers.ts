@@ -22,10 +22,6 @@ export function createTestRuntime(calls: RuntimeCall[]): CliRuntime {
 		handleOnboardCommand: async (command, cwd) => {
 			calls.push({ name: "onboard", payload: { command, cwd } });
 		},
-		runCliCommandDaemonOnly: async (options) => {
-			calls.push({ name: "daemonCliOnly", payload: options });
-			return 0;
-		},
 		runProductionDaemon: async (options) => {
 			calls.push({ name: "daemonProduction", payload: options });
 			return 0;

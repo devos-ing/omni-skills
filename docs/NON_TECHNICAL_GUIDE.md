@@ -57,10 +57,10 @@ devos.ing runs agent stages using a configurable backend and model settings.
 
 ## Operator Setup and First Run
 
-1. Run `devos onboard` and answer prompts.
-2. Run `devos onboard --check` to validate config and required tooling.
-3. Run `bun run packages/cli/src/index.ts projects` to confirm project resolution.
-4. Start one scoped run: `bun run packages/cli/src/index.ts run --project <PROJECT_ID>`.
+1. Run `npx devos onboard` and answer prompts.
+2. Run `npx devos onboard --check` to validate config and required tooling.
+3. Run `npx devos projects` to confirm project resolution.
+4. Start one scoped run: `npx devos run --project <PROJECT_ID>`.
 5. Confirm run state appears under `.devos/projects/<project-id>/runs`.
 
 More detail:

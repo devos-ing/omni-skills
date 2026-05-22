@@ -56,6 +56,7 @@ import {
 	shouldSkipReviewOnlyRunState,
 	shouldSquashMergePullRequestForComplexityScore,
 	shouldStopPolling,
+	sleep,
 	withExecutionPathLock,
 } from "../src/features/workflow/workflow";
 import { processIssueQueueBounded } from "../src/features/workflow/workflow-queue";
@@ -114,6 +115,49 @@ describe("resolvePollingSettings", () => {
 			exitWhenIdle: false,
 			staleRunTimeoutMs: 3600000,
 		});
+	});
+
+	it("keeps polling helpers exportable from workflow", () => {
+		expect(typeof resolvePollingSettings).toBe("function");
+		expect(typeof shouldStopPolling).toBe("function");
+		expect(typeof sleep).toBe("function");
+	});
+});
+
+describe("runWorkflow no-project polling", () => {
+	it("returns immediately when no projects are configured outside poll-forever", async () => {
+		const createLinearClient = mock();
+		const runtime = { createLinearClient } as unknown as WorkflowRuntime;
+
+		await runWorkflow(
+			createLoadedConfigWithProjects([]),
+			{ poll: true },
+			runtime,
+		);
+
+		expect(createLinearClient).not.toHaveBeenCalled();
+	});
+
+	it("keeps poll-forever alive when no projects are configured", async () => {
+		const stopped = new Error("stop after first no-project sleep");
+		const sleepCalls: number[] = [];
+		const runtime = {
+			createLinearClient: mock(),
+			sleep: mock(async (ms: number) => {
+				sleepCalls.push(ms);
+				throw stopped;
+			}),
+		} as unknown as WorkflowRuntime;
+
+		await expect(
+			runWorkflow(
+				createLoadedConfigWithProjects([]),
+				{ pollForever: true },
+				runtime,
+			),
+		).rejects.toThrow(stopped);
+
+		expect(sleepCalls).toEqual([1]);
 	});
 });
 
@@ -2717,9 +2761,16 @@ describe("prepareImplementationBranchForStage", () => {
 });
 
 function createLoadedConfig(config: ResolvedProjectConfig): LoadedConfig {
+	return createLoadedConfigWithProjects([config]);
+}
+
+function createLoadedConfigWithProjects(
+	projects: ResolvedProjectConfig[],
+): LoadedConfig {
+	const baseConfig = projects[0] ?? createProject("default");
 	return {
-		projects: [config],
-		server: config.server,
+		projects,
+		server: baseConfig.server,
 		polling: {
 			intervalMs: 1,
 			maxCycles: 1,

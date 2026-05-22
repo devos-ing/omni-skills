@@ -112,13 +112,13 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 
 function deriveWsUrl(baseUrl: string): string {
 	if (!baseUrl) {
-		return "/api/cli/stream";
+		return "/api/workflow";
 	}
 	if (baseUrl.startsWith("http://")) {
-		return `${baseUrl.replace(/^http:\/\//, "ws://")}/api/cli/stream`;
+		return `${baseUrl.replace(/^http:\/\//, "ws://")}/api/workflow`;
 	}
 	if (baseUrl.startsWith("https://")) {
-		return `${baseUrl.replace(/^https:\/\//, "wss://")}/api/cli/stream`;
+		return `${baseUrl.replace(/^https:\/\//, "wss://")}/api/workflow`;
 	}
-	return `${baseUrl}/api/cli/stream`;
+	return `${baseUrl}/api/workflow`;
 }

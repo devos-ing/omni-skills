@@ -16,7 +16,7 @@ describe("web api client command streams", () => {
 			events.push(event),
 		);
 
-		expect(calls[0]?.url).toBe("ws://localhost:3000/api/cli/stream");
+		expect(calls[0]?.url).toBe("ws://localhost:3000/api/workflow");
 		expect(calls[0]?.body).toEqual({
 			type: "command",
 			requestId: expect.any(String),
@@ -32,13 +32,12 @@ describe("web api client command streams", () => {
 	});
 
 	it("resolves browser websocket stream endpoints", () => {
-		expect(resolveWebServerProxyWsUrl({})).toBe("/api/cli/stream");
+		expect(resolveWebServerProxyWsUrl({})).toBe("/api/workflow");
 		expect(
 			resolveWebServerProxyWsUrl({
-				DEVOS_CLI_DAEMON_WS_URL: "ws://127.0.0.1:3002",
-				NEXT_PUBLIC_DEVOS_SERVER_WS_URL: "ws://127.0.0.1:3001/api/cli/stream",
+				NEXT_PUBLIC_DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
 			}),
-		).toBe("ws://127.0.0.1:3001/api/cli/stream");
+		).toBe("ws://127.0.0.1:3001/api/workflow");
 	});
 });
 

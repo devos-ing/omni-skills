@@ -1,7 +1,7 @@
 import { createApiClient } from "./client";
 import type { ApiClient } from "./client.types";
 
-const WEB_SERVER_PROXY_WS_URL = "/api/cli/stream";
+const WEB_WORKFLOW_WS_URL = "/api/workflow";
 
 export function createWebApiClient(): ApiClient {
 	return createApiClient({
@@ -12,5 +12,5 @@ export function createWebApiClient(): ApiClient {
 export function resolveWebServerProxyWsUrl(
 	env: NodeJS.ProcessEnv = process.env,
 ): string {
-	return env.NEXT_PUBLIC_DEVOS_SERVER_WS_URL ?? WEB_SERVER_PROXY_WS_URL;
+	return env.NEXT_PUBLIC_DEVOS_WORKFLOW_WS_URL ?? WEB_WORKFLOW_WS_URL;
 }

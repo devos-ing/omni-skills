@@ -41,25 +41,24 @@ npx devos onboard --check
 
 # local workspace startup/build shortcuts
 bun run dev
-bun run dev:cli-daemon
+devos daemon
 bun run dev:server
 bun run dev:web
-devos daemon
 bun run build:server
 bun run build:web
 bun run build
 
 # inspect configured projects
-bun run packages/cli/src/index.ts projects
+npx devos projects
 
 # run one issue
-bun run packages/cli/src/index.ts run --project <PROJECT_ID> --issue ENG-123
+npx devos run --project <PROJECT_ID> --issue ENG-123
 
 # local polling mode
-bun run packages/cli/src/index.ts run --project <PROJECT_ID> --poll
+npx devos run --project <PROJECT_ID> --poll
 
 # daemon-owned continuous workflow polling
-bun run packages/cli/src/index.ts run --all-projects --poll-forever
+npx devos run --all-projects --poll-forever
 
 # unattended scheduled mode (server-owned cron runner)
 bun run --filter devos-server cron
@@ -83,13 +82,13 @@ bun run publish:version
 git push --follow-tags
 
 # inspect run state for one issue
-bun run packages/cli/src/index.ts status --project <PROJECT_ID> --issue ENG-123
+npx devos status --project <PROJECT_ID> --issue ENG-123
 
 # skills management
-bun run packages/cli/src/index.ts skills list [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
+npx devos skills list [--project <PROJECT_ID>]
+npx devos skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+npx devos skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+npx devos skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 After `bun install` and `bun run build`, use `npx devos ...` from the repo root to test the local workspace CLI package.
@@ -100,11 +99,9 @@ Use `bun run dev` from the repository root to start the local API server and web
 
 Use `bun run dev:server` or `bun run dev:web` when you only need one side of the local stack.
 
-Use `bun run dev:cli-daemon` to start only the CLI daemon websocket on `ws://127.0.0.1:3002` for local command streaming. This is the companion process the API server connects to when browser command streams go through `/api/cli/stream`.
+Use `devos daemon` to run the production API server, web UI, outbound CLI workflow worker, and workflow poller together in the foreground after production artifacts already exist. The command starts the server on `PIV_SERVER_PORT=3001`, the web UI on `PORT=3000`, and a supervised `run --all-projects --poll-forever` worker by default, with command and database websocket traffic sharing `DEVOS_WORKFLOW_WS_URL` at `/api/workflow`. Override those environment variables before starting when needed.
 
-Use `devos daemon` to run the production API server, web UI, CLI command daemon, and workflow poller together in the foreground after production artifacts already exist. The command starts the server on `PIV_SERVER_PORT=3001`, the web UI on `PORT=3000`, and a supervised `run --all-projects --poll-forever` worker by default, with the web UI proxying to `DEVOS_SERVER_BASE_URL=http://127.0.0.1:3001`. Override those environment variables before starting when needed.
-
-Server cron remains a separate scheduled automation runner. Start it with `bun run --filter devos-server cron` when you want server-owned cron jobs.
+Server cron remains a separate scheduled automation runner. Start it with `bun run --filter devos-server cron` when you want server-owned cron jobs, or use `bun run cron:once` to run the first enabled automation job once now.
 
 To run the full local development stack in Docker, use:
 
@@ -117,14 +114,6 @@ The Compose stack starts the web UI at `http://localhost:3000`, the API server h
 ```bash
 docker compose down
 ```
-
-## Workflow Summary
-
-1. Create or assign a Linear issue.
-2. devos.ing plans the task.
-3. devos.ing implements code changes and updates PR context.
-4. devos.ing runs review/testing and loops on failures until `done` or `blocked`.
-5. Review-only automations squash-merge completed PRs with `COMPLEXITY_SCORE < 5`; scores `>= 5` trigger a human approval email.
 
 ## Configuration Notes
 

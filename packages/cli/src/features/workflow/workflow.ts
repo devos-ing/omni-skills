@@ -37,6 +37,11 @@ import {
 	matchesIssueStateConfigValue,
 } from "./workflow-linear-state";
 import {
+	resolvePollingSettings,
+	shouldStopPolling,
+	sleep,
+} from "./workflow-polling";
+import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
 	dedupeIssuesByKey,
 	processIssueQueueBounded,
@@ -65,7 +70,6 @@ export { routeProjectsForIssueProjectId } from "./workflow-routing";
 import type { AgentAdapter } from "adapters";
 import type {
 	CodexUsageRecord,
-	PollingConfig,
 	PullRequestRef,
 	ResolvedNotificationConfig,
 	ResolvedProjectConfig,
@@ -84,6 +88,7 @@ export type {
 } from "./workflow.types";
 
 export { runAgentWithChatLog } from "./agent-chat-log";
+export { resolvePollingSettings, shouldStopPolling, sleep };
 
 const DEFAULT_PLANNER_COMPLEXITY_SCORE = 4;
 const HUMAN_REVIEW_COMPLEXITY_THRESHOLD = 5;
@@ -94,9 +99,10 @@ export async function runWorkflow(
 	options: RunOptions,
 	runtime: WorkflowRuntime = createWorkflowRuntime(),
 ): Promise<void> {
+	const globalPolling = resolvePollingSettings(config.polling, options);
 	const projects = pickProjects(config, options);
 	if (projects.length === 0) {
-		logger.info("No project selected.");
+		await handleNoProjectSelection(globalPolling, options, runtime);
 		return;
 	}
 
@@ -114,7 +120,6 @@ export async function runWorkflow(
 			return;
 		}
 	}
-	const globalPolling = resolvePollingSettings(config.polling, options);
 	let cycle = 0;
 
 	while (true) {
@@ -242,6 +247,31 @@ function pickProjects(
 	return config.projects.slice(0, 1);
 }
 
+async function handleNoProjectSelection(
+	polling: PollingSettings,
+	options: RunOptions,
+	runtime: WorkflowRuntime,
+): Promise<void> {
+	if (options.pollForever === true && !options.issueArg) {
+		while (true) {
+			logger.info(
+				{ pollIntervalMs: polling.intervalMs },
+				"No projects configured; waiting before next workflow poll.",
+			);
+			await sleepForWorkflow(runtime, polling.intervalMs);
+		}
+	}
+
+	logger.info("No project selected.");
+}
+
+async function sleepForWorkflow(
+	runtime: WorkflowRuntime,
+	intervalMs: number,
+): Promise<void> {
+	await (runtime.sleep?.(intervalMs) ?? sleep(intervalMs));
+}
+
 async function routeProjectContextsForTargetIssue(
 	contexts: Array<{
 		config: ResolvedProjectConfig;
@@ -289,25 +319,6 @@ async function routeProjectContextsForTargetIssue(
 		"Routed target task to project by source project id",
 	);
 	return selected;
-}
-
-export function shouldStopPolling(
-	polling: PollingSettings,
-	options: RunOptions,
-	cycle: number,
-	totalIssues: number,
-	cycleHadError = false,
-): boolean {
-	if (!polling.enabled || options.issueArg) {
-		return true;
-	}
-	if (polling.maxCycles !== undefined && cycle >= polling.maxCycles) {
-		return true;
-	}
-	if (totalIssues === 0 && polling.exitWhenIdle && !cycleHadError) {
-		return true;
-	}
-	return false;
 }
 
 function emitPollingProgress(
@@ -1048,28 +1059,6 @@ export function resolveEffectiveIssueConcurrency(
 	options: RunOptions,
 ): number {
 	return options.concurrency ?? config.workflow.issueConcurrency;
-}
-
-export function resolvePollingSettings(
-	pollingConfig: PollingConfig,
-	options: RunOptions,
-): PollingSettings {
-	const pollForever = options.pollForever === true;
-	return {
-		enabled: options.poll === true || pollForever,
-		intervalMs: options.pollIntervalMs ?? pollingConfig.intervalMs,
-		maxCycles: pollForever
-			? undefined
-			: (options.maxPollCycles ?? pollingConfig.maxCycles),
-		exitWhenIdle: pollForever
-			? false
-			: (options.exitWhenIdle ?? pollingConfig.exitWhenIdle),
-		staleRunTimeoutMs: pollingConfig.staleRunTimeoutMs,
-	};
-}
-
-export async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function buildIssueJobLogFields(

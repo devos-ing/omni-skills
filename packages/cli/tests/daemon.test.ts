@@ -9,7 +9,7 @@ import {
 } from "../src/features/daemon";
 
 describe("buildDaemonCommands", () => {
-	it("builds production server and web commands with default env", () => {
+	it("builds production server, web, and workflow poller commands", () => {
 		const commands = buildDaemonCommands({});
 
 		expect(commands).toEqual([
@@ -17,11 +17,7 @@ describe("buildDaemonCommands", () => {
 				name: "server",
 				command: "bun",
 				args: ["run", "--filter", "devos-server", "start"],
-				env: {
-					DEVOS_CLI_DAEMON_WS_URL: "ws://127.0.0.1:3002",
-					NODE_ENV: "production",
-					PIV_SERVER_PORT: "3001",
-				},
+				env: { NODE_ENV: "production", PIV_SERVER_PORT: "3001" },
 			},
 			{
 				name: "web",
@@ -31,7 +27,7 @@ describe("buildDaemonCommands", () => {
 					NODE_ENV: "production",
 					PORT: "3000",
 					DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
-					NEXT_PUBLIC_DEVOS_SERVER_WS_URL: "ws://127.0.0.1:3001/api/cli/stream",
+					NEXT_PUBLIC_DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
 				},
 			},
 			{
@@ -46,7 +42,6 @@ describe("buildDaemonCommands", () => {
 				],
 				env: {
 					DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
-					DEVOS_SERVER_EVENTS_WS_URL: "ws://127.0.0.1:3001/daemon/events",
 					DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
 					NODE_ENV: "production",
 				},
@@ -54,81 +49,35 @@ describe("buildDaemonCommands", () => {
 		]);
 	});
 
-	it("preserves configured ports and server base url", () => {
+	it("preserves configured ports, base URL, and workflow websocket URL", () => {
 		const commands = buildDaemonCommands({
 			NODE_ENV: "development",
 			PIV_SERVER_PORT: "4101",
 			PORT: "4102",
 			DEVOS_SERVER_BASE_URL: "https://api.example.test",
-			DEVOS_CLI_DAEMON_PORT: "4103",
+			DEVOS_WORKFLOW_WS_URL: "ws://workflow.example.test/socket",
 		});
 
 		expect(commands[0]?.env).toMatchObject({
 			NODE_ENV: "production",
 			PIV_SERVER_PORT: "4101",
-			DEVOS_CLI_DAEMON_WS_URL: "ws://127.0.0.1:4103",
 		});
 		expect(commands[1]?.env).toMatchObject({
 			NODE_ENV: "production",
 			PORT: "4102",
 			DEVOS_SERVER_BASE_URL: "https://api.example.test",
-			NEXT_PUBLIC_DEVOS_SERVER_WS_URL: "ws://127.0.0.1:4101/api/cli/stream",
+			NEXT_PUBLIC_DEVOS_WORKFLOW_WS_URL: "ws://workflow.example.test/socket",
 		});
-		expect(commands[2]).toMatchObject({
-			name: "workflow-poller",
-			command: "bun",
-			args: [
-				"run",
-				"packages/cli/src/index.ts",
-				"run",
-				"--all-projects",
-				"--poll-forever",
-			],
-			env: {
-				DEVOS_SERVER_BASE_URL: "https://api.example.test",
-				DEVOS_SERVER_EVENTS_WS_URL: "wss://api.example.test/daemon/events",
-				DEVOS_WORKFLOW_WS_URL: "wss://api.example.test/api/workflow",
-				NODE_ENV: "production",
-			},
-		});
-	});
-
-	it("preserves explicit workflow and daemon events websocket urls", () => {
-		const commands = buildDaemonCommands({
-			DEVOS_SERVER_EVENTS_WS_URL: "ws://events.example.test/socket",
+		expect(commands[2]?.env).toMatchObject({
+			DEVOS_SERVER_BASE_URL: "https://api.example.test",
 			DEVOS_WORKFLOW_WS_URL: "ws://workflow.example.test/socket",
+			NODE_ENV: "production",
 		});
-
-		expect(commands[2]?.env.DEVOS_SERVER_EVENTS_WS_URL).toBe(
-			"ws://events.example.test/socket",
-		);
-		expect(commands[2]?.env.DEVOS_WORKFLOW_WS_URL).toBe(
-			"ws://workflow.example.test/socket",
-		);
-	});
-
-	it("does not expose the CLI daemon websocket as the web stream target", () => {
-		const commands = buildDaemonCommands({
-			PIV_SERVER_PORT: "4101",
-			DEVOS_CLI_DAEMON_PORT: "4103",
-		});
-		const serverEnv = commands.find(
-			(command) => command.name === "server",
-		)?.env;
-		const webEnv = commands.find((command) => command.name === "web")?.env;
-
-		expect(serverEnv?.DEVOS_CLI_DAEMON_WS_URL).toBe("ws://127.0.0.1:4103");
-		expect(webEnv?.NEXT_PUBLIC_DEVOS_SERVER_WS_URL).toBe(
-			"ws://127.0.0.1:4101/api/cli/stream",
-		);
-		expect(webEnv?.NEXT_PUBLIC_DEVOS_SERVER_WS_URL).not.toBe(
-			serverEnv?.DEVOS_CLI_DAEMON_WS_URL,
-		);
 	});
 });
 
 describe("runProductionDaemon", () => {
-	it("starts both services in the requested cwd", async () => {
+	it("starts services and the outbound workflow worker in the requested cwd", async () => {
 		const harness = createDaemonHarness();
 
 		const done = runProductionDaemon({
@@ -136,8 +85,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
-			startCommandDaemon: harness.startCommandDaemon,
-			write: () => {},
+			startWorkflowWorker: harness.startWorkflowWorker,
 		});
 
 		expect(harness.calls).toEqual([
@@ -163,35 +111,33 @@ describe("runProductionDaemon", () => {
 				cwd: "/repo",
 			},
 		]);
-		expect(harness.commandDaemonEnv).toMatchObject({
+		expect(harness.workflowWorkerEnv).toMatchObject({
 			DEVOS_SERVER_BASE_URL: "http://127.0.0.1:3001",
-			DEVOS_SERVER_EVENTS_WS_URL: "ws://127.0.0.1:3001/daemon/events",
 			DEVOS_WORKFLOW_WS_URL: "ws://127.0.0.1:3001/api/workflow",
+			PIV_WORKSPACE_PATH: "/repo",
 		});
 		harness.children[0]?.emit("close", 0, null);
 		await expect(done).resolves.toBe(0);
-		expect(harness.commandDaemonStopped).toBe(true);
+		expect(harness.workflowWorkerStopped).toBe(true);
 	});
 
-	it("stops the sibling when one service exits", async () => {
+	it("stops siblings and the worker when one service exits", async () => {
 		const harness = createDaemonHarness();
 		const done = runProductionDaemon({
 			cwd: "/repo",
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
-			startCommandDaemon: harness.startCommandDaemon,
-			write: () => {},
+			startWorkflowWorker: harness.startWorkflowWorker,
 		});
 
 		harness.children[0]?.emit("close", 7, null);
 
 		await expect(done).resolves.toBe(7);
 		expect(harness.children[0]?.killed).toBe(false);
-		expect(harness.children[1]?.killed).toBe(true);
-		expect(harness.children[2]?.killed).toBe(true);
 		expect(harness.children[1]?.signals).toEqual(["SIGTERM"]);
 		expect(harness.children[2]?.signals).toEqual(["SIGTERM"]);
+		expect(harness.workflowWorkerStopped).toBe(true);
 	});
 
 	it("stops all services with the received process signal", async () => {
@@ -201,8 +147,7 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
-			startCommandDaemon: harness.startCommandDaemon,
-			write: () => {},
+			startWorkflowWorker: harness.startWorkflowWorker,
 		});
 
 		harness.signalTarget.emitSignal("SIGINT");
@@ -222,14 +167,14 @@ describe("runProductionDaemon", () => {
 			env: {},
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
-			startCommandDaemon: harness.startCommandDaemon,
-			write: () => {},
+			startWorkflowWorker: harness.startWorkflowWorker,
 		});
 
 		harness.children[0]?.emit("error", new Error("spawn EACCES"));
 
 		await expect(done).resolves.toBe(1);
 		expect(harness.children[1]?.signals).toEqual(["SIGTERM"]);
+		expect(harness.workflowWorkerStopped).toBe(true);
 	});
 });
 
@@ -265,11 +210,11 @@ function createDaemonHarness(): {
 	children: FakeDaemonChild[];
 	signalTarget: FakeSignalTarget;
 	spawnChild: DaemonSpawn;
-	startCommandDaemon: NonNullable<
+	startWorkflowWorker: NonNullable<
 		Parameters<typeof runProductionDaemon>[0]
-	>["startCommandDaemon"];
-	commandDaemonStopped: boolean;
-	commandDaemonEnv: NodeJS.ProcessEnv | undefined;
+	>["startWorkflowWorker"];
+	workflowWorkerEnv: NodeJS.ProcessEnv | undefined;
+	workflowWorkerStopped: boolean;
 } {
 	const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
 	const children: FakeDaemonChild[] = [];
@@ -283,16 +228,16 @@ function createDaemonHarness(): {
 	const harness = {
 		calls,
 		children,
-		commandDaemonEnv: undefined as NodeJS.ProcessEnv | undefined,
-		commandDaemonStopped: false,
 		signalTarget: new FakeSignalTarget(),
 		spawnChild,
-		startCommandDaemon: (options: { env?: NodeJS.ProcessEnv }) => {
-			harness.commandDaemonEnv = options.env;
+		workflowWorkerEnv: undefined as NodeJS.ProcessEnv | undefined,
+		workflowWorkerStopped: false,
+		startWorkflowWorker: (options: { env?: NodeJS.ProcessEnv }) => {
+			harness.workflowWorkerEnv = options.env;
 			return {
-				port: 3002,
+				workerId: "worker-1",
 				stop: async () => {
-					harness.commandDaemonStopped = true;
+					harness.workflowWorkerStopped = true;
 				},
 			};
 		},

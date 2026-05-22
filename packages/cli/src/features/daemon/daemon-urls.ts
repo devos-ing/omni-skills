@@ -28,3 +28,9 @@ function resolveWsUrl(baseUrl: string, pathname: string): string {
 	}
 	return url.toString();
 }
+
+export function resolveWorkflowWorkerUrl(env: NodeJS.ProcessEnv): string {
+	return (
+		env.DEVOS_WORKFLOW_WS_URL ?? resolveWorkflowWsUrl(resolveServerBaseUrl(env))
+	);
+}

@@ -8,7 +8,7 @@ and hosted cloud coordination.
 
 The core product direction is:
 
-1. Keep workflow execution owned by the CLI daemon.
+1. Keep workflow execution owned by outbound CLI workers.
 2. Make the server and web UI the operator control plane.
 3. Add Telegram, Linear OAuth, Slack, and Trello through typed integration
    boundaries instead of one-off workflow logic.
@@ -27,7 +27,7 @@ Implementation checkpoints:
 1. Add shared daemon control contracts for status, active runs, pause, resume,
    stop, restart, approve, reject, and logs.
 2. Add server routes that validate typed control intents and forward them to the
-   CLI daemon boundary.
+   CLI worker boundary.
 3. Keep workflow orchestration in `packages/cli`; server routes must not
    duplicate workflow business logic.
 4. Persist an audit trail for operator control actions.

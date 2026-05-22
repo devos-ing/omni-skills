@@ -1,13 +1,8 @@
 import { spawn } from "node:child_process";
 import type { Readable } from "node:stream";
 import { createDaemonProgressPrinter } from "./daemon-progress-printer";
+import { resolveServerBaseUrl, resolveWorkflowWsUrl } from "./daemon-urls";
 import { resolveDaemonWorkspaceEnv } from "./daemon-workspace-env";
-import type { DaemonReadinessHandle } from "./daemon.types";
-
-interface SignalTarget {
-	on(signal: NodeJS.Signals, listener: () => void): void;
-	off(signal: NodeJS.Signals, listener: () => void): void;
-}
 
 export interface AttachedPoller {
 	killed: boolean;
@@ -76,86 +71,20 @@ export function startAttachedWorkflowPoller(
 	return child;
 }
 
-export function superviseCliCommandDaemonWithPoller(
-	commandDaemon: { stop(): Promise<void> },
-	signalTarget: SignalTarget,
-	poller?: AttachedPoller,
-	readiness?: DaemonReadinessHandle,
-): Promise<number> {
-	return new Promise((resolve) => {
-		let resolved = false;
-
-		const finish = (code: number, signal?: NodeJS.Signals) => {
-			if (resolved) {
-				return;
-			}
-			resolved = true;
-			readiness?.cancel();
-			for (const item of SIGNALS) {
-				signalTarget.off(item, signalHandlers[item]);
-			}
-			if (poller && !poller.killed) {
-				poller.kill(signal ?? "SIGTERM");
-			}
-			void commandDaemon.stop().finally(() => resolve(code));
-		};
-
-		const signalHandlers = {
-			SIGINT: () => finish(0, "SIGINT"),
-			SIGTERM: () => finish(0, "SIGTERM"),
-		};
-
-		for (const signal of SIGNALS) {
-			signalTarget.on(signal, signalHandlers[signal]);
-		}
-
-		poller?.on("error", () => finish(1));
-		poller?.on("close", (code, signal) => {
-			finish(code ?? (signal ? 1 : 0));
-		});
-	});
-}
-
 export function buildAttachedPollerEnv(
 	env: NodeJS.ProcessEnv,
 	cwd?: string,
 ): NodeJS.ProcessEnv {
 	const workspaceEnv = resolveDaemonWorkspaceEnv(env, cwd);
-	const serverBaseUrl = env.DEVOS_SERVER_BASE_URL ?? "http://127.0.0.1:3001";
+	const serverBaseUrl = resolveServerBaseUrl(env);
 	return {
 		...workspaceEnv,
 		DEVOS_SERVER_BASE_URL: serverBaseUrl,
-		DEVOS_SERVER_EVENTS_WS_URL:
-			env.DEVOS_SERVER_EVENTS_WS_URL ?? resolveServerEventsWsUrl(serverBaseUrl),
 		DEVOS_WORKFLOW_WS_URL:
 			env.DEVOS_WORKFLOW_WS_URL ?? resolveWorkflowWsUrl(serverBaseUrl),
 		DEVOS_WORKFLOW_PROGRESS_STREAM: "1",
 	};
 }
 
-function resolveServerEventsWsUrl(serverBaseUrl: string): string {
-	const url = new URL("/daemon/events", serverBaseUrl);
-	if (url.protocol === "http:") {
-		url.protocol = "ws:";
-	}
-	if (url.protocol === "https:") {
-		url.protocol = "wss:";
-	}
-	return url.toString();
-}
-
-function resolveWorkflowWsUrl(serverBaseUrl: string): string {
-	const url = new URL("/api/workflow", serverBaseUrl);
-	if (url.protocol === "http:") {
-		url.protocol = "ws:";
-	}
-	if (url.protocol === "https:") {
-		url.protocol = "wss:";
-	}
-	return url.toString();
-}
-
 const spawnAttachedPoller: AttachedPollerSpawn = (command, args, options) =>
 	spawn(command, args, options);
-
-const SIGNALS = ["SIGINT", "SIGTERM"] as const;

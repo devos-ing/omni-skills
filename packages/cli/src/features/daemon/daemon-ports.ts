@@ -1,30 +1,24 @@
-import { resolveCliDaemonPort } from "./command-daemon";
-
 export const DEFAULT_SERVER_PORT = "3001";
 export const DEFAULT_WEB_PORT = "3000";
 
 export function resolveDaemonPorts(env: NodeJS.ProcessEnv): {
 	serverPort: string;
 	webPort: string;
-	cliDaemonPort: number;
 } {
 	const serverPort = parseDaemonPort(
 		env.PIV_SERVER_PORT ?? DEFAULT_SERVER_PORT,
 		"PIV_SERVER_PORT",
 	);
 	const webPort = parseDaemonPort(env.PORT ?? DEFAULT_WEB_PORT, "PORT");
-	const cliDaemonPort = resolveCliDaemonPort(env);
 
 	assertDistinctPorts([
 		["server", "PIV_SERVER_PORT", serverPort],
 		["web", "PORT", webPort],
-		["cli", "DEVOS_CLI_DAEMON_PORT", cliDaemonPort],
 	]);
 
 	return {
 		serverPort: String(serverPort),
 		webPort: String(webPort),
-		cliDaemonPort,
 	};
 }
 

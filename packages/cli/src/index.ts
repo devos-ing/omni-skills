@@ -10,10 +10,7 @@ import {
 } from "./commands/handlers";
 import { handleTaskCommand } from "./features/commands/task-command";
 import { loadConfig } from "./features/config";
-import {
-	runCliCommandDaemonOnly,
-	runProductionDaemon,
-} from "./features/daemon";
+import { runProductionDaemon } from "./features/daemon";
 import { PromptCancelledError } from "./features/prompts";
 import {
 	logger,
@@ -28,7 +25,6 @@ async function main(): Promise<void> {
 		cwd,
 		loadConfig: () => loadConfig(cwd),
 		handleOnboardCommand,
-		runCliCommandDaemonOnly,
 		runProductionDaemon,
 		handleRunCommand,
 		handleProjectsCommand,

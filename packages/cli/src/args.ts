@@ -3,7 +3,6 @@ import { parsePositiveInt } from "./args-utils";
 import type {
 	CliParseOutput,
 	CliRuntime,
-	DaemonCommanderOptions,
 	OnboardCommanderOptions,
 	RunCommanderOptions,
 	StatusCommanderOptions,
@@ -99,24 +98,8 @@ function registerRunCommand(program: Command, runtime: CliRuntime): void {
 function registerDaemonCommand(program: Command, runtime: CliRuntime): void {
 	program
 		.command("daemon")
-		.description("run the production or CLI-only daemon")
-		.option("--cli-only", "run only the CLI polling daemon")
-		.option("--poll-forever", "poll continuously in CLI-only mode")
-		.option("--all-projects", "poll all projects in CLI-only mode")
-		.action(async (options: DaemonCommanderOptions, command: Command) => {
-			if ((options.pollForever || options.allProjects) && !options.cliOnly) {
-				command.error(
-					"daemon polling flags require --cli-only; use devos daemon for the full production daemon",
-				);
-			}
-			if (options.cliOnly) {
-				process.exitCode = await runtime.runCliCommandDaemonOnly({
-					cwd: runtime.cwd,
-					pollForever: true,
-					allProjects: true,
-				});
-				return;
-			}
+		.description("run the production daemon")
+		.action(async () => {
 			process.exitCode = await runtime.runProductionDaemon({
 				cwd: runtime.cwd,
 			});

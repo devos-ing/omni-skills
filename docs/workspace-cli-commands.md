@@ -6,8 +6,6 @@ This guide documents the devos.ing ADHD workspace CLI commands exposed by `packa
 
 Use one of these forms:
 
-- Workspace source entrypoint: `bun run packages/cli/src/index.ts <command> ...`
-- Package-local entrypoint: `bun run src/index.ts <command> ...` (from `packages/cli`)
 - Local npx entrypoint: `npx devos <command> ...` (after `bun install` and `bun run build`)
 - Installed binary: `devos <command> ...` (help text form)
 
@@ -66,8 +64,8 @@ devos onboard [--check]
 Examples:
 
 ```bash
-bun run packages/cli/src/index.ts onboard
-bun run packages/cli/src/index.ts onboard --check
+npx devos onboard
+npx devos onboard --check
 ```
 
 Expected behavior:
@@ -91,7 +89,7 @@ devos projects
 Example:
 
 ```bash
-bun run packages/cli/src/index.ts projects
+npx devos projects
 ```
 
 Expected behavior:
@@ -115,10 +113,10 @@ devos run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll] [--no-exit-when-
 Examples:
 
 ```bash
-bun run packages/cli/src/index.ts run --project default --issue ENG-123
-bun run packages/cli/src/index.ts run --project default --poll
-bun run packages/cli/src/index.ts run --all-projects --poll
-bun run packages/cli/src/index.ts run --all-projects --poll-forever
+npx devos run --project default --issue ENG-123
+npx devos run --project default --poll
+npx devos run --all-projects --poll
+npx devos run --all-projects --poll-forever
 ```
 
 Expected behavior:
@@ -151,7 +149,7 @@ devos status --project <PROJECT_ID> --issue <LINEAR_KEY>
 Example:
 
 ```bash
-bun run packages/cli/src/index.ts status --project default --issue ENG-123
+npx devos status --project default --issue ENG-123
 ```
 
 Expected behavior:
@@ -179,10 +177,10 @@ devos task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--n
 Examples:
 
 ```bash
-bun run packages/cli/src/index.ts task create --request "Add retry handling for API timeouts" --project default
-bun run packages/cli/src/index.ts task create "Investigate flaky review stage"
-bun run packages/cli/src/index.ts task create --request - --project default
-bun run packages/cli/src/index.ts task create --request "Backfill missing docs" --non-interactive --clarifications-json '[{"question":"Scope?","answer":"CLI docs only"}]'
+npx devos task create --request "Add retry handling for API timeouts" --project default
+npx devos task create "Investigate flaky review stage"
+npx devos task create --request - --project default
+npx devos task create --request "Backfill missing docs" --non-interactive --clarifications-json '[{"question":"Scope?","answer":"CLI docs only"}]'
 ```
 
 Expected behavior:
@@ -221,10 +219,10 @@ devos skills remove <NAME> [--project <PROJECT_ID>]
 Examples:
 
 ```bash
-bun run packages/cli/src/index.ts skills list --project default
-bun run packages/cli/src/index.ts skills add --title "Docs Writer" --description "Writes release notes" --content "Use concise release note format." --project default
-bun run packages/cli/src/index.ts skills update docs-writer --description "Writes CLI release notes." --project default
-bun run packages/cli/src/index.ts skills remove docs-writer --project default
+npx devos skills list --project default
+npx devos skills add --title "Docs Writer" --description "Writes release notes" --content "Use concise release note format." --project default
+npx devos skills update docs-writer --description "Writes CLI release notes." --project default
+npx devos skills remove docs-writer --project default
 ```
 
 Expected behavior:

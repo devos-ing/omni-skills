@@ -146,5 +146,83 @@ export interface WorkflowDataService {
 	): Promise<unknown | undefined>;
 }
 
+export interface WorkflowCliCommandRequest {
+	action: string;
+	[key: string]: unknown;
+}
+
+export interface WorkflowCliCommandInvocation {
+	command: string;
+	args: string[];
+}
+
+export interface WorkflowCliCommandExecutionResult {
+	status: "succeeded" | "failed" | "rejected";
+	request: WorkflowCliCommandRequest;
+	invocation?: WorkflowCliCommandInvocation;
+	commandResult?: {
+		code: number;
+		stdout: string;
+		stderr: string;
+	};
+	error?: string;
+}
+
+export type WorkflowCliCommandStreamEvent =
+	| {
+			type: "start";
+			request: WorkflowCliCommandRequest;
+			invocation: WorkflowCliCommandInvocation;
+	  }
+	| { type: "stdout"; text: string }
+	| { type: "stderr"; text: string }
+	| { type: "progress"; event: unknown }
+	| { type: "error"; error: string }
+	| { type: "complete"; result: WorkflowCliCommandExecutionResult };
+
+export interface WorkflowPingFrame {
+	type: "ping";
+	requestId: string;
+}
+
+export interface WorkflowPongFrame {
+	type: "pong";
+	requestId: string;
+}
+
+export interface WorkflowClientCommandFrame {
+	type: "command";
+	requestId: string;
+	request: WorkflowCliCommandRequest;
+}
+
+export interface WorkflowWorkerReadyFrame {
+	type: "cli.worker.ready";
+	workerId: string;
+}
+
+export interface WorkflowWorkerDispatchFrame {
+	type: "cli.dispatch";
+	requestId: string;
+	request: WorkflowCliCommandRequest;
+}
+
+export type WorkflowCommandStreamFrame = WorkflowCliCommandStreamEvent & {
+	requestId: string;
+};
+
+export type WorkflowSocketInboundFrame =
+	| WorkflowDataRequestFrame
+	| WorkflowPingFrame
+	| WorkflowClientCommandFrame
+	| WorkflowWorkerReadyFrame
+	| WorkflowCommandStreamFrame;
+
+export type WorkflowSocketOutboundFrame =
+	| WorkflowDataResponseFrame
+	| WorkflowPongFrame
+	| WorkflowWorkerDispatchFrame
+	| WorkflowCommandStreamFrame;
+
 export type WorkflowTaskCreatePayload = CreateTaskPayload;
 export type WorkflowTaskUpdatePayload = UpdateTaskPayload;
