@@ -47,10 +47,10 @@ Use the CLI to list, add, update, and remove skill folders under the configured
 `skills.root` for the selected project:
 
 ```bash
-bun run src/index.ts skills list [--project <PROJECT_ID>]
-bun run src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
-bun run src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
-bun run src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
+devos skills list [--project <PROJECT_ID>]
+devos skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+devos skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+devos skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 Generated `SKILL.md` template:

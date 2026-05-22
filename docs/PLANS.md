@@ -25,10 +25,10 @@ Planning output should remain concise and implementation-focused, including:
 
 ## Operating Commands
 
-1. `bun run packages/cli/src/index.ts run --project default`
-2. `bun run packages/cli/src/index.ts run --all-projects`
-3. `bun run packages/cli/src/index.ts status --project default --issue ENG-123`
-4. `bun run packages/cli/src/index.ts projects`
+1. `npx devos run --project default`
+2. `npx devos run --all-projects`
+3. `npx devos status --project default --issue ENG-123`
+4. `npx devos projects`
 
 ## Parallel Processing Operating Guidance
 

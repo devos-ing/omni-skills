@@ -49,16 +49,16 @@ bun run build:web
 bun run build
 
 # inspect configured projects
-bun run packages/cli/src/index.ts projects
+npx devos projects
 
 # run one issue
-bun run packages/cli/src/index.ts run --project <PROJECT_ID> --issue ENG-123
+npx devos run --project <PROJECT_ID> --issue ENG-123
 
 # local polling mode
-bun run packages/cli/src/index.ts run --project <PROJECT_ID> --poll
+npx devos run --project <PROJECT_ID> --poll
 
 # daemon-owned continuous workflow polling
-bun run packages/cli/src/index.ts run --all-projects --poll-forever
+npx devos run --all-projects --poll-forever
 
 # unattended scheduled mode (server-owned cron runner)
 bun run --filter devos-server cron
@@ -82,13 +82,13 @@ bun run publish:version
 git push --follow-tags
 
 # inspect run state for one issue
-bun run packages/cli/src/index.ts status --project <PROJECT_ID> --issue ENG-123
+npx devos status --project <PROJECT_ID> --issue ENG-123
 
 # skills management
-bun run packages/cli/src/index.ts skills list [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
-bun run packages/cli/src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
+npx devos skills list [--project <PROJECT_ID>]
+npx devos skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+npx devos skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+npx devos skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 After `bun install` and `bun run build`, use `npx devos ...` from the repo root to test the local workspace CLI package.
@@ -114,14 +114,6 @@ The Compose stack starts the web UI at `http://localhost:3000`, the API server h
 ```bash
 docker compose down
 ```
-
-## Workflow Summary
-
-1. Create or assign a Linear issue.
-2. devos.ing plans the task.
-3. devos.ing implements code changes and updates PR context.
-4. devos.ing runs review/testing and loops on failures until `done` or `blocked`.
-5. Review-only automations squash-merge completed PRs with `COMPLEXITY_SCORE < 5`; scores `>= 5` trigger a human approval email.
 
 ## Configuration Notes
 

@@ -15,17 +15,16 @@ For non-technical operators, start with [docs/NON_TECHNICAL_GUIDE.md](docs/NON_T
 
 ```bash
 bun install
-bun run src/index.ts onboard
-bun run src/index.ts onboard --check
-bun run src/index.ts run --project <PROJECT_ID>
+devos onboard
+devos onboard --check
+devos run --project <PROJECT_ID>
 ```
 
-Use `bun run src/index.ts projects` to list available project IDs, then pass one of those values as `<PROJECT_ID>`.
+Use `devos projects` to list available project IDs, then pass one of those values as `<PROJECT_ID>`.
 
 ## Command Reference
 
-Use either `bun run src/index.ts ...` or `devos ...` (after linking/installing
-the package bin).
+Use `devos ...` after linking or installing the package bin.
 
 ### Help
 
@@ -34,9 +33,9 @@ Purpose: print CLI usage and available commands.
 Syntax:
 
 ```bash
-bun run src/index.ts help
-bun run src/index.ts --help
-bun run src/index.ts -h
+devos help
+devos --help
+devos -h
 ```
 
 Output shape:
@@ -54,7 +53,7 @@ Purpose: run guided environment onboarding, or validate onboarding prerequisites
 Syntax:
 
 ```bash
-bun run src/index.ts onboard [--check]
+devos onboard [--check]
 ```
 
 Options:
@@ -77,7 +76,7 @@ Purpose: list configured projects from runtime config.
 Syntax:
 
 ```bash
-bun run src/index.ts projects
+devos projects
 ```
 
 Output shape:
@@ -96,8 +95,8 @@ Purpose: run workflow orchestration for one issue or project scope.
 Syntax:
 
 ```bash
-bun run src/index.ts run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll|--poll-forever] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
-bun run src/index.ts run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll|--poll-forever] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
+devos run [--project <PROJECT_ID>] [--issue <LINEAR_KEY_OR_URL>] [--poll|--poll-forever] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
+devos run --all-projects [--issue <LINEAR_KEY_OR_URL>] [--poll|--poll-forever] [--no-exit-when-idle] [--concurrency <N>] [--poll-interval-ms <MS>] [--max-poll-cycles <N>] [--isolated-worktrees]
 ```
 
 Options:
@@ -129,7 +128,7 @@ Purpose: inspect persisted run state for one project/issue pair.
 Syntax:
 
 ```bash
-bun run src/index.ts status --project <PROJECT_ID> --issue <LINEAR_KEY>
+devos status --project <PROJECT_ID> --issue <LINEAR_KEY>
 ```
 
 Options:
@@ -154,7 +153,7 @@ Purpose: generate a Linear backlog issue from a loose request through task intak
 Syntax:
 
 ```bash
-bun run src/index.ts task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--non-interactive] [--max-clarification-rounds <N>] [--clarifications-json <JSON>]
+devos task create [<REQUEST>] [--request <TEXT|->] [--project <PROJECT_ID>] [--non-interactive] [--max-clarification-rounds <N>] [--clarifications-json <JSON>]
 ```
 
 Parameters and options:
@@ -185,7 +184,7 @@ Purpose: list skills for the selected project's skills root.
 Syntax:
 
 ```bash
-bun run src/index.ts skills list [--project <PROJECT_ID>]
+devos skills list [--project <PROJECT_ID>]
 ```
 
 Output shape:
@@ -205,7 +204,7 @@ Purpose: create a new skill document in the selected project.
 Syntax:
 
 ```bash
-bun run src/index.ts skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
+devos skills add --title "<TITLE>" --description "<DESCRIPTION>" --content "<CONTENT>" [--project <PROJECT_ID>]
 ```
 
 Options:
@@ -226,7 +225,7 @@ Purpose: update skill metadata/content by skill name.
 Syntax:
 
 ```bash
-bun run src/index.ts skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
+devos skills update <NAME> [--title "<TITLE>"] [--description "<DESCRIPTION>"] [--content "<CONTENT>"] [--project <PROJECT_ID>]
 ```
 
 Parameters and options:
@@ -252,7 +251,7 @@ Purpose: remove a skill by name from the selected project.
 Syntax:
 
 ```bash
-bun run src/index.ts skills remove <NAME> [--project <PROJECT_ID>]
+devos skills remove <NAME> [--project <PROJECT_ID>]
 ```
 
 Parameters and options:
@@ -265,14 +264,6 @@ Output shape:
 - `Removed skill <name> from <path>`.
 
 After linking/installing the package bin, you can also use `devos ...` directly.
-
-## Workflow Summary
-
-1. Create or assign a Linear issue.
-2. devos.ing plans the task.
-3. devos.ing implements code changes and updates PR context.
-4. devos.ing runs review/testing and loops on failures until `done` or `blocked`.
-5. Completed runs with `COMPLEXITY_SCORE < 5` can be squash-merged by automation; scores `>= 5` trigger a human approval email.
 
 ## Configuration Notes
 
