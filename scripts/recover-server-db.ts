@@ -2,6 +2,7 @@ import { cp, mkdtemp, rename, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { initializeServerDatabase } from "devos-db";
+import { readOptionValue } from "./script-args";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..");
 const DEFAULT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");
@@ -180,18 +181,6 @@ function parseArgs(rawArgs: string[]): ParsedArgs {
 		}
 	}
 	return parsed;
-}
-
-function readOptionValue(
-	rawArgs: string[],
-	index: number,
-	option: string,
-): string {
-	const value = rawArgs[index + 1];
-	if (!value || value.startsWith("--")) {
-		throw new Error(`${option} requires a value`);
-	}
-	return value;
 }
 
 function formatBackupTimestamp(date: Date): string {

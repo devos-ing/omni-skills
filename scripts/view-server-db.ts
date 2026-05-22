@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { readOptionValue } from "./script-args";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..");
 const DEFAULT_DB_PATH = path.join(
@@ -110,14 +111,6 @@ function parseArgs(rawArgs: string[]) {
 	}
 
 	return parsed;
-}
-
-function readOptionValue(rawArgs: string[], index: number, option: string) {
-	const value = rawArgs[index + 1];
-	if (!value || value.startsWith("--")) {
-		throw new Error(`${option} requires a value`);
-	}
-	return value;
 }
 
 function parseLimit(value: string) {

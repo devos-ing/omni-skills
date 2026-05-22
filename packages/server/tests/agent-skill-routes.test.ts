@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createHandleRequest } from "../src/app";
-import type { AppDeps } from "../src/app.types";
 import type {
 	AgentCreatePayload,
 	SkillCreatePayload,
 } from "../src/routes/entity-crud.types";
+import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -41,7 +40,7 @@ describe("agent and skill CRUD routes", () => {
 		};
 
 		const createResponse = await app(
-			jsonRequest("POST", "/api/agents", payload),
+			createJsonRequest("POST", "/api/agents", payload),
 		);
 		expect(createResponse.status).toBe(201);
 		expect(await createResponse.json()).toEqual(payload);
@@ -57,7 +56,7 @@ describe("agent and skill CRUD routes", () => {
 		expect(await readResponse.json()).toEqual(payload);
 
 		const updateResponse = await app(
-			jsonRequest("PATCH", "/api/agents/agent-1", {
+			createJsonRequest("PATCH", "/api/agents/agent-1", {
 				model: "gpt-5.1",
 				concurrency: 4,
 				skills: ["adhd-review"],
@@ -89,7 +88,7 @@ describe("agent and skill CRUD routes", () => {
 		const createdAt = "2026-05-12 00:02:00";
 
 		const createResponse = await app(
-			jsonRequest("POST", "/api/agents", {
+			createJsonRequest("POST", "/api/agents", {
 				id: "agent-empty",
 				name: "codex-empty",
 				backend: "codex",
@@ -101,7 +100,7 @@ describe("agent and skill CRUD routes", () => {
 		const createdAgent = (await createResponse.json()) as AgentCreatePayload;
 
 		const patchResponse = await app(
-			jsonRequest("PATCH", "/api/agents/agent-empty", {
+			createJsonRequest("PATCH", "/api/agents/agent-empty", {
 				name: createdAgent.name,
 				description: "",
 				logo: "",
@@ -139,7 +138,7 @@ describe("agent and skill CRUD routes", () => {
 		};
 
 		const createResponse = await app(
-			jsonRequest("POST", "/api/skills", payload),
+			createJsonRequest("POST", "/api/skills", payload),
 		);
 		expect(createResponse.status).toBe(201);
 		expect(await createResponse.json()).toEqual(payload);
@@ -155,7 +154,7 @@ describe("agent and skill CRUD routes", () => {
 		expect(await readResponse.json()).toEqual(payload);
 
 		const updateResponse = await app(
-			jsonRequest("PATCH", "/api/skills/skill-1", { source: "inline" }),
+			createJsonRequest("PATCH", "/api/skills/skill-1", { source: "inline" }),
 		);
 		expect(updateResponse.status).toBe(200);
 		expect(await updateResponse.json()).toEqual({
@@ -186,7 +185,7 @@ describe("agent and skill CRUD routes", () => {
 		});
 
 		const missingField = await app(
-			jsonRequest("POST", "/api/agents", {
+			createJsonRequest("POST", "/api/agents", {
 				id: "agent-1",
 				name: "codex-main",
 				backend: "codex",
@@ -199,7 +198,7 @@ describe("agent and skill CRUD routes", () => {
 		});
 
 		const wrongAgentFieldType = await app(
-			jsonRequest("POST", "/api/agents", {
+			createJsonRequest("POST", "/api/agents", {
 				id: "agent-1",
 				name: "codex-main",
 				backend: "codex",
@@ -214,7 +213,7 @@ describe("agent and skill CRUD routes", () => {
 		});
 
 		const wrongType = await app(
-			jsonRequest("POST", "/api/skills", {
+			createJsonRequest("POST", "/api/skills", {
 				id: "skill-1",
 				name: "backend-standard",
 				description: "Backend implementation guidance",
@@ -228,7 +227,7 @@ describe("agent and skill CRUD routes", () => {
 		});
 
 		const emptyPatch = await app(
-			jsonRequest("PATCH", "/api/agents/agent-1", {}),
+			createJsonRequest("PATCH", "/api/agents/agent-1", {}),
 		);
 		expect(emptyPatch.status).toBe(400);
 		expect(await emptyPatch.json()).toEqual({
@@ -236,7 +235,7 @@ describe("agent and skill CRUD routes", () => {
 		});
 
 		const unknownField = await app(
-			jsonRequest("PATCH", "/api/skills/skill-1", { id: "nope" }),
+			createJsonRequest("PATCH", "/api/skills/skill-1", { id: "nope" }),
 		);
 		expect(unknownField.status).toBe(400);
 		expect(await unknownField.json()).toEqual({
@@ -254,7 +253,7 @@ describe("agent and skill CRUD routes", () => {
 		expect(await missingRead.json()).toEqual({ error: "Not Found" });
 
 		const missingPatch = await app(
-			jsonRequest("PATCH", "/api/agents/missing", {
+			createJsonRequest("PATCH", "/api/agents/missing", {
 				model: "gpt-5.1",
 				concurrency: 2,
 			}),
@@ -280,21 +279,5 @@ describe("agent and skill CRUD routes", () => {
 
 async function createApp() {
 	testDatabase = await createDrizzleServerTestDatabase();
-	const deps: AppDeps = {
-		db: testDatabase.db,
-		cliExecutor: {
-			execute: async (request) => ({ status: "succeeded", request }),
-			executeStream: async (request) => ({ status: "succeeded", request }),
-			getHistory: () => [],
-		},
-	};
-	return createHandleRequest(deps);
-}
-
-function jsonRequest(method: string, pathname: string, body: unknown): Request {
-	return new Request(`http://localhost${pathname}`, {
-		method,
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(body),
-	});
+	return createServerTestApp(testDatabase.db);
 }

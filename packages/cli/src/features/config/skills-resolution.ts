@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { DeepPartial, ProjectRuntimeConfig } from "../types";
+import { normalizeOptionalPath } from "./path-resolution";
 
 type SkillConfig = ProjectRuntimeConfig["skills"];
 
@@ -90,22 +91,6 @@ function resolveAutoSelectConfig(
 				base?.maxSelected,
 		),
 	};
-}
-
-function normalizeOptionalPath(
-	input: unknown,
-	baseDir: string,
-): string | undefined {
-	if (typeof input !== "string") {
-		return undefined;
-	}
-	const trimmed = input.trim();
-	if (!trimmed) {
-		return undefined;
-	}
-	return path.isAbsolute(trimmed)
-		? trimmed
-		: path.resolve(baseDir || process.cwd(), trimmed);
 }
 
 function normalizeMaxSelected(input: unknown): number {

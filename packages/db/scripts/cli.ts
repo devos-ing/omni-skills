@@ -1,4 +1,6 @@
 import path from "node:path";
+import { readOptionValue } from "../../../scripts/script-args";
+export { readOptionValue } from "../../../scripts/script-args";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
 const DEFAULT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");
@@ -24,18 +26,6 @@ export function parseDatabaseScriptArgs(rawArgs: string[]): DatabaseScriptArgs {
 		throw new Error(`Unknown option: ${arg}`);
 	}
 	return parsed;
-}
-
-export function readOptionValue(
-	rawArgs: string[],
-	index: number,
-	option: string,
-): string {
-	const value = rawArgs[index + 1];
-	if (!value || value.startsWith("--")) {
-		throw new Error(`${option} requires a value`);
-	}
-	return value;
 }
 
 export function resolveDatabasePath(dbPath: string | undefined): string {

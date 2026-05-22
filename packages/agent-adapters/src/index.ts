@@ -31,6 +31,8 @@ export {
 	normalizeAgentBackend,
 	resolveAgentConfiguration,
 } from "./registry";
+export { assertCommandOk, runCommand } from "./shell";
+export type { CommandResult, RunCommandOptions } from "./shell";
 
 export function createAgentAdapter(
 	config: AgentAdapterRuntimeConfig,

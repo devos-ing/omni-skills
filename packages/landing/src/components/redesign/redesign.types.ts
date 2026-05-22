@@ -37,10 +37,6 @@ export type FlowStep = {
 	body: string;
 };
 
-export type WorkflowStep = FlowStep & {
-	key: string;
-};
-
 export type BoardStatus =
 	| "backlog"
 	| "exploring"

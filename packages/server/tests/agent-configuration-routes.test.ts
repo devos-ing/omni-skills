@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createHandleRequest } from "../src/app";
-import type { AppDeps } from "../src/app.types";
+import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -67,26 +66,10 @@ describe("agent configuration validation", () => {
 
 async function createAgent(body: unknown): Promise<Response> {
 	const app = await createApp();
-	return app(jsonRequest("POST", "/api/agents", body));
+	return app(createJsonRequest("POST", "/api/agents", body));
 }
 
 async function createApp() {
 	testDatabase = await createDrizzleServerTestDatabase();
-	const deps: AppDeps = {
-		db: testDatabase.db,
-		cliExecutor: {
-			execute: async (request) => ({ status: "succeeded", request }),
-			executeStream: async (request) => ({ status: "succeeded", request }),
-			getHistory: () => [],
-		},
-	};
-	return createHandleRequest(deps);
-}
-
-function jsonRequest(method: string, pathname: string, body: unknown): Request {
-	return new Request(`http://localhost${pathname}`, {
-		method,
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(body),
-	});
+	return createServerTestApp(testDatabase.db);
 }

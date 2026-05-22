@@ -11,3 +11,4 @@ export {
 	CLAUDE_LABEL,
 } from "./constants";
 export { claudeConfigurationDoc } from "./configuration-doc";
+export { findClaudeBinary, getClaudeBinaryPath } from "./path";

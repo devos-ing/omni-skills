@@ -11,8 +11,8 @@ import {
 	initializeServerDatabase,
 	projectBoardsTable,
 } from "devos-db";
-import { createHandleRequest } from "../src/app";
 import { createBoardReadModels } from "../src/board-read-models";
+import { createServerTestApp } from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -156,14 +156,7 @@ describe("linear task reference fields", () => {
 });
 
 function createApp(db: ServerDatabase["db"]) {
-	return createHandleRequest({
-		cliExecutor: {
-			execute: async (request) => ({ status: "succeeded", request }),
-			executeStream: async (request) => ({ status: "succeeded", request }),
-			getHistory: () => [],
-		},
-		db,
-	});
+	return createServerTestApp(db);
 }
 
 async function seedProject(db: ServerDatabase["db"]) {

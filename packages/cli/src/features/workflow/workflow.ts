@@ -4,6 +4,10 @@ import { buildImplementationComment } from "../../utils/comments";
 import { logger, normalizeError } from "../../utils/logger";
 import { runAgentWithChatLog } from "./agent-chat-log";
 import {
+	safeLinearComment,
+	safeLinearMoveToCanceled,
+} from "./integration-wrappers";
+import {
 	handlePlanningStage,
 	shouldSquashMergePullRequestForComplexityScore,
 } from "./plan";
@@ -43,8 +47,17 @@ import {
 } from "./workflow-polling";
 import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
+	buildReviewOnlyIssueQueue,
 	dedupeIssuesByKey,
+	isReviewOnlyEligibleRunState,
+	isReviewOnlyExecutableStage,
+	isRunStateStaleForRetry as isRunStateStaleForRetryWithLease,
 	processIssueQueueBounded,
+	selectIssueQueueForCycle,
+	selectReviewOnlyIssueKeys,
+	selectStaleRunIssueKeys as selectStaleRunIssueKeysWithLease,
+	shouldRetryRunStage,
+	shouldSkipReviewOnlyRunState,
 } from "./workflow-queue";
 import { routeProjectsForIssueProjectId } from "./workflow-routing";
 import {
@@ -89,6 +102,15 @@ export type {
 
 export { runAgentWithChatLog } from "./agent-chat-log";
 export { resolvePollingSettings, shouldStopPolling, sleep };
+export {
+	buildReviewOnlyIssueQueue,
+	isReviewOnlyEligibleRunState,
+	isReviewOnlyExecutableStage,
+	selectIssueQueueForCycle,
+	selectReviewOnlyIssueKeys,
+	shouldSkipReviewOnlyRunState,
+	shouldRetryRunStage,
+} from "./workflow-queue";
 
 const DEFAULT_PLANNER_COMPLEXITY_SCORE = 4;
 const HUMAN_REVIEW_COMPLEXITY_THRESHOLD = 5;
@@ -489,33 +511,6 @@ export function buildPrioritizedIssueQueue(
 	);
 }
 
-export function selectIssueQueueForCycle(
-	issueArg: string | undefined,
-	assignedIssues: WorkflowIssue[],
-	staleRetryIssues: WorkflowIssue[],
-	options: Pick<RunOptions, "reviewOnly"> = {},
-): WorkflowIssue[] {
-	if (options.reviewOnly) {
-		return [];
-	}
-	if (issueArg !== undefined) {
-		return assignedIssues;
-	}
-	return buildPrioritizedIssueQueue(assignedIssues, staleRetryIssues);
-}
-
-export function isReviewOnlyEligibleRunState(state: RunState): boolean {
-	return (
-		(state.stage === "pr_created" ||
-			state.stage === "reviewing" ||
-			state.stage === "testing" ||
-			(state.stage === "done" &&
-				!state.pullRequestApprovedAt &&
-				!state.humanReviewNotifiedAt)) &&
-		Boolean(state.pullRequest?.url)
-	);
-}
-
 export function resolveReviewOnlyBootstrapStage(
 	state: WorkflowIssue["state"],
 	statusMap: ResolvedProjectConfig["linear"]["statusMap"],
@@ -530,77 +525,6 @@ export function resolveReviewOnlyBootstrapStage(
 		return "done";
 	}
 	return "testing";
-}
-
-export function buildReviewOnlyIssueQueue(input: {
-	runStates: RunState[];
-	localIssues: WorkflowIssue[];
-	linearIssues: WorkflowIssue[];
-	discoveredPullRequestsByIssueKey: Map<string, PullRequestRef | undefined>;
-}): ReviewOnlyQueueBuildResult {
-	const merged = dedupeIssuesByKey([
-		...input.localIssues,
-		...input.linearIssues,
-	]);
-	const runStateByKey = new Map(
-		input.runStates.map((state) => [normalizeIssueKey(state.issue.key), state]),
-	);
-	const issueQueue: WorkflowIssue[] = [];
-	let discoveredPrCount = 0;
-	let skippedWithoutPr = 0;
-
-	for (const issue of merged) {
-		const key = normalizeIssueKey(issue.identifier);
-		const runState = runStateByKey.get(key);
-		if (runState?.stage === "done" && !isReviewOnlyEligibleRunState(runState)) {
-			continue;
-		}
-		const runStatePr = runState?.pullRequest;
-		const discoveredPr = input.discoveredPullRequestsByIssueKey.get(key);
-		const pullRequest = runStatePr?.url ? runStatePr : discoveredPr;
-
-		if (!runStatePr?.url && discoveredPr?.url) {
-			discoveredPrCount += 1;
-		}
-		if (!pullRequest?.url) {
-			skippedWithoutPr += 1;
-			continue;
-		}
-
-		issueQueue.push({
-			...issue,
-			pullRequest,
-		});
-	}
-
-	return {
-		issueQueue,
-		mergedCandidateCount: merged.length,
-		discoveredPrCount,
-		skippedWithoutPr,
-	};
-}
-
-export function selectReviewOnlyIssueKeys(runStates: RunState[]): string[] {
-	return runStates
-		.filter((state) => isReviewOnlyEligibleRunState(state))
-		.map((state) => normalizeIssueKey(state.issue.key));
-}
-
-export function isReviewOnlyExecutableStage(stage: WorkflowStage): boolean {
-	return (
-		stage === "pr_created" ||
-		stage === "reviewing" ||
-		stage === "testing" ||
-		stage === "done"
-	);
-}
-
-export function shouldSkipReviewOnlyRunState(
-	state: Pick<RunState, "stage"> | null,
-	options: Pick<RunOptions, "reviewOnly">,
-): boolean {
-	return options.reviewOnly === true && state?.stage === "human_review";
 }
 
 export async function withExecutionPathLock<T>(
@@ -635,33 +559,17 @@ export async function withExecutionPathLock<T>(
 	}
 }
 
-export function shouldRetryRunStage(stage: WorkflowStage): boolean {
-	return (
-		stage === "received" ||
-		stage === "planning" ||
-		stage === "implementing" ||
-		stage === "pr_created" ||
-		stage === "reviewing" ||
-		stage === "testing"
-	);
-}
-
 export function isRunStateStaleForRetry(
 	state: RunState,
 	nowMs: number,
 	timeoutMs: number,
 ): boolean {
-	if (!shouldRetryRunStage(state.stage)) {
-		return false;
-	}
-	if (!isRunLeaseExpired(state, nowMs)) {
-		return false;
-	}
-	const updatedAtMs = Date.parse(state.updatedAt);
-	if (Number.isNaN(updatedAtMs)) {
-		return false;
-	}
-	return nowMs - updatedAtMs >= timeoutMs;
+	return isRunStateStaleForRetryWithLease(
+		state,
+		nowMs,
+		timeoutMs,
+		isRunLeaseExpired,
+	);
 }
 
 export function selectStaleRunIssueKeys(
@@ -669,9 +577,12 @@ export function selectStaleRunIssueKeys(
 	nowMs: number,
 	timeoutMs: number,
 ): string[] {
-	return runStates
-		.filter((state) => isRunStateStaleForRetry(state, nowMs, timeoutMs))
-		.map((state) => normalizeIssueKey(state.issue.key));
+	return selectStaleRunIssueKeysWithLease(
+		runStates,
+		nowMs,
+		timeoutMs,
+		isRunLeaseExpired,
+	);
 }
 
 async function fetchStaleIssuesForRetry(
@@ -1574,22 +1485,6 @@ export {
 	resolveReviewFailureStage,
 } from "./review-stage";
 
-async function safeLinearComment(
-	linear: WorkflowLinearClient,
-	issueId: string,
-	body: string,
-): Promise<void> {
-	const runLogger = logger.child({ issueId });
-	try {
-		await linear.comment(issueId, body);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to add task comment",
-		);
-	}
-}
-
 async function safePrComment(
 	config: ResolvedProjectConfig,
 	state: RunState,
@@ -1693,21 +1588,6 @@ async function safeNotifyHumanReviewRequired(
 		runLogger.error(
 			{ err: normalizeError(error) },
 			"Failed to send human review required email notification",
-		);
-	}
-}
-
-async function safeLinearMoveToCanceled(
-	linear: WorkflowLinearClient,
-	issueId: string,
-): Promise<void> {
-	const runLogger = logger.child({ issueId, stage: "canceled" });
-	try {
-		await linear.markCanceled(issueId);
-	} catch (error) {
-		runLogger.error(
-			{ err: normalizeError(error) },
-			"Failed to move task to Canceled",
 		);
 	}
 }

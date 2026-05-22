@@ -1,11 +1,7 @@
-import {
-	type BoardTaskRow,
-	type ServerDatabase,
-	boardProjectsTable,
-	projectBoardsTable,
-} from "devos-db";
+import type { BoardTaskRow, ServerDatabase } from "devos-db";
 import { createHandleRequest } from "../src/app";
 import type { AppDeps } from "../src/app.types";
+import { seedServerTestProject } from "./app-test-helpers";
 
 export function createTaskChatCreateTestApp(
 	db: ServerDatabase["db"],
@@ -25,24 +21,7 @@ export async function seedTaskChatProject(
 	db: ServerDatabase["db"],
 	projectId: string,
 ): Promise<void> {
-	await db.insert(projectBoardsTable).values({
-		id: "board-1",
-		name: "Board",
-		description: "Test board",
-		ownerId: "owner-1",
-		createdAt: "2026-05-13T00:00:00.000Z",
-		updatedAt: "2026-05-13T00:00:00.000Z",
-	});
-	await db.insert(boardProjectsTable).values({
-		id: projectId,
-		boardId: "board-1",
-		externalProjectId: null,
-		name: "Project",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-13T00:00:00.000Z",
-		updatedAt: "2026-05-13T00:00:00.000Z",
-	});
+	await seedServerTestProject(db, projectId);
 }
 
 export function createdTaskChatIntake(overrides: Partial<BoardTaskRow> = {}) {
