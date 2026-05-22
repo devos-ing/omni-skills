@@ -1,1 +1,11 @@
-export * from "../features/skills/prompt-types";
+import type { RankedSkillCandidate } from "./types";
+
+export interface PlanPromptOptions {
+	supplementalSkills?: RankedSkillCandidate[];
+	autoSelectWarnings?: string[];
+}
+
+export interface ReviewPromptOptions {
+	successGoal?: string;
+	planSummary?: string;
+}

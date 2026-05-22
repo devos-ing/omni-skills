@@ -5,7 +5,7 @@ import path from "node:path";
 import {
 	handleStatusCommand,
 	resolveTaskCreateRequest,
-} from "../src/commands/handlers";
+} from "../src/features/commands";
 import type { LoadedConfig } from "../src/features/config";
 import type { ResolvedProjectConfig, RunState } from "../src/features/types";
 import { saveRunState } from "../src/features/workflow/state";

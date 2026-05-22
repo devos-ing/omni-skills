@@ -5,10 +5,13 @@ import type {
 	RunState,
 } from "../../features/types";
 import {
+	buildGithubCommentPrompt,
+	buildReviewPrompt,
+} from "../../skills/prompts";
+import {
 	buildImplementationFeedbackComment,
 	buildReviewComment,
 } from "../../utils/comments";
-import { buildGithubCommentPrompt, buildReviewPrompt } from "../skills/prompts";
 import { emitActionProgress, emitStageProgress } from "./progress";
 import { parseReviewOutcome } from "./review";
 import {

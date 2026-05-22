@@ -5,7 +5,7 @@ import type {
 	SkillAddCommanderOptions,
 	SkillUpdateCommanderOptions,
 	SkillsCommand,
-} from "../../args.types";
+} from "../args.types";
 
 export function registerSkillsCommand(
 	program: Command,

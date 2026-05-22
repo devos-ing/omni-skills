@@ -11,8 +11,8 @@ import {
 	prepareImplementationBranch,
 	updateDraftPrFromWorktree,
 } from "../../integrations/github";
+import { buildFixPrompt, buildImplementPrompt } from "../../skills/prompts";
 import { buildImplementationComment } from "../../utils/comments";
-import { buildFixPrompt, buildImplementPrompt } from "../skills/prompts";
 
 interface HandleImplementingStageDeps {
 	runAgentWithChatLog: (input: {

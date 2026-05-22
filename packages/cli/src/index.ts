@@ -7,8 +7,8 @@ import {
 	handleRunCommand,
 	handleSkillsCommand,
 	handleStatusCommand,
-} from "./commands/handlers";
-import { handleTaskCommand } from "./features/commands/task-command";
+	handleTaskCommand,
+} from "./features/commands";
 import { loadConfig } from "./features/config";
 import { runProductionDaemon } from "./features/daemon";
 import { PromptCancelledError } from "./features/prompts";

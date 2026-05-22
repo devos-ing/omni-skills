@@ -1,11 +1,10 @@
 import { createAgentAdapter } from "adapters";
-import type { TaskCommand } from "../../args";
-import type { LoadedConfig } from "../../features/config";
-import { getProjectById } from "../../features/config";
-import { createBoardTaskCreator } from "../task-intake/board-task-creator";
-import { readStdinText, withQuestionReader } from "../task-intake/io";
-import { runTaskIntake } from "../task-intake/run";
-import type { TaskIntakeRunResult } from "../task-intake/task-intake.types";
+import type { TaskCommand } from "../../../args";
+import { type LoadedConfig, getProjectById } from "../../config";
+import { createBoardTaskCreator } from "../../task-intake/board-task-creator";
+import { readStdinText, withQuestionReader } from "../../task-intake/io";
+import { runTaskIntake } from "../../task-intake/run";
+import type { TaskIntakeRunResult } from "../../task-intake/task-intake.types";
 import { resolveTaskCreateRequest } from "./task-command-request";
 
 export async function handleTaskCommand(

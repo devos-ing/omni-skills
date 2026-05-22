@@ -8,8 +8,8 @@ import type {
 	StatusCommanderOptions,
 } from "./args.types";
 import type { LoadedConfig } from "./features/config";
-import { registerSkillsCommand } from "./features/skills/args";
 import { registerTaskCommand } from "./features/task-intake/args";
+import { registerSkillsCommand } from "./skills/args";
 
 export type {
 	CliRuntime,
