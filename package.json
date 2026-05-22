@@ -17,7 +17,6 @@
 		"dev:daemon": "bun run ./packages/cli/src/index.ts daemon",
 		"dev:server": "bun run --filter devos-server start",
 		"dev:web": "bun run --filter web dev",
-		"dev": "bun run ./scripts/dev.ts",
 		"dev:all": "bun run ./scripts/dev.ts",
 		"db:migrate": "bun run --filter devos-db migrate",
 		"db:seed": "bun run --filter devos-db seed",
