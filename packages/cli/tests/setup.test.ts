@@ -280,6 +280,12 @@ describe("setup helpers", () => {
 			const jwtSecret = sqliteEnv?.JWT_SECRET ?? "missing JWT_SECRET";
 			expect(collectChecks).toHaveBeenCalledTimes(1);
 			expect(output).toContain("Onboarding files written:");
+			expect(output).toContain(
+				`Instance config: ${path.join(
+					tempDir,
+					".devos/config/instance.config.json",
+				)}`,
+			);
 			expect(output).toContain(renderDevosBanner());
 			expect(output).toContain("Running doctor checks...\n");
 			expect(output).toContain("Summary");
