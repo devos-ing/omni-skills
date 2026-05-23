@@ -213,6 +213,16 @@ function resolveInvocation(
 		if (allProjectsValidation.status !== "ok") {
 			return allProjectsValidation;
 		}
+		if (
+			projectIdValidation.value !== undefined &&
+			allProjectsValidation.value === true
+		) {
+			return {
+				status: "error",
+				error:
+					"Malformed run request: projectId cannot be combined with allProjects",
+			};
+		}
 		const pollValidation = validateOptionalBooleanField(
 			request.poll,
 			"run",

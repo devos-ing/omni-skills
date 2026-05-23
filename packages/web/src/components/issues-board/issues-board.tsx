@@ -33,6 +33,7 @@ import type {
 	IssueTab,
 } from "./issues-board.types";
 import { useIssueBoardTaskActions } from "./use-issue-board-task-actions";
+import { useIssueWorkflowRun } from "./use-issue-workflow-run";
 
 interface IssuesBoardProps {
 	createIssueRequest: number;
@@ -61,6 +62,7 @@ export function IssuesBoard({
 	const tasksQuery = useBoardTasksQuery();
 	const createTask = useCreateBoardTaskMutation();
 	const updateTask = useUpdateBoardTaskMutation();
+	const workflowRun = useIssueWorkflowRun();
 	const { copyIssueLink, deleteIssue, pinIssueToSidebar, updateIssue } =
 		useIssueBoardTaskActions(setDragError);
 
@@ -236,6 +238,7 @@ export function IssuesBoard({
 				onCopyLink={copyIssueLink}
 				onDeleteIssue={(task) => void deleteIssue(task)}
 				onPinIssue={pinIssueToSidebar}
+				workflowRun={workflowRun}
 				onSubmitDialog={submitDialog}
 				onUpdateIssue={(task, update) => void updateIssue(task, update)}
 			/>

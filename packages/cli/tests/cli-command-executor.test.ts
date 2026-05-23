@@ -256,6 +256,11 @@ describe("CliCommandExecutor", () => {
 			action: "run",
 			concurrency: 0,
 		} as unknown as { action: string });
+		const malformedRunTargetConflict = await executor.execute({
+			action: "run",
+			projectId: "default",
+			allProjects: true,
+		} as unknown as { action: string });
 		const malformedPollForever = await executor.execute({
 			action: "run",
 			pollForever: true,
@@ -278,6 +283,10 @@ describe("CliCommandExecutor", () => {
 		expect(malformedTaskCreate.status).toBe("rejected");
 		expect(malformedTaskUnsafeField.status).toBe("rejected");
 		expect(malformedRunField.status).toBe("rejected");
+		expect(malformedRunTargetConflict.status).toBe("rejected");
+		expect(malformedRunTargetConflict.error).toContain(
+			"projectId cannot be combined",
+		);
 		expect(malformedPollForever.status).toBe("rejected");
 		expect(malformedPollForever.error).toContain(
 			"pollForever cannot be combined",

@@ -41,7 +41,11 @@ export type {
 	CliCommandStreamEvent,
 	CliCommandStreamHandler,
 	CliCommandStreamRequest,
+	SupportedWorkflowCommandRequest,
+	WorkflowProgressEvent,
 } from "./command-stream-client.types";
+export { buildIssueRunCommand } from "./workflow-run-command";
+export type { IssueRunCommandInput } from "./workflow-run-command";
 export type {
 	BoardTaskMutationInput,
 	BoardTaskUpdateMutationInput,

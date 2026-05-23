@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Pin, Trash2 } from "lucide-react";
+import { Copy, Pin, PlayCircle, Trash2 } from "lucide-react";
 import {
 	type ChangeEvent,
 	type ReactElement,
@@ -23,6 +23,7 @@ interface IssueCardContextMenuProps {
 	onCopyLink: (task: ProjectBoardTaskRecord) => void;
 	onDeleteIssue: (task: ProjectBoardTaskRecord) => void;
 	onPinIssue: (task: ProjectBoardTaskRecord) => void;
+	onRunIssue: (task: ProjectBoardTaskRecord) => void;
 	onUpdateIssue: (
 		task: ProjectBoardTaskRecord,
 		update: IssueQuickUpdate,
@@ -37,6 +38,7 @@ export function IssueCardContextMenu({
 	onCopyLink,
 	onDeleteIssue,
 	onPinIssue,
+	onRunIssue,
 	onUpdateIssue,
 }: IssueCardContextMenuProps): ReactElement {
 	const [assigneeDraft, setAssigneeDraft] = useState(task.assigneeId ?? "");
@@ -153,6 +155,14 @@ export function IssueCardContextMenu({
 					</div>
 				</MenuField>
 				<div className="grid gap-1 border-t border-zinc-800 pt-2">
+					<MenuButton
+						icon={<PlayCircle size={14} />}
+						label="Run workflow"
+						onClick={() => {
+							onRunIssue(task);
+							onClose();
+						}}
+					/>
 					<MenuButton
 						icon={<Pin size={14} />}
 						label="Pin to sidebar"

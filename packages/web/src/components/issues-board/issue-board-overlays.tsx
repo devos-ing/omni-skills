@@ -7,11 +7,13 @@ import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
 
 import { IssueCardContextMenu } from "./issue-card-context-menu";
 import { IssueDialog } from "./issue-dialog";
+import { IssueWorkflowRunPanel } from "./issue-workflow-run-panel";
 import type {
 	IssueContextMenuState,
 	IssueDialogState,
 	IssueQuickUpdate,
 } from "./issues-board.types";
+import type { IssueWorkflowRunController } from "./use-issue-workflow-run";
 
 interface IssueBoardOverlaysProps {
 	contextMenu: IssueContextMenuState | null;
@@ -26,6 +28,7 @@ interface IssueBoardOverlaysProps {
 	onCopyLink: (task: ProjectBoardTaskRecord) => void;
 	onDeleteIssue: (task: ProjectBoardTaskRecord) => void;
 	onPinIssue: (task: ProjectBoardTaskRecord) => void;
+	workflowRun: IssueWorkflowRunController;
 	onSubmitDialog: (input: TaskMutationRequest) => Promise<void>;
 	onUpdateIssue: (
 		task: ProjectBoardTaskRecord,
@@ -46,6 +49,7 @@ export function IssueBoardOverlays({
 	onCopyLink,
 	onDeleteIssue,
 	onPinIssue,
+	workflowRun,
 	onSubmitDialog,
 	onUpdateIssue,
 }: IssueBoardOverlaysProps): ReactElement {
@@ -60,6 +64,7 @@ export function IssueBoardOverlays({
 					onCopyLink={onCopyLink}
 					onDeleteIssue={onDeleteIssue}
 					onPinIssue={onPinIssue}
+					onRunIssue={(task) => void workflowRun.runIssue(task)}
 					onUpdateIssue={onUpdateIssue}
 				/>
 			) : null}
@@ -83,6 +88,10 @@ export function IssueBoardOverlays({
 					onClose={onCloseChatDialog}
 				/>
 			) : null}
+			<IssueWorkflowRunPanel
+				runState={workflowRun.state}
+				onClose={workflowRun.clearRunState}
+			/>
 		</>
 	);
 }

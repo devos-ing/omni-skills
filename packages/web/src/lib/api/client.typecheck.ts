@@ -12,6 +12,7 @@ import type {
 	WorkspaceProjectRecord,
 } from "./client.types";
 import { createWebApiClient } from "./web-client";
+import { buildIssueRunCommand } from "./workflow-run-command";
 
 const client = createApiClient();
 const webClient = createWebApiClient();
@@ -65,6 +66,15 @@ const updatedBoardTaskPromise: Promise<ProjectBoardTaskRecord> =
 	webClient.updateBoardTask("task-1", { status: "reviewing" });
 const deletedBoardTaskPromise: Promise<ProjectBoardTaskRecord> =
 	webClient.deleteBoardTask("task-1");
+const runIssueStreamPromise: Promise<void> = webClient.streamCliCommand(
+	buildIssueRunCommand({ projectId: "project-1", issueKey: "TASK-1" }),
+	(event) => {
+		if (event.type === "progress") {
+			const kind: string | undefined = event.event.kind;
+			void kind;
+		}
+	},
+);
 
 void healthResponsePromise;
 void webHealthResponsePromise;
@@ -80,3 +90,4 @@ void pollingStatusPromise;
 void createdBoardTaskPromise;
 void updatedBoardTaskPromise;
 void deletedBoardTaskPromise;
+void runIssueStreamPromise;
