@@ -177,6 +177,8 @@ export function buildEnvBase(
 		},
 		agent: {
 			backend: normalizeAgentBackend(env.AGENT_BACKEND),
+		},
+		claude: {
 			model: normalizeOptionalValue(env.CLAUDE_CODE_MODEL),
 			maxTurns: parseOptionalPositiveInt(env.CLAUDE_CODE_MAX_TURNS),
 			allowedTools: parseCommaList(env.CLAUDE_CODE_ALLOWED_TOOLS),

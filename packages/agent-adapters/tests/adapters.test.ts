@@ -201,7 +201,37 @@ describe("codex adapter", () => {
 });
 
 describe("claude code adapter", () => {
-	it("builds common args from generic agent config", () => {
+	it("builds common args from primary claude config", () => {
+		const adapter = new ClaudeCodeAdapter({
+			...config,
+			claude: {
+				model: "claude-sonnet-4-20250514",
+				maxTurns: 7,
+				allowedTools: ["Bash", "Read", "Edit"],
+				permissionMode: "plan",
+			},
+		});
+		const args = (
+			adapter as unknown as { buildCommonArgs: () => string[] }
+		).buildCommonArgs();
+
+		expect(args).toEqual([
+			"--output-format",
+			"json",
+			"--permission-mode",
+			"plan",
+			"--model",
+			"claude-sonnet-4-20250514",
+			"--max-turns",
+			"7",
+			"--allowedTools",
+			"Bash",
+			"Read",
+			"Edit",
+		]);
+	});
+
+	it("falls back to deprecated agent claude settings when claude config is absent", () => {
 		const adapter = new ClaudeCodeAdapter({
 			...config,
 			agent: {
@@ -228,6 +258,40 @@ describe("claude code adapter", () => {
 			"Bash",
 			"Read",
 			"Edit",
+		]);
+	});
+
+	it("prefers primary claude config over deprecated agent claude settings", () => {
+		const adapter = new ClaudeCodeAdapter({
+			...config,
+			agent: {
+				model: "claude-opus-4-20250514",
+				maxTurns: 3,
+				allowedTools: ["Read", "Write"],
+				permissionMode: "dontAsk",
+			},
+			claude: {
+				model: "claude-sonnet-4-20250514",
+				maxTurns: 11,
+				allowedTools: ["Bash"],
+				permissionMode: "plan",
+			},
+		});
+		const args = (
+			adapter as unknown as { buildCommonArgs: () => string[] }
+		).buildCommonArgs();
+
+		expect(args).toEqual([
+			"--output-format",
+			"json",
+			"--permission-mode",
+			"plan",
+			"--model",
+			"claude-sonnet-4-20250514",
+			"--max-turns",
+			"11",
+			"--allowedTools",
+			"Bash",
 		]);
 	});
 

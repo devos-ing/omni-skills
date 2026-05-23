@@ -67,6 +67,7 @@ const envKeys = [
 	"CLAUDE_CODE_MODEL",
 	"CLAUDE_CODE_MAX_TURNS",
 	"CLAUDE_CODE_ALLOWED_TOOLS",
+	"CLAUDE_CODE_PERMISSION_MODE",
 	"CURSOR_AGENT_BINARY",
 	"CURSOR_AGENT_MODEL",
 	"CURSOR_AGENT_FORCE",
@@ -107,6 +108,7 @@ describe("loadConfig", () => {
 								key === "CODEX_DOCKER_EXECUTION_PATH" ||
 								key === "CODEX_DOCKER_CODEX_HOME_PATH" ||
 								key === "CLAUDE_CODE_MODEL" ||
+								key === "CLAUDE_CODE_PERMISSION_MODE" ||
 								key === "CLAUDE_CODE_ALLOWED_TOOLS" ||
 								key === "CURSOR_AGENT_MODEL" ||
 								key === "CURSOR_API_KEY" ||
@@ -570,7 +572,9 @@ describe("loadConfig", () => {
 		process.env.CLAUDE_CODE_MODEL = "claude-sonnet-4-20250514";
 		await withTempConfig(async (tempDir) => {
 			const config = await loadConfig(tempDir);
-			expect(config.projects[0]?.agent?.model).toBe("claude-sonnet-4-20250514");
+			expect(config.projects[0]?.claude?.model).toBe(
+				"claude-sonnet-4-20250514",
+			);
 		});
 	});
 
@@ -578,7 +582,7 @@ describe("loadConfig", () => {
 		process.env.CLAUDE_CODE_MAX_TURNS = "50";
 		await withTempConfig(async (tempDir) => {
 			const config = await loadConfig(tempDir);
-			expect(config.projects[0]?.agent?.maxTurns).toBe(50);
+			expect(config.projects[0]?.claude?.maxTurns).toBe(50);
 		});
 	});
 
@@ -586,7 +590,7 @@ describe("loadConfig", () => {
 		process.env.CLAUDE_CODE_MAX_TURNS = "0";
 		await withTempConfig(async (tempDir) => {
 			const config = await loadConfig(tempDir);
-			expect(config.projects[0]?.agent?.maxTurns).toBeUndefined();
+			expect(config.projects[0]?.claude?.maxTurns).toBeUndefined();
 		});
 	});
 
@@ -594,7 +598,7 @@ describe("loadConfig", () => {
 		process.env.CLAUDE_CODE_ALLOWED_TOOLS = "Read,Write,Bash";
 		await withTempConfig(async (tempDir) => {
 			const config = await loadConfig(tempDir);
-			expect(config.projects[0]?.agent?.allowedTools).toEqual([
+			expect(config.projects[0]?.claude?.allowedTools).toEqual([
 				"Read",
 				"Write",
 				"Bash",
@@ -606,7 +610,15 @@ describe("loadConfig", () => {
 		process.env.CLAUDE_CODE_ALLOWED_TOOLS = "";
 		await withTempConfig(async (tempDir) => {
 			const config = await loadConfig(tempDir);
-			expect(config.projects[0]?.agent?.allowedTools).toBeUndefined();
+			expect(config.projects[0]?.claude?.allowedTools).toBeUndefined();
+		});
+	});
+
+	it("loads Claude Code permission mode from CLAUDE_CODE_PERMISSION_MODE env", async () => {
+		process.env.CLAUDE_CODE_PERMISSION_MODE = "plan";
+		await withTempConfig(async (tempDir) => {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.claude?.permissionMode).toBe("plan");
 		});
 	});
 
@@ -620,9 +632,12 @@ describe("loadConfig", () => {
 				"export default {",
 				"  agent: {",
 				"    backend: 'claude-code',",
+				"  },",
+				"  claude: {",
 				"    model: 'claude-opus-4-20250514',",
 				"    maxTurns: 100,",
 				"    allowedTools: ['Read', 'Write'],",
+				"    permissionMode: 'plan',",
 				"  },",
 				"  projects: [",
 				"    { id: 'default' }",
@@ -635,12 +650,56 @@ describe("loadConfig", () => {
 		try {
 			const config = await loadConfig(tempDir);
 			expect(config.projects[0]?.agent?.backend).toBe("claude-code");
-			expect(config.projects[0]?.agent?.model).toBe("claude-opus-4-20250514");
-			expect(config.projects[0]?.agent?.maxTurns).toBe(100);
-			expect(config.projects[0]?.agent?.allowedTools).toEqual([
+			expect(config.projects[0]?.claude?.model).toBe("claude-opus-4-20250514");
+			expect(config.projects[0]?.claude?.maxTurns).toBe(100);
+			expect(config.projects[0]?.claude?.allowedTools).toEqual([
 				"Read",
 				"Write",
 			]);
+			expect(config.projects[0]?.claude?.permissionMode).toBe("plan");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("merges root and project claude settings with project precedence", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-config-test-"),
+		);
+		await writeFile(
+			path.join(tempDir, "devos.config.ts"),
+			[
+				"export default {",
+				"  agent: { backend: 'claude-code' },",
+				"  claude: {",
+				"    model: 'claude-sonnet-4-20250514',",
+				"    maxTurns: 8,",
+				"    allowedTools: ['Read'],",
+				"  },",
+				"  projects: [",
+				"    {",
+				"      id: 'default',",
+				"      claude: {",
+				"        maxTurns: 12,",
+				"        allowedTools: ['Read', 'Edit'],",
+				"        permissionMode: 'plan',",
+				"      },",
+				"    }",
+				"  ]",
+				"};",
+				"",
+			].join("\n"),
+		);
+
+		try {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.agent?.backend).toBe("claude-code");
+			expect(config.projects[0]?.claude).toEqual({
+				model: "claude-sonnet-4-20250514",
+				maxTurns: 12,
+				allowedTools: ["Read", "Edit"],
+				permissionMode: "plan",
+			});
 		} finally {
 			await rm(tempDir, { recursive: true, force: true });
 		}

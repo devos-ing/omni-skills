@@ -34,26 +34,30 @@ export class ClaudeCodeAdapter implements AgentAdapter {
 	}
 
 	private buildModelArgs(): string[] {
-		const model = this.config.agent?.model;
+		const model = this.config.claude?.model ?? this.config.agent?.model;
 		if (!model) return [];
 		return ["--model", model];
 	}
 
 	private buildMaxTurnsArgs(): string[] {
-		const maxTurns = this.config.agent?.maxTurns;
+		const maxTurns =
+			this.config.claude?.maxTurns ?? this.config.agent?.maxTurns;
 		if (!maxTurns || maxTurns <= 0) return [];
 		return ["--max-turns", String(maxTurns)];
 	}
 
 	private buildAllowedToolsArgs(): string[] {
-		const tools = this.config.agent?.allowedTools;
+		const tools =
+			this.config.claude?.allowedTools ?? this.config.agent?.allowedTools;
 		if (!tools || tools.length === 0) return [];
 		return ["--allowedTools", ...tools];
 	}
 
 	private buildCommonArgs(): string[] {
 		const permissionMode =
-			this.config.agent?.permissionMode ?? "bypassPermissions";
+			this.config.claude?.permissionMode ??
+			this.config.agent?.permissionMode ??
+			"bypassPermissions";
 		return [
 			"--output-format",
 			"json",

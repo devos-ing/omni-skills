@@ -56,12 +56,14 @@ const baseConfig: ResolvedProjectConfig = {
 	dryRun: false,
 };
 
-function createConfig(
-	agent?: ResolvedProjectConfig["agent"],
-): ResolvedProjectConfig {
+function createConfig(input?: {
+	agent?: ResolvedProjectConfig["agent"];
+	claude?: ResolvedProjectConfig["claude"];
+}): ResolvedProjectConfig {
 	return {
 		...baseConfig,
-		agent,
+		agent: input?.agent,
+		claude: input?.claude,
 	};
 }
 
@@ -176,10 +178,12 @@ describe("claude code adapter", () => {
 	it("builds common args with model, maxTurns, allowedTools, and permission mode", () => {
 		const adapter = new ClaudeCodeAdapter(
 			createConfig({
-				model: "claude-sonnet-4-20250514",
-				maxTurns: 7,
-				allowedTools: ["Bash", "Read", "Edit"],
-				permissionMode: "plan",
+				claude: {
+					model: "claude-sonnet-4-20250514",
+					maxTurns: 7,
+					allowedTools: ["Bash", "Read", "Edit"],
+					permissionMode: "plan",
+				},
 			}),
 		);
 		const args = (
@@ -204,12 +208,16 @@ describe("claude code adapter", () => {
 	it("skips maxTurns when maxTurns is zero or negative", () => {
 		const zeroTurnsAdapter = new ClaudeCodeAdapter(
 			createConfig({
-				maxTurns: 0,
+				claude: {
+					maxTurns: 0,
+				},
 			}),
 		);
 		const negativeTurnsAdapter = new ClaudeCodeAdapter(
 			createConfig({
-				maxTurns: -5,
+				claude: {
+					maxTurns: -5,
+				},
 			}),
 		);
 		const zeroArgs = (
@@ -220,6 +228,69 @@ describe("claude code adapter", () => {
 		).buildCommonArgs();
 		expect(zeroArgs).not.toContain("--max-turns");
 		expect(negativeArgs).not.toContain("--max-turns");
+	});
+
+	it("falls back to deprecated agent Claude settings when claude settings are absent", () => {
+		const adapter = new ClaudeCodeAdapter(
+			createConfig({
+				agent: {
+					model: "claude-opus-4-20250514",
+					maxTurns: 3,
+					allowedTools: ["Read", "Write"],
+					permissionMode: "dontAsk",
+				},
+			}),
+		);
+		const args = (
+			adapter as unknown as { buildCommonArgs: () => string[] }
+		).buildCommonArgs();
+		expect(args).toEqual([
+			"--output-format",
+			"json",
+			"--permission-mode",
+			"dontAsk",
+			"--model",
+			"claude-opus-4-20250514",
+			"--max-turns",
+			"3",
+			"--allowedTools",
+			"Read",
+			"Write",
+		]);
+	});
+
+	it("prefers claude settings over deprecated agent Claude settings", () => {
+		const adapter = new ClaudeCodeAdapter(
+			createConfig({
+				agent: {
+					model: "claude-opus-4-20250514",
+					maxTurns: 3,
+					allowedTools: ["Read", "Write"],
+					permissionMode: "dontAsk",
+				},
+				claude: {
+					model: "claude-sonnet-4-20250514",
+					maxTurns: 9,
+					allowedTools: ["Bash"],
+					permissionMode: "plan",
+				},
+			}),
+		);
+		const args = (
+			adapter as unknown as { buildCommonArgs: () => string[] }
+		).buildCommonArgs();
+		expect(args).toEqual([
+			"--output-format",
+			"json",
+			"--permission-mode",
+			"plan",
+			"--model",
+			"claude-sonnet-4-20250514",
+			"--max-turns",
+			"9",
+			"--allowedTools",
+			"Bash",
+		]);
 	});
 
 	it("extracts session id from json", () => {

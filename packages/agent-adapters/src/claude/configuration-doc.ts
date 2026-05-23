@@ -36,10 +36,34 @@ export const claudeConfigurationDoc = {
 	],
 	configFields: [
 		field("agent.backend", "Agent backend", "Project agent backend."),
-		field("agent.model", "Model", "Claude Code model id."),
-		field("agent.maxTurns", "Max turns", "Maximum turns per invocation."),
-		field("agent.allowedTools", "Allowed tools", "Claude Code tool allowlist."),
-		field("agent.permissionMode", "Permission mode", "Permission mode."),
+		field("claude.model", "Model", "Claude Code model id."),
+		field("claude.maxTurns", "Max turns", "Maximum turns per invocation."),
+		field(
+			"claude.allowedTools",
+			"Allowed tools",
+			"Claude Code tool allowlist.",
+		),
+		field("claude.permissionMode", "Permission mode", "Permission mode."),
+		field(
+			"agent.model",
+			"Deprecated model fallback",
+			"Deprecated Claude fallback; use claude.model.",
+		),
+		field(
+			"agent.maxTurns",
+			"Deprecated max turns fallback",
+			"Deprecated Claude fallback; use claude.maxTurns.",
+		),
+		field(
+			"agent.allowedTools",
+			"Deprecated tools fallback",
+			"Deprecated Claude fallback; use claude.allowedTools.",
+		),
+		field(
+			"agent.permissionMode",
+			"Deprecated permission fallback",
+			"Deprecated Claude fallback; use claude.permissionMode.",
+		),
 	],
 	defaults: {
 		backend: CLAUDE_BACKEND,

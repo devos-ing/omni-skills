@@ -68,6 +68,17 @@ export interface AgentAdapterRuntimeConfig {
 		force?: boolean;
 		apiKey?: string;
 	};
+	claude?: {
+		model?: string;
+		maxTurns?: number;
+		allowedTools?: string[];
+		permissionMode?:
+			| "default"
+			| "acceptEdits"
+			| "bypassPermissions"
+			| "dontAsk"
+			| "plan";
+	};
 	agent?: {
 		backend?: AgentBackend;
 		model?: string;

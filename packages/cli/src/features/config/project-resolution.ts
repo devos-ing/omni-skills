@@ -165,6 +165,11 @@ function mergeRuntime(
 				rootDefaults.cursor?.apiKey ??
 				base.cursor?.apiKey,
 		},
+		claude: {
+			...(base.claude ?? {}),
+			...(rootDefaults.claude ?? {}),
+			...(project.claude ?? {}),
+		},
 		skills: resolveSkillsConfig(
 			configCwd,
 			base.skills,
