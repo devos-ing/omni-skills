@@ -1,12 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import { EventEmitter } from "node:events";
 import {
-	type DaemonChild,
-	type DaemonSignalTarget,
-	type DaemonSpawn,
 	buildDaemonCommands,
 	runProductionDaemon,
 } from "../src/features/daemon";
+import {
+	createDaemonHarness,
+	flushAsyncWork,
+	readyImmediately,
+} from "./daemon-test-harness";
 
 describe("buildDaemonCommands", () => {
 	it("builds production server, web, and workflow poller commands", () => {
@@ -86,8 +87,10 @@ describe("runProductionDaemon", () => {
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
-
+		await flushAsyncWork();
 		expect(harness.calls).toEqual([
 			{
 				command: "bun",
@@ -130,8 +133,11 @@ describe("runProductionDaemon", () => {
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 
+		await flushAsyncWork();
 		harness.children[0]?.emit("close", 7, null);
 
 		await expect(done).resolves.toBe(7);
@@ -149,8 +155,11 @@ describe("runProductionDaemon", () => {
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 
+		await flushAsyncWork();
 		harness.signalTarget.emitSignal("SIGINT");
 
 		await expect(done).resolves.toBe(0);
@@ -170,8 +179,11 @@ describe("runProductionDaemon", () => {
 			spawnChild: harness.spawnChild,
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 
+		await flushAsyncWork();
 		harness.children[0]?.emit("error", new Error("spawn EACCES"));
 
 		await expect(done).resolves.toBe(1);
@@ -179,70 +191,3 @@ describe("runProductionDaemon", () => {
 		expect(harness.workflowWorkerStopped).toBe(true);
 	});
 });
-
-class FakeDaemonChild extends EventEmitter implements DaemonChild {
-	killed = false;
-	readonly signals: Array<NodeJS.Signals | undefined> = [];
-
-	kill(signal?: NodeJS.Signals): boolean {
-		this.killed = true;
-		this.signals.push(signal);
-		return true;
-	}
-}
-
-class FakeSignalTarget implements DaemonSignalTarget {
-	private readonly emitter = new EventEmitter();
-
-	on(signal: NodeJS.Signals, listener: () => void): void {
-		this.emitter.on(signal, listener);
-	}
-
-	off(signal: NodeJS.Signals, listener: () => void): void {
-		this.emitter.off(signal, listener);
-	}
-
-	emitSignal(signal: NodeJS.Signals): void {
-		this.emitter.emit(signal);
-	}
-}
-
-function createDaemonHarness(): {
-	calls: Array<{ command: string; args: string[]; cwd: string }>;
-	children: FakeDaemonChild[];
-	signalTarget: FakeSignalTarget;
-	spawnChild: DaemonSpawn;
-	startWorkflowWorker: NonNullable<
-		Parameters<typeof runProductionDaemon>[0]
-	>["startWorkflowWorker"];
-	workflowWorkerEnv: NodeJS.ProcessEnv | undefined;
-	workflowWorkerStopped: boolean;
-} {
-	const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
-	const children: FakeDaemonChild[] = [];
-	const spawnChild: DaemonSpawn = (command, args, options) => {
-		calls.push({ command, args, cwd: options.cwd });
-		const child = new FakeDaemonChild();
-		children.push(child);
-		return child;
-	};
-
-	const harness = {
-		calls,
-		children,
-		signalTarget: new FakeSignalTarget(),
-		spawnChild,
-		workflowWorkerEnv: undefined as NodeJS.ProcessEnv | undefined,
-		workflowWorkerStopped: false,
-		startWorkflowWorker: (options: { env?: NodeJS.ProcessEnv }) => {
-			harness.workflowWorkerEnv = options.env;
-			return {
-				workerId: "worker-1",
-				stop: async () => {
-					harness.workflowWorkerStopped = true;
-				},
-			};
-		},
-	};
-	return harness;
-}

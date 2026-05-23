@@ -61,6 +61,8 @@ describe("runProductionDaemon port cleanup", () => {
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
 			cleanupPorts: harness.cleanupPorts,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 
 		harness.children[0]?.emit("close", 7, null);
@@ -81,6 +83,8 @@ describe("runProductionDaemon port cleanup", () => {
 			signalTarget: harness.signalTarget,
 			startWorkflowWorker: harness.startWorkflowWorker,
 			cleanupPorts: harness.cleanupPorts,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 
 		harness.children[0]?.emit("error", new Error("spawn EACCES"));
@@ -100,6 +104,8 @@ describe("runProductionDaemon port cleanup", () => {
 			signalTarget: cleanHarness.signalTarget,
 			startWorkflowWorker: cleanHarness.startWorkflowWorker,
 			cleanupPorts: cleanHarness.cleanupPorts,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 		cleanHarness.children[0]?.emit("close", 0, null);
 		await expect(cleanDone).resolves.toBe(0);
@@ -113,6 +119,8 @@ describe("runProductionDaemon port cleanup", () => {
 			signalTarget: signalHarness.signalTarget,
 			startWorkflowWorker: signalHarness.startWorkflowWorker,
 			cleanupPorts: signalHarness.cleanupPorts,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 		});
 		signalHarness.signalTarget.emitSignal("SIGINT");
 		await expect(signalDone).resolves.toBe(0);
@@ -196,3 +204,5 @@ function createDaemonHarness(): {
 	};
 	return harness;
 }
+
+async function readyImmediately(): Promise<void> {}

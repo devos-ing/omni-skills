@@ -30,13 +30,20 @@ export {
 	DAEMON_READY_MESSAGE,
 	scheduleDaemonReadyMessage,
 } from "./daemon-readiness";
+export {
+	DAEMON_SERVICE_READY_INTERVAL_MS,
+	DAEMON_SERVICE_READY_TIMEOUT_MS,
+	waitForDaemonHttpReady,
+} from "./daemon-service-readiness";
 export type {
 	DaemonChild,
+	DaemonHttpReadinessOptions,
 	DaemonPortCleanup,
 	DaemonPortCleanupOptions,
 	DaemonPortCleanupPorts,
 	DaemonReadinessHandle,
 	DaemonReadinessScheduler,
+	DaemonServiceReadinessProbe,
 	DaemonServiceCommand,
 	DaemonServiceName,
 	DaemonSignalTarget,

@@ -71,6 +71,25 @@ export type DaemonReadinessScheduler = (
 	delayMs: number,
 ) => DaemonReadinessHandle;
 
+export type DaemonReadinessShouldStop = () => boolean;
+
+export type DaemonServiceReadinessProbe = (
+	url: string,
+	shouldStop?: DaemonReadinessShouldStop,
+) => Promise<void>;
+
+export type DaemonReadinessFetch = (url: string) => Promise<{ ok: boolean }>;
+
+export type DaemonReadinessSleep = (ms: number) => Promise<void>;
+
+export interface DaemonHttpReadinessOptions {
+	fetch?: DaemonReadinessFetch;
+	intervalMs?: number;
+	shouldStop?: DaemonReadinessShouldStop;
+	sleep?: DaemonReadinessSleep;
+	timeoutMs?: number;
+}
+
 export interface DaemonReadinessOptions {
 	delayMs?: number;
 	message?: string;
@@ -89,5 +108,21 @@ export interface RunProductionDaemonOptions {
 		cwd: string;
 		env?: NodeJS.ProcessEnv;
 	}) => WorkflowCommandWorker;
+	waitForServerReady?: DaemonServiceReadinessProbe;
+	waitForWebReady?: DaemonServiceReadinessProbe;
+	write?: (message: string) => void;
+}
+
+export interface DaemonStartupInput {
+	cwd: string;
+	readinessScheduler?: RunProductionDaemonOptions["readinessScheduler"];
+	serverHealthUrl: string;
+	services: DaemonServiceCommand[];
+	spawnChild: DaemonSpawn;
+	waitForServerReady: NonNullable<
+		RunProductionDaemonOptions["waitForServerReady"]
+	>;
+	waitForWebReady: NonNullable<RunProductionDaemonOptions["waitForWebReady"]>;
+	webUrl: string;
 	write?: (message: string) => void;
 }

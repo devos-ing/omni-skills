@@ -22,8 +22,11 @@ describe("daemon delayed readiness", () => {
 			signalTarget: harness.signalTarget,
 			spawnChild: harness.spawnChild,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 			write: (message) => messages.push(message),
 		});
+		await flushAsyncWork();
 
 		expect(readiness.delayMs).toBe(DAEMON_READY_DELAY_MS);
 		expect(messages).toEqual([]);
@@ -46,8 +49,11 @@ describe("daemon delayed readiness", () => {
 			signalTarget: harness.signalTarget,
 			spawnChild: harness.spawnChild,
 			startWorkflowWorker: harness.startWorkflowWorker,
+			waitForServerReady: readyImmediately,
+			waitForWebReady: readyImmediately,
 			write: (message) => messages.push(message),
 		});
+		await flushAsyncWork();
 
 		harness.signalTarget.emitSignal("SIGTERM");
 		await expect(done).resolves.toBe(0);
@@ -133,4 +139,11 @@ class FakeSignalTarget implements DaemonSignalTarget {
 	emitSignal(signal: NodeJS.Signals): void {
 		this.emitter.emit(signal);
 	}
+}
+
+async function readyImmediately(): Promise<void> {}
+
+async function flushAsyncWork(): Promise<void> {
+	await Promise.resolve();
+	await Promise.resolve();
 }
