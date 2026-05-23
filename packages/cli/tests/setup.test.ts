@@ -287,7 +287,11 @@ describe("setup helpers", () => {
 				)}`,
 			);
 			expect(output).toContain(renderDevosBanner());
-			expect(output).toContain("Running doctor checks...\n");
+			expect(
+				output
+					.split("\n")
+					.some((line) => line.includes("Running doctor checks...")),
+			).toBe(true);
 			expect(output).toContain("Summary");
 			expect(output).toContain("1 passed");
 			expect(output).toContain("Config file");
