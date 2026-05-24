@@ -5,6 +5,7 @@ import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { boardProjectsTable, boardTasksTable } from "devos-db/schema";
 import { backupDatabase } from "../scripts/backup";
+import { resolveDatabasePath } from "../scripts/cli";
 import { migrateDatabase } from "../scripts/migrate";
 import { seedDatabase } from "../scripts/seed";
 import { initializeServerDatabase } from "../src";
@@ -73,6 +74,68 @@ describe("database scripts", () => {
 		await expect(
 			readMigrationCount(result.backupPath),
 		).resolves.toBeGreaterThan(0);
+	});
+
+	it("resolves database paths from explicit, env, instance, then repo fallback", async () => {
+		let readCalls = 0;
+		const readText = async (targetPath: string) => {
+			readCalls += 1;
+			expect(targetPath).toBe(
+				path.join(
+					"/tmp/devos-home",
+					".devos",
+					"config",
+					"instance.config.json",
+				),
+			);
+			return JSON.stringify({
+				database: { embeddedPostgresDataDir: "/tmp/instance-db" },
+			});
+		};
+
+		await expect(
+			resolveDatabasePath("/tmp/explicit-db", {
+				env: {
+					HOME: "/tmp/devos-home",
+					PIV_SERVER_DATABASE_PATH: "/tmp/env-db",
+				},
+				readText,
+			}),
+		).resolves.toBe("/tmp/explicit-db");
+		await expect(
+			resolveDatabasePath(undefined, {
+				env: {
+					HOME: "/tmp/devos-home",
+					PIV_SERVER_DATABASE_PATH: "/tmp/env-db",
+				},
+				readText,
+			}),
+		).resolves.toBe("/tmp/env-db");
+		expect(readCalls).toBe(0);
+		await expect(
+			resolveDatabasePath(undefined, {
+				env: { HOME: "/tmp/devos-home" },
+				readText,
+			}),
+		).resolves.toBe("/tmp/instance-db");
+		await expect(
+			resolveDatabasePath(undefined, {
+				env: { HOME: "/tmp/devos-home" },
+				readText: async () => {
+					throw new Error("missing");
+				},
+			}),
+		).resolves.toBe(
+			path.resolve(
+				import.meta.dir,
+				"..",
+				"..",
+				"..",
+				".devos",
+				"config",
+				"server-db",
+			),
+		);
 	});
 
 	it("keeps schema package exports available", () => {

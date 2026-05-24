@@ -41,7 +41,7 @@ export async function runMigrateDatabaseCli(
 export async function migrateDatabase(
 	options: MigrateDatabaseOptions = {},
 ): Promise<MigrateDatabaseResult> {
-	const dbPath = resolveDatabasePath(options.dbPath);
+	const dbPath = await resolveDatabasePath(options.dbPath);
 	await mkdir(path.dirname(dbPath), { recursive: true });
 	const client = new PGlite(dbPath);
 	try {

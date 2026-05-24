@@ -48,7 +48,7 @@ export async function runSeedDatabaseCli(
 export async function seedDatabase(
 	options: SeedDatabaseOptions = {},
 ): Promise<SeedDatabaseResult> {
-	const dbPath = resolveDatabasePath(options.dbPath);
+	const dbPath = await resolveDatabasePath(options.dbPath);
 	const database = await initializeServerDatabase(dbPath);
 	try {
 		await insertSeedRows(database.db);

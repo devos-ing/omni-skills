@@ -48,7 +48,7 @@ export async function runBackupDatabaseCli(
 export async function backupDatabase(
 	options: BackupDatabaseOptions = {},
 ): Promise<BackupDatabaseResult> {
-	const sourcePath = resolveDatabasePath(options.dbPath);
+	const sourcePath = await resolveDatabasePath(options.dbPath);
 	await ensureDirectory(sourcePath, "Database path");
 	const backupPath = options.outPath
 		? path.resolve(options.outPath)

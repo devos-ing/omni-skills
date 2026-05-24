@@ -2,10 +2,8 @@ import { cp, mkdtemp, rename, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { initializeServerDatabase } from "devos-db";
+import { resolveDatabasePath } from "../packages/db/scripts/cli";
 import { readOptionValue } from "./script-args";
-
-const REPO_ROOT = path.resolve(import.meta.dir, "..");
-const DEFAULT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");
 
 export interface RecoverServerDatabaseOptions {
 	apply?: boolean;
@@ -55,9 +53,7 @@ export async function runRecoverServerDatabaseCli(
 export async function recoverServerDatabase(
 	options: RecoverServerDatabaseOptions = {},
 ): Promise<RecoverServerDatabaseResult> {
-	const sourcePath = path.resolve(
-		options.dbPath ?? process.env.PIV_SERVER_DATABASE_PATH ?? DEFAULT_DB_PATH,
-	);
+	const sourcePath = await resolveRecoverDatabasePath(options.dbPath);
 	const validateDatabase = options.validateDatabase ?? validateServerDatabase;
 	await ensureDirectory(sourcePath);
 
@@ -88,6 +84,12 @@ export async function recoverServerDatabase(
 	} finally {
 		await rm(tempDir, { recursive: true, force: true });
 	}
+}
+
+async function resolveRecoverDatabasePath(
+	dbPath: string | undefined,
+): Promise<string> {
+	return dbPath ? path.resolve(dbPath) : resolveDatabasePath(undefined);
 }
 
 async function restoreValidatedCopy(input: {

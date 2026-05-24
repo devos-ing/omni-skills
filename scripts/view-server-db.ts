@@ -1,14 +1,10 @@
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { resolveDatabasePath } from "../packages/db/scripts/cli";
 import { readOptionValue } from "./script-args";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..");
-const DEFAULT_DB_PATH = path.join(
-	REPO_ROOT,
-	"packages/server/.devos/config/server-db",
-);
-const ROOT_DB_PATH = path.join(REPO_ROOT, ".devos", "config", "server-db");
 const DEFAULT_LIMIT = 20;
 const requireFromDb = createRequire(
 	path.join(REPO_ROOT, "packages", "db", "package.json"),
@@ -29,13 +25,10 @@ async function main() {
 		return;
 	}
 
-	const dbPath = resolveDatabasePath(args.db);
+	const dbPath = await resolveDatabasePath(args.db);
 
 	if (!existsSync(dbPath)) {
 		console.error(`Server database path does not exist: ${dbPath}`);
-		if (dbPath === DEFAULT_DB_PATH) {
-			console.error(`Hint: try --db ${ROOT_DB_PATH}`);
-		}
 		process.exit(1);
 	}
 
@@ -125,12 +118,6 @@ async function createClient(dbPath: string) {
 	const pglitePath = requireFromDb.resolve("@electric-sql/pglite");
 	const { PGlite } = await import(pglitePath);
 	return new PGlite(dbPath);
-}
-
-function resolveDatabasePath(dbPath: string | undefined) {
-	return path.resolve(
-		dbPath ?? process.env.PIV_SERVER_DATABASE_PATH ?? DEFAULT_DB_PATH,
-	);
 }
 
 async function printTables(client: Awaited<ReturnType<typeof createClient>>) {
@@ -237,5 +224,5 @@ Options:
   --db <path>      PGlite database path
   --limit <count>  Row limit for --table (${DEFAULT_LIMIT})
   --help, -h       Show this help
-Default DB path: ${DEFAULT_DB_PATH}`);
+Default DB path: configured instance DB, then repo-local .devos/config/server-db fallback`);
 }
