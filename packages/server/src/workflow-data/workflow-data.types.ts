@@ -7,6 +7,7 @@ import type {
 	CreateTaskPayload,
 	UpdateTaskPayload,
 } from "../http/project-task-api.types";
+import type { WorkflowComputerRegistration } from "./workflow-computer.types";
 
 export const WORKFLOW_DATA_WS_PATH = "/api/workflow";
 
@@ -200,6 +201,7 @@ export interface WorkflowClientCommandFrame {
 export interface WorkflowWorkerReadyFrame {
 	type: "cli.worker.ready";
 	workerId: string;
+	computer?: WorkflowComputerRegistration;
 }
 
 export interface WorkflowWorkerDispatchFrame {

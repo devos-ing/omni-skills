@@ -28,3 +28,7 @@ export {
 	type WorkflowWorkerDispatchFrame,
 	type WorkflowWorkerReadyFrame,
 } from "./workflow-data.types";
+export type {
+	RegisteredWorkflowComputer,
+	WorkflowComputerRegistration,
+} from "./workflow-computer.types";

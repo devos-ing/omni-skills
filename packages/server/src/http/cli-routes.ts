@@ -14,5 +14,12 @@ export async function handleCliRoute(
 		return jsonSuccess(cliExecutor.getHistory());
 	}
 
+	if (pathname === "/api/computers") {
+		if (request.method !== "GET") {
+			return methodNotAllowed();
+		}
+		return jsonSuccess(cliExecutor.listComputers?.() ?? []);
+	}
+
 	return null;
 }

@@ -6,6 +6,7 @@ import type {
 	CliCommandStreamEvent,
 } from "../server";
 import { resolveWorkflowWorkerUrl } from "./daemon-urls";
+import { buildWorkflowComputerRegistration } from "./workflow-computer-registration";
 import {
 	logWorkerActionReceived,
 	logWorkerStreamEvent,
@@ -31,6 +32,7 @@ export function startWorkflowCommandWorker(
 	options: WorkflowCommandWorkerOptions,
 ): WorkflowCommandWorker {
 	const workerId = options.workerId ?? crypto.randomUUID();
+	const computer = options.computer ?? buildWorkflowComputerRegistration(options);
 	const workerLogger = options.logger ?? defaultLogger;
 	const executor = new CliCommandExecutor(
 		buildWorkflowCommandWorkerExecutorOptions(options),
@@ -54,6 +56,7 @@ export function startWorkflowCommandWorker(
 			sendFrame(socket, {
 				type: "cli.worker.ready",
 				workerId,
+				computer,
 			} satisfies WorkflowWorkerReadyFrame);
 		});
 		socket.addEventListener("message", (event) => {

@@ -10,6 +10,7 @@ import type { BoardRepository } from "./board";
 import type { NotificationService } from "./notifications/notifications-service";
 import type { RealtimeEventPublisher } from "./realtime";
 import type { ReadRepositories } from "./repositories.types";
+import type { RegisteredWorkflowComputer } from "./workflow-data";
 
 export interface CliExecutor {
 	execute(request: CliCommandRequest): Promise<CliCommandExecutionResult>;
@@ -18,6 +19,7 @@ export interface CliExecutor {
 		emit: CliCommandStreamEmit,
 	): Promise<CliCommandExecutionResult>;
 	getHistory(): CliCommandExecutionHistoryEntry[];
+	listComputers?(): RegisteredWorkflowComputer[];
 }
 
 export interface AppDeps {

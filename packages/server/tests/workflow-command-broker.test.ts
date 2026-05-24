@@ -38,7 +38,17 @@ describe("workflow command broker", () => {
 		const broker = createWorkflowCommandBroker();
 		const worker = new FakeWorkflowSocket();
 		const frames: WorkflowCommandStreamFrame[] = [];
-		broker.registerWorker(worker, "worker-1");
+		broker.registerWorker(worker, "worker-1", {
+			id: "roys-macbook",
+			name: "Roy's MacBook",
+			hostname: "roys-macbook.local",
+			platform: "darwin",
+			arch: "arm64",
+			cwd: "/repo",
+			startedAt: "2026-05-24T00:00:00.000Z",
+			processId: 123,
+			user: "roy",
+		});
 
 		const done = broker.dispatchCommand(
 			{ type: "command", requestId: "req-2", request: { action: "onboard" } },
@@ -74,6 +84,11 @@ describe("workflow command broker", () => {
 			request: { action: "onboard" },
 			status: "succeeded",
 		});
+		expect(broker.listComputers()[0]).toMatchObject({
+			id: "roys-macbook",
+			workerId: "worker-1",
+			status: "online",
+		});
 	});
 
 	it("fails pending command dispatch when the active worker closes", async () => {
@@ -102,6 +117,29 @@ describe("workflow command broker", () => {
 				error: "CLI worker disconnected: worker-1",
 			},
 		});
+	});
+
+	it("marks registered computers offline when their worker disconnects", () => {
+		const broker = createWorkflowCommandBroker();
+		const worker = new FakeWorkflowSocket();
+		broker.registerWorker(worker, "worker-1", {
+			id: "computer-1",
+			name: "Computer 1",
+			hostname: "computer-1.local",
+			platform: "darwin",
+			arch: "arm64",
+			cwd: "/repo",
+			startedAt: "2026-05-24T00:00:00.000Z",
+		});
+
+		worker.close();
+
+		expect(broker.listComputers()[0]).toMatchObject({
+			id: "computer-1",
+			status: "offline",
+			workerId: "worker-1",
+		});
+		expect(broker.listComputers()[0]?.disconnectedAt).toBeTruthy();
 	});
 });
 

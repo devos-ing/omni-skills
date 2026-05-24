@@ -99,7 +99,7 @@ async function handleWorkflowSocketMessage(
 		return;
 	}
 	if (frame.type === "cli.worker.ready") {
-		options.commandBroker?.registerWorker(client, frame.workerId);
+		options.commandBroker?.registerWorker(client, frame.workerId, frame.computer);
 		return;
 	}
 	options.commandBroker?.handleWorkerFrame(frame);

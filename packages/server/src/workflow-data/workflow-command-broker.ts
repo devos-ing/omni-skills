@@ -14,11 +14,16 @@ import type {
 	WorkflowCommandStreamFrame,
 	WorkflowWorkerDispatchFrame,
 } from "./workflow-data.types";
+import type {
+	WorkflowComputerRegistration,
+	RegisteredWorkflowComputer,
+} from "./workflow-computer.types";
 
 const DEFAULT_HISTORY_LIMIT = 100;
 const NO_WORKER_ERROR = "No CLI worker connected to /api/workflow";
 
 interface ActiveWorker {
+	computerId?: string;
 	socket: WorkflowDataSocket;
 	workerId: string;
 }
@@ -34,6 +39,7 @@ export function createWorkflowCommandBroker(
 	historyLimit = DEFAULT_HISTORY_LIMIT,
 ): WorkflowCommandBroker {
 	const history: CliCommandExecutionHistoryEntry[] = [];
+	const computers = new Map<string, RegisteredWorkflowComputer>();
 	const pending = new Map<string, PendingCommand>();
 	let activeWorker: ActiveWorker | undefined;
 
@@ -46,7 +52,12 @@ export function createWorkflowCommandBroker(
 				emit(toCommandStreamEvent(frame)),
 			),
 		getHistory: () => [...history],
+		listComputers: () =>
+			[...computers.values()].sort((left, right) =>
+				left.name.localeCompare(right.name),
+			),
 		handleWorkerFrame(frame) {
+			touchActiveComputer();
 			const command = pending.get(frame.requestId);
 			if (!command) {
 				return;
@@ -59,15 +70,22 @@ export function createWorkflowCommandBroker(
 				command.resolve(result);
 			}
 		},
-		registerWorker(socket, workerId) {
+		registerWorker(socket, workerId, computer) {
 			if (activeWorker && activeWorker.socket !== socket) {
 				failPending("CLI worker replaced");
+				markComputerOffline(activeWorker.computerId);
 				activeWorker.socket.close();
 			}
-			activeWorker = { socket, workerId };
+			const computerId = registerComputer(workerId, computer);
+			activeWorker = {
+				socket,
+				workerId,
+				...(computerId ? { computerId } : {}),
+			};
 			socket.on("close", () => {
 				if (activeWorker?.socket === socket) {
 					activeWorker = undefined;
+					markComputerOffline(computerId);
 					failPending(`CLI worker disconnected: ${workerId}`);
 				}
 			});
@@ -117,6 +135,56 @@ export function createWorkflowCommandBroker(
 			command.resolve(result);
 		}
 		pending.clear();
+	}
+
+	function registerComputer(
+		workerId: string,
+		computer: WorkflowComputerRegistration | undefined,
+	): string | undefined {
+		if (!computer) {
+			return undefined;
+		}
+		const now = new Date().toISOString();
+		computers.set(computer.id, {
+			...computer,
+			workerId,
+			status: "online",
+			connectedAt: now,
+			lastSeenAt: now,
+		});
+		return computer.id;
+	}
+
+	function touchActiveComputer(): void {
+		const computerId = activeWorker?.computerId;
+		if (!computerId) {
+			return;
+		}
+		const computer = computers.get(computerId);
+		if (!computer) {
+			return;
+		}
+		computers.set(computerId, {
+			...computer,
+			lastSeenAt: new Date().toISOString(),
+		});
+	}
+
+	function markComputerOffline(computerId: string | undefined): void {
+		if (!computerId) {
+			return;
+		}
+		const computer = computers.get(computerId);
+		if (!computer) {
+			return;
+		}
+		const now = new Date().toISOString();
+		computers.set(computerId, {
+			...computer,
+			status: "offline",
+			lastSeenAt: now,
+			disconnectedAt: now,
+		});
 	}
 
 	return broker;

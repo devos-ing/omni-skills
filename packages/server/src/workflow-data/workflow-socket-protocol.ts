@@ -9,6 +9,7 @@ import type {
 	WorkflowSocketInboundFrame,
 	WorkflowWorkerReadyFrame,
 } from "./workflow-data.types";
+import { parseComputerRegistration } from "./workflow-computer-registration";
 
 const WORKFLOW_ACTIONS = new Set<string>([
 	"tasks.list",
@@ -146,9 +147,17 @@ function parseWorkerReady(
 	if (typeof value.workerId !== "string" || !value.workerId.trim()) {
 		return errorParseFrame("invalid_worker", "workerId is required");
 	}
+	const computer = parseComputerRegistration(value.computer);
+	if (computer.status === "error") {
+		return computer;
+	}
 	return {
 		status: "ok",
-		frame: { type: "cli.worker.ready", workerId: value.workerId },
+		frame: {
+			type: "cli.worker.ready",
+			workerId: value.workerId,
+			...(computer.value ? { computer: computer.value } : {}),
+		},
 	};
 }
 

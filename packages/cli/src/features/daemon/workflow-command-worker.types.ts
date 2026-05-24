@@ -40,6 +40,7 @@ export interface WorkflowCommandWorkerSignalTarget {
 
 export interface WorkflowCommandWorkerOptions {
 	cwd: string;
+	computer?: WorkflowComputerRegistration;
 	env?: NodeJS.ProcessEnv;
 	logger?: WorkflowCommandWorkerLogger;
 	reconnectDelayMs?: number;
@@ -70,6 +71,7 @@ export interface WorkflowPongFrame {
 export interface WorkflowWorkerReadyFrame {
 	type: "cli.worker.ready";
 	workerId: string;
+	computer?: WorkflowComputerRegistration;
 }
 
 export interface WorkflowWorkerDispatchFrame {
@@ -81,3 +83,15 @@ export interface WorkflowWorkerDispatchFrame {
 export type WorkflowCommandStreamFrame = CliCommandStreamEvent & {
 	requestId: string;
 };
+
+export interface WorkflowComputerRegistration {
+	id: string;
+	name: string;
+	hostname: string;
+	platform: string;
+	arch: string;
+	cwd: string;
+	startedAt: string;
+	processId?: number;
+	user?: string;
+}

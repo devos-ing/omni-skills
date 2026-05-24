@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+	buildWorkflowComputerRegistration,
 	handleWorkerMessage,
 	parseWorkerInboundFrame,
 	startWorkflowCommandWorker,
@@ -11,6 +12,17 @@ describe("workflow command worker", () => {
 		const WebSocketImpl = createFakeWebSocketConstructor();
 		startWorkflowCommandWorker({
 			cwd: "/repo",
+			computer: {
+				id: "roys-macbook",
+				name: "Roy's MacBook",
+				hostname: "roys-macbook.local",
+				platform: "darwin",
+				arch: "arm64",
+				cwd: "/repo",
+				startedAt: "2026-05-24T00:00:00.000Z",
+				processId: 123,
+				user: "roy",
+			},
 			env: { DEVOS_WORKFLOW_WS_URL: "ws://server.test/api/workflow" },
 			WebSocketImpl,
 			workerId: "worker-1",
@@ -21,8 +33,40 @@ describe("workflow command worker", () => {
 
 		expect(socket?.url).toBe("ws://server.test/api/workflow");
 		expect(socket?.sent.map((message) => JSON.parse(message))).toEqual([
-			{ type: "cli.worker.ready", workerId: "worker-1" },
+			{
+				type: "cli.worker.ready",
+				workerId: "worker-1",
+				computer: {
+					id: "roys-macbook",
+					name: "Roy's MacBook",
+					hostname: "roys-macbook.local",
+					platform: "darwin",
+					arch: "arm64",
+					cwd: "/repo",
+					startedAt: "2026-05-24T00:00:00.000Z",
+					processId: 123,
+					user: "roy",
+				},
+			},
 		]);
+	});
+
+	it("builds a stable computer registration for the worker process", () => {
+		const registration = buildWorkflowComputerRegistration({
+			cwd: "/repo",
+			env: { DEVOS_COMPUTER_NAME: "Roy's MacBook" },
+		});
+
+		expect(registration).toMatchObject({
+			id: "roy-s-macbook",
+			name: "Roy's MacBook",
+			cwd: "/repo",
+			processId: process.pid,
+		});
+		expect(registration.hostname).toBeTruthy();
+		expect(registration.platform).toBeTruthy();
+		expect(registration.arch).toBeTruthy();
+		expect(Date.parse(registration.startedAt)).not.toBeNaN();
 	});
 
 	it("executes dispatch frames and streams command events back", async () => {

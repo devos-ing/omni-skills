@@ -35,7 +35,21 @@ describe("workflow command websocket routing", () => {
 		});
 
 		socket.emitMessage(
-			JSON.stringify({ type: "cli.worker.ready", workerId: "worker-1" }),
+			JSON.stringify({
+				type: "cli.worker.ready",
+				workerId: "worker-1",
+				computer: {
+					id: "roys-macbook",
+					name: "Roy's MacBook",
+					hostname: "roys-macbook.local",
+					platform: "darwin",
+					arch: "arm64",
+					cwd: "/repo",
+					startedAt: "2026-05-24T00:00:00.000Z",
+					processId: 123,
+					user: "roy",
+				},
+			}),
 		);
 		socket.emitMessage(
 			JSON.stringify({ type: "complete", requestId: "cmd-2", result: {} }),
@@ -44,6 +58,17 @@ describe("workflow command websocket routing", () => {
 		expect(broker.workerFrames).toEqual([
 			{ type: "complete", requestId: "cmd-2", result: {} },
 		]);
+		expect(broker.registeredComputer).toEqual({
+			id: "roys-macbook",
+			name: "Roy's MacBook",
+			hostname: "roys-macbook.local",
+			platform: "darwin",
+			arch: "arm64",
+			cwd: "/repo",
+			startedAt: "2026-05-24T00:00:00.000Z",
+			processId: 123,
+			user: "roy",
+		});
 	});
 });
 
@@ -84,13 +109,16 @@ class FakeWorkflowDataSocket
 }
 
 function createFakeCommandBroker(): WorkflowCommandBroker & {
+	registeredComputer?: unknown;
 	registeredWorkerId?: string;
 	workerFrames: unknown[];
 } {
 	const broker: WorkflowCommandBroker & {
+		registeredComputer?: unknown;
 		registeredWorkerId?: string;
 		workerFrames: unknown[];
 	} = {
+		registeredComputer: undefined,
 		registeredWorkerId: undefined,
 		workerFrames: [],
 		dispatchCommand: async (frame, emit) => {
@@ -101,11 +129,13 @@ function createFakeCommandBroker(): WorkflowCommandBroker & {
 		execute: async (request) => ({ status: "succeeded", request }),
 		executeStream: async (request) => ({ status: "succeeded", request }),
 		getHistory: () => [],
+		listComputers: () => [],
 		handleWorkerFrame: (frame) => {
 			broker.workerFrames.push(frame);
 		},
-		registerWorker: (_socket, workerId) => {
+		registerWorker: (_socket, workerId, computer) => {
 			broker.registeredWorkerId = workerId;
+			broker.registeredComputer = computer;
 		},
 	};
 	return broker;

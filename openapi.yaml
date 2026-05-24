@@ -25,6 +25,18 @@ paths:
       responses:
         '200':
           description: In-memory CLI execution history.
+  /api/computers:
+    get:
+      tags: [CLI]
+      responses:
+        '200':
+          description: Registered workflow worker computers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegisteredComputerRecord'
   /api/token-usage:
     get:
       tags: [Read Models]
@@ -750,6 +762,51 @@ components:
         exitCode:
           type: integer
         executedAt:
+          type: string
+    RegisteredComputerRecord:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - hostname
+        - platform
+        - arch
+        - cwd
+        - startedAt
+        - workerId
+        - status
+        - connectedAt
+        - lastSeenAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        hostname:
+          type: string
+        platform:
+          type: string
+        arch:
+          type: string
+        cwd:
+          type: string
+        startedAt:
+          type: string
+        processId:
+          type: integer
+        user:
+          type: string
+        workerId:
+          type: string
+        status:
+          type: string
+          enum: [online, offline]
+        connectedAt:
+          type: string
+        lastSeenAt:
+          type: string
+        disconnectedAt:
           type: string
     PollingStatusResponse:
       type: object

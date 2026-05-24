@@ -49,7 +49,7 @@ bun run dev
 bun run dev:worker
 
 # standalone command worker only, without polling
-npx devos workflow-worker
+npx devos worker
 
 # production/local package daemon after build artifacts exist
 devos daemon
@@ -132,9 +132,10 @@ DEVOS_SERVER_BASE_URL=http://127.0.0.1:3001
 DEVOS_WORKFLOW_WS_URL=ws://127.0.0.1:3001/api/workflow
 ```
 
-After `bun run build`, use `devos workflow-worker` or
-`npx devos workflow-worker` from the repository root only when you want the
-standalone command worker without polling.
+After `bun run build`, use `devos worker` or `npx devos worker` from the
+repository root only when you want the standalone command worker without
+polling. The older `workflow-worker` command remains available as a compatibility
+alias.
 
 Use `devos daemon` to run the production API server, web UI, outbound CLI workflow worker, and workflow poller together in the foreground after production artifacts already exist. The command starts the server on `PIV_SERVER_PORT=3001`, the web UI on `PORT=3000`, and a supervised `run --all-projects --poll-forever` worker by default, with command and database websocket traffic sharing `DEVOS_WORKFLOW_WS_URL` at `/api/workflow`. Override those environment variables before starting when needed.
 

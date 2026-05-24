@@ -5,6 +5,10 @@ import type {
 	WorkflowClientCommandFrame,
 	WorkflowCommandStreamFrame,
 } from "./workflow-data.types";
+import type {
+	WorkflowComputerRegistration,
+	RegisteredWorkflowComputer,
+} from "./workflow-computer.types";
 
 export interface WorkflowCommandBroker extends CliExecutor {
 	dispatchCommand(
@@ -12,5 +16,10 @@ export interface WorkflowCommandBroker extends CliExecutor {
 		emit: (frame: WorkflowCommandStreamFrame) => void,
 	): Promise<CliCommandExecutionResult>;
 	handleWorkerFrame(frame: WorkflowCommandStreamFrame): void;
-	registerWorker(socket: WorkflowDataSocket, workerId: string): void;
+	listComputers(): RegisteredWorkflowComputer[];
+	registerWorker(
+		socket: WorkflowDataSocket,
+		workerId: string,
+		computer?: WorkflowComputerRegistration,
+	): void;
 }

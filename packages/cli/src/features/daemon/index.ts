@@ -57,6 +57,9 @@ export type {
 	AttachedPollerSpawnOptions,
 } from "./daemon-poller";
 export {
+	buildWorkflowComputerRegistration,
+} from "./workflow-computer-registration";
+export {
 	buildWorkflowCommandWorkerExecutorOptions,
 	handleWorkerMessage,
 	parseWorkerInboundFrame,
