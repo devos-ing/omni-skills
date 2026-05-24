@@ -10,7 +10,7 @@ export const navItems: SidebarNavItem[] = [
 	{ key: "projects", label: "Projects", href: "/projects" },
 	{ key: "autopilot", label: "Autopilot", href: "/autopilot" },
 	{ key: "agents", label: "Agents", href: "/agents" },
-	{ key: "squads", label: "Squads", href: "/squads" },
+	// { key: "squads", label: "Squads", href: "/squads" },
 	{ key: "usage", label: "Usage", href: "/usage" },
 	{ key: "runtimes", label: "Runtimes", href: "/runtimes" },
 	{ key: "skills", label: "Skills", href: "/skills" },

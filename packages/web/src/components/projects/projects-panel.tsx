@@ -1,72 +1,66 @@
 "use client";
 
-import { Plus, RefreshCw } from "lucide-react";
+import { LayoutGrid, List, Plus, RefreshCw, Search } from "lucide-react";
 import type { ChangeEvent, FormEvent, ReactElement } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useCreateProjectMutation } from "@/lib/api/queries";
 import { useWorkspaceProjectsQuery } from "@/lib/api/realtime-queries";
+import { cn } from "@/lib/utils";
 
+import { ProjectCreateDialog } from "./project-create-dialog";
 import {
 	EMPTY_PROJECT_FORM_STATE,
 	buildProjectCreateRequest,
+	buildProjectDisplayRows,
+	filterProjects,
 } from "./projects-panel-utils";
-import type { ProjectFormState } from "./types/projects-panel.types";
+import { ProjectsTable } from "./projects-table";
+import type {
+	ProjectFormState,
+	ProjectTableDensity,
+} from "./types/projects-panel.types";
 
 const LOCAL_WORKSPACE_ID = "owner-1";
 const LOCAL_BOARD_ID = "board-1";
-
-const FIELD_GROUPS: Array<{
-	title: string;
-	fields: Array<{
-		name: keyof ProjectFormState;
-		label: string;
-		placeholder?: string;
-		type?: "number" | "text";
-	}>;
-}> = [
-	{
-		title: "Identity",
-		fields: [
-			{ name: "name", label: "Project name" },
-			{ name: "externalProjectId", label: "External project ID" },
-			{ name: "description", label: "Description" },
-		],
-	},
-	{
-		title: "Repository",
-		fields: [
-			{ name: "repoOwner", label: "Repo owner", placeholder: "octo" },
-			{ name: "repoName", label: "Repo name", placeholder: "core" },
-			{ name: "baseBranch", label: "Base branch" },
-			{ name: "localFolder", label: "Local folder" },
-		],
-	},
-	{
-		title: "Ownership",
-		fields: [
-			{ name: "lead", label: "Lead" },
-			{ name: "category", label: "Category" },
-			{ name: "priority", label: "Priority", type: "number" },
-		],
-	},
-];
 
 export function ProjectsPanel(): ReactElement {
 	const [form, setForm] = useState<ProjectFormState>({
 		...EMPTY_PROJECT_FORM_STATE,
 	});
 	const [formError, setFormError] = useState<string | null>(null);
+	const [isCreateOpen, setIsCreateOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [density, setDensity] = useState<ProjectTableDensity>("compact");
 	const projectsQuery = useWorkspaceProjectsQuery(LOCAL_WORKSPACE_ID, {
 		refetchIntervalMs: false,
 	});
 	const createProject = useCreateProjectMutation();
+	const projects = projectsQuery.data ?? [];
+	const filteredProjects = useMemo(
+		() => filterProjects(projects, searchQuery),
+		[projects, searchQuery],
+	);
+	const projectRows = useMemo(
+		() => buildProjectDisplayRows(filteredProjects),
+		[filteredProjects],
+	);
 
 	function updateField(
 		field: keyof ProjectFormState,
 		event: ChangeEvent<HTMLInputElement>,
 	): void {
 		setForm((current) => ({ ...current, [field]: event.target.value }));
+	}
+
+	function openCreateDialog(): void {
+		setFormError(null);
+		setIsCreateOpen(true);
+	}
+
+	function closeCreateDialog(): void {
+		setIsCreateOpen(false);
+		setFormError(null);
 	}
 
 	async function submitProject(
@@ -82,6 +76,7 @@ export function ProjectsPanel(): ReactElement {
 				}),
 			);
 			setForm({ ...EMPTY_PROJECT_FORM_STATE });
+			setIsCreateOpen(false);
 		} catch (error) {
 			setFormError(
 				error instanceof Error ? error.message : "Project save failed",
@@ -90,109 +85,144 @@ export function ProjectsPanel(): ReactElement {
 	}
 
 	return (
-		<section className="h-[100dvh] max-h-[100dvh] overflow-auto bg-[#0f1013] p-4 text-zinc-100">
-			<header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-				<div>
-					<h1 className="m-0 text-2xl font-semibold">Projects</h1>
-					<p className="m-0 mt-1 text-sm text-zinc-400">
-						{projectsQuery.data?.length ?? 0} configured
-					</p>
+		<section className="grid h-[100dvh] max-h-[100dvh] min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-[#0f1013] text-zinc-100">
+			<header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 bg-[#111216] px-5 py-4">
+				<div className="flex min-w-0 items-center gap-2">
+					<h1 className="m-0 truncate text-xl font-semibold">Projects</h1>
+					<span className="text-sm text-zinc-500">{projects.length}</span>
 				</div>
-				<button
-					type="button"
-					className="inline-flex items-center gap-2 rounded border border-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-					onClick={() => void projectsQuery.refetch()}
-				>
-					<RefreshCw size={16} />
-					Refresh
-				</button>
-			</header>
-
-			<div className="grid gap-4 lg:grid-cols-[minmax(20rem,28rem)_1fr]">
-				<form
-					className="grid content-start gap-4 border border-zinc-800 bg-[#17181c] p-4"
-					onSubmit={submitProject}
-				>
-					{FIELD_GROUPS.map((group) => (
-						<fieldset
-							key={group.title}
-							className="grid gap-3 border-0 border-t border-zinc-800 p-0 pt-3 first:border-t-0 first:pt-0"
-						>
-							<legend className="mb-1 text-sm font-medium text-zinc-300">
-								{group.title}
-							</legend>
-							{group.fields.map((field) => (
-								<label key={field.name} className="grid gap-1 text-sm">
-									<span className="text-zinc-400">{field.label}</span>
-									<input
-										className="h-10 border border-zinc-700 bg-[#111216] px-3 text-zinc-100 outline-none focus:border-cyan-600"
-										name={field.name}
-										placeholder={field.placeholder}
-										type={field.type ?? "text"}
-										value={form[field.name]}
-										onChange={(event) => updateField(field.name, event)}
-									/>
-								</label>
-							))}
-						</fieldset>
-					))}
-					{formError ? (
-						<p className="m-0 text-sm text-red-300">{formError}</p>
-					) : null}
+				<div className="flex flex-wrap items-center gap-2">
 					<button
-						type="submit"
-						className="inline-flex h-10 items-center justify-center gap-2 border border-cyan-700 bg-cyan-950 px-3 text-sm font-medium text-cyan-100 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-60"
-						disabled={createProject.isPending}
+						aria-label="Refresh projects"
+						className="issue-icon-button"
+						onClick={() => void projectsQuery.refetch()}
+						type="button"
+					>
+						<RefreshCw size={16} />
+					</button>
+					<button
+						className="issue-primary-button"
+						onClick={openCreateDialog}
+						type="button"
 					>
 						<Plus size={16} />
-						Create project
+						New project
 					</button>
-				</form>
-
-				<section className="min-w-0 border border-zinc-800 bg-[#17181c]">
-					<div className="border-b border-zinc-800 px-4 py-3">
-						<h2 className="m-0 text-base font-semibold">Workspace projects</h2>
-					</div>
-					<div className="grid gap-0">
-						{projectsQuery.isLoading ? (
-							<p className="m-0 p-4 text-sm text-zinc-400">Loading projects</p>
-						) : null}
-						{projectsQuery.error ? (
-							<p className="m-0 p-4 text-sm text-red-300">
-								{projectsQuery.error.message}
-							</p>
-						) : null}
-						{(projectsQuery.data ?? []).map((project) => (
-							<article
-								key={project.id}
-								className="grid gap-2 border-b border-zinc-800 p-4 last:border-b-0"
-							>
-								<div className="flex flex-wrap items-center justify-between gap-2">
-									<h3 className="m-0 text-base font-semibold">
-										{project.name}
-									</h3>
-									<span className="text-xs text-zinc-500">{project.id}</span>
-								</div>
-								<p className="m-0 text-sm text-zinc-400">
-									{project.description ?? "No description"}
-								</p>
-								<div className="flex flex-wrap gap-2 text-xs text-zinc-500">
-									<span>
-										{project.repoOwner ?? "-"} / {project.repoName ?? "-"}
-									</span>
-									<span>{project.baseBranch ?? "main"}</span>
-									<span>{project.localFolder ?? "No local folder"}</span>
-								</div>
-							</article>
-						))}
-						{!projectsQuery.isLoading &&
-						!projectsQuery.error &&
-						(projectsQuery.data?.length ?? 0) === 0 ? (
-							<p className="m-0 p-4 text-sm text-zinc-400">No projects yet</p>
-						) : null}
-					</div>
-				</section>
+				</div>
+			</header>
+			<ProjectToolbar
+				density={density}
+				filteredCount={filteredProjects.length}
+				searchQuery={searchQuery}
+				totalCount={projects.length}
+				onDensityChange={setDensity}
+				onSearchChange={setSearchQuery}
+			/>
+			<div className="min-h-0 p-5 pt-4">
+				<ProjectsTable
+					density={density}
+					error={projectsQuery.error}
+					isLoading={projectsQuery.isLoading}
+					rows={projectRows}
+					searchQuery={searchQuery}
+					totalCount={projects.length}
+				/>
 			</div>
+			{isCreateOpen ? (
+				<ProjectCreateDialog
+					form={form}
+					formError={formError}
+					isSaving={createProject.isPending}
+					onClose={closeCreateDialog}
+					onSubmit={(event) => void submitProject(event)}
+					onUpdateField={updateField}
+				/>
+			) : null}
 		</section>
+	);
+}
+
+function ProjectToolbar({
+	density,
+	filteredCount,
+	searchQuery,
+	totalCount,
+	onDensityChange,
+	onSearchChange,
+}: {
+	density: ProjectTableDensity;
+	filteredCount: number;
+	searchQuery: string;
+	totalCount: number;
+	onDensityChange: (density: ProjectTableDensity) => void;
+	onSearchChange: (value: string) => void;
+}): ReactElement {
+	return (
+		<div className="flex flex-wrap items-center gap-3 border-b border-zinc-900 px-5 py-3">
+			<label className="relative min-w-60 flex-1 sm:max-w-sm">
+				<Search
+					className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+					size={16}
+				/>
+				<input
+					aria-label="Search projects"
+					className="issue-input h-10 w-full pl-9"
+					onChange={(event) => onSearchChange(event.target.value)}
+					placeholder="Search projects..."
+					value={searchQuery}
+				/>
+			</label>
+			<div className="ml-auto flex flex-wrap items-center gap-3">
+				<span className="whitespace-nowrap text-sm text-zinc-500">
+					{filteredCount} / {totalCount}
+				</span>
+				<div className="inline-flex rounded-lg border border-zinc-800 bg-[#18191d] p-1">
+					<DensityButton
+						density="compact"
+						icon={<List size={15} />}
+						isActive={density === "compact"}
+						label="Compact"
+						onSelect={onDensityChange}
+					/>
+					<DensityButton
+						density="comfortable"
+						icon={<LayoutGrid size={15} />}
+						isActive={density === "comfortable"}
+						label="Comfortable"
+						onSelect={onDensityChange}
+					/>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function DensityButton({
+	density,
+	icon,
+	isActive,
+	label,
+	onSelect,
+}: {
+	density: ProjectTableDensity;
+	icon: ReactElement;
+	isActive: boolean;
+	label: string;
+	onSelect: (density: ProjectTableDensity) => void;
+}): ReactElement {
+	return (
+		<button
+			className={cn(
+				"inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-sm",
+				isActive
+					? "bg-zinc-800 text-zinc-100"
+					: "text-zinc-500 hover:text-zinc-200",
+			)}
+			onClick={() => onSelect(density)}
+			type="button"
+		>
+			{icon}
+			<span>{label}</span>
+		</button>
 	);
 }
