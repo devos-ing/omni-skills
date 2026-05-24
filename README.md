@@ -95,9 +95,13 @@ After `bun install` and `bun run build`, use `npx devos ...` from the repo root 
 
 ## Local Server/Web Notes
 
-Use `bun run dev` from the repository root to start the local API server and web UI together. The combined entrypoint runs `dev:server` with `PIV_SERVER_PORT=3001` and `dev:web` with `PORT=3002` so the two local servers do not contend for the same port.
+Use `bun run dev` from the repository root to start the local API server, web UI,
+and workflow worker together. The combined entrypoint runs `dev:server`,
+`dev:web` with `PORT=3000`, and `dev:worker` connected to `/api/workflow`.
 
-Use `bun run dev:server` or `bun run dev:web` when you only need one side of the local stack.
+Use `bun run dev:server`, `bun run dev:web`, or `bun run dev:worker` when you
+only need one side of the local stack. Chat task creation and browser command
+streams need the workflow worker connected to `/api/workflow`.
 
 Use `devos daemon` to run the production API server, web UI, outbound CLI workflow worker, and workflow poller together in the foreground after production artifacts already exist. The command starts the server on `PIV_SERVER_PORT=3001`, the web UI on `PORT=3000`, and a supervised `run --all-projects --poll-forever` worker by default, with command and database websocket traffic sharing `DEVOS_WORKFLOW_WS_URL` at `/api/workflow`. Override those environment variables before starting when needed.
 
@@ -109,7 +113,10 @@ To run the full local development stack in Docker, use:
 docker compose up
 ```
 
-The Compose stack starts the web UI at `http://localhost:3000`, the API server health endpoint at `http://localhost:3001/health`, and the landing site at `http://localhost:3002`. Stop it with:
+The Compose stack starts the web UI at `http://localhost:3000`, the API server
+health endpoint at `http://localhost:3001/health`, the workflow worker connected
+to `ws://server:3001/api/workflow`, and the landing site at
+`http://localhost:3002`. Stop it with:
 
 ```bash
 docker compose down

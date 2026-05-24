@@ -93,6 +93,8 @@ export type OnboardCommand = { check: boolean };
 
 export type DaemonCommand = Record<string, never>;
 
+export type WorkflowWorkerCommand = Record<string, never>;
+
 export type StatusCommand = {
 	issueKey: string;
 	projectId: string;
@@ -103,6 +105,7 @@ export type CliRuntime = {
 	loadConfig(): Promise<LoadedConfig>;
 	handleOnboardCommand(command: OnboardCommand, cwd: string): Promise<void>;
 	runProductionDaemon(options: { cwd: string }): Promise<number>;
+	runWorkflowCommandWorker(options: { cwd: string }): Promise<number>;
 	handleRunCommand(config: LoadedConfig, options: RunOptions): Promise<void>;
 	handleStatusCommand(
 		config: LoadedConfig,

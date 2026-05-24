@@ -33,6 +33,11 @@ export interface WorkflowCommandWorkerLogger {
 	error(context: Record<string, unknown>, message: string): void;
 }
 
+export interface WorkflowCommandWorkerSignalTarget {
+	on(signal: NodeJS.Signals, listener: () => void): void;
+	off(signal: NodeJS.Signals, listener: () => void): void;
+}
+
 export interface WorkflowCommandWorkerOptions {
 	cwd: string;
 	env?: NodeJS.ProcessEnv;
@@ -41,6 +46,15 @@ export interface WorkflowCommandWorkerOptions {
 	scheduler?: WorkflowCommandWorkerScheduler;
 	WebSocketImpl?: WorkflowCommandWorkerWebSocketConstructor;
 	workerId?: string;
+}
+
+export interface RunWorkflowCommandWorkerOptions {
+	cwd?: string;
+	env?: NodeJS.ProcessEnv;
+	signalTarget?: WorkflowCommandWorkerSignalTarget;
+	startWorkflowWorker?: (
+		options: WorkflowCommandWorkerOptions,
+	) => WorkflowCommandWorker;
 }
 
 export interface WorkflowPingFrame {

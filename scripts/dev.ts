@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 const commands = [
 	["bun", ["run", "dev:server"], {}],
 	["bun", ["run", "dev:web"], { PORT: "3000" }],
-	["bun", ["run", "dev:daemon"], {}],
+	["bun", ["run", "dev:worker"], {}],
 ] as const;
 
 const children = commands.map(([command, args, env]) =>

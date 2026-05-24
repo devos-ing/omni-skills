@@ -60,6 +60,7 @@ export {
 	buildWorkflowCommandWorkerExecutorOptions,
 	handleWorkerMessage,
 	parseWorkerInboundFrame,
+	runWorkflowCommandWorker,
 	startWorkflowCommandWorker,
 } from "./workflow-command-worker";
 export {
@@ -73,6 +74,8 @@ export type {
 	WorkflowCommandWorkerOptions,
 	WorkflowCommandWorkerScheduler,
 	WorkflowCommandWorkerSchedulerHandle,
+	WorkflowCommandWorkerSignalTarget,
 	WorkflowCommandWorkerSocket,
 	WorkflowCommandWorkerWebSocketConstructor,
+	RunWorkflowCommandWorkerOptions,
 } from "./workflow-command-worker.types";

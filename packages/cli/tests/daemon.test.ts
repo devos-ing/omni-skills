@@ -2,8 +2,10 @@ import { describe, expect, it } from "bun:test";
 import {
 	buildDaemonCommands,
 	runProductionDaemon,
+	runWorkflowCommandWorker,
 } from "../src/features/daemon";
 import {
+	FakeSignalTarget,
 	createDaemonHarness,
 	flushAsyncWork,
 	readyImmediately,
@@ -189,5 +191,35 @@ describe("runProductionDaemon", () => {
 		await expect(done).resolves.toBe(1);
 		expect(harness.children[1]?.signals).toEqual(["SIGTERM"]);
 		expect(harness.workflowWorkerStopped).toBe(true);
+	});
+});
+
+describe("runWorkflowCommandWorker", () => {
+	it("keeps the standalone worker alive until process shutdown", async () => {
+		const signalTarget = new FakeSignalTarget();
+		let startedEnv: NodeJS.ProcessEnv | undefined;
+		let stopped = false;
+		const done = runWorkflowCommandWorker({
+			cwd: "/repo",
+			env: { DEVOS_WORKFLOW_WS_URL: "ws://server.test/api/workflow" },
+			signalTarget,
+			startWorkflowWorker: (options) => {
+				startedEnv = options.env;
+				return {
+					workerId: "worker-1",
+					stop: async () => {
+						stopped = true;
+					},
+				};
+			},
+		});
+
+		signalTarget.emitSignal("SIGTERM");
+
+		await expect(done).resolves.toBe(0);
+		expect(startedEnv).toMatchObject({
+			DEVOS_WORKFLOW_WS_URL: "ws://server.test/api/workflow",
+		});
+		expect(stopped).toBe(true);
 	});
 });

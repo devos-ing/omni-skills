@@ -19,6 +19,7 @@ export type {
 	SkillsCommand,
 	StatusCommand,
 	TaskCommand,
+	WorkflowWorkerCommand,
 } from "./args.types";
 
 export function createCliProgram(
@@ -37,6 +38,7 @@ export function createCliProgram(
 
 	registerRunCommand(program, runtime);
 	registerDaemonCommand(program, runtime);
+	registerWorkflowWorkerCommand(program, runtime);
 	registerOnboardCommand(program, runtime);
 	registerStatusCommand(program, runtime);
 	registerTaskCommand(program, runtime);
@@ -95,6 +97,20 @@ function registerDaemonCommand(program: Command, runtime: CliRuntime): void {
 		.description("run the production daemon")
 		.action(async () => {
 			process.exitCode = await runtime.runProductionDaemon({
+				cwd: runtime.cwd,
+			});
+		});
+}
+
+function registerWorkflowWorkerCommand(
+	program: Command,
+	runtime: CliRuntime,
+): void {
+	program
+		.command("workflow-worker")
+		.description("connect to /api/workflow and execute CLI commands")
+		.action(async () => {
+			process.exitCode = await runtime.runWorkflowCommandWorker({
 				cwd: runtime.cwd,
 			});
 		});

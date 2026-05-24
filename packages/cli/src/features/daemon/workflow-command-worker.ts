@@ -11,6 +11,7 @@ import {
 	logWorkerStreamEvent,
 } from "./workflow-command-worker-logging";
 import type {
+	RunWorkflowCommandWorkerOptions,
 	WorkflowCommandStreamFrame,
 	WorkflowCommandWorker,
 	WorkflowCommandWorkerLogger,
@@ -83,6 +84,30 @@ export function startWorkflowCommandWorker(
 			socket?.close();
 		},
 	};
+}
+
+export function runWorkflowCommandWorker(
+	options: RunWorkflowCommandWorkerOptions = {},
+): Promise<number> {
+	const worker = (options.startWorkflowWorker ?? startWorkflowCommandWorker)({
+		cwd: options.cwd ?? process.cwd(),
+		env: options.env ?? process.env,
+	});
+	const signalTarget = options.signalTarget ?? process;
+	return new Promise((resolve) => {
+		let resolved = false;
+		const finish = () => {
+			if (resolved) {
+				return;
+			}
+			resolved = true;
+			signalTarget.off("SIGINT", finish);
+			signalTarget.off("SIGTERM", finish);
+			void worker.stop().finally(() => resolve(0));
+		};
+		signalTarget.on("SIGINT", finish);
+		signalTarget.on("SIGTERM", finish);
+	});
 }
 
 export function buildWorkflowCommandWorkerExecutorOptions(

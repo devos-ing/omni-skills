@@ -13,6 +13,21 @@ describe("createCliProgram daemon", () => {
 		]);
 	});
 
+	it("runs the standalone workflow command worker", async () => {
+		const result = await captureWithRuntime([
+			"bun",
+			"devos",
+			"workflow-worker",
+		]);
+
+		expect(result.calls).toEqual([
+			{
+				name: "workflowWorker",
+				payload: { cwd: "/tmp/devos-test" },
+			},
+		]);
+	});
+
 	it("rejects removed CLI-only daemon flags", async () => {
 		const result = await expectCommanderError([
 			"bun",

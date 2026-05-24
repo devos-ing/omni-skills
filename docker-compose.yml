@@ -45,11 +45,24 @@ services:
       <<: *app-env
       DEVOS_SERVER_BASE_URL: http://server:3001
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_DEVOS_SERVER_WS_URL: ws://localhost:3001/api/cli/stream
+      NEXT_PUBLIC_DEVOS_WORKFLOW_WS_URL: ws://localhost:3001/api/workflow
       PORT: "3000"
     command: bun run --filter web dev
     ports:
       - "3000:3000"
+
+  workflow-worker:
+    <<: *app-base
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      server:
+        condition: service_started
+    environment:
+      <<: *app-env
+      DEVOS_SERVER_BASE_URL: http://server:3001
+      DEVOS_WORKFLOW_WS_URL: ws://server:3001/api/workflow
+    command: bun run ./packages/cli/src/index.ts workflow-worker
 
   landing:
     <<: *app-base

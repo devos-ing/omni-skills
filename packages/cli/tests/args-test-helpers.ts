@@ -26,6 +26,10 @@ export function createTestRuntime(calls: RuntimeCall[]): CliRuntime {
 			calls.push({ name: "daemonProduction", payload: options });
 			return 0;
 		},
+		runWorkflowCommandWorker: async (options) => {
+			calls.push({ name: "workflowWorker", payload: options });
+			return 0;
+		},
 		handleRunCommand: async (_config, options) => {
 			calls.push({ name: "run", payload: options });
 		},
