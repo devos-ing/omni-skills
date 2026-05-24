@@ -542,14 +542,14 @@ components:
     TaskCreateRequest:
       type: object
       additionalProperties: false
-      required: [title, content, priority, status, creatorId]
+      required: [title, priority, status, creatorId]
       properties:
         projectId:
           type: string
           minLength: 1
           nullable: true
         title: { type: string, minLength: 1 }
-        content: { type: string, minLength: 1 }
+        content: { type: string }
         priority: { type: integer }
         status: { type: string, minLength: 1 }
         creatorId: { type: string, minLength: 1 }
@@ -636,7 +636,7 @@ components:
       properties:
         projectId: { type: string, minLength: 1 }
         title: { type: string, minLength: 1 }
-        content: { type: string, minLength: 1 }
+        content: { type: string }
         priority: { type: integer }
         status: { type: string, minLength: 1 }
         creatorId: { type: string, minLength: 1 }

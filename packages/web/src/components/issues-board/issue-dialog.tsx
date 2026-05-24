@@ -59,8 +59,8 @@ export function IssueDialog({
 	}, [defaultStatus, task]);
 
 	const canSubmit = useMemo(() => {
-		return draft.title.trim().length > 0 && draft.content.trim().length > 0;
-	}, [draft.content, draft.title]);
+		return draft.title.trim().length > 0;
+	}, [draft.title]);
 
 	async function handleSubmit(): Promise<void> {
 		setLocalError(null);
@@ -70,7 +70,7 @@ export function IssueDialog({
 			return;
 		}
 		if (!canSubmit) {
-			setLocalError("Title and description are required.");
+			setLocalError("Title is required.");
 			return;
 		}
 		await onSubmit({

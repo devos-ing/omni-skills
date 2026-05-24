@@ -117,9 +117,11 @@ export function IssueCard({
 				<h3 className="m-0 line-clamp-2 text-sm font-semibold text-zinc-100">
 					{task.title}
 				</h3>
-				<p className="mb-2 mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-500">
-					{task.content}
-				</p>
+				{task.content.trim() ? (
+					<p className="mb-2 mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-500">
+						{task.content}
+					</p>
+				) : null}
 				<div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
 					<span className="rounded-md bg-zinc-800 px-2 py-1">
 						{getPriorityLabel(task.priority)}

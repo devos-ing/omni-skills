@@ -45,6 +45,25 @@ describe("request schemas", () => {
 				linearUrl: "https://linear.app/roy/issue/ROY-233/task",
 			}).ok,
 		).toBeTrue();
+		expect(
+			parseCreateTaskPayload({
+				projectId: "project-1",
+				title: "Ship it",
+				content: "",
+				priority: 1,
+				status: "todo",
+				creatorId: "user-1",
+			}).ok,
+		).toBeTrue();
+		expect(
+			parseCreateTaskPayload({
+				projectId: "project-1",
+				title: "Ship it",
+				priority: 1,
+				status: "todo",
+				creatorId: "user-1",
+			}),
+		).toMatchObject({ ok: true, value: { content: "" } });
 	});
 
 	it("returns route-compatible project and task errors", () => {

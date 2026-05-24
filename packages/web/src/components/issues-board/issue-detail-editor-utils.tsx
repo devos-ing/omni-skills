@@ -67,8 +67,8 @@ export function createSaveRequest(
 	if (!Number.isInteger(priority)) {
 		return { ok: false, error: "Priority must be an integer." };
 	}
-	if (!draft.title.trim() || !draft.content.trim()) {
-		return { ok: false, error: "Title and description are required." };
+	if (!draft.title.trim()) {
+		return { ok: false, error: "Title is required." };
 	}
 	if (!draft.creatorId.trim()) {
 		return { ok: false, error: "Creator is required." };

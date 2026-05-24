@@ -9,6 +9,7 @@ import type { ParseResult } from "./zod-utils";
 import { mapZodResult } from "./zod-utils";
 
 const nonEmptyString = z.string().trim().min(1);
+const taskContentString = z.string().trim();
 const optionalNullableString = z.string().nullable().optional();
 const optionalTimestamp = z
 	.string()
@@ -37,7 +38,7 @@ const createTaskSchema = z.object({
 	taskKey: nonEmptyString.optional(),
 	projectId: optionalNullableString,
 	title: nonEmptyString,
-	content: nonEmptyString,
+	content: taskContentString.optional().default(""),
 	priority: z.number().int(),
 	status: nonEmptyString,
 	creatorId: nonEmptyString,
@@ -49,7 +50,21 @@ const createTaskSchema = z.object({
 	linearUrl: optionalNullableString,
 });
 
-const updateTaskSchema = createTaskSchema.partial();
+const updateTaskSchema = z.object({
+	taskKey: nonEmptyString.optional(),
+	projectId: optionalNullableString,
+	title: nonEmptyString.optional(),
+	content: taskContentString.optional(),
+	priority: z.number().int().optional(),
+	status: nonEmptyString.optional(),
+	creatorId: nonEmptyString.optional(),
+	assigneeId: optionalNullableString,
+	dueDate: optionalTimestamp,
+	linkedPr: optionalNullableString,
+	linearIssueId: optionalNullableString,
+	linearIdentifier: optionalNullableString,
+	linearUrl: optionalNullableString,
+});
 
 export function parseCreateProjectPayload(
 	body: Record<string, unknown>,
@@ -82,6 +97,9 @@ function issueToError(issue: z.ZodIssue | undefined): string {
 	}
 	if (field === "dueDate") {
 		return "dueDate must be a valid timestamp string or null";
+	}
+	if (field === "content") {
+		return "content must be a string";
 	}
 	return `${field} must be a non-empty string`;
 }
