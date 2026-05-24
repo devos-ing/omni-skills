@@ -46,6 +46,18 @@ export interface PluginTemplate {
 }
 
 export type PluginsCommand =
+	| {
+			action: "create";
+			name: string;
+			template?: "skill" | "mcp" | "connector";
+			preset?: "codegraph" | "slack" | "telegram";
+			outputDir?: string;
+			displayName?: string;
+			description?: string;
+			author?: string;
+			force?: boolean;
+			json?: boolean;
+	  }
 	| { action: "list"; enabledOnly?: boolean }
 	| { action: "show"; pluginId: string }
 	| { action: "install"; pluginId: string }

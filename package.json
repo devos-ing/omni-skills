@@ -19,7 +19,7 @@
 	"workspaces": ["packages/*"],
 	"scripts": {
 		"preinstall": "bun run ./scripts/enforce-bun.ts",
-		"build": "bun run --filter devos build",
+		"build": "bun run --filter create-devos-plugin build && bun run --filter devos build",
 		"build:landing": "bun run --filter landing build",
 		"build:server": "bun -e \"console.log('No server workspace package is present yet. Add the ROY-120 server package, then wire this script to its build command.')\"",
 		"build:web": "bun run --filter web build",
@@ -36,8 +36,8 @@
 		"db:recover": "bun run ./scripts/recover-server-db.ts",
 		"smoke": "bun test packages/cli/tests/smoke-flow.test.ts",
 		"publish:version": "bun run --filter devos publish:version",
-		"test": "bun test packages/agent-adapters/tests packages/cli/tests packages/db/tests",
-		"typecheck": "bun run --filter adapters typecheck && bun run --filter devos-db typecheck && bun run --filter devos typecheck && bun run --filter web typecheck && bun run --filter landing typecheck",
+		"test": "bun test packages/agent-adapters/tests packages/create-devos-plugin/tests packages/cli/tests packages/db/tests",
+		"typecheck": "bun run --filter adapters typecheck && bun run --filter create-devos-plugin typecheck && bun run --filter devos-db typecheck && bun run --filter devos typecheck && bun run --filter web typecheck && bun run --filter landing typecheck",
 		"format": "bun run biome format --write .",
 		"lint": "bun run biome lint .",
 		"check": "bun run biome check .",
@@ -51,6 +51,7 @@
 		"@biomejs/biome": "1.9.4",
 		"@changesets/cli": "^2.31.0",
 		"adapters": "workspace:*",
+		"create-devos-plugin": "workspace:*",
 		"devos": "workspace:*",
 		"devos-db": "workspace:*",
 		"husky": "^9.1.7"

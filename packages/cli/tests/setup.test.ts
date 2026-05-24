@@ -187,6 +187,9 @@ describe("setup helpers", () => {
 					keyFilePath: path.join(instanceRoot, "secrets", "master.key"),
 				},
 			},
+			plugins: {
+				installed: [],
+			},
 		});
 	});
 

@@ -10,6 +10,7 @@ import {
 } from "./env-file";
 import {
 	createInstanceConfig,
+	loadInstanceConfig,
 	renderInstanceConfigDocument,
 } from "./instance-config";
 import type { OnboardInstanceConfig } from "./instance-config.types";
@@ -31,7 +32,11 @@ export async function writeSetupFiles(
 	};
 	await writeFile(envPath, mergeEnvFile(existingEnv, envUpdates));
 	await saveSqliteEnv(cwd, databaseEnvUpdates);
+	const existingInstanceConfig = await loadInstanceConfig(cwd);
 	const instanceConfig = createInstanceConfig(cwd, new Date().toISOString());
+	if (existingInstanceConfig.ok && existingInstanceConfig.config.plugins) {
+		instanceConfig.plugins = existingInstanceConfig.config.plugins;
+	}
 	await mkdir(path.dirname(targetInstanceConfigPath), { recursive: true });
 	await createLocalInstanceDirectories(instanceConfig);
 	await writeFile(

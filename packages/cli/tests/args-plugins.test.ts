@@ -2,6 +2,43 @@ import { describe, expect, it } from "bun:test";
 import { captureWithRuntime, expectCommanderError } from "./args-test-helpers";
 
 describe("createCliProgram plugins", () => {
+	it("runs plugins create command", async () => {
+		expect(
+			(
+				await captureWithRuntime([
+					"bun",
+					"devos",
+					"plugins",
+					"create",
+					"slack",
+					"--preset",
+					"slack",
+					"--output",
+					"/tmp/plugins",
+					"--json",
+				])
+			).calls,
+		).toEqual([
+			{ name: "loadConfig" },
+			{
+				name: "plugins",
+				payload: {
+					action: "create",
+					name: "slack",
+					preset: "slack",
+					outputDir: "/tmp/plugins",
+					template: undefined,
+					displayName: undefined,
+					description: undefined,
+					author: undefined,
+					force: undefined,
+					json: true,
+					cwd: "/tmp/devos-test",
+				},
+			},
+		]);
+	});
+
 	it("runs plugins list command", async () => {
 		expect(
 			(await captureWithRuntime(["bun", "devos", "plugins", "list"])).calls,

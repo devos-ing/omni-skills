@@ -93,4 +93,8 @@ export interface SetupWizardDeps extends Partial<SetupDraftPromptDeps> {
 	runCommand?: SetupCheckDeps["runCommand"];
 	writeSetupFiles?: (cwd: string, draft: SetupDraft) => Promise<void>;
 	collectSetupChecks?: (cwd: string) => Promise<SetupCheck[]>;
+	configurePluginCredentials?: (
+		cwd: string,
+		prompts: PromptAdapter,
+	) => Promise<void>;
 }

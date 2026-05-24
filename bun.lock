@@ -8,6 +8,7 @@
         "@biomejs/biome": "1.9.4",
         "@changesets/cli": "^2.31.0",
         "adapters": "workspace:*",
+        "create-devos-plugin": "workspace:*",
         "devos": "workspace:*",
         "devos-db": "workspace:*",
         "husky": "^9.1.7",
@@ -34,7 +35,21 @@
         "@linear/sdk": "^83.0.0",
         "adapters": "workspace:*",
         "commander": "^14.0.3",
+        "create-devos-plugin": "workspace:*",
         "picocolors": "^1.1.1",
+      },
+      "devDependencies": {
+        "@devos/tsconfig": "workspace:*",
+        "@types/bun": "^1.3.2",
+        "@types/node": "^24.10.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/create-devos-plugin": {
+      "name": "create-devos-plugin",
+      "version": "0.0.1",
+      "bin": {
+        "create-devos-plugin": "dist/index.js",
       },
       "devDependencies": {
         "@devos/tsconfig": "workspace:*",
@@ -579,6 +594,8 @@
     "cookie-signature": ["cookie-signature@1.2.2", "", {}, "sha512-D76uU73ulSXrD1UXF4KE2TMxVVwhsnCgfAyTg9k8P6KGZjlXKrOLe4dJQKI3Bxi5wjesZoFXJWElNWBjPZMbhg=="],
 
     "cookiejar": ["cookiejar@2.1.4", "", {}, "sha512-LDx6oHrK+PhzLKJU9j5S7/Y3jM/mUHvD/DeI1WQmJn652iPC5Y4TBzC9l+5OMOXlyTTA+SmVUPm0HQUwpD5Jqw=="],
+
+    "create-devos-plugin": ["create-devos-plugin@workspace:packages/create-devos-plugin"],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 

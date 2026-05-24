@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
 	devosHomeInstanceRoot,
@@ -25,6 +25,22 @@ export function renderInstanceConfigDocument(
 	config: OnboardInstanceConfig,
 ): string {
 	return `${JSON.stringify(config, null, "\t")}\n`;
+}
+
+export async function saveInstanceConfig(
+	config: OnboardInstanceConfig,
+	writeText: (
+		targetPath: string,
+		content: string,
+		encoding: BufferEncoding,
+	) => Promise<void> = writeFile,
+): Promise<void> {
+	config.$meta.updatedAt = new Date().toISOString();
+	await writeText(
+		instanceConfigPath(),
+		renderInstanceConfigDocument(config),
+		"utf8",
+	);
 }
 
 export async function loadInstanceConfig(
@@ -123,6 +139,9 @@ export function createInstanceConfig(
 				keyFilePath: path.join(instanceRoot, "secrets", "master.key"),
 			},
 		},
+		plugins: {
+			installed: [],
+		},
 	};
 }
 
@@ -153,6 +172,12 @@ function validateInstanceConfig(config: unknown): string | undefined {
 	const server = config.server;
 	if (!isRecord(server) || typeof server.port !== "number") {
 		return `${INSTANCE_CONFIG_FILE} is missing server.port`;
+	}
+	const plugins = config.plugins;
+	if (plugins !== undefined) {
+		if (!isRecord(plugins) || !Array.isArray(plugins.installed)) {
+			return `${INSTANCE_CONFIG_FILE} plugins.installed must be an array`;
+		}
 	}
 	return undefined;
 }

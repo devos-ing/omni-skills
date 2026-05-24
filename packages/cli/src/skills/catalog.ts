@@ -38,14 +38,15 @@ export async function selectPlanningSupplementalSkills(
 	issue: IssueRef,
 ): Promise<SkillSelectionResult> {
 	const autoSelect = config.skills.autoSelect;
-	if (!autoSelect?.enabled) {
+	const pluginSkillPaths = config.skills.pluginSkillPaths ?? [];
+	if (!autoSelect?.enabled && pluginSkillPaths.length === 0) {
 		return { selected: [], warnings: [] };
 	}
 
 	const warnings: string[] = [];
 	let candidates: SkillCandidate[] = [];
 
-	if (autoSelect.sources.folder) {
+	if (autoSelect?.enabled && autoSelect.sources.folder) {
 		try {
 			const fromFolder = await loadFolderSkillCandidates(
 				config.skills.root,
@@ -59,7 +60,7 @@ export async function selectPlanningSupplementalSkills(
 		}
 	}
 
-	if (autoSelect.sources.database) {
+	if (autoSelect?.enabled && autoSelect.sources.database) {
 		try {
 			const fromDatabase = await loadDatabaseSkillCandidates(
 				autoSelect.databasePath,
@@ -72,10 +73,20 @@ export async function selectPlanningSupplementalSkills(
 		}
 	}
 
+	for (const skillPath of pluginSkillPaths) {
+		try {
+			candidates.push(await loadPluginSkillCandidate(skillPath));
+		} catch (error) {
+			warnings.push(
+				`Plugin skill failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
 	const selected = rankSkillCandidates(
 		candidates,
 		issue,
-		autoSelect.maxSelected,
+		autoSelect?.maxSelected ?? 3,
 	);
 	return { selected, warnings };
 }
@@ -146,6 +157,23 @@ export function loadDatabaseSkillCandidates(
 	} finally {
 		db.close(false);
 	}
+}
+
+export async function loadPluginSkillCandidate(
+	skillPath: string,
+): Promise<SkillCandidate> {
+	const raw = await readFile(skillPath, "utf8");
+	const parsed = parseSkillDocument(raw);
+	return {
+		name:
+			parsed.name ??
+			path.basename(path.dirname(skillPath)).replace(/[-_]+/g, " ").trim(),
+		description: parsed.description,
+		content: clampText(raw, MAX_SKILL_CONTENT_CHARS),
+		path: skillPath,
+		tags: [],
+		source: "plugin",
+	};
 }
 
 export function rankSkillCandidates(

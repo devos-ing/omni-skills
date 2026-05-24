@@ -32,6 +32,17 @@ export type PluginListCommanderOptions = {
 	enabled?: boolean;
 };
 
+export type PluginCreateCommanderOptions = {
+	template?: "skill" | "mcp" | "connector";
+	preset?: "codegraph" | "slack" | "telegram";
+	output?: string;
+	displayName?: string;
+	description?: string;
+	author?: string;
+	force?: boolean;
+	json?: boolean;
+};
+
 export type StatusCommanderOptions = ProjectCommanderOptions & {
 	issue?: string;
 };

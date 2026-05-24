@@ -21,6 +21,13 @@ export interface AgentAdapter {
 
 export type AgentBackend = "codex" | "claude-code" | "cursor-agent";
 
+export interface AgentMcpServerRuntimeConfig {
+	name: string;
+	command: string;
+	args: string[];
+	env?: Record<string, string>;
+}
+
 export interface AgentAdapterRuntimeConfig {
 	workspacePath: string;
 	executionPath: string;
@@ -49,6 +56,7 @@ export interface AgentAdapterRuntimeConfig {
 		};
 		plugins?: string[];
 		skillsets?: string[];
+		mcpServers?: AgentMcpServerRuntimeConfig[];
 		configOverrides?: Record<string, string>;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
 		codexHome?: string;

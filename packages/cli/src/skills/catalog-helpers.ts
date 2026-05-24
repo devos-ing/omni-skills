@@ -29,7 +29,9 @@ const STOP_WORDS = new Set([
 ]);
 
 export function sourcePriority(source: SkillSource): number {
-	return source === "folder" ? 0 : 1;
+	if (source === "folder") return 0;
+	if (source === "plugin") return 1;
+	return 2;
 }
 
 export function dedupeCandidates(

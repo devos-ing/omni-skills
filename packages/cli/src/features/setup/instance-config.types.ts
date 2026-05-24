@@ -1,3 +1,28 @@
+import type {
+	DevosPluginManifest,
+	DevosPluginMcpServer,
+} from "create-devos-plugin";
+
+export interface InstalledDevosPluginSkill {
+	name: string;
+	path: string;
+	description?: string;
+}
+
+export interface InstalledDevosPlugin {
+	id: string;
+	sourcePath: string;
+	enabled: boolean;
+	manifest: DevosPluginManifest;
+	credentials: Record<string, string>;
+	skills: InstalledDevosPluginSkill[];
+	mcpServers: DevosPluginMcpServer[];
+}
+
+export interface InstancePluginsConfig {
+	installed: InstalledDevosPlugin[];
+}
+
 export interface OnboardInstanceConfig {
 	$meta: {
 		version: 1;
@@ -54,6 +79,7 @@ export interface OnboardInstanceConfig {
 			keyFilePath: string;
 		};
 	};
+	plugins?: InstancePluginsConfig;
 }
 
 export type InstanceConfigLoadResult =

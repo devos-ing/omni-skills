@@ -201,6 +201,7 @@ describe("loadConfig", () => {
 				databasePath: path.join(tempDir, ".devos", "config", "skills.sqlite"),
 				maxSelected: 3,
 			});
+			expect(config.projects[0]?.skills.pluginSkillPaths).toEqual([]);
 			expect(config.projects[0]?.workflow.issueConcurrency).toBe(1);
 			expect(config.projects[0]?.workflow.isolatedWorktrees).toEqual({
 				enabled: false,

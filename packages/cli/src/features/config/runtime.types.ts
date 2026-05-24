@@ -28,6 +28,13 @@ export interface WorkflowRuntimeConfig {
 	};
 }
 
+export interface McpServerRuntimeConfig {
+	name: string;
+	command: string;
+	args: string[];
+	env?: Record<string, string>;
+}
+
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends Array<infer U>
 		? Array<DeepPartial<U>>
@@ -85,6 +92,7 @@ export interface ProjectRuntimeConfig {
 		};
 		plugins?: string[];
 		skillsets?: string[];
+		mcpServers?: McpServerRuntimeConfig[];
 		configOverrides?: Record<string, string>;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
 		codexHome?: string;
@@ -144,6 +152,7 @@ export interface ProjectRuntimeConfig {
 			databasePath?: string;
 			maxSelected: number;
 		};
+		pluginSkillPaths?: string[];
 	};
 	dryRun: boolean;
 }

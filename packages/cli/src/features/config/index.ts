@@ -16,6 +16,7 @@ import {
 	loadInstanceServerDatabasePath,
 } from "./instance-database-path";
 import { resolveNotifications } from "./notification-resolution";
+import { applyInstancePlugins } from "./plugin-resolution";
 import { applyServerProjectMetadata } from "./project-metadata";
 import { resolveProjects } from "./project-resolution";
 import { resolveRootServerConfig } from "./server-resolution";
@@ -66,10 +67,11 @@ async function loadConfigWithOptions(
 				root,
 			})
 		: resolvedProjects;
-	const projects =
+	const projectsWithoutPlugins =
 		metadataProjects.length > 0
 			? metadataProjects
 			: resolveProjects(cwd, envBase, defaultProjectRoot);
+	const projects = await applyInstancePlugins(projectsWithoutPlugins);
 	const polling = resolvePolling(envPolling, root.polling);
 	const notifications = resolveNotifications(
 		envNotifications,

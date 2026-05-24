@@ -1,6 +1,7 @@
 import { runCommand } from "../../utils/shell";
 import { renderCliHeading } from "../../utils/terminal-format";
 import { instanceConfigPath, sqliteEnvDbPath } from "../config";
+import { promptForMissingPluginCredentials } from "../plugins/credentials";
 import { clackPromptAdapter } from "../prompts";
 import { renderDevosBanner } from "./banner";
 import {
@@ -11,6 +12,7 @@ import {
 } from "./checks";
 import { safeRun } from "./checks-helpers";
 import { ENV_FILE } from "./constants";
+import { loadInstanceConfig, saveInstanceConfig } from "./instance-config";
 import { collectSetupDraft } from "./setup-draft";
 import { writeSetupFiles } from "./setup-files";
 import type { SetupWizardDeps } from "./setup.types";
@@ -23,6 +25,8 @@ export async function runSetupWizard(
 	const prompts = deps.prompts ?? clackPromptAdapter;
 	const writeFiles = deps.writeSetupFiles ?? writeSetupFiles;
 	const collectChecks = deps.collectSetupChecks ?? collectSetupChecks;
+	const configurePluginCredentials =
+		deps.configurePluginCredentials ?? configureInstalledPluginCredentials;
 	const rtk = await safeRun(commandRunner, "rtk", ["--version"], cwd);
 	if (rtk.code !== 0) process.stdout.write(renderSetupRtkInstallPrompt());
 	const gh = await safeRun(commandRunner, "gh", ["auth", "status"], cwd);
@@ -33,6 +37,7 @@ export async function runSetupWizard(
 		inferGitHubDefaults: deps.inferGitHubDefaults,
 	});
 	await writeFiles(cwd, draft);
+	await configurePluginCredentials(cwd, prompts);
 	process.stdout.write(
 		`${renderCliHeading("Onboarding files written:")}\n${ENV_FILE}\nInstance config: ${instanceConfigPath()}\nSecrets saved to ${sqliteEnvDbPath(cwd)}\n\n`,
 	);
@@ -42,5 +47,20 @@ export async function runSetupWizard(
 	process.stdout.write(formatSetupChecks(checks));
 	if (checks.some((check) => check.status === "fail")) {
 		throw new Error("Setup check failed");
+	}
+}
+
+async function configureInstalledPluginCredentials(
+	cwd: string,
+	prompts: typeof clackPromptAdapter,
+): Promise<void> {
+	const result = await loadInstanceConfig(cwd);
+	if (!result.ok) return;
+	const changed = await promptForMissingPluginCredentials(
+		result.config,
+		prompts,
+	);
+	if (changed) {
+		await saveInstanceConfig(result.config);
 	}
 }

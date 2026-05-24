@@ -43,6 +43,11 @@ export function resolveSkillsConfig(
 			rootOverride?.autoSelect,
 			projectOverride?.autoSelect,
 		),
+		pluginSkillPaths: [
+			...(base.pluginSkillPaths ?? []),
+			...(rootOverride?.pluginSkillPaths ?? []),
+			...(projectOverride?.pluginSkillPaths ?? []),
+		],
 	};
 }
 

@@ -144,6 +144,11 @@ function mergeRuntime(
 				...(rootDefaults.codex?.fastModes ?? {}),
 				...(project.codex?.fastModes ?? {}),
 			},
+			mcpServers: [
+				...(base.codex.mcpServers ?? []),
+				...(rootDefaults.codex?.mcpServers ?? []),
+				...(project.codex?.mcpServers ?? []),
+			],
 		},
 		cursor: {
 			binary:

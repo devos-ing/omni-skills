@@ -142,6 +142,7 @@ export function buildEnvBase(
 			sandbox,
 			codexHome,
 			plugins: parseCommaList(env.CODEX_PLUGINS),
+			mcpServers: [],
 			docker: {
 				enabled: normalizeBooleanEnvValue(
 					env.CODEX_DOCKER_ENABLED,
@@ -182,6 +183,7 @@ export function buildEnvBase(
 				),
 				maxSelected: 3,
 			},
+			pluginSkillPaths: [],
 		},
 		agent: {
 			backend: normalizeAgentBackend(env.AGENT_BACKEND),

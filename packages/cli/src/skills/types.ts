@@ -1,4 +1,4 @@
-export type SkillSource = "folder" | "database";
+export type SkillSource = "folder" | "database" | "plugin";
 
 export interface SkillCandidate {
 	name: string;
