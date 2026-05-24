@@ -64,7 +64,7 @@ describe("chat task create route", () => {
 			task: BoardTaskApiRow;
 		};
 		expect(body.status).toBe("created");
-		expect(body.task.taskKey).toBe("TASK-000001");
+		expect(body.task.taskKey).toBe("TASK(project-1)-1");
 		expect(body.task.title).toBe("Compose task creation");
 		expect(body.task.content).toBe("Create both task records.");
 		expect(body.task.status).toBe("planning");
@@ -143,7 +143,10 @@ describe("chat task create route", () => {
 					commandResult: {
 						code: 0,
 						stdout: `${JSON.stringify(
-							createdTaskChatIntake({ projectId: null }),
+							createdTaskChatIntake({
+								projectId: null,
+								taskKey: "TASK(owner-1)-1",
+							}),
 						)}\n`,
 						stderr: "",
 					},
@@ -168,6 +171,7 @@ describe("chat task create route", () => {
 		};
 		expect(body.status).toBe("created");
 		expect(body.task.projectId).toBeNull();
+		expect(body.task.taskKey).toBe("TASK(owner-1)-1");
 		expect(body.task.status).toBe("planning");
 		expect(body.task.linkedPr).toBeNull();
 		expect(body.task.assigneeId).toBeNull();

@@ -9,6 +9,7 @@ export {
 export { and, asc, desc, eq, inArray } from "drizzle-orm";
 export { runMigrations } from "./migrations";
 export { generateBoardTaskKey } from "./task-keys";
+export type { BoardTaskKeyScope } from "./task-keys.types";
 export {
 	recordPollingEvent,
 	recordPollingStatus,

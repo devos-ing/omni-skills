@@ -65,6 +65,7 @@ describe("server services", () => {
 
 	it("creates task defaults and rejects empty task updates", async () => {
 		const createdTasks: unknown[] = [];
+		const keyScopes: unknown[] = [];
 		const storedTasks = new Map<string, BoardTaskApiRecord>();
 		const service = createTaskService({
 			listTasks: async () => [],
@@ -81,7 +82,10 @@ describe("server services", () => {
 					: null;
 			},
 			projectExists: async (id) => id === "project-1",
-			nextTaskKey: async () => "TASK-000123",
+			nextTaskKey: async (scope) => {
+				keyScopes.push(scope);
+				return "TASK(owner-1)-1";
+			},
 			createTask: async (input, assigneeId) => {
 				const created = {
 					...input,
@@ -111,12 +115,13 @@ describe("server services", () => {
 		});
 		expect(created.status).toBe("ok");
 		expect(createdTasks[0]).toMatchObject({
-			taskKey: "TASK-000123",
+			taskKey: "TASK(owner-1)-1",
 			projectId: null,
 			linearIdentifier: null,
 			linearIssueId: null,
 			linearUrl: null,
 		});
+		expect(keyScopes).toEqual([{ projectId: null, creatorId: "owner-1" }]);
 
 		const emptyUpdate = await service.updateTask("task-1", {});
 		expect(emptyUpdate.status).toBe("invalid_payload");

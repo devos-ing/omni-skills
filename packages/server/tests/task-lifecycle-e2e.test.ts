@@ -47,7 +47,7 @@ describe("task lifecycle e2e", () => {
 			},
 		});
 
-		expect(created.taskKey).toBe("TASK-000001");
+		expect(created.taskKey).toBe("TASK(project-1)-1");
 		expect(created.projectId).toBe("project-1");
 		expect(created.status).toBe("todo");
 		expect(created.assigneeId).toBeNull();

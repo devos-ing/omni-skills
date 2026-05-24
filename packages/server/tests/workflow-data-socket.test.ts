@@ -116,10 +116,17 @@ describe("workflow data websocket", () => {
 		});
 
 		expect(workflow.payload).toEqual(
-			expect.objectContaining({ status: "todo" }),
+			expect.objectContaining({
+				taskKey: "TASK(project-1)-1",
+				status: "todo",
+			}),
 		);
 		expect(intake.payload).toEqual(
-			expect.objectContaining({ status: "planning", creatorId: "owner-1" }),
+			expect.objectContaining({
+				taskKey: "TASK(project-1)-2",
+				status: "planning",
+				creatorId: "owner-1",
+			}),
 		);
 		expect(await db.select().from(pollingStatusTable)).toHaveLength(1);
 		expect(await db.select().from(pollingEventsTable)).toHaveLength(1);

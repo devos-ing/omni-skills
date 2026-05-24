@@ -51,7 +51,12 @@ export function createTaskService(repository: TaskRepository): TaskService {
 				const created = await repository.createTask(
 					{
 						id: crypto.randomUUID(),
-						taskKey: input.taskKey ?? (await repository.nextTaskKey()),
+						taskKey:
+							input.taskKey ??
+							(await repository.nextTaskKey({
+								projectId: input.projectId ?? null,
+								creatorId: input.creatorId,
+							})),
 						projectId: input.projectId ?? null,
 						title: input.title,
 						content: input.content,

@@ -52,9 +52,11 @@ describe("task routes", () => {
 		const created = (await createResponse.json()) as {
 			assigneeId: string | null;
 			id: string;
+			taskKey: string;
 			title: string;
 		};
 		expect(created.title).toBe("Task 1");
+		expect(created.taskKey).toBe("TASK(project-1)-1");
 		expect(created.assigneeId).toBe("owner-2");
 
 		const unassignedResponse = await app(
@@ -71,10 +73,12 @@ describe("task routes", () => {
 			}),
 		);
 		expect(unassignedResponse.status).toBe(201);
-		expect(
-			((await unassignedResponse.json()) as { projectId: string | null })
-				.projectId,
-		).toBeNull();
+		const unassigned = (await unassignedResponse.json()) as {
+			projectId: string | null;
+			taskKey: string;
+		};
+		expect(unassigned.projectId).toBeNull();
+		expect(unassigned.taskKey).toBe("TASK(owner-1)-1");
 
 		const listResponse = await app(
 			new Request("http://localhost/api/tasks", { method: "GET" }),

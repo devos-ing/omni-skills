@@ -1,4 +1,5 @@
 import type {
+	BoardTaskKeyScope,
 	BoardTaskRow,
 	NewBoardTaskRow,
 	NewTaskCommentRow,
@@ -21,7 +22,7 @@ export interface TaskRepository {
 	getTask(id: string): Promise<BoardTaskApiRecord | null>;
 	getTaskActivity(id: string): Promise<TaskActivitySourceRows | null>;
 	projectExists(id: string): Promise<boolean>;
-	nextTaskKey(): Promise<string>;
+	nextTaskKey(scope: BoardTaskKeyScope): Promise<string>;
 	createTask(
 		input: NewBoardTaskRow,
 		assigneeId?: string | null,

@@ -36,7 +36,7 @@ export function createdTaskChatBoardTask(
 ): BoardTaskRow {
 	return {
 		id: "task-1",
-		taskKey: "TASK-000001",
+		taskKey: "TASK(project-1)-1",
 		projectId: "project-1",
 		title: "Compose task creation",
 		content: "Create both task records.",

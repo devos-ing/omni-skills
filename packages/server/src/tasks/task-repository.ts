@@ -68,8 +68,8 @@ export function createTaskRepository(db: ServerDatabase["db"]): TaskRepository {
 				.where(eq(boardProjectsTable.id, id));
 			return Boolean(project);
 		},
-		async nextTaskKey() {
-			return generateBoardTaskKey(db);
+		async nextTaskKey(scope) {
+			return generateBoardTaskKey(db, scope);
 		},
 		async createTask(input, assigneeId) {
 			return db.transaction(async (tx) => {
