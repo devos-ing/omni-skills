@@ -65,6 +65,16 @@ describe("theme helpers", () => {
 		expect(readStoredThemePreference(storage, "dark")).toBe("light");
 	});
 
+	it("falls back when storage read throws", () => {
+		const throwingStorage = {
+			getItem: (_key: string): string | null => {
+				throw new Error("blocked");
+			},
+		};
+		expect(readStoredThemePreference(throwingStorage, "system")).toBe("system");
+		expect(readStoredThemePreference(throwingStorage, "dark")).toBe("dark");
+	});
+
 	it("builds theme snapshots from storage + system preference", () => {
 		const darkMatchMedia = (_query: string): MediaQueryList =>
 			({ matches: true }) as MediaQueryList;

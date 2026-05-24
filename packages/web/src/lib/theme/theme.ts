@@ -48,7 +48,11 @@ export function readStoredThemePreference(
 	if (!storage) {
 		return fallback;
 	}
-	return readThemePreference(storage.getItem(THEME_STORAGE_KEY), fallback);
+	try {
+		return readThemePreference(storage.getItem(THEME_STORAGE_KEY), fallback);
+	} catch {
+		return fallback;
+	}
 }
 
 export function writeStoredThemePreference(
