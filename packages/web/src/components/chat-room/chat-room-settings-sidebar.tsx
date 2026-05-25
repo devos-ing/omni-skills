@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import type { ComponentType, ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ChatRoomSettingsSidebarProps } from "./types/chat-room.types";
 
@@ -57,22 +58,26 @@ export function ChatRoomSettingsSidebar({
 		>
 			<header className="border-b border-zinc-900 p-3">
 				<div className="flex min-w-0 gap-2">
-					<button
-						className="issue-tool-button min-w-0 flex-1 justify-start"
+					<Button
+						className="min-w-0 flex-1 justify-start"
 						onClick={onBack}
+						size="sm"
 						type="button"
+						variant="outline"
 					>
 						<ArrowLeft size={16} />
 						Back
-					</button>
-					<button
+					</Button>
+					<Button
 						aria-label="Close chat sidebar"
-						className="issue-icon-button md:hidden"
+						className="md:hidden"
 						onClick={onClose}
+						size="icon"
 						type="button"
+						variant="ghost"
 					>
 						<X size={16} />
-					</button>
+					</Button>
 				</div>
 			</header>
 			<nav className="min-h-0 overflow-auto p-3">

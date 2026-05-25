@@ -3,19 +3,26 @@
 import { Save, X } from "lucide-react";
 import { type ReactElement, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { AgentRecord } from "@/lib/api";
 import { useUpdateAgentMutation } from "@/lib/api/queries";
 
+import { AgentDetailField as Field } from "./agent-detail-field";
 import {
 	type AgentDraft,
 	createAgentDraft,
 	parseLineList,
 } from "./types/agents-panel.types";
 
-interface AgentDetailDialogProps {
-	agent: AgentRecord;
-	onClose: () => void;
-}
+type AgentDetailDialogProps = { agent: AgentRecord; onClose: () => void };
 
 export function AgentDetailDialog({
 	agent,
@@ -71,38 +78,31 @@ export function AgentDetailDialog({
 	const errorMessage = localError ?? updateAgent.error?.message ?? null;
 
 	return (
-		<div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
-			<dialog
-				aria-labelledby="agent-detail-dialog-title"
-				aria-modal="true"
-				className="grid max-h-[92vh] w-full max-w-3xl gap-4 overflow-auto rounded-lg border border-zinc-800 bg-[#18191d] p-5 text-zinc-100 shadow-2xl"
-				open
+		<Dialog open onOpenChange={(open) => !open && onClose()}>
+			<DialogContent
+				className="max-h-[92vh] max-w-3xl overflow-auto p-5"
+				showCloseButton={false}
 			>
-				<header className="flex items-start justify-between gap-4">
+				<DialogHeader className="flex-row items-start justify-between gap-4 space-y-0 text-left">
 					<div>
 						<p className="mb-1 text-xs font-medium uppercase text-zinc-500">
 							Agent Detail
 						</p>
-						<h2
-							className="m-0 text-lg font-semibold"
-							id="agent-detail-dialog-title"
-						>
-							{agent.id}
-						</h2>
+						<DialogTitle>{agent.id}</DialogTitle>
 					</div>
-					<button
+					<Button
 						aria-label="Close dialog"
-						className="grid h-9 w-9 place-items-center rounded-md border border-zinc-700 text-zinc-400 hover:bg-zinc-800"
 						onClick={onClose}
+						size="iconLg"
 						type="button"
+						variant="secondary"
 					>
 						<X size={17} />
-					</button>
-				</header>
+					</Button>
+				</DialogHeader>
 				<div className="grid gap-3 sm:grid-cols-2">
 					<Field label="Title">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.name}
 							onChange={(event) =>
 								setDraft({ ...draft, name: event.target.value })
@@ -110,8 +110,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Owner">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.owner}
 							onChange={(event) =>
 								setDraft({ ...draft, owner: event.target.value })
@@ -119,8 +118,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Runtime">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.runtime}
 							onChange={(event) =>
 								setDraft({ ...draft, runtime: event.target.value })
@@ -128,8 +126,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Backend">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.backend}
 							onChange={(event) =>
 								setDraft({ ...draft, backend: event.target.value })
@@ -137,8 +134,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Model">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.model}
 							onChange={(event) =>
 								setDraft({ ...draft, model: event.target.value })
@@ -146,8 +142,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Concurrency">
-						<input
-							className="issue-input"
+						<Input
 							type="number"
 							min={1}
 							value={draft.concurrency}
@@ -157,8 +152,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Created at">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.createdAt}
 							onChange={(event) =>
 								setDraft({ ...draft, createdAt: event.target.value })
@@ -166,8 +160,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Updated at">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.updatedAt}
 							onChange={(event) =>
 								setDraft({ ...draft, updatedAt: event.target.value })
@@ -175,8 +168,7 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Logo">
-						<input
-							className="issue-input"
+						<Input
 							value={draft.logo}
 							onChange={(event) =>
 								setDraft({ ...draft, logo: event.target.value })
@@ -185,8 +177,8 @@ export function AgentDetailDialog({
 					</Field>
 				</div>
 				<Field label="Description">
-					<textarea
-						className="issue-input min-h-24 resize-y"
+					<Textarea
+						className="min-h-24 resize-y"
 						value={draft.description}
 						onChange={(event) =>
 							setDraft({ ...draft, description: event.target.value })
@@ -195,8 +187,8 @@ export function AgentDetailDialog({
 				</Field>
 				<div className="grid gap-3 sm:grid-cols-3">
 					<Field label="Skills">
-						<textarea
-							className="issue-input min-h-24 resize-y"
+						<Textarea
+							className="min-h-24 resize-y"
 							value={draft.skills}
 							onChange={(event) =>
 								setDraft({ ...draft, skills: event.target.value })
@@ -204,8 +196,8 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Recent work">
-						<textarea
-							className="issue-input min-h-24 resize-y"
+						<Textarea
+							className="min-h-24 resize-y"
 							value={draft.recentWork}
 							onChange={(event) =>
 								setDraft({ ...draft, recentWork: event.target.value })
@@ -213,8 +205,8 @@ export function AgentDetailDialog({
 						/>
 					</Field>
 					<Field label="Activity">
-						<textarea
-							className="issue-input min-h-24 resize-y"
+						<Textarea
+							className="min-h-24 resize-y"
 							value={draft.activity}
 							onChange={(event) =>
 								setDraft({ ...draft, activity: event.target.value })
@@ -223,8 +215,8 @@ export function AgentDetailDialog({
 					</Field>
 				</div>
 				<Field label="Instructions">
-					<textarea
-						className="issue-input min-h-28 resize-y"
+					<Textarea
+						className="min-h-28 resize-y"
 						value={draft.instructions}
 						onChange={(event) =>
 							setDraft({ ...draft, instructions: event.target.value })
@@ -237,39 +229,19 @@ export function AgentDetailDialog({
 					</p>
 				) : null}
 				<footer className="flex justify-end gap-2">
-					<button
-						className="issue-secondary-button"
-						onClick={onClose}
-						type="button"
-					>
+					<Button onClick={onClose} type="button" variant="secondary">
 						Cancel
-					</button>
-					<button
-						className="issue-primary-button"
+					</Button>
+					<Button
 						disabled={updateAgent.isPending}
 						onClick={handleSave}
 						type="button"
 					>
 						<Save size={15} />
 						{updateAgent.isPending ? "Saving..." : "Save"}
-					</button>
+					</Button>
 				</footer>
-			</dialog>
-		</div>
-	);
-}
-
-function Field({
-	label,
-	children,
-}: {
-	label: string;
-	children: ReactElement;
-}): ReactElement {
-	return (
-		<div className="grid gap-1.5 text-sm text-zinc-400">
-			<span>{label}</span>
-			{children}
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }

@@ -3,6 +3,8 @@
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { ChatMessageRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -110,23 +112,28 @@ function ClarificationBox({
 	return (
 		<div className="grid gap-3 justify-self-start rounded-md border border-zinc-800 bg-[#17181c] p-3">
 			{questions.map((question, index) => (
-				<label className="grid gap-1.5 text-sm" key={question}>
+				<label
+					className="grid gap-1.5 text-sm"
+					htmlFor={`clarification-answer-${index}`}
+					key={question}
+				>
 					<span className="text-zinc-300">{question}</span>
-					<input
-						className="issue-input w-[min(36rem,78vw)]"
+					<Input
+						className="w-[min(36rem,78vw)]"
+						id={`clarification-answer-${index}`}
 						onChange={(event) => onAnswerChange(index, event.target.value)}
 						value={answers[index] ?? ""}
 					/>
 				</label>
 			))}
-			<button
-				className="issue-primary-button justify-self-end"
+			<Button
+				className="justify-self-end"
 				disabled={!canSubmit}
 				onClick={onSubmit}
 				type="button"
 			>
 				Submit
-			</button>
+			</Button>
 		</div>
 	);
 }

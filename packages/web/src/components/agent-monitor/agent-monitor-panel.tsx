@@ -2,6 +2,7 @@
 
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import type {
 	AgentHealthViewModel,
 	AgentRuntimeTabViewModel,
@@ -49,9 +50,9 @@ export function AgentMonitorPanel({
 				)}
 			</div>
 			<div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-				<button type="button" onClick={onToggleDetails} style={buttonStyle}>
+				<Button type="button" onClick={onToggleDetails}>
 					{showDetails ? "Hide details" : "Show details"}
-				</button>
+				</Button>
 			</div>
 			<div style={{ color: "#e4e4e7" }}>
 				<p style={{ margin: "0 0 0.5rem" }}>Server status: {health.status}</p>
@@ -71,9 +72,14 @@ function renderRuntimeTabs(
 ): ReactElement {
 	if (runtimes.status !== "ready") {
 		return (
-			<button type="button" disabled style={disabledTabStyle}>
+			<Button
+				className="grid h-auto min-w-[8.5rem] justify-start gap-1 text-left text-zinc-400"
+				type="button"
+				disabled
+				variant="outline"
+			>
 				<span style={tabLabelStyle}>{runtimes.summary}</span>
-			</button>
+			</Button>
 		);
 	}
 
@@ -82,16 +88,19 @@ function renderRuntimeTabs(
 			{runtimes.tabs.map((tab) => {
 				const isActive = activeRuntimeTabId === tab.id;
 				return (
-					<button
+					<Button
 						key={tab.id}
 						type="button"
 						onClick={() => onRuntimeTabChange(tab.id)}
 						aria-pressed={isActive}
-						style={isActive ? activeTabStyle : runtimeTabStyle}
+						className={`grid h-auto min-w-[8.5rem] justify-start gap-1 text-left ${
+							isActive ? "border-blue-400 bg-zinc-800" : ""
+						}`}
+						variant="outline"
 					>
 						<span style={tabNameStyle}>{tab.name}</span>
 						<span style={tabLabelStyle}>{tab.runtimeLabel}</span>
-					</button>
+					</Button>
 				);
 			})}
 		</>
@@ -121,35 +130,6 @@ const tabListStyle = {
 	flexWrap: "wrap",
 	gap: "0.5rem",
 	marginBottom: "1rem",
-} as const;
-
-const buttonStyle = {
-	border: "1px solid #3f3f46",
-	borderRadius: "6px",
-	background: "#27272a",
-	color: "#f4f4f5",
-	cursor: "pointer",
-	padding: "0.5rem 0.75rem",
-} as const;
-
-const runtimeTabStyle = {
-	...buttonStyle,
-	display: "grid",
-	gap: "0.2rem",
-	minWidth: "8.5rem",
-	textAlign: "left",
-} as const;
-
-const activeTabStyle = {
-	...runtimeTabStyle,
-	borderColor: "#60a5fa",
-	background: "#1f2937",
-} as const;
-
-const disabledTabStyle = {
-	...runtimeTabStyle,
-	color: "#a1a1aa",
-	cursor: "default",
 } as const;
 
 const tabNameStyle = {

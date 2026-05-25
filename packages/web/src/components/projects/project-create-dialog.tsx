@@ -3,6 +3,14 @@
 import { Plus, X } from "lucide-react";
 import type { ChangeEvent, FormEvent, ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { PROJECT_FORM_FIELD_GROUPS } from "./projects-panel-utils";
 import type { ProjectFormState } from "./types/projects-panel.types";
 
@@ -27,35 +35,28 @@ export function ProjectCreateDialog({
 	onUpdateField,
 }: ProjectCreateDialogProps): ReactElement {
 	return (
-		<div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4">
-			<button
-				aria-label="Close project dialog"
-				className="absolute inset-0 h-full w-full cursor-default bg-transparent p-0"
-				onClick={onClose}
-				type="button"
-			/>
-			<section
-				aria-labelledby="project-create-title"
-				className="relative z-10 grid max-h-[min(46rem,calc(100dvh-2rem))] w-full max-w-2xl grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-zinc-800 bg-[#17181c] shadow-2xl"
+		<Dialog open onOpenChange={(open) => !open && onClose()}>
+			<DialogContent
+				className="grid max-h-[min(46rem,calc(100dvh-2rem))] max-w-2xl grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden bg-[#17181c] p-0"
+				showCloseButton={false}
 			>
-				<header className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+				<DialogHeader className="flex-row items-center justify-between gap-3 space-y-0 border-b border-zinc-800 px-4 py-3 text-left">
 					<div className="min-w-0">
-						<h2
-							className="m-0 truncate text-base font-semibold text-zinc-100"
-							id="project-create-title"
-						>
+						<DialogTitle className="truncate text-base">
 							New project
-						</h2>
+						</DialogTitle>
 					</div>
-					<button
+					<Button
 						aria-label="Close"
-						className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-zinc-500 hover:bg-zinc-800 hover:text-zinc-100"
+						className="shrink-0"
 						onClick={onClose}
+						size="icon"
 						type="button"
+						variant="ghost"
 					>
 						<X size={16} />
-					</button>
-				</header>
+					</Button>
+				</DialogHeader>
 				<form
 					className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden"
 					onSubmit={onSubmit}
@@ -71,10 +72,14 @@ export function ProjectCreateDialog({
 								</legend>
 								<div className="grid gap-3 sm:grid-cols-2">
 									{group.fields.map((field) => (
-										<label className="grid gap-1 text-sm" key={field.name}>
+										<label
+											className="grid gap-1 text-sm"
+											htmlFor={`project-create-${field.name}`}
+											key={field.name}
+										>
 											<span className="text-zinc-400">{field.label}</span>
-											<input
-												className="h-10 rounded-md border border-zinc-700 bg-[#111216] px-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-zinc-500"
+											<Input
+												id={`project-create-${field.name}`}
 												name={field.name}
 												placeholder={field.placeholder}
 												type={field.type ?? "text"}
@@ -93,24 +98,21 @@ export function ProjectCreateDialog({
 						) : null}
 					</div>
 					<footer className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-800 px-4 py-3">
-						<button
-							className="inline-flex h-9 items-center rounded-md border border-zinc-700 px-3 text-sm text-zinc-200 hover:bg-zinc-800"
+						<Button
 							onClick={onClose}
+							size="sm"
 							type="button"
+							variant="secondary"
 						>
 							Cancel
-						</button>
-						<button
-							className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-zinc-600 bg-zinc-800 px-3 text-sm font-medium text-zinc-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
-							disabled={isSaving}
-							type="submit"
-						>
+						</Button>
+						<Button disabled={isSaving} size="sm" type="submit">
 							<Plus size={15} />
 							Create project
-						</button>
+						</Button>
 					</footer>
 				</form>
-			</section>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }

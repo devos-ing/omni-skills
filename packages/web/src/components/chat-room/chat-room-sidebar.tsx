@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { type ReactElement, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatRoomSettingsSidebar } from "./chat-room-settings-sidebar";
 import { buildChatSessionProjectGroups } from "./chat-room-sidebar-utils";
@@ -71,32 +72,38 @@ export function ChatRoomSidebar({
 				>
 					<div className="grid gap-2 border-b border-zinc-900 p-3">
 						<div className="flex min-w-0 gap-2">
-							<button
-								className="issue-tool-button min-w-0 flex-1 justify-start"
+							<Button
+								className="min-w-0 flex-1 justify-start"
 								disabled={isCreating}
 								onClick={onNewSession}
+								size="sm"
 								type="button"
+								variant="outline"
 							>
 								<MessageSquarePlus size={16} />
 								New Session
-							</button>
-							<button
+							</Button>
+							<Button
 								aria-label="Close chat sidebar"
-								className="issue-icon-button md:hidden"
+								className="md:hidden"
 								onClick={handleCloseSidebar}
+								size="icon"
 								type="button"
+								variant="ghost"
 							>
 								<X size={16} />
-							</button>
+							</Button>
 						</div>
-						<button
-							className="issue-tool-button w-full justify-start"
+						<Button
+							className="w-full justify-start"
 							onClick={onSearch}
+							size="sm"
 							type="button"
+							variant="outline"
 						>
 							<Search size={16} />
 							Search
-						</button>
+						</Button>
 					</div>
 					<div className="min-h-0 overflow-auto p-3">
 						<div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase text-zinc-500">
@@ -109,10 +116,10 @@ export function ChatRoomSidebar({
 								const GroupIcon = group.isActive ? ChevronDown : ChevronRight;
 								return (
 									<div className="grid gap-1" key={group.id}>
-										<button
+										<Button
 											aria-expanded={group.isActive}
 											className={cn(
-												"flex h-9 min-w-0 items-center gap-2 rounded-md px-2 text-left text-sm",
+												"h-9 min-w-0 justify-start gap-2 px-2 text-left text-sm",
 												group.isActive
 													? "bg-zinc-900 text-zinc-100"
 													: "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
@@ -122,8 +129,10 @@ export function ChatRoomSidebar({
 													onSelectSession(firstSessionId);
 												}
 											}}
+											size="sm"
 											title={group.label}
 											type="button"
+											variant="ghost"
 										>
 											<GroupIcon className="shrink-0" size={14} />
 											<Folder className="shrink-0" size={14} />
@@ -133,25 +142,27 @@ export function ChatRoomSidebar({
 											<span className="shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] leading-none text-zinc-500">
 												{group.sessions.length}
 											</span>
-										</button>
+										</Button>
 										{group.isActive ? (
 											<div className="grid gap-1 pl-6">
 												{group.sessions.map((session) => (
-													<button
+													<Button
 														aria-current={
 															session.id === activeSessionId
 																? "page"
 																: undefined
 														}
 														className={cn(
-															"min-w-0 rounded-md px-2 py-2 text-left text-sm",
+															"h-auto min-w-0 justify-start rounded-md px-2 py-2 text-left text-sm",
 															session.id === activeSessionId
 																? "bg-zinc-800 text-zinc-100"
 																: "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
 														)}
 														key={session.id}
 														onClick={() => onSelectSession(session.id)}
+														size="sm"
 														type="button"
+														variant="ghost"
 													>
 														<span className="block truncate">
 															{session.title}
@@ -159,7 +170,7 @@ export function ChatRoomSidebar({
 														<span className="mt-1 block truncate text-xs text-zinc-600">
 															{session.taskId ?? "No issue"}
 														</span>
-													</button>
+													</Button>
 												))}
 											</div>
 										) : null}
@@ -174,16 +185,18 @@ export function ChatRoomSidebar({
 						</div>
 					</div>
 					<nav className="border-t border-zinc-900 p-3">
-						<button
-							className="flex h-9 w-full items-center gap-2 rounded-md px-2 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+						<Button
+							className="h-9 w-full justify-start gap-2 px-2 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
 							onClick={showSettingsSidebar}
+							size="sm"
 							type="button"
+							variant="ghost"
 						>
 							<Settings size={15} />
 							<span className="min-w-0 flex-1 truncate text-left">
 								Settings
 							</span>
-						</button>
+						</Button>
 					</nav>
 				</div>
 				<ChatRoomSettingsSidebar

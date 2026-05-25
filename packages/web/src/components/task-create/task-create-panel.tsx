@@ -3,6 +3,9 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useCreateTaskMutation } from "@/lib/api/queries";
 import { formatTaskCreateError } from "./task-create-chat-errors";
 
@@ -111,22 +114,13 @@ export function TaskCreatePanel(): ReactElement {
 			>
 				Requirement
 			</label>
-			<textarea
+			<Textarea
+				className="mb-3 min-h-32 resize-y"
 				id="task-create-requirement"
 				value={request}
 				onChange={(event) => setRequest(event.target.value)}
 				placeholder="Describe the task requirement"
 				rows={5}
-				style={{
-					width: "100%",
-					resize: "vertical",
-					border: "1px solid #3f3f46",
-					borderRadius: "6px",
-					background: "#141519",
-					color: "#f4f4f5",
-					padding: "0.5rem",
-					marginBottom: "0.75rem",
-				}}
 			/>
 			<label
 				htmlFor="task-create-project-id"
@@ -134,60 +128,42 @@ export function TaskCreatePanel(): ReactElement {
 			>
 				Project ID
 			</label>
-			<input
+			<Input
+				className="mb-3"
 				id="task-create-project-id"
 				type="text"
 				value={projectId}
 				onChange={(event) => setProjectId(event.target.value)}
 				placeholder="default"
-				style={{
-					width: "100%",
-					border: "1px solid #3f3f46",
-					borderRadius: "6px",
-					background: "#141519",
-					color: "#f4f4f5",
-					padding: "0.5rem",
-					marginBottom: "0.75rem",
-				}}
 			/>
-			<button
+			<Button
 				type="button"
 				onClick={handleInitialSubmit}
 				disabled={!canSubmitInitial}
-				style={buttonStyle}
 			>
 				Submit Requirement
-			</button>
+			</Button>
 			{activeQuestions.length > 0 ? (
 				<div style={{ marginTop: "1rem" }}>
 					<h3 style={{ marginTop: 0 }}>Clarification Questions</h3>
 					{activeQuestions.map((question, index) => (
 						<div key={question} style={{ marginBottom: "0.75rem" }}>
 							<p style={{ marginTop: 0, marginBottom: "0.5rem" }}>{question}</p>
-							<input
+							<Input
 								type="text"
 								value={answers[index]?.answer ?? ""}
 								onChange={(event) => updateAnswer(index, event.target.value)}
 								placeholder="Type your answer"
-								style={{
-									width: "100%",
-									border: "1px solid #3f3f46",
-									borderRadius: "6px",
-									background: "#141519",
-									color: "#f4f4f5",
-									padding: "0.5rem",
-								}}
 							/>
 						</div>
 					))}
-					<button
+					<Button
 						type="button"
 						onClick={handleClarificationSubmit}
 						disabled={!canSubmitClarifications}
-						style={buttonStyle}
 					>
 						Submit Answers
-					</button>
+					</Button>
 				</div>
 			) : null}
 			{createTask.data?.status === "created" ? (
@@ -198,12 +174,3 @@ export function TaskCreatePanel(): ReactElement {
 		</section>
 	);
 }
-
-const buttonStyle = {
-	border: "1px solid #3f3f46",
-	borderRadius: "6px",
-	background: "#27272a",
-	color: "#f4f4f5",
-	cursor: "pointer",
-	padding: "0.5rem 0.75rem",
-} as const;

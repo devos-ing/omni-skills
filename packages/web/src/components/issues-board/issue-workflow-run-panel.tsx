@@ -3,6 +3,7 @@
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import type { IssueWorkflowRunState } from "./use-issue-workflow-run";
@@ -43,14 +44,15 @@ export function IssueWorkflowRunPanel({
 					</p>
 				</div>
 				{isRunning ? null : (
-					<button
+					<Button
 						aria-label="Close workflow run panel"
-						className="issue-icon-button"
 						onClick={onClose}
+						size="icon"
 						type="button"
+						variant="ghost"
 					>
 						<XCircle size={16} />
-					</button>
+					</Button>
 				)}
 			</header>
 			<div className="grid max-h-56 gap-1 overflow-auto rounded-md border border-zinc-800 bg-[#101115] p-3 font-mono text-xs text-zinc-300">

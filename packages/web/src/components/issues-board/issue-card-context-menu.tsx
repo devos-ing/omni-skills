@@ -8,8 +8,15 @@ import {
 	useState,
 } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	NativeSelect,
+	NativeSelectOption,
+} from "@/components/ui/native-select";
 import type { ProjectBoardTaskRecord } from "@/lib/api";
 
+import { MenuButton, MenuField } from "./issue-card-menu-parts";
 import { getStatusLabel, normalizeDueDate } from "./issues-board-utils";
 import { STATUS_ORDER } from "./issues-board.constants";
 import { PriorityDropdown } from "./priority-dropdown";
@@ -105,17 +112,17 @@ export function IssueCardContextMenu({
 					<p className="m-0 truncate text-sm font-medium">{task.title}</p>
 				</div>
 				<MenuField label="Status">
-					<select
-						className="issue-input h-9"
+					<NativeSelect
+						className="h-9"
 						onChange={changeStatus}
 						value={task.status}
 					>
 						{STATUS_ORDER.map((status) => (
-							<option key={status} value={status}>
+							<NativeSelectOption key={status} value={status}>
 								{getStatusLabel(status)}
-							</option>
+							</NativeSelectOption>
 						))}
-					</select>
+					</NativeSelect>
 				</MenuField>
 				<MenuField label="Priority">
 					<PriorityDropdown
@@ -126,35 +133,39 @@ export function IssueCardContextMenu({
 				</MenuField>
 				<MenuField label="Assignee">
 					<div className="flex gap-2">
-						<input
-							className="issue-input h-9 min-w-0 flex-1"
+						<Input
+							className="h-9 min-w-0 flex-1"
 							onChange={(event) => setAssigneeDraft(event.target.value)}
 							value={assigneeDraft}
 						/>
-						<button
-							className="issue-secondary-button h-9 px-2"
+						<Button
+							className="px-2"
 							onClick={setAssignee}
+							size="sm"
 							type="button"
+							variant="secondary"
 						>
 							Set
-						</button>
+						</Button>
 					</div>
 				</MenuField>
 				<MenuField label="Due date">
 					<div className="flex gap-2">
-						<input
-							className="issue-input h-9 min-w-0 flex-1"
+						<Input
+							className="h-9 min-w-0 flex-1"
 							onChange={(event) => setDueDateDraft(event.target.value)}
 							type="date"
 							value={dueDateDraft}
 						/>
-						<button
-							className="issue-secondary-button h-9 px-2"
+						<Button
+							className="px-2"
 							onClick={setDueDate}
+							size="sm"
 							type="button"
+							variant="secondary"
 						>
 							Set
-						</button>
+						</Button>
 					</div>
 				</MenuField>
 				<div className="grid gap-1 border-t border-zinc-800 pt-2">
@@ -193,48 +204,6 @@ export function IssueCardContextMenu({
 					/>
 				</div>
 			</div>
-		</button>
-	);
-}
-
-function MenuField({
-	children,
-	label,
-}: {
-	children: ReactElement;
-	label: string;
-}): ReactElement {
-	return (
-		<div className="grid gap-1 text-xs text-zinc-500">
-			<span>{label}</span>
-			{children}
-		</div>
-	);
-}
-
-function MenuButton({
-	danger = false,
-	icon,
-	label,
-	onClick,
-}: {
-	danger?: boolean;
-	icon: ReactElement;
-	label: string;
-	onClick: () => void;
-}): ReactElement {
-	return (
-		<button
-			className={`flex h-8 items-center gap-2 rounded-md px-2 text-sm ${
-				danger
-					? "text-red-300 hover:bg-red-950/40"
-					: "text-zinc-300 hover:bg-zinc-800"
-			}`}
-			onClick={onClick}
-			type="button"
-		>
-			{icon}
-			<span>{label}</span>
 		</button>
 	);
 }

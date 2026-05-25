@@ -3,6 +3,19 @@
 import { Trash2, X } from "lucide-react";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+	NativeSelect,
+	NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -90,38 +103,31 @@ export function IssueDialog({
 	}
 
 	return (
-		<div
-			className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
-			role="presentation"
-		>
-			<dialog
-				aria-labelledby="issue-dialog-title"
-				aria-modal="true"
-				className="grid max-h-[100dvh] w-full max-w-2xl gap-4 overflow-auto rounded-lg border border-zinc-800 bg-[#18191d] p-5 text-zinc-100 shadow-2xl"
-				open
+		<Dialog open onOpenChange={(open) => !open && onClose()}>
+			<DialogContent
+				className="max-h-[100dvh] max-w-2xl overflow-auto p-5"
+				showCloseButton={false}
 			>
-				<header className="flex items-center justify-between gap-4">
+				<DialogHeader className="flex-row items-center justify-between gap-4 space-y-0 text-left">
 					<div>
 						<p className="mb-1 text-xs font-medium uppercase text-zinc-500">
 							{mode === "create" ? getStatusLabel(defaultStatus) : "Details"}
 						</p>
-						<h2 className="m-0 text-lg font-semibold" id="issue-dialog-title">
-							{title}
-						</h2>
+						<DialogTitle>{title}</DialogTitle>
 					</div>
-					<button
+					<Button
 						aria-label="Close dialog"
-						className="grid h-9 w-9 place-items-center rounded-md border border-zinc-700 text-zinc-400 hover:bg-zinc-800"
 						onClick={onClose}
+						size="iconLg"
 						type="button"
+						variant="secondary"
 					>
 						<X size={17} />
-					</button>
-				</header>
+					</Button>
+				</DialogHeader>
 				<div className="grid gap-3">
 					<Field label="Title">
-						<input
-							className="issue-input"
+						<Input
 							onChange={(event) =>
 								setDraft({ ...draft, title: event.target.value })
 							}
@@ -129,8 +135,8 @@ export function IssueDialog({
 						/>
 					</Field>
 					<Field label="Description">
-						<textarea
-							className="issue-input min-h-28 resize-y"
+						<Textarea
+							className="min-h-28 resize-y"
 							onChange={(event) =>
 								setDraft({ ...draft, content: event.target.value })
 							}
@@ -139,19 +145,18 @@ export function IssueDialog({
 					</Field>
 					<div className="grid gap-3 sm:grid-cols-2">
 						<Field label="Status">
-							<select
-								className="issue-input"
+							<NativeSelect
 								onChange={(event) =>
 									setDraft({ ...draft, status: event.target.value })
 								}
 								value={draft.status}
 							>
 								{STATUS_ORDER.map((status) => (
-									<option key={status} value={status}>
+									<NativeSelectOption key={status} value={status}>
 										{getStatusLabel(status)}
-									</option>
+									</NativeSelectOption>
 								))}
-							</select>
+							</NativeSelect>
 						</Field>
 						<Field label="Priority">
 							<PriorityDropdown
@@ -160,8 +165,7 @@ export function IssueDialog({
 							/>
 						</Field>
 						<Field label="Creator">
-							<input
-								className="issue-input"
+							<Input
 								onChange={(event) =>
 									setDraft({ ...draft, creatorId: event.target.value })
 								}
@@ -169,8 +173,7 @@ export function IssueDialog({
 							/>
 						</Field>
 						<Field label="Due date">
-							<input
-								className="issue-input"
+							<Input
 								onChange={(event) =>
 									setDraft({ ...draft, dueDate: event.target.value })
 								}
@@ -180,8 +183,7 @@ export function IssueDialog({
 						</Field>
 					</div>
 					<Field label="Linked PR">
-						<input
-							className="issue-input"
+						<Input
 							onChange={(event) =>
 								setDraft({ ...draft, linkedPr: event.target.value })
 							}
@@ -197,38 +199,34 @@ export function IssueDialog({
 				) : null}
 				<footer className="flex flex-wrap items-center justify-between gap-3">
 					{onDelete ? (
-						<button
-							className="inline-flex items-center gap-2 rounded-md border border-red-900/70 px-3 py-2 text-sm text-red-200 hover:bg-red-950/50"
+						<Button
 							disabled={isDeleting}
 							onClick={onDelete}
 							type="button"
+							variant="destructive"
 						>
 							<Trash2 size={15} />
 							{isDeleting ? "Deleting..." : "Delete"}
-						</button>
+						</Button>
 					) : (
 						<span />
 					)}
 					<div className="flex items-center gap-2">
-						<button
-							className="issue-secondary-button"
-							onClick={onClose}
-							type="button"
-						>
+						<Button onClick={onClose} type="button" variant="secondary">
 							Cancel
-						</button>
-						<button
-							className={cn("issue-primary-button", !canSubmit && "opacity-50")}
+						</Button>
+						<Button
+							className={cn(!canSubmit && "opacity-50")}
 							disabled={!canSubmit || isSaving}
 							onClick={handleSubmit}
 							type="button"
 						>
 							{isSaving ? "Saving..." : "Save"}
-						</button>
+						</Button>
 					</div>
 				</footer>
-			</dialog>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

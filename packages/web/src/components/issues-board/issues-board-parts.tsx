@@ -3,6 +3,8 @@
 import { Columns3, Filter, Plus, SlidersHorizontal } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type {
 	ProjectBoardStatusColumn,
 	ProjectBoardTaskRecord,
@@ -46,14 +48,10 @@ export function BoardHeader({
 						{tab}
 					</button>
 				))} */}
-				<button
-					className="issue-primary-button"
-					onClick={onCreateIssue}
-					type="button"
-				>
+				<Button onClick={onCreateIssue} size="sm" type="button">
 					<Plus size={16} />
 					New Issue
-				</button>
+				</Button>
 			</div>
 		</header>
 	);
@@ -69,10 +67,10 @@ export function ToolButton({
 	onClick: () => void;
 }): ReactElement {
 	return (
-		<button className="issue-tool-button" onClick={onClick} type="button">
+		<Button onClick={onClick} size="sm" type="button" variant="outline">
 			{icon}
 			<span>{label}</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -86,7 +84,7 @@ export function ColumnToggles({
 	return (
 		<div className="flex gap-2 overflow-x-auto border-b border-zinc-900 px-5 py-2">
 			{STATUS_ORDER.map((status) => (
-				<button
+				<Button
 					className={cn(
 						"whitespace-nowrap rounded-md border px-2.5 py-1.5 text-xs",
 						visibleStatuses.includes(status)
@@ -95,10 +93,12 @@ export function ColumnToggles({
 					)}
 					key={status}
 					onClick={() => onToggle(status)}
+					size="sm"
 					type="button"
+					variant="ghost"
 				>
 					{getStatusLabel(status)}
-				</button>
+				</Button>
 			))}
 		</div>
 	);
@@ -123,9 +123,9 @@ export function BoardToolbar({
 }): ReactElement {
 	return (
 		<div className="flex flex-wrap items-center gap-3 border-b border-zinc-900 px-5 py-3">
-			<input
+			<Input
 				aria-label="Search issues"
-				className="issue-input h-9 min-w-52 flex-1"
+				className="h-9 min-w-52 flex-1"
 				onChange={(event) => onSearchChange(event.target.value)}
 				placeholder="Search issues"
 				value={searchQuery}

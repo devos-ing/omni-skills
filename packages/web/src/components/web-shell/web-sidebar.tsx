@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import type { ComponentType, ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import type {
 	SidebarDisplayMode,
 	SidebarNavItem,
@@ -95,15 +96,17 @@ export function WebSidebar({
 						Roy Lee&apos;s Workspace
 					</strong>
 				) : null}
-				<button
+				<Button
 					aria-label={nextSidebarLabel(mode)}
-					className="ml-auto grid h-8 w-8 place-items-center rounded-md hover:bg-zinc-800"
+					className="ml-auto"
 					onClick={onToggleMode}
+					size="icon"
 					title={nextSidebarLabel(mode)}
 					type="button"
+					variant="ghost"
 				>
 					<PanelLeft size={16} />
-				</button>
+				</Button>
 			</header>
 			<div className="grid gap-2 px-3 pb-4">
 				<SidebarAction
@@ -200,16 +203,18 @@ function SidebarAction({
 	onClick?: () => void;
 }): ReactElement {
 	return (
-		<button
+		<Button
 			className={cn(
-				"flex h-9 items-center gap-3 rounded-md px-2 text-xs font-normal text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200",
+				"h-9 justify-start gap-3 px-2 text-xs font-normal text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200",
 				!isExpanded && "justify-center",
 			)}
 			onClick={onClick}
+			size="sm"
 			type="button"
+			variant="ghost"
 		>
 			<Icon size={18} />
 			{isExpanded ? <span>{label}</span> : null}
-		</button>
+		</Button>
 	);
 }

@@ -4,6 +4,7 @@ import { Pin, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/lib/ui-store";
 
 export function SidebarPinnedIssues({
@@ -30,14 +31,16 @@ export function SidebarPinnedIssues({
 						<span className="truncate">{issue.taskKey}</span>
 						<span className="truncate text-zinc-600">{issue.title}</span>
 					</Link>
-					<button
+					<Button
 						aria-label={`Unpin ${issue.taskKey}`}
-						className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-zinc-600 opacity-0 hover:bg-zinc-900 hover:text-zinc-200 group-hover:opacity-100"
+						className="h-7 w-7 shrink-0 text-zinc-600 opacity-0 hover:bg-zinc-900 hover:text-zinc-200 group-hover:opacity-100"
 						onClick={() => unpinIssue(issue.id)}
+						size="icon"
 						type="button"
+						variant="ghost"
 					>
 						<X size={13} />
-					</button>
+					</Button>
 				</div>
 			))}
 		</div>

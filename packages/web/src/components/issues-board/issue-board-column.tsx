@@ -3,6 +3,7 @@
 import { Circle, MoreHorizontal, Plus } from "lucide-react";
 import type { DragEvent, ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import type {
 	ProjectBoardStatusColumn,
 	ProjectBoardTaskRecord,
@@ -107,17 +108,18 @@ export function IssueColumn({
 					<span className="text-sm text-zinc-500">{column.tasks.length}</span>
 				</div>
 				<div className="flex items-center gap-1">
-					<button className="issue-icon-button" type="button">
+					<Button size="icon" type="button" variant="ghost">
 						<MoreHorizontal size={16} />
-					</button>
-					<button
+					</Button>
+					<Button
 						aria-label={`Add ${getStatusLabel(column.status)} issue`}
-						className="issue-icon-button"
 						onClick={() => onCreateIssue(column.status)}
+						size="icon"
 						type="button"
+						variant="ghost"
 					>
 						<Plus size={16} />
-					</button>
+					</Button>
 				</div>
 			</header>
 			<div className="grid content-start gap-3 overflow-y-auto pr-1">

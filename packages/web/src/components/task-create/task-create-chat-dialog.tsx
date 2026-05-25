@@ -3,6 +3,15 @@
 import { CheckCircle2, RotateCcw, Send, X } from "lucide-react";
 import { type ReactElement, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { formatTaskCreateError } from "./task-create-chat-errors";
@@ -104,41 +113,39 @@ export function TaskCreateChatDialog({
 	}
 
 	return (
-		<div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
-			<dialog
-				aria-labelledby="task-create-chat-title"
-				aria-modal="true"
-				className="grid max-h-[100dvh] w-full max-w-2xl gap-4 overflow-auto rounded-lg border border-zinc-800 bg-[#18191d] p-5 text-zinc-100 shadow-2xl"
-				open
+		<Dialog open onOpenChange={(open) => !open && onClose()}>
+			<DialogContent
+				className="max-h-[100dvh] max-w-2xl overflow-auto p-5"
+				showCloseButton={false}
 			>
-				<header className="flex items-start justify-between gap-4">
+				<DialogHeader className="flex-row items-start justify-between gap-4 space-y-0 text-left">
 					<div>
 						<p className="mb-1 text-xs font-medium uppercase text-zinc-500">
 							New Issue
 						</p>
-						<h2
-							className="m-0 text-lg font-semibold"
-							id="task-create-chat-title"
-						>
-							Chat to create a task
-						</h2>
+						<DialogTitle>Chat to create a task</DialogTitle>
 						<p className="mb-0 mt-2 text-sm text-zinc-400">{statusText}</p>
 					</div>
-					<button
+					<Button
 						aria-label="Close dialog"
-						className="grid h-9 w-9 place-items-center rounded-md border border-zinc-700 text-zinc-400 hover:bg-zinc-800"
 						onClick={onClose}
+						size="iconLg"
 						type="button"
+						variant="secondary"
 					>
 						<X size={17} />
-					</button>
-				</header>
+					</Button>
+				</DialogHeader>
 				<div className="grid gap-3">
-					<label className="grid gap-1.5 text-sm text-zinc-400">
+					<label
+						className="grid gap-1.5 text-sm text-zinc-400"
+						htmlFor="task-create-chat-request"
+					>
 						<span>Request</span>
-						<textarea
-							className="issue-input min-h-32 resize-y"
+						<Textarea
+							className="min-h-32 resize-y"
 							disabled={state.step === "created" || isStreaming}
+							id="task-create-chat-request"
 							onChange={(event) =>
 								setState({ ...state, request: event.target.value })
 							}
@@ -146,11 +153,14 @@ export function TaskCreateChatDialog({
 							value={state.request}
 						/>
 					</label>
-					<label className="grid gap-1.5 text-sm text-zinc-400">
+					<label
+						className="grid gap-1.5 text-sm text-zinc-400"
+						htmlFor="task-create-chat-project-id"
+					>
 						<span>Project ID</span>
-						<input
-							className="issue-input"
+						<Input
 							disabled={state.step === "created" || isStreaming}
+							id="task-create-chat-project-id"
 							onChange={(event) =>
 								setState({ ...state, projectId: event.target.value })
 							}
@@ -164,11 +174,12 @@ export function TaskCreateChatDialog({
 						{state.questions.map((question, index) => (
 							<label
 								className="grid gap-1.5 text-sm text-zinc-400"
+								htmlFor={`task-create-chat-answer-${index}`}
 								key={question}
 							>
 								<span>{question}</span>
-								<input
-									className="issue-input"
+								<Input
+									id={`task-create-chat-answer-${index}`}
 									onChange={(event) => updateAnswer(index, event.target.value)}
 									placeholder="Type your answer"
 									value={state.answers[index]?.answer ?? ""}
@@ -201,17 +212,12 @@ export function TaskCreateChatDialog({
 				<footer className="flex flex-wrap items-center justify-between gap-3">
 					<div />
 					<div className="flex items-center gap-2">
-						<button
-							className="issue-secondary-button"
-							onClick={onClose}
-							type="button"
-						>
+						<Button onClick={onClose} type="button" variant="secondary">
 							Close
-						</button>
+						</Button>
 						{state.step !== "created" ? (
-							<button
+							<Button
 								className={cn(
-									"issue-primary-button",
 									(state.step === "clarifying"
 										? !canSubmitAnswers
 										: !canSubmitRequest) && "opacity-50",
@@ -226,11 +232,11 @@ export function TaskCreateChatDialog({
 							>
 								<Send size={15} />
 								{state.step === "clarifying" ? "Submit Answers" : "Create"}
-							</button>
+							</Button>
 						) : null}
 					</div>
 				</footer>
-			</dialog>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }

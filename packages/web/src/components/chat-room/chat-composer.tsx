@@ -9,6 +9,8 @@ import {
 	useState,
 } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import {
@@ -105,7 +107,7 @@ export function ChatComposer({
 								const isSelected = index === activeIndex;
 								const optionId = commandOptionId(menuId, item.command);
 								return (
-									<button
+									<Button
 										aria-selected={isSelected}
 										className={cn(
 											"flex min-h-10 items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm text-zinc-300 hover:bg-zinc-800",
@@ -116,6 +118,7 @@ export function ChatComposer({
 										onClick={() => selectCommand(item.command)}
 										onMouseDown={handleCommandPointerDown}
 										type="button"
+										variant="ghost"
 									>
 										<span className="font-mono text-zinc-100">
 											{item.command}
@@ -123,7 +126,7 @@ export function ChatComposer({
 										<span className="min-w-0 truncate text-xs text-zinc-500">
 											{item.hint}
 										</span>
-									</button>
+									</Button>
 								);
 							})
 						) : (
@@ -132,15 +135,16 @@ export function ChatComposer({
 					</div>
 				) : null}
 				<div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2 rounded-md border border-zinc-800 bg-[#17181c] p-2">
-					<button
+					<Button
 						aria-label="Add"
-						className="issue-icon-button h-9 w-9"
 						disabled={disabled}
+						size="iconLg"
 						type="button"
+						variant="ghost"
 					>
 						<Plus size={16} />
-					</button>
-					<textarea
+					</Button>
+					<Textarea
 						aria-activedescendant={
 							showCommands && activeCommand
 								? commandOptionId(menuId, activeCommand.command)
@@ -149,7 +153,7 @@ export function ChatComposer({
 						aria-controls={showCommands ? menuId : undefined}
 						aria-expanded={showCommands}
 						aria-haspopup="menu"
-						className="max-h-36 min-h-10 resize-none bg-transparent px-1 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+						className="max-h-36 min-h-10 resize-none border-0 bg-transparent px-1 py-2 focus-visible:border-transparent focus-visible:ring-0"
 						disabled={disabled}
 						onBlur={() => setIsFocused(false)}
 						onChange={(event) => handleDraftChange(event.target.value)}
@@ -158,15 +162,17 @@ export function ChatComposer({
 						placeholder="Message or /command"
 						value={draft}
 					/>
-					<button
+					<Button
 						aria-label="Send"
-						className="issue-icon-button h-9 w-9 text-zinc-300"
+						className="text-zinc-300"
 						disabled={disabled || isSending || draft.trim().length === 0}
 						onClick={onSubmit}
+						size="iconLg"
 						type="button"
+						variant="ghost"
 					>
 						<Send size={16} />
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

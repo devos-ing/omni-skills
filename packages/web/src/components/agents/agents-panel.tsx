@@ -3,6 +3,7 @@
 import { Bot } from "lucide-react";
 import { type ReactElement, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { AgentRecord } from "@/lib/api";
 import { useAgentsQuery } from "@/lib/api/queries";
 
@@ -81,10 +82,11 @@ function AgentRow({
 }): ReactElement {
 	return (
 		<li>
-			<button
-				className="grid w-full gap-2 rounded-md border border-zinc-800 bg-[#141519] p-3 text-left transition hover:border-zinc-700 hover:bg-zinc-900"
+			<Button
+				className="grid h-auto w-full justify-stretch gap-2 rounded-md border-zinc-800 bg-[#141519] p-3 text-left hover:border-zinc-700 hover:bg-zinc-900"
 				onClick={onOpen}
 				type="button"
+				variant="outline"
 			>
 				<div className="flex items-center justify-between gap-2">
 					<span className="inline-flex items-center gap-2 text-sm font-medium text-zinc-100">
@@ -102,7 +104,7 @@ function AgentRow({
 				{agent.description ? (
 					<p className="m-0 text-xs text-zinc-500">{agent.description}</p>
 				) : null}
-			</button>
+			</Button>
 		</li>
 	);
 }

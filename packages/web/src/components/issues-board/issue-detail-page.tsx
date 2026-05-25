@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useBoardTaskQuery } from "@/lib/api/queries";
 
 import { IssueActivityPanel } from "./issue-activity";
@@ -28,14 +29,10 @@ export function IssueDetailPage(): ReactElement {
 					</p>
 					<h1 className="m-0 text-xl font-semibold">Task details</h1>
 				</div>
-				<button
-					className="issue-secondary-button"
-					onClick={navigateBack}
-					type="button"
-				>
+				<Button onClick={navigateBack} type="button" variant="secondary">
 					<ArrowLeft size={16} />
 					Issues
-				</button>
+				</Button>
 			</header>
 			<div className="mx-auto grid max-w-5xl gap-5 px-5 py-6">
 				{renderDetailContent(taskQuery, taskId)}

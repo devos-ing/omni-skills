@@ -4,6 +4,26 @@
 
 :root {
 	color-scheme: dark;
+	--background: 228 10% 10%;
+	--foreground: 240 5% 96%;
+	--card: 225 10% 11%;
+	--card-foreground: 240 5% 96%;
+	--popover: 225 10% 11%;
+	--popover-foreground: 240 5% 96%;
+	--primary: 240 4% 24%;
+	--primary-foreground: 240 5% 96%;
+	--secondary: 240 4% 16%;
+	--secondary-foreground: 240 5% 90%;
+	--muted: 240 5% 18%;
+	--muted-foreground: 240 5% 64%;
+	--accent: 240 4% 16%;
+	--accent-foreground: 240 5% 96%;
+	--destructive: 0 73% 41%;
+	--destructive-foreground: 0 0% 98%;
+	--border: 240 4% 16%;
+	--input: 240 4% 16%;
+	--ring: 240 5% 64%;
+	--radius: 0.5rem;
 }
 
 * {
@@ -18,26 +38,4 @@ body {
 		"Segoe UI", sans-serif;
 	background: #0f1013;
 	color: #f4f4f5;
-}
-
-@layer components {
-	.issue-input {
-		@apply rounded-md border border-zinc-800 bg-[#141519] px-3 py-2 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-zinc-500;
-	}
-
-	.issue-primary-button {
-		@apply inline-flex items-center justify-center gap-2 rounded-md border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-700 disabled:cursor-not-allowed;
-	}
-
-	.issue-secondary-button {
-		@apply inline-flex items-center justify-center rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800;
-	}
-
-	.issue-tool-button {
-		@apply inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border border-zinc-800 px-3 text-sm text-zinc-300 hover:bg-zinc-900;
-	}
-
-	.issue-icon-button {
-		@apply grid h-8 w-8 place-items-center rounded-md text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200;
-	}
 }

@@ -8,6 +8,12 @@ import {
 	useState,
 } from "react";
 
+import { Input } from "@/components/ui/input";
+import {
+	NativeSelect,
+	NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
 import { useUpdateBoardTaskMutation } from "@/lib/api/queries";
 
@@ -117,17 +123,17 @@ export function IssueDetailEditor({
 					<SaveStatus errorMessage={errorMessage} saveState={saveState} />
 				</div>
 				<EditableField label="Title">
-					<input
+					<Input
 						aria-label="Title"
-						className="issue-input text-lg font-semibold"
+						className="text-lg font-semibold"
 						onChange={(event) => updateField("title", event)}
 						value={draft.title}
 					/>
 				</EditableField>
 				<EditableField label="Description">
-					<textarea
+					<Textarea
 						aria-label="Description"
-						className="issue-input mt-3 min-h-36 resize-y leading-6"
+						className="mt-3 min-h-36 resize-y leading-6"
 						onChange={(event) => updateField("content", event)}
 						value={draft.content}
 					/>
@@ -135,34 +141,31 @@ export function IssueDetailEditor({
 			</section>
 			<section className="grid gap-3 rounded-lg border border-zinc-800 bg-[#18191d] p-5 sm:grid-cols-2">
 				<EditableField label="Status">
-					<select
+					<NativeSelect
 						aria-label="Status"
-						className="issue-input"
 						onChange={(event) => updateField("status", event)}
 						value={draft.status}
 					>
 						{STATUS_ORDER.map((status) => (
-							<option key={status} value={status}>
+							<NativeSelectOption key={status} value={status}>
 								{getStatusLabel(status)}
-							</option>
+							</NativeSelectOption>
 						))}
-					</select>
+					</NativeSelect>
 				</EditableField>
 				<EditableField label="Priority">
 					<PriorityDropdown value={draft.priority} onChange={updatePriority} />
 				</EditableField>
 				<EditableField label="Creator">
-					<input
+					<Input
 						aria-label="Creator"
-						className="issue-input"
 						onChange={(event) => updateField("creatorId", event)}
 						value={draft.creatorId}
 					/>
 				</EditableField>
 				<EditableField label="Due date">
-					<input
+					<Input
 						aria-label="Due date"
-						className="issue-input"
 						onChange={(event) => updateField("dueDate", event)}
 						type="date"
 						value={draft.dueDate}
@@ -172,9 +175,8 @@ export function IssueDetailEditor({
 					{task.projectId ?? "No project"}
 				</DetailField>
 				<EditableField label="Linked PR">
-					<input
+					<Input
 						aria-label="Linked PR"
-						className="issue-input"
 						onChange={(event) => updateField("linkedPr", event)}
 						placeholder="https://github.com/org/repo/pull/123"
 						value={draft.linkedPr}

@@ -4,6 +4,8 @@ import { LayoutGrid, List, Plus, RefreshCw, Search } from "lucide-react";
 import type { ChangeEvent, FormEvent, ReactElement } from "react";
 import { useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	useCreateProjectMutation,
 	useCurrentWorkspaceQuery,
@@ -102,23 +104,24 @@ export function ProjectsPanel(): ReactElement {
 					<span className="text-sm text-zinc-500">{projects.length}</span>
 				</div>
 				<div className="flex flex-wrap items-center gap-2">
-					<button
+					<Button
 						aria-label="Refresh projects"
-						className="issue-icon-button"
 						onClick={() => void projectsQuery.refetch()}
+						size="icon"
+						variant="ghost"
 						type="button"
 					>
 						<RefreshCw size={16} />
-					</button>
-					<button
-						className="issue-primary-button"
+					</Button>
+					<Button
 						disabled={!workspaceId || currentWorkspaceQuery.isLoading}
 						onClick={openCreateDialog}
+						size="sm"
 						type="button"
 					>
 						<Plus size={16} />
 						New project
-					</button>
+					</Button>
 				</div>
 			</header>
 			<ProjectToolbar
@@ -170,14 +173,18 @@ function ProjectToolbar({
 }): ReactElement {
 	return (
 		<div className="flex flex-wrap items-center gap-3 border-b border-zinc-900 px-5 py-3">
-			<label className="relative min-w-60 flex-1 sm:max-w-sm">
+			<label
+				className="relative min-w-60 flex-1 sm:max-w-sm"
+				htmlFor="projects-search"
+			>
 				<Search
 					className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
 					size={16}
 				/>
-				<input
+				<Input
 					aria-label="Search projects"
-					className="issue-input h-10 w-full pl-9"
+					className="pl-9"
+					id="projects-search"
 					onChange={(event) => onSearchChange(event.target.value)}
 					placeholder="Search projects..."
 					value={searchQuery}
@@ -222,18 +229,20 @@ function DensityButton({
 	onSelect: (density: ProjectTableDensity) => void;
 }): ReactElement {
 	return (
-		<button
+		<Button
 			className={cn(
-				"inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-sm",
+				"h-8 gap-2 px-2.5",
 				isActive
 					? "bg-zinc-800 text-zinc-100"
 					: "text-zinc-500 hover:text-zinc-200",
 			)}
 			onClick={() => onSelect(density)}
+			size="sm"
 			type="button"
+			variant="ghost"
 		>
 			{icon}
 			<span>{label}</span>
-		</button>
+		</Button>
 	);
 }

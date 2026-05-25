@@ -9,6 +9,7 @@ import {
 	useRef,
 } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { ProjectBoardTaskRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -105,10 +106,11 @@ export function IssueCard({
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
 		>
-			<button
-				className="block w-full text-left"
+			<Button
+				className="block h-auto w-full p-0 text-left hover:bg-transparent"
 				onClick={handleClick}
 				type="button"
+				variant="ghost"
 			>
 				<div className="mb-2 flex items-center justify-between gap-2 text-xs font-medium text-zinc-500">
 					<span className="truncate">{task.taskKey}</span>
@@ -131,7 +133,7 @@ export function IssueCard({
 					</span>
 					{isAgentTask(task) ? <Bot size={14} /> : <CheckCircle2 size={14} />}
 				</div>
-			</button>
+			</Button>
 		</div>
 	);
 }

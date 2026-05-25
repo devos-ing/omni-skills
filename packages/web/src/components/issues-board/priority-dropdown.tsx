@@ -2,6 +2,10 @@
 
 import type { ChangeEvent, ReactElement } from "react";
 
+import {
+	NativeSelect,
+	NativeSelectOption,
+} from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 
 import { PRIORITY_OPTIONS } from "./issues-board.constants";
@@ -25,17 +29,17 @@ export function PriorityDropdown({
 	}
 
 	return (
-		<select
+		<NativeSelect
 			aria-label={ariaLabel}
-			className={cn("issue-input", className)}
+			className={cn(className)}
 			onChange={handleChange}
 			value={String(value)}
 		>
 			{PRIORITY_OPTIONS.map((option) => (
-				<option key={option.value} value={option.value}>
+				<NativeSelectOption key={option.value} value={option.value}>
 					{option.label}
-				</option>
+				</NativeSelectOption>
 			))}
-		</select>
+		</NativeSelect>
 	);
 }
