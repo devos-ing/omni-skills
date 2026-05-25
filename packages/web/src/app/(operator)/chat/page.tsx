@@ -6,10 +6,12 @@ import { ChatRoomPanel } from "@/components/chat-room/chat-room-panel";
 import { useOperatorIssueActions } from "@/components/web-shell/operator-issue-actions-context";
 
 export default function ChatPage(): ReactElement {
-	const { createSessionRequest, requestSearch } = useOperatorIssueActions();
+	const { commandDraftRequest, createSessionRequest, requestSearch } =
+		useOperatorIssueActions();
 
 	return (
 		<ChatRoomPanel
+			commandDraftRequest={commandDraftRequest}
 			newSessionRequest={createSessionRequest}
 			onSearchRequest={requestSearch}
 		/>

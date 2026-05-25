@@ -1,21 +1,31 @@
 "use client";
 
-import { Clipboard, FileText, Navigation, Plus, Search, X } from "lucide-react";
 import {
-	type KeyboardEvent,
-	type ReactElement,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+	Clipboard,
+	FileText,
+	Navigation,
+	Plus,
+	Terminal,
+	X,
+} from "lucide-react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { buildCommandSearchGroups } from "./command-search-dialog-utils";
+import {
+	buildCommandSearchGroups,
+	commandSearchDraftText,
+} from "./command-search-dialog-utils";
 import type {
 	CommandSearchDialogProps,
 	CommandSearchResult,
@@ -34,17 +44,15 @@ export function CommandSearchDialog({
 	onNavigate,
 	onNewIssue,
 	onOpenIssue,
+	onSelectCommand,
 	tasks,
 }: CommandSearchDialogProps): ReactElement {
-	const inputRef = useRef<HTMLInputElement>(null);
 	const [query, setQuery] = useState("");
-	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 	const groups = useMemo(
 		() => buildCommandSearchGroups({ commandHistory, navItems, query, tasks }),
 		[commandHistory, navItems, query, tasks],
 	);
-	const results = groups.flatMap((group) => group.results);
 	const hasLoadingState = isBoardLoading || isCommandHistoryLoading;
 	const errorMessage =
 		boardError?.message ?? commandHistoryError?.message ?? null;
@@ -52,19 +60,21 @@ export function CommandSearchDialog({
 	useEffect(() => {
 		if (isOpen) {
 			setQuery("");
-			setSelectedIndex(0);
 			setCopiedCommand(null);
-			window.setTimeout(() => inputRef.current?.focus(), 0);
 		}
 	}, [isOpen]);
 
 	function updateQuery(value: string): void {
 		setQuery(value);
-		setSelectedIndex(0);
 		setCopiedCommand(null);
 	}
 
 	function selectResult(result: CommandSearchResult): void {
+		if (result.kind === "chatCommand") {
+			onSelectCommand(commandSearchDraftText(result.command));
+			onClose();
+			return;
+		}
 		if (result.kind === "navigation") {
 			onNavigate(result.navKey);
 			onClose();
@@ -89,114 +99,86 @@ export function CommandSearchDialog({
 			.catch(() => setCopiedCommand(null));
 	}
 
-	function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
-		if (event.key === "ArrowDown") {
-			event.preventDefault();
-			setSelectedIndex((index) => wrapIndex(index + 1, results.length));
-		}
-		if (event.key === "ArrowUp") {
-			event.preventDefault();
-			setSelectedIndex((index) => wrapIndex(index - 1, results.length));
-		}
-		if (event.key === "Enter" && results[selectedIndex]) {
-			event.preventDefault();
-			selectResult(results[selectedIndex]);
-		}
-	}
-
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent
 				className="w-[min(44rem,calc(100vw-1.5rem))] max-w-none gap-0 overflow-hidden bg-[#15161a] p-0"
 				showCloseButton={false}
 			>
-				<header className="flex items-center gap-3 border-b border-zinc-900 px-4 py-3">
-					<Search className="text-zinc-500" size={18} />
-					<Input
-						aria-label="Search commands and issues"
-						className="min-w-0 flex-1 border-0 bg-transparent px-0 focus-visible:border-transparent focus-visible:ring-0"
-						onChange={(event) => updateQuery(event.target.value)}
-						onKeyDown={handleKeyDown}
-						placeholder="Search issues and commands"
-						ref={inputRef}
-						value={query}
-					/>
-					<Button
-						aria-label="Close dialog"
-						onClick={onClose}
-						size="icon"
-						type="button"
-						variant="ghost"
-					>
-						<X size={16} />
-					</Button>
-				</header>
 				<DialogTitle className="sr-only" id="command-search-title">
 					Search
 				</DialogTitle>
-				<div className="max-h-[min(34rem,calc(100dvh-7rem))] overflow-y-auto p-2">
-					{errorMessage ? <DialogState label={errorMessage} /> : null}
-					{!errorMessage && hasLoadingState && results.length === 0 ? (
-						<DialogState label="Loading results" />
-					) : null}
-					{!errorMessage && !hasLoadingState && results.length === 0 ? (
-						<DialogState label="No results" />
-					) : null}
-					{groups.map((group) => (
-						<section className="py-2" key={group.id}>
-							<p className="mb-1 px-2 text-xs font-semibold text-zinc-500">
-								{group.label}
-							</p>
-							<div className="grid gap-1">
-								{group.results.map((result) => {
-									const index = results.indexOf(result);
-									return (
-										<ResultButton
-											activeKey={activeKey}
-											isCopied={copiedCommand === result.id}
-											isSelected={index === selectedIndex}
-											key={result.id}
-											onSelect={() => selectResult(result)}
-											result={result}
-										/>
-									);
-								})}
-							</div>
-						</section>
-					))}
-				</div>
+				<Command shouldFilter={false}>
+					<header className="flex items-center border-b border-zinc-900">
+						<CommandInput
+							aria-label="Search commands and issues"
+							onValueChange={updateQuery}
+							placeholder="Search commands"
+							value={query}
+						/>
+						<Button
+							aria-label="Close dialog"
+							className="mr-3"
+							onClick={onClose}
+							size="icon"
+							type="button"
+							variant="ghost"
+						>
+							<X size={16} />
+						</Button>
+					</header>
+					<CommandList>
+						{errorMessage ? <DialogState label={errorMessage} /> : null}
+						{!errorMessage && hasLoadingState && groups.length === 0 ? (
+							<DialogState label="Loading results" />
+						) : null}
+						{!errorMessage && !hasLoadingState ? (
+							<CommandEmpty>No results</CommandEmpty>
+						) : null}
+						{groups.map((group) => (
+							<CommandGroup heading={group.label} key={group.id}>
+								{group.results.map((result) => (
+									<ResultItem
+										activeKey={activeKey}
+										isCopied={copiedCommand === result.id}
+										key={result.id}
+										onSelect={() => selectResult(result)}
+										result={result}
+									/>
+								))}
+							</CommandGroup>
+						))}
+					</CommandList>
+				</Command>
 			</DialogContent>
 		</Dialog>
 	);
 }
 
-function ResultButton({
+function ResultItem({
 	activeKey,
 	isCopied,
-	isSelected,
 	onSelect,
 	result,
 }: {
 	activeKey: CommandSearchDialogProps["activeKey"];
 	isCopied: boolean;
-	isSelected: boolean;
 	onSelect: () => void;
 	result: CommandSearchResult;
 }): ReactElement {
 	const Icon = resultIcon(result);
 	return (
-		<Button
-			className={cn(
-				"h-auto min-h-12 w-full justify-start gap-3 rounded-md px-3 py-2 text-left text-sm",
-				isSelected ? "bg-zinc-800 text-zinc-100" : "text-zinc-300",
-			)}
-			onClick={onSelect}
-			type="button"
-			variant="ghost"
-		>
+		<CommandItem onSelect={onSelect} value={result.id}>
 			<Icon className="shrink-0 text-zinc-500" size={17} />
 			<span className="min-w-0 flex-1">
-				<span className="block truncate font-medium">{result.label}</span>
+				<span
+					className={cn(
+						"block truncate font-medium",
+						result.kind === "chatCommand" && "font-mono",
+					)}
+				>
+					{result.label}
+				</span>
 				<span className="block truncate text-xs text-zinc-500">
 					{isCopied ? "Copied" : result.detail}
 				</span>
@@ -204,7 +186,7 @@ function ResultButton({
 			{result.kind === "navigation" && result.navKey === activeKey ? (
 				<span className="text-xs text-zinc-500">Current</span>
 			) : null}
-		</Button>
+		</CommandItem>
 	);
 }
 
@@ -215,6 +197,9 @@ function DialogState({ label }: { label: string }): ReactElement {
 }
 
 function resultIcon(result: CommandSearchResult): typeof Navigation {
+	if (result.kind === "chatCommand") {
+		return Terminal;
+	}
 	if (result.kind === "issue") {
 		return FileText;
 	}
@@ -225,11 +210,4 @@ function resultIcon(result: CommandSearchResult): typeof Navigation {
 		return Plus;
 	}
 	return Navigation;
-}
-
-function wrapIndex(index: number, length: number): number {
-	if (length === 0) {
-		return 0;
-	}
-	return (index + length) % length;
 }

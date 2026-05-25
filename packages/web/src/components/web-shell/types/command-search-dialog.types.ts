@@ -5,6 +5,14 @@ import type { SidebarNavItem } from "./web-shell.types";
 export type CommandSearchResult =
 	| {
 			id: string;
+			kind: "chatCommand";
+			label: string;
+			detail: string;
+			command: string;
+			hint: string;
+	  }
+	| {
+			id: string;
 			kind: "navigation";
 			label: string;
 			detail: string;
@@ -51,5 +59,6 @@ export interface CommandSearchDialogProps {
 	onNavigate: (key: SidebarNavItem["key"]) => void;
 	onNewIssue: () => void;
 	onOpenIssue: (taskId: string) => void;
+	onSelectCommand: (draft: string) => void;
 	tasks: ProjectBoardTaskRecord[] | undefined;
 }

@@ -1,3 +1,4 @@
+import type { CommandDraftRequest } from "@/components/web-shell/types/operator-issue-actions.types";
 import type {
 	ChatMessageRecord,
 	ChatSessionRecord,
@@ -9,6 +10,7 @@ import type {
 import type { RefObject } from "react";
 
 export interface ChatRoomPanelProps {
+	commandDraftRequest: CommandDraftRequest | null;
 	newSessionRequest: number;
 	onSearchRequest: () => void;
 }

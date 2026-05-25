@@ -20,7 +20,10 @@ import { useBoardTasksQuery, useCommandHistoryQuery } from "@/lib/api/queries";
 
 import { CommandSearchDialog } from "./command-search-dialog";
 import { OperatorIssueActionsProvider } from "./operator-issue-actions-context";
-import type { OperatorIssueActionsContextValue } from "./types/operator-issue-actions.types";
+import type {
+	CommandDraftRequest,
+	OperatorIssueActionsContextValue,
+} from "./types/operator-issue-actions.types";
 import { hrefForNavKey, navItems } from "./web-shell.constants";
 
 const compactSidebarQuery = "(max-width: 900px)";
@@ -65,6 +68,8 @@ export function WebOperatorShell({
 	const [sidebarMode, setSidebarMode] =
 		useState<SidebarDisplayMode>("expanded");
 	const [isCompactViewport, setIsCompactViewport] = useState<boolean>(false);
+	const [commandDraftRequest, setCommandDraftRequest] =
+		useState<CommandDraftRequest | null>(null);
 	const [createIssueRequest, setCreateIssueRequest] = useState(0);
 	const [createSessionRequest, setCreateSessionRequest] = useState(0);
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -112,6 +117,17 @@ export function WebOperatorShell({
 		setIsSearchOpen(true);
 	}, []);
 
+	const selectChatCommandDraft = useCallback(
+		(draft: string) => {
+			router.push("/chat");
+			setCommandDraftRequest((current) => ({
+				id: (current?.id ?? 0) + 1,
+				draft,
+			}));
+		},
+		[router],
+	);
+
 	const openIssue = useCallback(
 		(taskId: string) => {
 			router.push(`/issues/${encodeURIComponent(taskId)}`);
@@ -131,20 +147,24 @@ export function WebOperatorShell({
 	}, [canShowSidebar]);
 	const issueActionsValue = useMemo<OperatorIssueActionsContextValue>(
 		() => ({
+			commandDraftRequest,
 			createIssueRequest,
 			createSessionRequest,
+			requestChatCommandDraft: selectChatCommandDraft,
 			requestNewIssue: createIssue,
 			requestNewSession: createSession,
 			requestOpenIssue: openIssue,
 			requestSearch: openSearch,
 		}),
 		[
+			commandDraftRequest,
 			createIssue,
 			createIssueRequest,
 			createSession,
 			createSessionRequest,
 			openIssue,
 			openSearch,
+			selectChatCommandDraft,
 		],
 	);
 
@@ -186,6 +206,7 @@ export function WebOperatorShell({
 				onNavigate={navigateToSection}
 				onNewIssue={createIssue}
 				onOpenIssue={openIssue}
+				onSelectCommand={selectChatCommandDraft}
 				tasks={searchTasksQuery.data}
 			/>
 		</main>

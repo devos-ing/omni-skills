@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactElement, useEffect, useRef, useState } from "react";
 
 import {
 	useAppendChatMessageMutation,
@@ -22,25 +22,25 @@ import { chatStreamLinesForSession } from "./chat-room-stream-utils";
 import { findActiveTaskId } from "./chat-task-utils";
 import { shouldShowChatThinkingIndicator } from "./chat-thinking-state";
 import type {
-	ChatRoomPanelProps,
-	ChatStreamLine,
+	ChatStreamLine as Line,
+	ChatRoomPanelProps as Props,
 } from "./types/chat-room.types";
 
 const SIDEBAR_CONTROL_ID = "chat-sidebar-toggle";
 const NO_REFETCH = { refetchIntervalMs: false } as const;
 
 export function ChatRoomPanel({
+	commandDraftRequest,
 	newSessionRequest,
 	onSearchRequest,
-}: ChatRoomPanelProps): ReactElement {
+}: Props): ReactElement {
 	const [activeSessionId, setActiveSessionId] = useState("");
-	const [draft, setDraft] = useState("");
-	const [commandStreamLines, setCommandStreamLines] = useState<
-		ChatStreamLine[]
-	>([]);
+	const [draftValue, setDraft] = useState("");
+	const [commandStreamLines, setCommandStreamLines] = useState<Line[]>([]);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isTaskDetailSheetOpen, setIsTaskDetailSheetOpen] = useState(false);
 	const clarificationState = useChatClarificationState();
+	const handledCommandDraftRequest = useRef(0);
 	const handledNewSessionRequest = useRef(0);
 	const sidebarToggleRef = useRef<HTMLInputElement>(null);
 
@@ -55,10 +55,8 @@ export function ChatRoomPanel({
 
 	const sessions = sessionsQuery.data ?? [];
 	const selectedSessionId = activeSessionId || sessions[0]?.id || "";
-	const selectedSession = useMemo(
-		() => sessions.find((session) => session.id === selectedSessionId) ?? null,
-		[sessions, selectedSessionId],
-	);
+	const selectedSession =
+		sessions.find(({ id }) => id === selectedSessionId) ?? null;
 	const messagesQuery = useChatMessagesQuery(selectedSessionId, {
 		enabled: Boolean(selectedSessionId),
 		refetchIntervalMs: false,
@@ -85,12 +83,16 @@ export function ChatRoomPanel({
 		sendingSessionId: sendMessage.variables?.sessionId,
 		streamLineCount: streamLines.length,
 	});
-	const mutationBusy =
-		createSession.isPending ||
-		updateSession.isPending ||
-		appendMessage.isPending ||
-		sendMessage.isPending;
-	const isBusy = currentWorkspaceQuery.isLoading || mutationBusy;
+	const isBusy =
+		currentWorkspaceQuery.isLoading ||
+		[createSession, updateSession, appendMessage, sendMessage].some(
+			(mutation) => mutation.isPending,
+		);
+	const pendingCommandDraftRequest =
+		commandDraftRequest?.id === handledCommandDraftRequest.current
+			? null
+			: commandDraftRequest;
+	const draft = pendingCommandDraftRequest?.draft ?? draftValue;
 
 	useEffect(() => {
 		if (
@@ -121,6 +123,17 @@ export function ChatRoomPanel({
 		if (toggle) toggle.checked = false;
 	}
 
+	function markCommandDraftHandled(): void {
+		if (pendingCommandDraftRequest) {
+			handledCommandDraftRequest.current = pendingCommandDraftRequest.id;
+		}
+	}
+
+	function handleDraftChange(value: string): void {
+		markCommandDraftHandled();
+		setDraft(value);
+	}
+
 	async function ensureSession() {
 		if (selectedSession) {
 			return selectedSession;
@@ -136,6 +149,7 @@ export function ChatRoomPanel({
 	async function handleSubmit(): Promise<void> {
 		const content = draft.trim();
 		if (!content || isBusy) return;
+		markCommandDraftHandled();
 		setDraft("");
 		setErrorMessage(null);
 		try {
@@ -216,14 +230,14 @@ export function ChatRoomPanel({
 			}
 			onCloseSidebar={closeMobileSidebar}
 			onCloseTaskDetails={() => setIsTaskDetailSheetOpen(false)}
-			onDraftChange={setDraft}
+			onDraftChange={handleDraftChange}
 			onNewSession={() => void startNewSession(true)}
 			onOpenTaskDetails={() => setIsTaskDetailSheetOpen(true)}
 			onSearch={() => {
 				closeMobileSidebar();
 				onSearchRequest();
 			}}
-			onSelectCommand={setDraft}
+			onSelectCommand={handleDraftChange}
 			onSelectSession={(sessionId) => {
 				setActiveSessionId(sessionId);
 				closeMobileSidebar();

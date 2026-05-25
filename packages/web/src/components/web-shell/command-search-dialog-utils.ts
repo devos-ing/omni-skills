@@ -1,5 +1,6 @@
 import type { CommandHistoryRecord, ProjectBoardTaskRecord } from "@/lib/api";
 
+import { CHAT_COMMANDS } from "@/components/chat-room/chat-command-utils";
 import { getStatusLabel } from "@/components/issues-board/issues-board-utils";
 
 import type {
@@ -23,10 +24,22 @@ export function buildCommandSearchGroups({
 	tasks: ProjectBoardTaskRecord[] | undefined;
 }): CommandSearchGroup[] {
 	const normalizedQuery = normalizeSearchText(query);
+	const commandGroup: CommandSearchGroup = {
+		id: "commands",
+		label: "Commands",
+		results: filterResults(
+			CHAT_COMMANDS.map(buildChatCommandResult),
+			normalizedQuery,
+		),
+	};
+	if (!normalizedQuery) {
+		return commandGroup.results.length > 0 ? [commandGroup] : [];
+	}
 	return [
+		commandGroup,
 		{
-			id: "commands",
-			label: "Commands",
+			id: "workspace",
+			label: "Workspace",
 			results: filterResults(
 				[buildNewIssueAction(), ...navItems.map(buildNavigationResult)],
 				normalizedQuery,
@@ -49,6 +62,23 @@ export function buildCommandSearchGroups({
 			).slice(0, MAX_HISTORY_RESULTS),
 		},
 	].filter((group) => group.results.length > 0);
+}
+
+export function commandSearchDraftText(command: string): string {
+	return `${command} `;
+}
+
+function buildChatCommandResult(
+	item: (typeof CHAT_COMMANDS)[number],
+): CommandSearchResult {
+	return {
+		id: `chat-command:${item.command}`,
+		kind: "chatCommand",
+		label: item.command,
+		detail: item.hint,
+		command: item.command,
+		hint: item.hint,
+	};
 }
 
 function buildNewIssueAction(): CommandSearchResult {
@@ -111,6 +141,9 @@ function resultMatches(
 }
 
 function extraText(result: CommandSearchResult): string {
+	if (result.kind === "chatCommand") {
+		return `${result.command} ${result.hint}`;
+	}
 	if (result.kind === "issue") {
 		return `${result.task.id} ${result.task.content} ${result.task.creatorId}`;
 	}
