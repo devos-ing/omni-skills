@@ -27,6 +27,7 @@ import type {
 } from "./types/chat-room.types";
 
 const SIDEBAR_CONTROL_ID = "chat-sidebar-toggle";
+const NO_REFETCH = { refetchIntervalMs: false } as const;
 
 export function ChatRoomPanel({
 	newSessionRequest,
@@ -42,16 +43,10 @@ export function ChatRoomPanel({
 	const handledNewSessionRequest = useRef(0);
 	const sidebarToggleRef = useRef<HTMLInputElement>(null);
 
-	const currentWorkspaceQuery = useCurrentWorkspaceQuery({
-		refetchIntervalMs: false,
-	});
+	const currentWorkspaceQuery = useCurrentWorkspaceQuery(NO_REFETCH);
 	const workspaceId = currentWorkspaceQuery.data?.workspaceId ?? "";
-	const sessionsQuery = useChatSessionsQuery(workspaceId, {
-		refetchIntervalMs: false,
-	});
-	const projectsQuery = useWorkspaceProjectsQuery(workspaceId, {
-		refetchIntervalMs: false,
-	});
+	const sessionsQuery = useChatSessionsQuery(workspaceId, NO_REFETCH);
+	const projectsQuery = useWorkspaceProjectsQuery(workspaceId, NO_REFETCH);
 	const createSession = useCreateChatSessionMutation();
 	const updateSession = useUpdateChatSessionMutation();
 	const appendMessage = useAppendChatMessageMutation();
@@ -70,22 +65,23 @@ export function ChatRoomPanel({
 	const pendingAnswers = selectedSessionId
 		? (answerDrafts[selectedSessionId] ?? [])
 		: [];
-	const isBusy =
-		currentWorkspaceQuery.isLoading ||
+	const mutationBusy =
 		createSession.isPending ||
 		updateSession.isPending ||
 		appendMessage.isPending ||
 		sendMessage.isPending;
+	const isBusy = currentWorkspaceQuery.isLoading || mutationBusy;
 
 	useEffect(() => {
 		if (
-			newSessionRequest > 0 &&
-			newSessionRequest !== handledNewSessionRequest.current &&
-			workspaceId
+			newSessionRequest <= 0 ||
+			newSessionRequest === handledNewSessionRequest.current ||
+			!workspaceId
 		) {
-			handledNewSessionRequest.current = newSessionRequest;
-			void startNewSession();
+			return;
 		}
+		handledNewSessionRequest.current = newSessionRequest;
+		void startNewSession();
 	}, [newSessionRequest, workspaceId]);
 
 	async function startNewSession(closeSidebar = false): Promise<void> {
@@ -94,14 +90,10 @@ export function ChatRoomPanel({
 			setErrorMessage("Workspace is still loading.");
 			return;
 		}
-		const session = await createSession.mutateAsync({
-			workspaceId,
-		});
+		const session = await createSession.mutateAsync({ workspaceId });
 		setActiveSessionId(session.id);
 		setDraft("");
-		if (closeSidebar) {
-			closeMobileSidebar();
-		}
+		if (closeSidebar) closeMobileSidebar();
 	}
 
 	function closeMobileSidebar(): void {
@@ -116,18 +108,14 @@ export function ChatRoomPanel({
 		if (!workspaceId) {
 			throw new Error("Workspace is still loading.");
 		}
-		const session = await createSession.mutateAsync({
-			workspaceId,
-		});
+		const session = await createSession.mutateAsync({ workspaceId });
 		setActiveSessionId(session.id);
 		return session;
 	}
 
 	async function handleSubmit(): Promise<void> {
 		const content = draft.trim();
-		if (!content || isBusy) {
-			return;
-		}
+		if (!content || isBusy) return;
 		setDraft("");
 		setErrorMessage(null);
 		try {
@@ -209,7 +197,6 @@ export function ChatRoomPanel({
 				activeSessionId={selectedSessionId}
 				isCreating={createSession.isPending}
 				projects={projectsQuery.data ?? []}
-				sidebarControlId={SIDEBAR_CONTROL_ID}
 				sessions={sessions}
 				onCloseSidebar={closeMobileSidebar}
 				onNewSession={() => void startNewSession(true)}
