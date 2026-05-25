@@ -12,6 +12,26 @@ export const CHAT_COMMANDS = [
 	{ command: "/onboard", hint: "Run onboarding checks" },
 ] as const;
 
+export function isChatCommandMenuDraft(input: string): boolean {
+	return /^\/[^\s]*$/.test(input);
+}
+
+export function getChatCommandSuggestions(
+	input: string,
+): (typeof CHAT_COMMANDS)[number][] {
+	if (!isChatCommandMenuDraft(input)) {
+		return [];
+	}
+	const query = input.slice(1).toLowerCase();
+	if (!query) {
+		return [...CHAT_COMMANDS];
+	}
+	return CHAT_COMMANDS.filter((item) => {
+		const command = item.command.slice(1).toLowerCase();
+		return command.startsWith(query);
+	});
+}
+
 export function parseChatCommand(
 	input: string,
 	context: ChatCommandContext,

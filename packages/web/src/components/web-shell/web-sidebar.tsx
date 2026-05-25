@@ -5,7 +5,6 @@ import {
 	Bot,
 	ChartColumn,
 	CircleHelp,
-	CircleUserRound,
 	Computer,
 	Inbox,
 	ListChecks,
