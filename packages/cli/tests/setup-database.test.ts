@@ -81,7 +81,12 @@ describe("setup database boundary", () => {
 				await readFile(instanceConfigPath(), "utf8"),
 			) as {
 				database: { embeddedPostgresDataDir: string; mode: string };
+				workspace: { id: string; name: string };
 			};
+			expect(instanceConfig.workspace).toEqual({
+				id: expect.stringMatching(/^workspace-[a-f0-9]{16}$/),
+				name: "Demo Workspace",
+			});
 			expect(instanceConfig.database.mode).toBe("embedded-postgres");
 			await access(instanceConfig.database.embeddedPostgresDataDir);
 			expect(
@@ -103,6 +108,11 @@ describe("setup database boundary", () => {
 
 		try {
 			await writeSetupFiles(tempDir, draft);
+			const firstInstanceConfig = JSON.parse(
+				await readFile(instanceConfigPath(), "utf8"),
+			) as {
+				workspace: { id: string; name: string };
+			};
 			await writeSetupFiles(tempDir, {
 				...draft,
 				workspaceName: "Renamed Workspace",
@@ -114,8 +124,13 @@ describe("setup database boundary", () => {
 			) as {
 				$meta: { source: string };
 				database: { embeddedPostgresDataDir: string };
+				workspace: { id: string; name: string };
 			};
 			expect(instanceConfig.$meta.source).toBe("onboard");
+			expect(instanceConfig.workspace).toEqual({
+				id: firstInstanceConfig.workspace.id,
+				name: "Renamed Workspace",
+			});
 			expect(
 				await readdir(instanceConfig.database.embeddedPostgresDataDir),
 			).toEqual([]);

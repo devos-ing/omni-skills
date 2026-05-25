@@ -10,13 +10,15 @@ import {
 	useSendChatMessageMutation,
 	useUpdateChatSessionMutation,
 } from "@/lib/api/chat-queries";
+import { useCurrentWorkspaceQuery } from "@/lib/api/queries";
 import { useWorkspaceProjectsQuery } from "@/lib/api/realtime-queries";
 
 import { parseChatCommand } from "./chat-command-utils";
 import { ChatComposer } from "./chat-composer";
 import { executeCommandInput } from "./chat-room-command-actions";
+import { ChatRoomHeader } from "./chat-room-header";
 import { ChatRoomSidebar } from "./chat-room-sidebar";
-import { LOCAL_WORKSPACE_ID } from "./chat-room.constants";
+import { replaceAt } from "./chat-room-state-utils";
 import { ChatTranscript } from "./chat-transcript";
 import type {
 	ChatAnswerPayload,
@@ -24,8 +26,11 @@ import type {
 	ChatStreamLine,
 } from "./types/chat-room.types";
 
+const SIDEBAR_CONTROL_ID = "chat-sidebar-toggle";
+
 export function ChatRoomPanel({
 	newSessionRequest,
+	onSearchRequest,
 }: ChatRoomPanelProps): ReactElement {
 	const [activeSessionId, setActiveSessionId] = useState("");
 	const [draft, setDraft] = useState("");
@@ -35,11 +40,16 @@ export function ChatRoomPanel({
 	const [streamLines, setStreamLines] = useState<ChatStreamLine[]>([]);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const handledNewSessionRequest = useRef(0);
+	const sidebarToggleRef = useRef<HTMLInputElement>(null);
 
-	const sessionsQuery = useChatSessionsQuery(LOCAL_WORKSPACE_ID, {
+	const currentWorkspaceQuery = useCurrentWorkspaceQuery({
 		refetchIntervalMs: false,
 	});
-	const projectsQuery = useWorkspaceProjectsQuery(LOCAL_WORKSPACE_ID, {
+	const workspaceId = currentWorkspaceQuery.data?.workspaceId ?? "";
+	const sessionsQuery = useChatSessionsQuery(workspaceId, {
+		refetchIntervalMs: false,
+	});
+	const projectsQuery = useWorkspaceProjectsQuery(workspaceId, {
 		refetchIntervalMs: false,
 	});
 	const createSession = useCreateChatSessionMutation();
@@ -61,6 +71,7 @@ export function ChatRoomPanel({
 		? (answerDrafts[selectedSessionId] ?? [])
 		: [];
 	const isBusy =
+		currentWorkspaceQuery.isLoading ||
 		createSession.isPending ||
 		updateSession.isPending ||
 		appendMessage.isPending ||
@@ -69,28 +80,44 @@ export function ChatRoomPanel({
 	useEffect(() => {
 		if (
 			newSessionRequest > 0 &&
-			newSessionRequest !== handledNewSessionRequest.current
+			newSessionRequest !== handledNewSessionRequest.current &&
+			workspaceId
 		) {
 			handledNewSessionRequest.current = newSessionRequest;
 			void startNewSession();
 		}
-	}, [newSessionRequest]);
+	}, [newSessionRequest, workspaceId]);
 
-	async function startNewSession(): Promise<void> {
+	async function startNewSession(closeSidebar = false): Promise<void> {
 		setErrorMessage(null);
+		if (!workspaceId) {
+			setErrorMessage("Workspace is still loading.");
+			return;
+		}
 		const session = await createSession.mutateAsync({
-			workspaceId: LOCAL_WORKSPACE_ID,
+			workspaceId,
 		});
 		setActiveSessionId(session.id);
 		setDraft("");
+		if (closeSidebar) {
+			closeMobileSidebar();
+		}
+	}
+
+	function closeMobileSidebar(): void {
+		const toggle = sidebarToggleRef.current;
+		if (toggle) toggle.checked = false;
 	}
 
 	async function ensureSession() {
 		if (selectedSession) {
 			return selectedSession;
 		}
+		if (!workspaceId) {
+			throw new Error("Workspace is still loading.");
+		}
 		const session = await createSession.mutateAsync({
-			workspaceId: LOCAL_WORKSPACE_ID,
+			workspaceId,
 		});
 		setActiveSessionId(session.id);
 		return session;
@@ -164,33 +191,42 @@ export function ChatRoomPanel({
 	}
 
 	return (
-		<section className="grid h-[100dvh] min-w-0 grid-rows-[minmax(0,1fr)] overflow-hidden bg-[#0f1013] text-zinc-100 md:grid-cols-[auto_minmax(0,1fr)]">
+		<section className="relative grid h-[100dvh] min-w-0 grid-rows-[minmax(0,1fr)] overflow-hidden bg-[#0f1013] text-zinc-100 md:grid-cols-[18rem_minmax(0,1fr)]">
+			<input
+				aria-hidden="true"
+				className="peer sr-only"
+				id={SIDEBAR_CONTROL_ID}
+				ref={sidebarToggleRef}
+				tabIndex={-1}
+				type="checkbox"
+			/>
+			<label
+				aria-label="Close chat sidebar"
+				className="fixed inset-0 z-30 hidden bg-black/60 peer-checked:block md:hidden"
+				htmlFor={SIDEBAR_CONTROL_ID}
+			/>
 			<ChatRoomSidebar
 				activeSessionId={selectedSessionId}
 				isCreating={createSession.isPending}
 				projects={projectsQuery.data ?? []}
 				sessions={sessions}
-				onNewSession={() => void startNewSession()}
-				onSelectSession={setActiveSessionId}
+				onCloseSidebar={closeMobileSidebar}
+				onNewSession={() => void startNewSession(true)}
+				onSearch={() => {
+					closeMobileSidebar();
+					onSearchRequest();
+				}}
+				onSelectSession={(sessionId) => {
+					setActiveSessionId(sessionId);
+					closeMobileSidebar();
+				}}
 			/>
 			<div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]">
-				<header className="border-b border-zinc-900 bg-[#111216] px-4 py-3">
-					<h1 className="m-0 truncate text-base font-semibold">
-						{selectedSession?.title ?? "Untitled"}
-					</h1>
-					<p className="m-0 mt-1 truncate text-xs text-zinc-500">
-						{selectedSession?.taskId ? (
-							<a
-								className="underline-offset-4 hover:text-zinc-300 hover:underline"
-								href={`/issues/${encodeURIComponent(selectedSession.taskId)}`}
-							>
-								Issue {selectedSession.taskId}
-							</a>
-						) : (
-							(selectedSession?.projectId ?? "default")
-						)}
-					</p>
-				</header>
+				<ChatRoomHeader
+					projectId={selectedSession?.projectId ?? "default"}
+					sidebarControlId={SIDEBAR_CONTROL_ID}
+					title={selectedSession?.title ?? "Untitled"}
+				/>
 				<ChatTranscript
 					error={messagesQuery.error}
 					isLoading={messagesQuery.isLoading}
@@ -222,10 +258,4 @@ export function ChatRoomPanel({
 			</div>
 		</section>
 	);
-}
-
-function replaceAt(values: string[], index: number, value: string): string[] {
-	const next = [...values];
-	next[index] = value;
-	return next;
 }

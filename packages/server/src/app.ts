@@ -13,6 +13,7 @@ import {
 } from "./http/response";
 import { handleTasksRoute } from "./http/tasks-routes";
 import { handleWorkspaceBoardRoute } from "./http/workspace-board-routes";
+import { defaultLocalWorkspace } from "./local-workspace";
 import { parseNotificationServerRequest } from "./notifications/notification-server-request";
 import { parseNotificationRequest } from "./notifications/notifications-request";
 import { READ_ONLY_SERVER_PATHS, handleServerRequest } from "./routes";
@@ -25,6 +26,14 @@ export function createHandleRequest(deps: AppDeps): RouteHandler {
 
 		if (pathname === "/health" && request.method === "GET") {
 			return jsonSuccess({ status: "ok" });
+		}
+
+		if (pathname === "/api/workspace/current" && request.method === "GET") {
+			const workspace = deps.workspace ?? defaultLocalWorkspace();
+			return jsonSuccess({
+				workspaceId: workspace.id,
+				name: workspace.name,
+			});
 		}
 
 		const cliResponse = await handleCliRoute(
@@ -42,6 +51,7 @@ export function createHandleRequest(deps: AppDeps): RouteHandler {
 				deps.db,
 				pathname,
 				deps.workspacePath ?? process.cwd(),
+				deps.workspace ?? defaultLocalWorkspace(),
 				deps.realtimeEvents,
 			);
 			if (chatResponse) {

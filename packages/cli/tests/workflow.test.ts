@@ -1004,6 +1004,7 @@ describe("runWorkflow parallel issue regression", () => {
 					to: [],
 				},
 			},
+			workspace: { id: "owner-1", name: "Default Workspace" },
 		};
 
 		await runWorkflow(loadedConfig, {}, runtime);
@@ -1072,6 +1073,7 @@ describe("runWorkflow parallel issue regression", () => {
 					to: [],
 				},
 			},
+			workspace: { id: "owner-1", name: "Default Workspace" },
 		};
 
 		await runWorkflow(loadedConfig, {}, runtime);
@@ -3080,6 +3082,7 @@ function createLoadedConfigWithProjects(
 				to: [],
 			},
 		},
+		workspace: { id: "owner-1", name: "Default Workspace" },
 	};
 }
 

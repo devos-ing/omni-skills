@@ -11,6 +11,7 @@ const workspaceRoot = path.join(
 );
 
 const nextConfig: NextConfig = {
+	allowedDevOrigins: ["127.0.0.1"],
 	reactStrictMode: true,
 	turbopack: {
 		root: workspaceRoot,

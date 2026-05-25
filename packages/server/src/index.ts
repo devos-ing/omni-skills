@@ -48,6 +48,7 @@ export async function startServerRuntime(
 	const cwd = process.cwd();
 	const workspacePath = resolveServerWorkspacePath(process.env);
 	const config = await loadServerStartupConfig(workspacePath);
+	const workspace = config.workspace;
 	const databasePath = resolveServerDatabasePath(
 		process.env,
 		workspacePath,
@@ -55,14 +56,14 @@ export async function startServerRuntime(
 	);
 	const databasePort = resolveServerDatabasePort(config);
 	logger.info(
-		{ port, databasePath, databasePort, cwd, workspacePath },
+		{ port, databasePath, databasePort, cwd, workspacePath, workspace },
 		"Starting server",
 	);
 	const serverDatabase = await initializeServerDatabase(databasePath, {
 		logDatabaseProcess: process.env.PIV_POSTGRES_DEBUG === "1",
 		port: databasePort,
 	});
-	await ensureLocalProjectBoard(serverDatabase.db);
+	await ensureLocalProjectBoard(serverDatabase.db, workspace);
 	const commandBroker = createWorkflowCommandBroker();
 	const realtimeEvents = createRealtimeEventBus();
 	const app = createExpressApp(
@@ -79,6 +80,7 @@ export async function startServerRuntime(
 			}),
 			realtimeEvents,
 			repositories: createReadRepositories(serverDatabase),
+			workspace,
 			workspacePath,
 		}),
 		{ logger },
@@ -111,6 +113,7 @@ export async function startServerRuntime(
 			databasePath,
 			databasePort,
 			cwd,
+			workspace,
 			workspacePath,
 		},
 		"Server started",

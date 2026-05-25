@@ -72,6 +72,32 @@ describe("loadServerStartupConfig", () => {
 		expect(config.projects[0]?.server.database.port).toBe(54330);
 		expect(config.server.database.databasePath).toBe(databasePath);
 		expect(config.server.database.port).toBe(54330);
+		expect(config.workspace).toEqual({
+			id: "owner-1",
+			name: "Default Workspace",
+		});
+	});
+
+	it("loads workspace identity from instance config", async () => {
+		tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-server-startup-config-"),
+		);
+		tempHomeDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-server-startup-home-"),
+		);
+		process.env.HOME = tempHomeDir;
+		process.env.PIV_SERVER_DATABASE_PATH = "";
+		await writeInstanceConfig(
+			path.join(tempHomeDir, "instances", "default", "db"),
+			{ id: "workspace-abcdef1234567890", name: "Roy Lab" },
+		);
+
+		const config = await loadServerStartupConfig(tempDir);
+
+		expect(config.workspace).toEqual({
+			id: "workspace-abcdef1234567890",
+			name: "Roy Lab",
+		});
 	});
 
 	it("keeps PIV_SERVER_DATABASE_PATH ahead of instance config", async () => {
@@ -118,11 +144,15 @@ describe("loadServerStartupConfig", () => {
 	});
 });
 
-async function writeInstanceConfig(databasePath: string): Promise<void> {
+async function writeInstanceConfig(
+	databasePath: string,
+	workspace?: { id: string; name: string },
+): Promise<void> {
 	await mkdir(path.dirname(instanceConfigPath()), { recursive: true });
 	await writeFile(
 		instanceConfigPath(),
 		JSON.stringify({
+			workspace,
 			database: {
 				embeddedPostgresDataDir: databasePath,
 				embeddedPostgresPort: 54330,

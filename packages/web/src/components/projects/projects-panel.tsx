@@ -4,7 +4,10 @@ import { LayoutGrid, List, Plus, RefreshCw, Search } from "lucide-react";
 import type { ChangeEvent, FormEvent, ReactElement } from "react";
 import { useMemo, useState } from "react";
 
-import { useCreateProjectMutation } from "@/lib/api/queries";
+import {
+	useCreateProjectMutation,
+	useCurrentWorkspaceQuery,
+} from "@/lib/api/queries";
 import { useWorkspaceProjectsQuery } from "@/lib/api/realtime-queries";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +24,6 @@ import type {
 	ProjectTableDensity,
 } from "./types/projects-panel.types";
 
-const LOCAL_WORKSPACE_ID = "owner-1";
 const LOCAL_BOARD_ID = "board-1";
 
 export function ProjectsPanel(): ReactElement {
@@ -32,7 +34,11 @@ export function ProjectsPanel(): ReactElement {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [density, setDensity] = useState<ProjectTableDensity>("compact");
-	const projectsQuery = useWorkspaceProjectsQuery(LOCAL_WORKSPACE_ID, {
+	const currentWorkspaceQuery = useCurrentWorkspaceQuery({
+		refetchIntervalMs: false,
+	});
+	const workspaceId = currentWorkspaceQuery.data?.workspaceId ?? "";
+	const projectsQuery = useWorkspaceProjectsQuery(workspaceId, {
 		refetchIntervalMs: false,
 	});
 	const createProject = useCreateProjectMutation();
@@ -68,11 +74,15 @@ export function ProjectsPanel(): ReactElement {
 	): Promise<void> {
 		event.preventDefault();
 		setFormError(null);
+		if (!workspaceId) {
+			setFormError("Workspace is still loading.");
+			return;
+		}
 		try {
 			await createProject.mutateAsync(
 				buildProjectCreateRequest(form, {
 					boardId: LOCAL_BOARD_ID,
-					ownerId: LOCAL_WORKSPACE_ID,
+					ownerId: workspaceId,
 				}),
 			);
 			setForm({ ...EMPTY_PROJECT_FORM_STATE });
@@ -102,6 +112,7 @@ export function ProjectsPanel(): ReactElement {
 					</button>
 					<button
 						className="issue-primary-button"
+						disabled={!workspaceId || currentWorkspaceQuery.isLoading}
 						onClick={openCreateDialog}
 						type="button"
 					>

@@ -3,6 +3,7 @@ import type {
 	AgentRecord,
 	ChatSendResponse,
 	ChatSessionRecord,
+	CurrentWorkspaceRecord,
 	HealthResponse,
 	PollingStatusResponse,
 	ProjectBoardRecord,
@@ -21,6 +22,8 @@ const webClient = createWebApiClient();
 
 const healthResponsePromise: Promise<HealthResponse> = client.getHealth();
 const webHealthResponsePromise: Promise<HealthResponse> = webClient.getHealth();
+const currentWorkspacePromise: Promise<CurrentWorkspaceRecord> =
+	webClient.getCurrentWorkspace();
 const agentRecordsPromise: Promise<AgentRecord[]> = webClient.listAgents();
 const chatSessionPromise: Promise<ChatSessionRecord> =
 	webClient.createChatSession({
@@ -88,6 +91,7 @@ const runIssueStreamPromise: Promise<void> = webClient.streamCliCommand(
 
 void healthResponsePromise;
 void webHealthResponsePromise;
+void currentWorkspacePromise;
 void agentRecordsPromise;
 void chatSessionPromise;
 void chatSendPromise;

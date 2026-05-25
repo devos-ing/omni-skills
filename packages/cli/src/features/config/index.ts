@@ -14,6 +14,7 @@ import {
 	loadInstanceServerDatabaseConfig,
 	loadInstanceServerDatabasePath,
 } from "./instance-database-path";
+import { loadInstanceWorkspaceConfig } from "./instance-workspace";
 import { resolveNotifications } from "./notification-resolution";
 import { applyInstancePlugins } from "./plugin-resolution";
 import { applyServerProjectMetadata } from "./project-metadata";
@@ -56,6 +57,7 @@ async function loadConfigWithOptions(
 	const envBase = buildEnvBase(cwd, env, instanceServerDatabase);
 	const envPolling = buildEnvPolling(env);
 	const envNotifications = buildEnvNotifications(env);
+	const workspace = await loadInstanceWorkspaceConfig();
 	const root = createRuntimeRootConfig();
 	const defaultProjectRoot = createDefaultProjectRootConfig();
 
@@ -83,7 +85,7 @@ async function loadConfigWithOptions(
 	validatePolling(polling);
 	validateNotifications(notifications);
 
-	return { projects, server, polling, notifications };
+	return { projects, server, polling, notifications, workspace };
 }
 
 function createRuntimeRootConfig(): DevosRootConfig {
@@ -116,6 +118,7 @@ export {
 	instanceConfigPath,
 } from "./home-paths";
 export { loadInstanceServerDatabaseConfig, loadInstanceServerDatabasePath };
+export { loadInstanceWorkspaceConfig };
 export { loadResolvedEnv };
 export type { LoadedConfig } from "./types/config.types";
 export type { ResolvedEnv } from "./env";

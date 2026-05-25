@@ -51,6 +51,7 @@ export async function createSmokeHarness(): Promise<SmokeHarness> {
 			staleRunTimeoutMs: 1000,
 		},
 		notifications: { email: { enabled: true, to: ["ops@example.invalid"] } },
+		workspace: { id: "owner-1", name: "Default Workspace" },
 	};
 	const allIssues = new Map<string, LinearIssue>();
 	const agents = new Map(projects.map((p) => [p.id, new FakeAgent()]));

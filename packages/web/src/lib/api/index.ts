@@ -16,6 +16,7 @@ export type {
 	ChatSessionRecord,
 	ChatSessionUpdateRequest,
 	CommandHistoryRecord,
+	CurrentWorkspaceRecord,
 	HealthRequestOptions,
 	HealthResponse,
 	HealthStatus,

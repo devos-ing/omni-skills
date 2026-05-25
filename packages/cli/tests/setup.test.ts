@@ -137,6 +137,10 @@ describe("setup helpers", () => {
 				updatedAt: "2026-05-12T16:13:11.419Z",
 				source: "onboard",
 			},
+			workspace: {
+				id: "owner-1",
+				name: "Default Workspace",
+			},
 			database: {
 				mode: "embedded-postgres",
 				embeddedPostgresDataDir: path.join(instanceRoot, "db"),
@@ -953,6 +957,10 @@ function loadedConfig({
 				enabled: false,
 				to: [],
 			},
+		},
+		workspace: {
+			id: "owner-1",
+			name: "Default Workspace",
 		},
 	};
 }

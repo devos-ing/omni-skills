@@ -1,3 +1,6 @@
 import type { LoadedConfig } from "devos/features/config";
 
-export type ServerStartupConfig = Pick<LoadedConfig, "projects" | "server">;
+export type ServerStartupConfig = Pick<
+	LoadedConfig,
+	"projects" | "server" | "workspace"
+>;

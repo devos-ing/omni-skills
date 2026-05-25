@@ -39,6 +39,7 @@ describe("handleStatusCommand status output", () => {
 					to: [],
 				},
 			},
+			workspace: { id: "owner-1", name: "Default Workspace" },
 		};
 
 		await saveRunState(workspaceRoot, createRunState("ROY-64", "planning"));

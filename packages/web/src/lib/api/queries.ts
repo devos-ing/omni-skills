@@ -11,6 +11,7 @@ import { serverStateQueryKeys } from "./query-keys";
 import type {
 	AgentRecord,
 	CommandHistoryRecord,
+	CurrentWorkspaceRecord,
 	JobRecord,
 	ProjectBoardTaskRecord,
 	SkillRecord,
@@ -83,6 +84,17 @@ export function useSkillsQuery(
 	return useQuery({
 		queryKey: serverStateQueryKeys.skills,
 		queryFn: () => apiClient.listSkills(),
+		enabled: options?.enabled,
+		refetchInterval: resolveRefetchInterval(options),
+	});
+}
+
+export function useCurrentWorkspaceQuery(
+	options?: ServerStateQueryOptions,
+): UseQueryResult<CurrentWorkspaceRecord, Error> {
+	return useQuery({
+		queryKey: serverStateQueryKeys.currentWorkspace,
+		queryFn: () => apiClient.getCurrentWorkspace(),
 		enabled: options?.enabled,
 		refetchInterval: resolveRefetchInterval(options),
 	});

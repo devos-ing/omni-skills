@@ -10,8 +10,10 @@ tags:
   - name: CLI
   - name: Read Models
   - name: Board
+  - name: Chat
   - name: Notifications
   - name: Polling
+  - name: Workspace
 paths:
   /health:
     get:
@@ -98,6 +100,99 @@ paths:
       responses:
         '200':
           description: Deleted project.
+        '404':
+          $ref: '#/components/responses/TypedError'
+  /api/workspace/current:
+    get:
+      tags: [Workspace]
+      responses:
+        '200':
+          description: Current configured workspace identity.
+  /api/chat/sessions:
+    get:
+      tags: [Chat]
+      parameters:
+        - in: query
+          name: workspaceId
+          required: false
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Chat sessions for the workspace.
+    post:
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreateRequest'
+      responses:
+        '201':
+          description: Created chat session.
+        '400':
+          $ref: '#/components/responses/TypedError'
+  /api/chat/sessions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionUpdateRequest'
+      responses:
+        '200':
+          description: Updated chat session.
+        '400':
+          $ref: '#/components/responses/TypedError'
+        '404':
+          $ref: '#/components/responses/TypedError'
+  /api/chat/sessions/{id}/messages:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Chat]
+      responses:
+        '200':
+          description: Chat session messages.
+        '404':
+          $ref: '#/components/responses/TypedError'
+    post:
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessageCreateRequest'
+      responses:
+        '201':
+          description: Appended chat message.
+        '400':
+          $ref: '#/components/responses/TypedError'
+        '404':
+          $ref: '#/components/responses/TypedError'
+  /api/chat/sessions/{id}/send:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSendMessageRequest'
+      responses:
+        '200':
+          description: Chat send result.
+        '400':
+          $ref: '#/components/responses/TypedError'
         '404':
           $ref: '#/components/responses/TypedError'
   /api/tasks:
@@ -581,6 +676,73 @@ components:
       properties:
         request: { type: string, minLength: 1 }
         projectId: { type: string, minLength: 1 }
+        answers:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [question, answer]
+            properties:
+              question: { type: string, minLength: 1 }
+              answer: { type: string, minLength: 1 }
+    ChatSessionCreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        workspaceId: { type: string, minLength: 1 }
+        projectId:
+          type: string
+          minLength: 1
+          nullable: true
+        title: { type: string, minLength: 1 }
+    ChatSessionUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        projectId:
+          type: string
+          minLength: 1
+          nullable: true
+        title: { type: string, minLength: 1 }
+        pendingRequest:
+          type: string
+          nullable: true
+        pendingQuestions:
+          type: array
+          nullable: true
+          items:
+            type: string
+            minLength: 1
+    ChatMessageCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        kind:
+          type: string
+          enum: [message, clarification, task, command, error]
+        content: { type: string, minLength: 1 }
+        taskId:
+          type: string
+          minLength: 1
+          nullable: true
+        commandAction:
+          type: string
+          minLength: 1
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+    ChatSendMessageRequest:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1 }
         answers:
           type: array
           items:

@@ -16,6 +16,7 @@ import type {
 	ApiClientOptions,
 	HealthRequestOptions,
 } from "./types/client.types";
+import { createWorkspaceApiMethods } from "./workspace-client";
 
 type RequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
@@ -39,11 +40,13 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 	);
 	const inboxApiMethods = createInboxApiMethods(requestWithBase);
 	const taskApiMethods = createTaskApiMethods(requestWithBase);
+	const workspaceApiMethods = createWorkspaceApiMethods(requestWithBase);
 
 	return {
 		...boardApiMethods,
 		...chatApiMethods,
 		...commandStreamApiMethods,
+		...workspaceApiMethods,
 		async getHealth(requestOptions) {
 			const payload = await requestWithBase("/health", "GET", requestOptions);
 			return parseHealthResponse(payload);

@@ -51,7 +51,7 @@ function getActiveNavKey(pathname: string): SidebarNavKey {
 	return (
 		navItems.find(
 			(item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-		)?.key ?? "issues"
+		)?.key ?? "chat"
 	);
 }
 
@@ -77,7 +77,8 @@ export function WebOperatorShell({
 		refetchIntervalMs: false,
 	});
 	const activeNavKey = getActiveNavKey(pathname);
-	const canShowSidebar = sidebarMode !== "hidden";
+	const isChatSurface = activeNavKey === "chat";
+	const canShowSidebar = sidebarMode !== "hidden" && !isChatSurface;
 
 	useEffect(() => {
 		const mediaQuery = window.matchMedia(compactSidebarQuery);
@@ -107,6 +108,10 @@ export function WebOperatorShell({
 		setCreateSessionRequest((value) => value + 1);
 	}, [router]);
 
+	const openSearch = useCallback(() => {
+		setIsSearchOpen(true);
+	}, []);
+
 	const openIssue = useCallback(
 		(taskId: string) => {
 			router.push(`/issues/${encodeURIComponent(taskId)}`);
@@ -131,6 +136,7 @@ export function WebOperatorShell({
 			requestNewIssue: createIssue,
 			requestNewSession: createSession,
 			requestOpenIssue: openIssue,
+			requestSearch: openSearch,
 		}),
 		[
 			createIssue,
@@ -138,6 +144,7 @@ export function WebOperatorShell({
 			createSession,
 			createSessionRequest,
 			openIssue,
+			openSearch,
 		],
 	);
 
@@ -158,8 +165,8 @@ export function WebOperatorShell({
 					mode={sidebarMode}
 					activeKey={activeNavKey}
 					navItems={navItems}
-					onNewIssue={createIssue}
-					onSearch={() => setIsSearchOpen(true)}
+					onNewSession={createSession}
+					onSearch={openSearch}
 					onToggleMode={toggleSidebarMode}
 				/>
 			) : null}

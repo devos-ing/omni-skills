@@ -113,8 +113,16 @@ describe("server database initialization", () => {
 		const database = await initializeServerDatabase(path.join(tempDir, "db"));
 
 		try {
-			await ensureLocalProjectBoard(database.db, "2026-05-20T00:00:00.000Z");
-			await ensureLocalProjectBoard(database.db, "2026-05-21T00:00:00.000Z");
+			await ensureLocalProjectBoard(
+				database.db,
+				undefined,
+				"2026-05-20T00:00:00.000Z",
+			);
+			await ensureLocalProjectBoard(
+				database.db,
+				undefined,
+				"2026-05-21T00:00:00.000Z",
+			);
 
 			const boards = await database.db
 				.select()
@@ -126,6 +134,37 @@ describe("server database initialization", () => {
 				name: "Local Workspace",
 				ownerId: LOCAL_WORKSPACE_ID,
 				createdAt: "2026-05-20 00:00:00",
+			});
+		} finally {
+			await database.close();
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("adopts the local project board for the configured workspace", async () => {
+		const tempDir = await mkdtemp(path.join(os.tmpdir(), "devos-db-init-"));
+		const database = await initializeServerDatabase(path.join(tempDir, "db"));
+
+		try {
+			await ensureLocalProjectBoard(
+				database.db,
+				undefined,
+				"2026-05-20T00:00:00.000Z",
+			);
+			await ensureLocalProjectBoard(
+				database.db,
+				{ id: "workspace-abcdef1234567890", name: "Roy Lab" },
+				"2026-05-21T00:00:00.000Z",
+			);
+
+			const [board] = await database.db
+				.select()
+				.from(projectBoardsTable)
+				.where(eq(projectBoardsTable.id, LOCAL_BOARD_ID));
+			expect(board).toMatchObject({
+				id: LOCAL_BOARD_ID,
+				ownerId: "workspace-abcdef1234567890",
+				updatedAt: "2026-05-21 00:00:00",
 			});
 		} finally {
 			await database.close();

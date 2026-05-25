@@ -8,6 +8,13 @@ import type {
 
 export interface ChatRoomPanelProps {
 	newSessionRequest: number;
+	onSearchRequest: () => void;
+}
+
+export interface ChatRoomHeaderProps {
+	projectId: string;
+	sidebarControlId: string;
+	title: string;
 }
 
 export interface ChatCommandContext {
@@ -50,6 +57,15 @@ export interface ChatComposerProps {
 	onDraftChange: (value: string) => void;
 	onSelectCommand: (value: string) => void;
 	onSubmit: () => void;
+}
+
+export type ChatRoomSidebarView = "main" | "settings";
+
+export interface ChatRoomSettingsSidebarProps {
+	isActive: boolean;
+	onBack: () => void;
+	onClose: () => void;
+	onNavigate: () => void;
 }
 
 export interface CommandRunResult {

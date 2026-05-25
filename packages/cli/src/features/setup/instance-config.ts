@@ -4,10 +4,15 @@ import {
 	devosHomeInstanceRoot,
 	instanceConfigPath,
 } from "../config/home-paths";
-import { INSTANCE_CONFIG_FILE } from "./constants";
+import {
+	DEFAULT_WORKSPACE_NAME,
+	INSTANCE_CONFIG_FILE,
+	LOCAL_WORKSPACE_ID,
+} from "./constants";
 import type {
 	InstanceConfigLoadResult,
 	OnboardInstanceConfig,
+	OnboardWorkspaceConfig,
 } from "./types/instance-config.types";
 
 const DEFAULT_INSTANCE_ID = "default";
@@ -67,7 +72,10 @@ export async function loadInstanceConfig(
 		if (validationMessage) {
 			return { ok: false, message: validationMessage };
 		}
-		return { ok: true, config: parsed as OnboardInstanceConfig };
+		return {
+			ok: true,
+			config: normalizeInstanceConfig(parsed as OnboardInstanceConfig),
+		};
 	} catch (error) {
 		return {
 			ok: false,
@@ -81,6 +89,7 @@ export async function loadInstanceConfig(
 export function createInstanceConfig(
 	_cwd: string,
 	updatedAt: string,
+	workspace: OnboardWorkspaceConfig = defaultWorkspaceConfig(),
 ): OnboardInstanceConfig {
 	const instanceRoot = devosHomeInstanceRoot(DEFAULT_INSTANCE_ID);
 	return {
@@ -89,6 +98,7 @@ export function createInstanceConfig(
 			updatedAt,
 			source: "onboard",
 		},
+		workspace,
 		database: {
 			mode: "embedded-postgres",
 			embeddedPostgresDataDir: path.join(instanceRoot, "db"),
@@ -147,6 +157,18 @@ export function createInstanceConfig(
 
 function validateInstanceConfig(config: unknown): string | undefined {
 	if (!isRecord(config)) return `${INSTANCE_CONFIG_FILE} must be an object`;
+	const workspace = config.workspace;
+	if (workspace !== undefined) {
+		if (!isRecord(workspace)) {
+			return `${INSTANCE_CONFIG_FILE} workspace must be an object`;
+		}
+		if (!isWorkspaceId(workspace.id)) {
+			return `${INSTANCE_CONFIG_FILE} workspace.id must be branch-safe`;
+		}
+		if (typeof workspace.name !== "string" || !workspace.name.trim()) {
+			return `${INSTANCE_CONFIG_FILE} workspace.name must be a non-empty string`;
+		}
+	}
 	const storage = config.storage;
 	if (!isRecord(storage) || !isRecord(storage.localDisk)) {
 		return `${INSTANCE_CONFIG_FILE} is missing storage.localDisk`;
@@ -180,6 +202,26 @@ function validateInstanceConfig(config: unknown): string | undefined {
 		}
 	}
 	return undefined;
+}
+
+function normalizeInstanceConfig(
+	config: OnboardInstanceConfig,
+): OnboardInstanceConfig {
+	return {
+		...config,
+		workspace: config.workspace ?? defaultWorkspaceConfig(),
+	};
+}
+
+function defaultWorkspaceConfig(): OnboardWorkspaceConfig {
+	return {
+		id: LOCAL_WORKSPACE_ID,
+		name: DEFAULT_WORKSPACE_NAME,
+	};
+}
+
+function isWorkspaceId(value: unknown): value is string {
+	return typeof value === "string" && /^[a-z0-9][a-z0-9-]*$/.test(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

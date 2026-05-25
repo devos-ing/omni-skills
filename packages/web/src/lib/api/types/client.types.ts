@@ -122,6 +122,11 @@ export interface CommandHistoryRecord {
 	executedAt: string;
 }
 
+export interface CurrentWorkspaceRecord {
+	workspaceId: string;
+	name: string;
+}
+
 export interface WorkspaceProjectRecord {
 	id: string;
 	boardId: string;
@@ -187,6 +192,9 @@ export interface ApiClientOptions {
 
 export interface ApiClient {
 	getHealth(options?: HealthRequestOptions): Promise<HealthResponse>;
+	getCurrentWorkspace(
+		options?: HealthRequestOptions,
+	): Promise<CurrentWorkspaceRecord>;
 	listTokenUsage(options?: HealthRequestOptions): Promise<TokenUsageRecord[]>;
 	listJobs(options?: HealthRequestOptions): Promise<JobRecord[]>;
 	listAgents(options?: HealthRequestOptions): Promise<AgentRecord[]>;

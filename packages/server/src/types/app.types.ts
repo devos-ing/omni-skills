@@ -7,6 +7,7 @@ import type {
 	NotificationServerRequest,
 } from "devos/features/server";
 import type { BoardRepository } from "../board";
+import type { LocalWorkspaceIdentity } from "../local-workspace";
 import type { NotificationService } from "../notifications/notifications-service";
 import type { RealtimeEventPublisher } from "../realtime";
 import type { RegisteredWorkflowComputer } from "../workflow-data";
@@ -32,6 +33,7 @@ export interface AppDeps {
 	notificationService?: NotificationService;
 	realtimeEvents?: RealtimeEventPublisher;
 	repositories?: ReadRepositories;
+	workspace?: LocalWorkspaceIdentity;
 	workspacePath?: string;
 }
 

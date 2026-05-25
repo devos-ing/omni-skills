@@ -23,12 +23,18 @@ export interface InstancePluginsConfig {
 	installed: InstalledDevosPlugin[];
 }
 
+export interface OnboardWorkspaceConfig {
+	id: string;
+	name: string;
+}
+
 export interface OnboardInstanceConfig {
 	$meta: {
 		version: 1;
 		updatedAt: string;
 		source: "onboard";
 	};
+	workspace: OnboardWorkspaceConfig;
 	database: {
 		mode: "embedded-postgres";
 		embeddedPostgresDataDir: string;

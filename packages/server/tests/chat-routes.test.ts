@@ -22,6 +22,53 @@ afterEach(async () => {
 });
 
 describe("chat routes", () => {
+	it("exposes and uses the configured local workspace", async () => {
+		testDatabase = await createDrizzleServerTestDatabase();
+		const workspace = { id: "workspace-abcdef1234567890", name: "Roy Lab" };
+		await testDatabase.db.insert(chatSessionsTable).values({
+			id: "legacy-session",
+			workspaceId: "owner-1",
+			projectId: null,
+			taskId: null,
+			title: "Legacy",
+			pendingRequest: null,
+			pendingQuestions: null,
+			createdAt: "2026-05-13T00:00:00.000Z",
+			updatedAt: "2026-05-13T00:00:00.000Z",
+		});
+		const app = createServerTestApp(testDatabase.db, {
+			workspace,
+			workspacePath: testDatabase.path,
+		});
+
+		const current = await app(
+			new Request("http://localhost/api/workspace/current"),
+		);
+		const created = await app(
+			createJsonRequest("POST", "/api/chat/sessions", {}),
+		);
+
+		expect(await current.json()).toEqual({
+			workspaceId: workspace.id,
+			name: workspace.name,
+		});
+		expect((await created.json()) as { workspaceId: string }).toMatchObject({
+			workspaceId: workspace.id,
+		});
+		const [legacy] = await testDatabase.db
+			.select()
+			.from(chatSessionsTable)
+			.where(eq(chatSessionsTable.id, "legacy-session"));
+		const [project] = await testDatabase.db
+			.select()
+			.from(boardProjectsTable)
+			.where(eq(boardProjectsTable.id, "default"));
+		const [task] = await testDatabase.db.select().from(boardTasksTable);
+		expect(legacy?.workspaceId).toBe(workspace.id);
+		expect(project?.ownerId).toBe(workspace.id);
+		expect(task?.creatorId).toBe(workspace.id);
+	});
+
 	it("creates a default project issue for new chat sessions", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		const events: unknown[] = [];

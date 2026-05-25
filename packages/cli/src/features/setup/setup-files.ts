@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { instanceConfigPath, saveSqliteEnv } from "../config";
-import { ENV_FILE } from "./constants";
+import { DEFAULT_WORKSPACE_NAME, ENV_FILE } from "./constants";
 import {
 	buildDatabaseEnvUpdates,
 	buildEnvUpdates,
@@ -33,7 +33,12 @@ export async function writeSetupFiles(
 	await writeFile(envPath, mergeEnvFile(existingEnv, envUpdates));
 	await saveSqliteEnv(cwd, databaseEnvUpdates);
 	const existingInstanceConfig = await loadInstanceConfig(cwd);
-	const instanceConfig = createInstanceConfig(cwd, new Date().toISOString());
+	const instanceConfig = createInstanceConfig(cwd, new Date().toISOString(), {
+		id: existingInstanceConfig.ok
+			? existingInstanceConfig.config.workspace.id
+			: createWorkspaceId(),
+		name: draft.workspaceName.trim() || DEFAULT_WORKSPACE_NAME,
+	});
 	if (existingInstanceConfig.ok && existingInstanceConfig.config.plugins) {
 		instanceConfig.plugins = existingInstanceConfig.config.plugins;
 	}
@@ -43,6 +48,10 @@ export async function writeSetupFiles(
 		targetInstanceConfigPath,
 		renderInstanceConfigDocument(instanceConfig),
 	);
+}
+
+function createWorkspaceId(): string {
+	return `workspace-${randomBytes(8).toString("hex")}`;
 }
 
 async function createLocalInstanceDirectories(

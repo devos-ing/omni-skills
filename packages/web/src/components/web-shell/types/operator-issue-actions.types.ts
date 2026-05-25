@@ -4,4 +4,5 @@ export interface OperatorIssueActionsContextValue {
 	requestNewIssue: () => void;
 	requestNewSession: () => void;
 	requestOpenIssue: (taskId: string) => void;
+	requestSearch: () => void;
 }

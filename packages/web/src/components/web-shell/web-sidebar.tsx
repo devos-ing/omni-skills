@@ -8,7 +8,7 @@ import {
 	Computer,
 	Inbox,
 	ListChecks,
-	MessageCircle,
+	MessageSquare,
 	PanelLeft,
 	PencilLine,
 	Search,
@@ -31,7 +31,7 @@ interface WebSidebarProps {
 	mode: SidebarDisplayMode;
 	activeKey: SidebarNavItem["key"];
 	navItems: SidebarNavItem[];
-	onNewIssue: () => void;
+	onNewSession: () => void;
 	onSearch: () => void;
 	onToggleMode: () => void;
 }
@@ -41,9 +41,9 @@ const iconByKey: Record<
 	ComponentType<{ size?: number }>
 > = {
 	agents: Bot,
-	chat: MessageCircle,
 	runtimes: Computer,
 	skills: BookOpen,
+	chat: MessageSquare,
 	settings: Settings,
 	issues: ListChecks,
 	projects: SquareKanban,
@@ -67,7 +67,7 @@ export function WebSidebar({
 	mode,
 	activeKey,
 	navItems,
-	onNewIssue,
+	onNewSession,
 	onSearch,
 	onToggleMode,
 }: WebSidebarProps): ReactElement {
@@ -115,8 +115,8 @@ export function WebSidebar({
 				<SidebarAction
 					icon={PencilLine}
 					isExpanded={isExpanded}
-					label="New Issue"
-					onClick={onNewIssue}
+					label="New Session"
+					onClick={onNewSession}
 				/>
 				<SidebarPinnedIssues isExpanded={isExpanded} />
 			</div>

@@ -7,7 +7,7 @@ import {
 	DEFAULT_CHAT_ISSUE_TITLE,
 } from "../chat/chat-defaults";
 import {
-	LOCAL_WORKSPACE_ID,
+	type LocalWorkspaceIdentity,
 	ensureLocalDefaultProject,
 } from "../local-workspace";
 import type { RealtimeEventPublisher } from "../realtime";
@@ -64,11 +64,17 @@ export async function handleChatRoute(
 	db: ServerDatabase["db"],
 	pathname: string,
 	workspacePath: string,
+	workspace: LocalWorkspaceIdentity,
 	realtimeEvents?: RealtimeEventPublisher,
 ): Promise<Response | null> {
-	const service = createChatRouteService(db, workspacePath, realtimeEvents);
+	const service = createChatRouteService(
+		db,
+		workspacePath,
+		workspace,
+		realtimeEvents,
+	);
 	if (pathname === SESSIONS_PATH) {
-		return handleSessionsRoute(request, service);
+		return handleSessionsRoute(request, service, workspace);
 	}
 	const sendMatch = pathname.match(SEND_PATH);
 	if (sendMatch?.[1]) {
@@ -96,15 +102,17 @@ export async function handleChatRoute(
 function createChatRouteService(
 	db: ServerDatabase["db"],
 	workspacePath: string,
+	workspace: LocalWorkspaceIdentity,
 	realtimeEvents?: RealtimeEventPublisher,
 ) {
 	const taskService = createTaskService(createTaskRepository(db));
 	return createChatService(createChatRepository(db), {
-		ensureDefaultProject: () => ensureLocalDefaultProject(db, workspacePath),
+		ensureDefaultProject: () =>
+			ensureLocalDefaultProject(db, workspacePath, workspace),
 		createIssue: async (input) => {
 			const result = await taskService.createTask({
 				content: input.content,
-				creatorId: LOCAL_WORKSPACE_ID,
+				creatorId: workspace.id,
 				priority: DEFAULT_CHAT_ISSUE_PRIORITY,
 				projectId: input.projectId,
 				status: DEFAULT_CHAT_ISSUE_STATUS,
@@ -134,11 +142,11 @@ function createChatRouteService(
 async function handleSessionsRoute(
 	request: Request,
 	service: ReturnType<typeof createChatRouteService>,
+	workspace: LocalWorkspaceIdentity,
 ): Promise<Response> {
 	if (request.method === "GET") {
 		const workspaceId =
-			new URL(request.url).searchParams.get("workspaceId") ??
-			LOCAL_WORKSPACE_ID;
+			new URL(request.url).searchParams.get("workspaceId") ?? workspace.id;
 		return jsonSuccess(await service.listSessions(workspaceId));
 	}
 	if (request.method !== "POST") {
@@ -151,7 +159,7 @@ async function handleSessionsRoute(
 	return jsonSuccess(
 		await service.createSession({
 			...parsed.value,
-			workspaceId: parsed.value.workspaceId ?? LOCAL_WORKSPACE_ID,
+			workspaceId: parsed.value.workspaceId ?? workspace.id,
 		}),
 		{ status: 201 },
 	);

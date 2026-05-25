@@ -7,4 +7,10 @@ export interface LoadedConfig {
 	server: ServerRuntimeConfig;
 	polling: PollingConfig;
 	notifications: ReturnType<typeof resolveNotifications>;
+	workspace: WorkspaceRuntimeConfig;
+}
+
+export interface WorkspaceRuntimeConfig {
+	id: string;
+	name: string;
 }
