@@ -1,4 +1,6 @@
 import type {
+	ChatMessageRecord,
+	ChatSessionRecord,
 	InboxMessageRecord,
 	ProjectBoardTaskRecord,
 	WorkspaceProjectRecord,
@@ -19,6 +21,11 @@ export type RealtimeProjectEventType =
 	| "project.created"
 	| "project.updated"
 	| "project.deleted";
+
+export type RealtimeChatEventType =
+	| "chat.session.created"
+	| "chat.session.updated"
+	| "chat.message.created";
 
 export interface WorkflowProgressEvent {
 	schema: "devos.workflow.stream.v1";
@@ -62,6 +69,18 @@ export type RealtimeEvent =
 	| {
 			id: string;
 			emittedAt: string;
+			type: "chat.session.created" | "chat.session.updated";
+			session: ChatSessionRecord;
+	  }
+	| {
+			id: string;
+			emittedAt: string;
+			type: "chat.message.created";
+			message: ChatMessageRecord;
+	  }
+	| {
+			id: string;
+			emittedAt: string;
 			type: "task.execution.event";
 			execution: RealtimeTaskExecutionEventRecord;
 	  }
@@ -84,4 +103,9 @@ export type RealtimeIssueEvent = Extract<
 export type RealtimeProjectEvent = Extract<
 	RealtimeEvent,
 	{ type: RealtimeProjectEventType }
+>;
+
+export type RealtimeChatSessionEvent = Extract<
+	RealtimeEvent,
+	{ type: "chat.session.created" | "chat.session.updated" }
 >;

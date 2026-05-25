@@ -1,5 +1,6 @@
 import type { BoardProjectRow, BoardTaskRow } from "devos-db";
 import type { WorkflowProgressEvent } from "devos/features/server";
+import type { ChatMessageRecord, ChatSessionRecord } from "../../chat";
 import type { InboxMessageRecord } from "../../inbox";
 
 export type RealtimeIssueEventType =
@@ -13,6 +14,11 @@ export type RealtimeProjectEventType =
 	| "project.deleted";
 
 export type RealtimeInboxEventType = "inbox.message.created";
+
+export type RealtimeChatEventType =
+	| "chat.session.created"
+	| "chat.session.updated"
+	| "chat.message.created";
 
 export interface RealtimeProjectRecord {
 	id: string;
@@ -34,6 +40,8 @@ export interface RealtimeProjectRecord {
 
 export type RealtimeIssueRecord = BoardTaskRow;
 export type RealtimeInboxMessageRecord = InboxMessageRecord;
+export type RealtimeChatSessionRecord = ChatSessionRecord;
+export type RealtimeChatMessageRecord = ChatMessageRecord;
 
 export interface RealtimeTaskExecutionEventRecord {
 	taskId: string;
@@ -60,6 +68,14 @@ export type RealtimeEventPayload =
 	| {
 			type: "inbox.message.created";
 			message: RealtimeInboxMessageRecord;
+	  }
+	| {
+			type: "chat.session.created" | "chat.session.updated";
+			session: RealtimeChatSessionRecord;
+	  }
+	| {
+			type: "chat.message.created";
+			message: RealtimeChatMessageRecord;
 	  }
 	| {
 			type: "task.execution.event";

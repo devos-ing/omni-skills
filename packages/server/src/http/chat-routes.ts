@@ -1,17 +1,13 @@
 import type { ServerDatabase } from "devos-db";
 import { z } from "zod";
-import { createChatRepository, createChatService } from "../chat";
-import {
-	DEFAULT_CHAT_ISSUE_PRIORITY,
-	DEFAULT_CHAT_ISSUE_STATUS,
-	DEFAULT_CHAT_ISSUE_TITLE,
-} from "../chat/chat-defaults";
-import {
-	type LocalWorkspaceIdentity,
-	ensureLocalDefaultProject,
-} from "../local-workspace";
+import type { LocalWorkspaceIdentity } from "../local-workspace";
 import type { RealtimeEventPublisher } from "../realtime";
-import { createTaskRepository, createTaskService } from "../tasks";
+import {
+	publishChatAppendResult,
+	publishChatSendResult,
+	publishChatSessionEvent,
+} from "./chat-route-realtime";
+import { createChatRouteService } from "./chat-route-service";
 import {
 	badRequest,
 	methodNotAllowed,
@@ -74,11 +70,16 @@ export async function handleChatRoute(
 		realtimeEvents,
 	);
 	if (pathname === SESSIONS_PATH) {
-		return handleSessionsRoute(request, service, workspace);
+		return handleSessionsRoute(request, service, workspace, realtimeEvents);
 	}
 	const sendMatch = pathname.match(SEND_PATH);
 	if (sendMatch?.[1]) {
-		return handleSendRoute(request, service, decodeURIComponent(sendMatch[1]));
+		return handleSendRoute(
+			request,
+			service,
+			decodeURIComponent(sendMatch[1]),
+			realtimeEvents,
+		);
 	}
 	const messagesMatch = pathname.match(MESSAGES_PATH);
 	if (messagesMatch?.[1]) {
@@ -86,6 +87,7 @@ export async function handleChatRoute(
 			request,
 			service,
 			decodeURIComponent(messagesMatch[1]),
+			realtimeEvents,
 		);
 	}
 	const sessionMatch = pathname.match(SESSION_PATH);
@@ -94,55 +96,17 @@ export async function handleChatRoute(
 			request,
 			service,
 			decodeURIComponent(sessionMatch[1]),
+			realtimeEvents,
 		);
 	}
 	return null;
-}
-
-function createChatRouteService(
-	db: ServerDatabase["db"],
-	workspacePath: string,
-	workspace: LocalWorkspaceIdentity,
-	realtimeEvents?: RealtimeEventPublisher,
-) {
-	const taskService = createTaskService(createTaskRepository(db));
-	return createChatService(createChatRepository(db), {
-		ensureDefaultProject: () =>
-			ensureLocalDefaultProject(db, workspacePath, workspace),
-		createIssue: async (input) => {
-			const result = await taskService.createTask({
-				content: input.content,
-				creatorId: workspace.id,
-				priority: DEFAULT_CHAT_ISSUE_PRIORITY,
-				projectId: input.projectId,
-				status: DEFAULT_CHAT_ISSUE_STATUS,
-				title: input.title || DEFAULT_CHAT_ISSUE_TITLE,
-			});
-			if (result.status !== "ok") {
-				throw new Error("Default chat issue creation failed");
-			}
-			realtimeEvents?.publish({ type: "issue.created", issue: result.value });
-			return result.value;
-		},
-		getIssue: async (issueId) => {
-			const result = await taskService.getTask(issueId);
-			return result.status === "ok" ? result.value : null;
-		},
-		updateIssue: async (issueId, input) => {
-			const result = await taskService.updateTask(issueId, input);
-			if (result.status !== "ok") {
-				throw new Error("Default chat issue update failed");
-			}
-			realtimeEvents?.publish({ type: "issue.updated", issue: result.value });
-			return result.value;
-		},
-	});
 }
 
 async function handleSessionsRoute(
 	request: Request,
 	service: ReturnType<typeof createChatRouteService>,
 	workspace: LocalWorkspaceIdentity,
+	realtimeEvents?: RealtimeEventPublisher,
 ): Promise<Response> {
 	if (request.method === "GET") {
 		const workspaceId =
@@ -156,19 +120,19 @@ async function handleSessionsRoute(
 	if (!parsed.ok) {
 		return badRequest(parsed.error);
 	}
-	return jsonSuccess(
-		await service.createSession({
-			...parsed.value,
-			workspaceId: parsed.value.workspaceId ?? workspace.id,
-		}),
-		{ status: 201 },
-	);
+	const session = await service.createSession({
+		...parsed.value,
+		workspaceId: parsed.value.workspaceId ?? workspace.id,
+	});
+	publishChatSessionEvent(realtimeEvents, "chat.session.created", session);
+	return jsonSuccess(session, { status: 201 });
 }
 
 async function handleSessionRoute(
 	request: Request,
 	service: ReturnType<typeof createChatRouteService>,
 	sessionId: string,
+	realtimeEvents?: RealtimeEventPublisher,
 ): Promise<Response> {
 	if (request.method !== "PATCH") {
 		return methodNotAllowed();
@@ -178,6 +142,7 @@ async function handleSessionRoute(
 		return badRequest(parsed.error);
 	}
 	const session = await service.updateSession(sessionId, parsed.value);
+	publishChatSessionEvent(realtimeEvents, "chat.session.updated", session);
 	return session ? jsonSuccess(session) : notFound("Chat session not found");
 }
 
@@ -185,6 +150,7 @@ async function handleMessagesRoute(
 	request: Request,
 	service: ReturnType<typeof createChatRouteService>,
 	sessionId: string,
+	realtimeEvents?: RealtimeEventPublisher,
 ): Promise<Response> {
 	if (request.method === "GET") {
 		const messages = await service.getMessages(sessionId);
@@ -199,9 +165,10 @@ async function handleMessagesRoute(
 	if (!parsed.ok) {
 		return badRequest(parsed.error);
 	}
-	const message = await service.addMessage(sessionId, parsed.value);
-	return message
-		? jsonSuccess(message, { status: 201 })
+	const result = await service.addMessage(sessionId, parsed.value);
+	publishChatAppendResult(realtimeEvents, result);
+	return result
+		? jsonSuccess(result.message, { status: 201 })
 		: notFound("Chat session not found");
 }
 
@@ -209,6 +176,7 @@ async function handleSendRoute(
 	request: Request,
 	service: ReturnType<typeof createChatRouteService>,
 	sessionId: string,
+	realtimeEvents?: RealtimeEventPublisher,
 ): Promise<Response> {
 	if (request.method !== "POST") {
 		return methodNotAllowed();
@@ -218,6 +186,7 @@ async function handleSendRoute(
 		return badRequest(parsed.error);
 	}
 	const result = await service.sendMessage(sessionId, parsed.value);
+	publishChatSendResult(realtimeEvents, result);
 	return result ? jsonSuccess(result) : notFound("Chat session not found");
 }
 

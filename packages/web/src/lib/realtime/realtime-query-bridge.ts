@@ -2,6 +2,8 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import type {
+	ChatMessageRecord,
+	ChatSessionRecord,
 	InboxMessageRecord,
 	ProjectBoardTaskRecord,
 	WorkspaceProjectRecord,
@@ -33,6 +35,17 @@ export function applyRealtimeEventToQueryClient(
 		upsertProject(queryClient, event.project);
 		return;
 	}
+	if (
+		event.type === "chat.session.created" ||
+		event.type === "chat.session.updated"
+	) {
+		upsertChatSession(queryClient, event.session);
+		return;
+	}
+	if (event.type === "chat.message.created") {
+		upsertChatMessage(queryClient, event.message);
+		return;
+	}
 	if (event.type === "task.execution.event") {
 		void queryClient.invalidateQueries({
 			queryKey: serverStateQueryKeys.taskActivity(event.execution.taskId),
@@ -45,7 +58,9 @@ export function applyRealtimeEventToQueryClient(
 		});
 		return;
 	}
-	prependInboxMessage(queryClient, event.message);
+	if (event.type === "inbox.message.created") {
+		prependInboxMessage(queryClient, event.message);
+	}
 }
 
 function isIssueEvent(event: RealtimeEvent): event is RealtimeIssueEvent {
@@ -116,6 +131,32 @@ function removeProject(
 			project.id,
 		),
 	});
+}
+
+function upsertChatSession(
+	queryClient: QueryClient,
+	session: ChatSessionRecord,
+): void {
+	queryClient.setQueryData<ChatSessionRecord[]>(
+		serverStateQueryKeys.chatSessions(session.workspaceId),
+		(current = []) =>
+			upsertById(current, session).sort((left, right) =>
+				right.updatedAt.localeCompare(left.updatedAt),
+			),
+	);
+}
+
+function upsertChatMessage(
+	queryClient: QueryClient,
+	message: ChatMessageRecord,
+): void {
+	queryClient.setQueryData<ChatMessageRecord[]>(
+		serverStateQueryKeys.chatMessages(message.sessionId),
+		(current = []) =>
+			upsertById(current, message).sort((left, right) =>
+				left.createdAt.localeCompare(right.createdAt),
+			),
+	);
 }
 
 function prependInboxMessage(

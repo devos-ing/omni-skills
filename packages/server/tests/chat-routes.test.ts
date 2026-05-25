@@ -83,6 +83,7 @@ describe("chat routes", () => {
 
 		expect(response.status).toBe(201);
 		const body = (await response.json()) as {
+			id: string;
 			projectId: string;
 			taskId: string;
 			title: string;
@@ -110,8 +111,20 @@ describe("chat routes", () => {
 			status: "planning",
 			creatorId: "owner-1",
 		});
-		expect(events).toHaveLength(1);
-		expect(events[0]).toMatchObject({ type: "issue.created", issue: task });
+		expect(events.map((event) => (event as { type: string }).type)).toEqual([
+			"project.created",
+			"issue.created",
+			"chat.session.created",
+		]);
+		expect(events[0]).toMatchObject({
+			type: "project.created",
+			project: { id: "default" },
+		});
+		expect(events[1]).toMatchObject({ type: "issue.created", issue: task });
+		expect(events[2]).toMatchObject({
+			type: "chat.session.created",
+			session: { id: body.id },
+		});
 	});
 
 	it("updates the session issue from the first chat message without task intake", async () => {
@@ -164,8 +177,12 @@ describe("chat routes", () => {
 		});
 		expect(cliCalls).toEqual([]);
 		expect(events.map((event) => (event as { type: string }).type)).toEqual([
+			"project.created",
 			"issue.created",
+			"chat.session.created",
 			"issue.updated",
+			"chat.message.created",
+			"chat.session.updated",
 		]);
 	});
 

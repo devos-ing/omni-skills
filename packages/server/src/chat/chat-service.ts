@@ -69,10 +69,13 @@ export function createChatService(
 				...input,
 				taskId: input.taskId ?? linked.issue.id,
 			});
-			await repository.updateSession(linked.session.id, {
+			const updatedSession = await repository.updateSession(linked.session.id, {
 				updatedAt: new Date().toISOString(),
 			});
-			return mapMessage(message);
+			return {
+				message: mapMessage(message),
+				session: mapSession(updatedSession ?? linked.session),
+			};
 		},
 		async sendMessage(sessionId, input) {
 			return sendMessage(repository, deps, sessionId, input);

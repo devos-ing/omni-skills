@@ -17,6 +17,13 @@ export interface LocalWorkspaceIdentity {
 	name: string;
 }
 
+export type LocalDefaultProjectStatus = "created" | "existing" | "updated";
+
+export interface LocalDefaultProjectResult {
+	project: BoardProjectRow;
+	status: LocalDefaultProjectStatus;
+}
+
 export async function ensureLocalProjectBoard(
 	db: ServerDatabase["db"],
 	workspace: LocalWorkspaceIdentity = defaultLocalWorkspace(),
@@ -42,6 +49,17 @@ export async function ensureLocalDefaultProject(
 	workspace: LocalWorkspaceIdentity = defaultLocalWorkspace(),
 	now = new Date().toISOString(),
 ): Promise<BoardProjectRow> {
+	return (
+		await ensureLocalDefaultProjectWithStatus(db, workspacePath, workspace, now)
+	).project;
+}
+
+export async function ensureLocalDefaultProjectWithStatus(
+	db: ServerDatabase["db"],
+	workspacePath: string,
+	workspace: LocalWorkspaceIdentity = defaultLocalWorkspace(),
+	now = new Date().toISOString(),
+): Promise<LocalDefaultProjectResult> {
 	await ensureLocalProjectBoard(db, workspace, now);
 	const localFolder = defaultProjectFolder(workspacePath);
 	await mkdir(localFolder, { recursive: true });
@@ -54,14 +72,14 @@ export async function ensureLocalDefaultProject(
 			existing.localFolder === localFolder &&
 			existing.ownerId === workspace.id
 		) {
-			return existing;
+			return { project: existing, status: "existing" };
 		}
 		const [updated] = await db
 			.update(boardProjectsTable)
 			.set({ localFolder, ownerId: workspace.id, updatedAt: now })
 			.where(eq(boardProjectsTable.id, DEFAULT_PROJECT_ID))
 			.returning();
-		return updated ?? existing;
+		return { project: updated ?? existing, status: "updated" };
 	}
 	const [created] = await db
 		.insert(boardProjectsTable)
@@ -86,7 +104,7 @@ export async function ensureLocalDefaultProject(
 	if (!created) {
 		throw new Error("Default project creation failed");
 	}
-	return created;
+	return { project: created, status: "created" };
 }
 
 export function defaultProjectFolder(workspacePath: string): string {

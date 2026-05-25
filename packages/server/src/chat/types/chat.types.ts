@@ -47,6 +47,11 @@ export interface ChatMessageCreateInput {
 	taskId?: string | null;
 }
 
+export interface ChatAddMessageResult {
+	message: ChatMessageRecord;
+	session: ChatSessionRecord;
+}
+
 export interface ChatSendInput {
 	answers?: ChatSendAnswer[];
 	content: string;
@@ -103,7 +108,7 @@ export interface ChatService {
 	addMessage(
 		sessionId: string,
 		input: ChatMessageCreateInput,
-	): Promise<ChatMessageRecord | null>;
+	): Promise<ChatAddMessageResult | null>;
 	createSession(input: ChatSessionCreateInput): Promise<ChatSessionRecord>;
 	getMessages(sessionId: string): Promise<ChatMessageRecord[] | null>;
 	listSessions(workspaceId: string): Promise<ChatSessionRecord[]>;
