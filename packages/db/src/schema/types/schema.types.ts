@@ -2,6 +2,8 @@ import type {
 	agentsTable,
 	boardProjectsTable,
 	boardTasksTable,
+	chatMessagesTable,
+	chatSessionsTable,
 	commandHistoryTable,
 	inboxMessagesTable,
 	jobsTable,
@@ -25,6 +27,10 @@ export type BoardProjectRow = typeof boardProjectsTable.$inferSelect;
 export type NewBoardProjectRow = typeof boardProjectsTable.$inferInsert;
 export type BoardTaskRow = typeof boardTasksTable.$inferSelect;
 export type NewBoardTaskRow = typeof boardTasksTable.$inferInsert;
+export type ChatMessageRow = typeof chatMessagesTable.$inferSelect;
+export type NewChatMessageRow = typeof chatMessagesTable.$inferInsert;
+export type ChatSessionRow = typeof chatSessionsTable.$inferSelect;
+export type NewChatSessionRow = typeof chatSessionsTable.$inferInsert;
 export type CommandHistoryRow = typeof commandHistoryTable.$inferSelect;
 export type NewCommandHistoryRow = typeof commandHistoryTable.$inferInsert;
 export type InboxMessageRow = typeof inboxMessagesTable.$inferSelect;

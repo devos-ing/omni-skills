@@ -79,6 +79,7 @@ export async function startServerRuntime(
 			}),
 			realtimeEvents,
 			repositories: createReadRepositories(serverDatabase),
+			workspacePath,
 		}),
 		{ logger },
 	);

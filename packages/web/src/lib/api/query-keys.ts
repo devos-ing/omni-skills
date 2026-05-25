@@ -6,6 +6,10 @@ export const serverStateQueryKeys = {
 	agents: ["server-state", "agents"] as const,
 	skills: ["server-state", "skills"] as const,
 	commandHistory: ["server-state", "command-history"] as const,
+	chatSessions: (workspaceId: string) =>
+		["server-state", "chat-sessions", workspaceId] as const,
+	chatMessages: (sessionId: string) =>
+		["server-state", "chat-messages", sessionId] as const,
 	pollingStatus: ["server-state", "polling-status"] as const,
 	boardTasks: ["server-state", "board-tasks"] as const,
 	boardTask: (taskId: string) =>

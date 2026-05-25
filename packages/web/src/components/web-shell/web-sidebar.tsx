@@ -9,6 +9,7 @@ import {
 	Computer,
 	Inbox,
 	ListChecks,
+	MessageCircle,
 	PanelLeft,
 	PencilLine,
 	Search,
@@ -41,6 +42,7 @@ const iconByKey: Record<
 	ComponentType<{ size?: number }>
 > = {
 	agents: Bot,
+	chat: MessageCircle,
 	runtimes: Computer,
 	skills: BookOpen,
 	settings: Settings,

@@ -5,6 +5,7 @@ import type {
 } from "@/components/web-shell/types/web-shell.types";
 
 export const navItems: SidebarNavItem[] = [
+	{ key: "chat", label: "Chat", href: "/chat" },
 	{ key: "inbox", label: "Inbox", href: "/inbox" },
 	{ key: "issues", label: "Issues", href: "/issues" },
 	{ key: "projects", label: "Projects", href: "/projects" },
@@ -61,8 +62,12 @@ export const sectionContentByKey: Record<
 		heading: "Usage Job Board",
 		description: "Inspect workflow usage and operating volume.",
 	},
+	chat: {
+		heading: "Chat",
+		description: "Create tasks and run workflow commands.",
+	},
 };
 
 export function hrefForNavKey(key: SidebarNavKey): SidebarNavItem["href"] {
-	return navItems.find((item) => item.key === key)?.href ?? "/issues";
+	return navItems.find((item) => item.key === key)?.href ?? "/chat";
 }

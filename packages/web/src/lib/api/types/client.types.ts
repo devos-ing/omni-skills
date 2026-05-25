@@ -1,4 +1,13 @@
 import type {
+	ChatMessageCreateRequest,
+	ChatMessageRecord,
+	ChatSendRequest,
+	ChatSendResponse,
+	ChatSessionCreateRequest,
+	ChatSessionRecord,
+	ChatSessionUpdateRequest,
+} from "./chat.types";
+import type {
 	CliCommandStreamHandler,
 	CliCommandStreamRequest,
 } from "./command-stream-client.types";
@@ -22,6 +31,17 @@ export type {
 	TaskMutationRequest,
 } from "./task.types";
 export type { PollingStatusResponse } from "./polling-status.types";
+export type {
+	ChatMessageCreateRequest,
+	ChatMessageKind,
+	ChatMessageRecord,
+	ChatMessageRole,
+	ChatSendRequest,
+	ChatSendResponse,
+	ChatSessionCreateRequest,
+	ChatSessionRecord,
+	ChatSessionUpdateRequest,
+} from "./chat.types";
 
 export type HealthStatus = "ok";
 
@@ -179,6 +199,33 @@ export interface ApiClient {
 	listCommandHistory(
 		options?: HealthRequestOptions,
 	): Promise<CommandHistoryRecord[]>;
+	listChatSessions(
+		workspaceId: string,
+		options?: HealthRequestOptions,
+	): Promise<ChatSessionRecord[]>;
+	createChatSession(
+		request: ChatSessionCreateRequest,
+		options?: HealthRequestOptions,
+	): Promise<ChatSessionRecord>;
+	updateChatSession(
+		sessionId: string,
+		request: ChatSessionUpdateRequest,
+		options?: HealthRequestOptions,
+	): Promise<ChatSessionRecord>;
+	listChatMessages(
+		sessionId: string,
+		options?: HealthRequestOptions,
+	): Promise<ChatMessageRecord[]>;
+	appendChatMessage(
+		sessionId: string,
+		request: ChatMessageCreateRequest,
+		options?: HealthRequestOptions,
+	): Promise<ChatMessageRecord>;
+	sendChatMessage(
+		sessionId: string,
+		request: ChatSendRequest,
+		options?: HealthRequestOptions,
+	): Promise<ChatSendResponse>;
 	listPollingStatus(
 		options?: HealthRequestOptions,
 	): Promise<PollingStatusResponse>;

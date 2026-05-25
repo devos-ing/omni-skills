@@ -1,6 +1,8 @@
 import { createApiClient } from "./client";
 import type {
 	AgentRecord,
+	ChatSendResponse,
+	ChatSessionRecord,
 	HealthResponse,
 	PollingStatusResponse,
 	ProjectBoardRecord,
@@ -20,6 +22,14 @@ const webClient = createWebApiClient();
 const healthResponsePromise: Promise<HealthResponse> = client.getHealth();
 const webHealthResponsePromise: Promise<HealthResponse> = webClient.getHealth();
 const agentRecordsPromise: Promise<AgentRecord[]> = webClient.listAgents();
+const chatSessionPromise: Promise<ChatSessionRecord> =
+	webClient.createChatSession({
+		workspaceId: "owner-1",
+	});
+const chatSendPromise: Promise<ChatSendResponse> = webClient.sendChatMessage(
+	"session-1",
+	{ content: "Create the issue plan" },
+);
 const taskCreateRequest: TaskCreateRequest = {
 	request: "Create a task from web UI",
 	projectId: "project-1",
@@ -79,6 +89,8 @@ const runIssueStreamPromise: Promise<void> = webClient.streamCliCommand(
 void healthResponsePromise;
 void webHealthResponsePromise;
 void agentRecordsPromise;
+void chatSessionPromise;
+void chatSendPromise;
 void taskCreateResponsePromise;
 void unassignedTaskCreateResponsePromise;
 void workspaceProjectsPromise;

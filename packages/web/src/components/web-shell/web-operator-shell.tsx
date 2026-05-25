@@ -66,6 +66,7 @@ export function WebOperatorShell({
 		useState<SidebarDisplayMode>("expanded");
 	const [isCompactViewport, setIsCompactViewport] = useState<boolean>(false);
 	const [createIssueRequest, setCreateIssueRequest] = useState(0);
+	const [createSessionRequest, setCreateSessionRequest] = useState(0);
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const searchTasksQuery = useBoardTasksQuery({
 		enabled: isSearchOpen,
@@ -101,6 +102,11 @@ export function WebOperatorShell({
 		setCreateIssueRequest((value) => value + 1);
 	}, [router]);
 
+	const createSession = useCallback(() => {
+		router.push("/chat");
+		setCreateSessionRequest((value) => value + 1);
+	}, [router]);
+
 	const openIssue = useCallback(
 		(taskId: string) => {
 			router.push(`/issues/${encodeURIComponent(taskId)}`);
@@ -121,10 +127,18 @@ export function WebOperatorShell({
 	const issueActionsValue = useMemo<OperatorIssueActionsContextValue>(
 		() => ({
 			createIssueRequest,
+			createSessionRequest,
 			requestNewIssue: createIssue,
+			requestNewSession: createSession,
 			requestOpenIssue: openIssue,
 		}),
-		[createIssue, createIssueRequest, openIssue],
+		[
+			createIssue,
+			createIssueRequest,
+			createSession,
+			createSessionRequest,
+			openIssue,
+		],
 	);
 
 	return (

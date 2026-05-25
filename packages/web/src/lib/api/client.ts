@@ -1,4 +1,5 @@
 import { createBoardApiMethods } from "./board-client";
+import { createChatApiMethods } from "./chat-client";
 import { createCommandStreamApiMethods } from "./command-stream-client";
 import { createInboxApiMethods } from "./inbox-client";
 import { parsePollingStatusResponse } from "./polling-status-client";
@@ -31,6 +32,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 	) =>
 		requestJson(baseUrl, path, method, fetchFn, headers, requestOptions, body);
 	const boardApiMethods = createBoardApiMethods(requestWithBase);
+	const chatApiMethods = createChatApiMethods(requestWithBase);
 	const commandStreamApiMethods = createCommandStreamApiMethods(
 		wsUrl,
 		options.WebSocketImpl,
@@ -40,6 +42,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 
 	return {
 		...boardApiMethods,
+		...chatApiMethods,
 		...commandStreamApiMethods,
 		async getHealth(requestOptions) {
 			const payload = await requestWithBase("/health", "GET", requestOptions);

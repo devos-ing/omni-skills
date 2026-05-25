@@ -32,6 +32,7 @@ export interface AppDeps {
 	notificationService?: NotificationService;
 	realtimeEvents?: RealtimeEventPublisher;
 	repositories?: ReadRepositories;
+	workspacePath?: string;
 }
 
 export type RouteHandler = (request: Request) => Response | Promise<Response>;

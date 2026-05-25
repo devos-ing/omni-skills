@@ -1,6 +1,8 @@
 export { boardProjectsTable } from "./board-projects.schema";
 export { boardTasksTable } from "./board-tasks.schema";
 export { agentsTable } from "./agents.schema";
+export { chatMessagesTable } from "./chat-messages.schema";
+export { chatSessionsTable } from "./chat-sessions.schema";
 export { commandHistoryTable } from "./command-history.schema";
 export { inboxMessagesTable } from "./inbox-messages.schema";
 export { jobsTable } from "./jobs.schema";

@@ -1,6 +1,7 @@
 export type SidebarDisplayMode = "expanded" | "collapsed" | "hidden";
 
 export type SidebarNavKey =
+	| "chat"
 	| "agents"
 	| "runtimes"
 	| "skills"

@@ -3,7 +3,11 @@ import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { boardProjectsTable, boardTasksTable } from "devos-db/schema";
+import {
+	boardProjectsTable,
+	boardTasksTable,
+	chatSessionsTable,
+} from "devos-db/schema";
 import { backupDatabase } from "../scripts/backup";
 import { resolveDatabaseConfig, resolveDatabasePath } from "../scripts/cli";
 import { migrateDatabase } from "../scripts/migrate";
@@ -42,9 +46,15 @@ describe("database scripts", () => {
 					"SELECT id FROM schema_migrations ORDER BY id",
 				);
 				expect(migrations.rows.length).toBeGreaterThan(0);
-				expect(migrations.rows.at(-1)?.id).toBe(
-					"0012_task_pull_request_branch",
+				expect(migrations.rows.at(-1)?.id).toBe("0014_chat_session_task_id");
+				const columns = await database.client.query<{ column_name: string }>(
+					`
+						SELECT column_name
+						FROM information_schema.columns
+						WHERE table_name = 'chat_sessions' AND column_name = 'task_id'
+					`,
 				);
+				expect(columns.rows).toHaveLength(1);
 			} finally {
 				await database.close();
 			}
@@ -203,6 +213,7 @@ describe("database scripts", () => {
 		expect(boardTasksTable).toBeDefined();
 		expect(boardTasksTable.id).toBeDefined();
 		expect(boardProjectsTable.repoName).toBeDefined();
+		expect(chatSessionsTable.taskId).toBeDefined();
 	});
 });
 

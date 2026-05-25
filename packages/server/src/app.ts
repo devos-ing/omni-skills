@@ -1,3 +1,4 @@
+import { handleChatRoute } from "./http/chat-routes";
 import { handleCliRoute } from "./http/cli-routes";
 import { handleInboxMessagesRoute } from "./http/inbox-routes";
 import { handlePollingStatusRoute } from "./http/polling-status-routes";
@@ -33,6 +34,19 @@ export function createHandleRequest(deps: AppDeps): RouteHandler {
 		);
 		if (cliResponse) {
 			return cliResponse;
+		}
+
+		if (deps.db) {
+			const chatResponse = await handleChatRoute(
+				request,
+				deps.db,
+				pathname,
+				deps.workspacePath ?? process.cwd(),
+				deps.realtimeEvents,
+			);
+			if (chatResponse) {
+				return chatResponse;
+			}
 		}
 
 		if (deps.db) {
