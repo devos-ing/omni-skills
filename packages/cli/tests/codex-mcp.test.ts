@@ -13,7 +13,7 @@ describe("codex MCP config overrides", () => {
 					{
 						name: "slack",
 						command: "bun",
-						args: ["run", "src/worker.ts"],
+						args: ["run", "dist/worker.mjs"],
 						env: { SLACK_BOT_TOKEN: "xoxb-secret" },
 					},
 				],
@@ -27,7 +27,7 @@ describe("codex MCP config overrides", () => {
 
 		expect(overrides).toContain('mcp_servers."slack".command="bun"');
 		expect(overrides).toContain(
-			'mcp_servers."slack".args=["run", "src/worker.ts"]',
+			'mcp_servers."slack".args=["run", "dist/worker.mjs"]',
 		);
 		expect(overrides).toContain(
 			'mcp_servers."slack".env.SLACK_BOT_TOKEN="xoxb-secret"',

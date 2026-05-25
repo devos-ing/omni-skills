@@ -9,15 +9,7 @@ import type {
 	DevosPluginPreset,
 	DevosPluginTemplate,
 } from "./types/scaffold.types";
-
-interface TemplateInput {
-	pluginId: string;
-	displayName: string;
-	description: string;
-	author: string;
-	template: DevosPluginTemplate;
-	preset?: DevosPluginPreset;
-}
+import type { TemplateInput } from "./types/template.types";
 
 export function buildManifest(input: TemplateInput): DevosPluginManifest {
 	return {
@@ -41,7 +33,7 @@ export function renderPackageJson(input: TemplateInput): string {
 		type: "module",
 		private: true,
 		scripts: {
-			build: "bun build ./src/worker.ts --outdir dist --target bun",
+			build: "bun build ./src/worker.ts --outfile dist/worker.mjs --target bun",
 			dev: "bun run ./src/worker.ts",
 			test: "bun test tests",
 			typecheck: "bunx tsc --noEmit",
@@ -77,7 +69,8 @@ export function renderReadme(input: TemplateInput): string {
 		"",
 		"- `devos.plugin.json` declares skills, MCP servers, credentials, and checks.",
 		"- `skills/` contains agent-facing instructions.",
-		"- `src/worker.ts` is the plugin runtime entrypoint.",
+		"- `src/worker.ts` is the editable worker source.",
+		"- `dist/worker.mjs` is the workflow-readable runtime artifact.",
 	].join("\n");
 }
 
@@ -97,6 +90,26 @@ export function renderWorker(input: TemplateInput): string {
 		"if (import.meta.main) {",
 		"	await run({",
 		"		credentials: process.env as Record<string, string | undefined>,",
+		"		logger: console,",
+		"	});",
+		"}",
+	].join("\n");
+}
+
+export function renderWorkerMjs(input: TemplateInput): string {
+	const credentialKeys = credentialsFor(input).map((item) => item.key);
+	return [
+		"export async function run(context) {",
+		`	context.logger.info("${input.pluginId} plugin worker started");`,
+		...credentialKeys.map(
+			(key) =>
+				`	if (!context.credentials.${key}) context.logger.warn("${key} is not configured");`,
+		),
+		"}",
+		"",
+		"if (import.meta.main) {",
+		"	await run({",
+		"		credentials: process.env,",
 		"		logger: console,",
 		"	});",
 		"}",
@@ -181,7 +194,7 @@ function mcpServersFor(input: TemplateInput): DevosPluginMcpServer[] {
 	}
 	if (input.template !== "mcp") return [];
 	return [
-		{ name: input.pluginId, command: "bun", args: ["run", "src/worker.ts"] },
+		{ name: input.pluginId, command: "bun", args: ["run", "dist/worker.mjs"] },
 	];
 }
 

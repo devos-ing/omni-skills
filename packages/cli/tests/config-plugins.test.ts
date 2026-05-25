@@ -65,7 +65,7 @@ describe("plugin config resolution", () => {
 						{
 							name: "slack",
 							command: "bun",
-							args: ["run", "src/worker.ts"],
+							args: ["run", "dist/worker.mjs"],
 							env: { SLACK_BOT_TOKEN: "${SLACK_BOT_TOKEN}" },
 						},
 					],
@@ -88,7 +88,7 @@ describe("plugin config resolution", () => {
 			expect(config.projects[0]?.codex.mcpServers).toContainEqual({
 				name: "slack",
 				command: "bun",
-				args: ["run", "src/worker.ts"],
+				args: ["run", "dist/worker.mjs"],
 				env: { SLACK_BOT_TOKEN: "xoxb-secret" },
 			});
 		} finally {
