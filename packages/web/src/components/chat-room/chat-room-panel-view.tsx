@@ -86,7 +86,6 @@ export function ChatRoomPanelView({
 				activeSessionId={activeSessionId}
 				isCreating={isCreatingSession}
 				projects={projects}
-				sidebarControlId={sidebarControlId}
 				sessions={sessions}
 				onCloseSidebar={onCloseSidebar}
 				onNewSession={onNewSession}

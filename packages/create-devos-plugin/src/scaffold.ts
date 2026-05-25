@@ -8,6 +8,7 @@ import {
 	renderReadme,
 	renderSkill,
 	renderWorker,
+	renderWorkerMjs,
 	renderWorkerTest,
 	renderWorkerTypes,
 } from "./templates";
@@ -97,6 +98,7 @@ async function writeScaffold(
 		["devos.plugin.json", `${JSON.stringify(manifest, null, "\t")}\n`],
 		["src/worker.ts", renderWorker(input)],
 		["src/types/worker.types.ts", renderWorkerTypes()],
+		["dist/worker.mjs", renderWorkerMjs(input)],
 		["tests/worker.test.ts", renderWorkerTest(input)],
 		[`skills/${input.pluginId}/SKILL.md`, renderSkill(input)],
 	];

@@ -43,6 +43,41 @@ describe("create-devos-plugin scaffold", () => {
 					"utf8",
 				),
 			).resolves.toContain("DevosPluginWorkerContext");
+			await expect(
+				readFile(path.join(result.pluginPath, "dist/worker.mjs"), "utf8"),
+			).resolves.toContain("export async function run");
+		} finally {
+			await rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it("points MCP templates at the generated mjs runtime artifact", async () => {
+		const tempDir = await mkdtemp(
+			path.join(process.cwd(), ".tmp-create-plugin-"),
+		);
+		try {
+			const result = await scaffoldDevosPlugin({
+				name: "MCP Helper",
+				outputDir: tempDir,
+				template: "mcp",
+			});
+			expect(result.manifest.mcpServers[0]).toMatchObject({
+				command: "bun",
+				args: ["run", "dist/worker.mjs"],
+			});
+			const packageJson = JSON.parse(
+				await readFile(path.join(result.pluginPath, "package.json"), "utf8"),
+			);
+			expect(packageJson.scripts.build).toBe(
+				"bun build ./src/worker.ts --outfile dist/worker.mjs --target bun",
+			);
+			const mcpConfig = JSON.parse(
+				await readFile(path.join(result.pluginPath, ".mcp.json"), "utf8"),
+			);
+			expect(mcpConfig.mcpServers["mcp-helper"].args).toEqual([
+				"run",
+				"dist/worker.mjs",
+			]);
 		} finally {
 			await rm(tempDir, { recursive: true, force: true });
 		}
