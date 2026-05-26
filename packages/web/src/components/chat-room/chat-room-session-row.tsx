@@ -4,6 +4,16 @@ import { Archive, Pin, PinOff } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import type { ChatRoomSessionRowProps } from "./types/chat-room-sidebar.types";
@@ -63,17 +73,44 @@ export function ChatRoomSessionRow({
 			>
 				{isPinned ? <PinOff size={14} /> : <Pin size={14} />}
 			</Button>
-			<Button
-				aria-label={`Archive ${session.title}`}
-				className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-				onClick={() => onArchiveSession(session.id)}
-				size="icon"
-				title="Archive session"
-				type="button"
-				variant="ghost"
-			>
-				<Archive size={14} />
-			</Button>
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button
+						aria-label={`Archive ${session.title}`}
+						className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+						size="icon"
+						title="Archive session"
+						type="button"
+						variant="ghost"
+					>
+						<Archive size={14} />
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Archive session?</DialogTitle>
+						<DialogDescription>
+							Archive "{session.title}" and remove it from the sidebar.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button type="button" variant="outline">
+								Cancel
+							</Button>
+						</DialogClose>
+						<DialogClose asChild>
+							<Button
+								onClick={() => onArchiveSession(session.id)}
+								type="button"
+								variant="destructive"
+							>
+								Archive
+							</Button>
+						</DialogClose>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
