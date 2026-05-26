@@ -74,6 +74,7 @@ export interface ChatRoomPanelViewProps {
 	isBusy: boolean;
 	isCreatingSession: boolean;
 	isMessagesLoading: boolean;
+	isSessionListLoading: boolean;
 	isSending: boolean;
 	isTaskDetailPanelOpen: boolean;
 	isThinking: boolean;
@@ -87,6 +88,7 @@ export interface ChatRoomPanelViewProps {
 	sidebarControlId: string;
 	sidebarToggleRef: RefObject<HTMLInputElement | null>;
 	sessions: ChatSessionRecord[];
+	sessionsError: Error | null;
 	streamLines: ChatStreamLine[];
 	workingStartedAt: string | null;
 	onAnswerChange: (index: number, value: string) => void;

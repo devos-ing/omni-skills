@@ -2,7 +2,9 @@ import type { ChatSessionRecord, WorkspaceProjectRecord } from "@/lib/api";
 
 export interface ChatRoomSidebarProps {
 	activeSessionId: string;
+	error: Error | null;
 	isCreating: boolean;
+	isLoading: boolean;
 	projects: WorkspaceProjectRecord[];
 	sidebarControlId: string;
 	sessions: ChatSessionRecord[];
@@ -11,6 +13,24 @@ export interface ChatRoomSidebarProps {
 	onArchiveSession: (sessionId: string) => void;
 	onSearch: () => void;
 	onSelectSession: (sessionId: string) => void;
+}
+
+export interface ChatRoomSessionListProps {
+	activeSessionId: string;
+	collapsedProjectIds: Set<string>;
+	error: Error | null;
+	isLoading: boolean;
+	pinnedSessions: ChatSessionRecord[];
+	projectGroups: ChatSessionProjectGroup[];
+	onArchiveSession: (sessionId: string) => void;
+	onPinSession: (sessionId: string) => void;
+	onSelectSession: (sessionId: string) => void;
+	onToggleProjectGroup: (
+		groupId: string,
+		isActive: boolean,
+		firstSessionId: string,
+	) => void;
+	onUnpinSession: (sessionId: string) => void;
 }
 
 export interface ChatSessionProjectGroup {

@@ -213,6 +213,7 @@ export function ChatRoomPanel({
 			isBusy={isBusy}
 			isCreatingSession={createSession.isPending}
 			isMessagesLoading={messagesQuery.isLoading}
+			isSessionListLoading={sessionsQuery.isLoading}
 			isSending={sendMessage.isPending}
 			isTaskDetailPanelOpen={taskDetails.isOpen}
 			isThinking={isThinking}
@@ -226,6 +227,7 @@ export function ChatRoomPanel({
 			sidebarControlId={SIDEBAR_CONTROL_ID}
 			sidebarToggleRef={sidebarToggleRef}
 			sessions={sessions}
+			sessionsError={sessionsQuery.error}
 			streamLines={streamLines}
 			workingStartedAt={workingStartedAt}
 			onAnswerChange={(index, value) =>

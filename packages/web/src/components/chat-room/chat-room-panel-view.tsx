@@ -17,6 +17,7 @@ export function ChatRoomPanelView({
 	isBusy,
 	isCreatingSession,
 	isMessagesLoading,
+	isSessionListLoading,
 	isSending,
 	isTaskDetailPanelOpen,
 	isThinking,
@@ -30,6 +31,7 @@ export function ChatRoomPanelView({
 	sidebarControlId,
 	sidebarToggleRef,
 	sessions,
+	sessionsError,
 	streamLines,
 	workingStartedAt,
 	onAnswerChange,
@@ -70,7 +72,9 @@ export function ChatRoomPanelView({
 			/>
 			<ChatRoomSidebar
 				activeSessionId={activeSessionId}
+				error={sessionsError}
 				isCreating={isCreatingSession}
+				isLoading={isSessionListLoading}
 				projects={projects}
 				sidebarControlId={sidebarControlId}
 				sessions={sessions}

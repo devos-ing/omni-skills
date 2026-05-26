@@ -1,21 +1,13 @@
 "use client";
 
-import {
-	ChevronDown,
-	ChevronRight,
-	Folder,
-	MessageSquarePlus,
-	Search,
-	Settings,
-	X,
-} from "lucide-react";
+import { MessageSquarePlus, Search, Settings, X } from "lucide-react";
 import { type ReactElement, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useUiStore } from "@/lib/ui-store";
 import { cn } from "@/lib/utils";
-import { ChatRoomSessionRow } from "./chat-room-session-row";
+import { ChatRoomSessionList } from "./chat-room-session-list";
 import { ChatRoomSettingsSidebar } from "./chat-room-settings-sidebar";
 import { buildChatSessionSidebarContent } from "./chat-room-sidebar-utils";
 import type { ChatRoomSidebarProps } from "./types/chat-room-sidebar.types";
@@ -23,7 +15,9 @@ import type { ChatRoomSidebarView } from "./types/chat-room.types";
 
 export function ChatRoomSidebar({
 	activeSessionId,
+	error,
 	isCreating,
+	isLoading,
 	projects,
 	sessions,
 	onNewSession,
@@ -135,95 +129,19 @@ export function ChatRoomSidebar({
 							Search
 						</Button>
 					</div>
-					<div className="min-h-0 overflow-auto p-3">
-						<div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-							<Folder size={14} />
-							<Typography as="span" variant="eyebrow">
-								Sessions
-							</Typography>
-						</div>
-						<div className="grid gap-1">
-							{pinnedSessions.length > 0 ? (
-								<div className="mb-2 grid gap-1 border-b border-border pb-2">
-									{pinnedSessions.map((session) => (
-										<ChatRoomSessionRow
-											activeSessionId={activeSessionId}
-											isPinned={true}
-											key={session.id}
-											onArchiveSession={onArchiveSession}
-											onPinSession={pinSession}
-											onSelectSession={onSelectSession}
-											onUnpinSession={unpinSession}
-											session={session}
-										/>
-									))}
-								</div>
-							) : null}
-							{projectGroups.map((group) => {
-								const firstSessionId = group.sessions[0]?.id ?? "";
-								const isExpanded =
-									group.isActive && !collapsedProjectIds.has(group.id);
-								const GroupIcon = isExpanded ? ChevronDown : ChevronRight;
-								return (
-									<div className="grid gap-1" key={group.id}>
-										<Button
-											aria-expanded={isExpanded}
-											className={cn(
-												"h-9 min-w-0 justify-start gap-2 px-2 text-left text-sm",
-												group.isActive
-													? "bg-[#111110] text-zinc-100"
-													: "text-zinc-400 hover:bg-surface-active hover:text-zinc-200",
-											)}
-											onClick={() =>
-												toggleProjectGroup(
-													group.id,
-													group.isActive,
-													firstSessionId,
-												)
-											}
-											size="sm"
-											title={group.label}
-											type="button"
-											variant="ghost"
-										>
-											<GroupIcon className="shrink-0" size={14} />
-											<Folder className="shrink-0" size={14} />
-											<Typography as="span" className="min-w-0 flex-1 truncate">
-												{group.label}
-											</Typography>
-											<Typography
-												className="shrink-0 rounded bg-surface-active px-1.5 py-0.5 text-[11px] leading-none"
-												variant="muted"
-											>
-												{group.sessions.length}
-											</Typography>
-										</Button>
-										{isExpanded ? (
-											<div className="grid gap-1 pl-6">
-												{group.sessions.map((session) => (
-													<ChatRoomSessionRow
-														activeSessionId={activeSessionId}
-														isPinned={false}
-														key={session.id}
-														onArchiveSession={onArchiveSession}
-														onPinSession={pinSession}
-														onSelectSession={onSelectSession}
-														onUnpinSession={unpinSession}
-														session={session}
-													/>
-												))}
-											</div>
-										) : null}
-									</div>
-								);
-							})}
-							{sessions.length === 0 ? (
-								<div className="rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-									<Typography variant="description">No sessions yet</Typography>
-								</div>
-							) : null}
-						</div>
-					</div>
+					<ChatRoomSessionList
+						activeSessionId={activeSessionId}
+						collapsedProjectIds={collapsedProjectIds}
+						error={error}
+						isLoading={isLoading}
+						pinnedSessions={pinnedSessions}
+						projectGroups={projectGroups}
+						onArchiveSession={onArchiveSession}
+						onPinSession={pinSession}
+						onSelectSession={onSelectSession}
+						onToggleProjectGroup={toggleProjectGroup}
+						onUnpinSession={unpinSession}
+					/>
 					<nav className="border-t border-border p-3">
 						<Button
 							className="h-9 w-full justify-start gap-2 px-2 text-xs text-zinc-400 hover:bg-surface-hover hover:text-zinc-200"

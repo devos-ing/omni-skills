@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChatEnvironmentPanel } from "./chat-environment-panel";
 import { resolveChatMessageDisplay } from "./chat-message-display";
 import { ChatMissionProgress } from "./chat-mission-progress";
+import { ChatTranscriptSkeleton } from "./chat-transcript-skeleton";
 import { ChatSelectedSessionWelcome } from "./chat-welcome-states";
 import type { ChatTranscriptProps } from "./types/chat-room.types";
 
@@ -71,7 +72,7 @@ export function ChatTranscript({
 			ref={scrollContainerRef}
 		>
 			<div className="mx-auto grid min-w-0 max-w-4xl gap-4 xl:mr-[22rem]">
-				{isLoading ? <StatusLine text="Loading session..." /> : null}
+				{isLoading ? <ChatTranscriptSkeleton /> : null}
 				{error ? <ErrorLine text={error.message} /> : null}
 				{!isLoading && messages.length === 0 ? (
 					<ChatSelectedSessionWelcome />
@@ -209,10 +210,6 @@ function PlanMessage({
 			</Typography>
 		</article>
 	);
-}
-
-function StatusLine({ text }: { text: string }): ReactElement {
-	return <Typography variant="description">{text}</Typography>;
 }
 
 function ErrorLine({ text }: { text: string }): ReactElement {
