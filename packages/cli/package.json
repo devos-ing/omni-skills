@@ -33,6 +33,7 @@
 		"adapters": "workspace:*",
 		"commander": "^14.0.3",
 		"create-devos-plugin": "workspace:*",
+		"devos-agents": "workspace:*",
 		"picocolors": "^1.1.1"
 	}
 }

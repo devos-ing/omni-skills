@@ -73,7 +73,7 @@ export function ChatTranscript({
 			className="relative min-h-0 min-w-0 overflow-auto px-4 py-6"
 			ref={scrollContainerRef}
 		>
-			<div className="mx-auto grid min-w-0 max-w-6xl gap-4">
+			<div className="mx-auto flex flex-col min-w-0 max-w-6xl gap-4">
 				<ChatMissionProgress
 					liveLogLines={streamLines}
 					mission={missionProgress}

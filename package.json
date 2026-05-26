@@ -19,7 +19,7 @@
 	"workspaces": ["packages/*"],
 	"scripts": {
 		"preinstall": "bun run ./scripts/enforce-bun.ts",
-		"build": "bun run --filter create-devos-plugin build && bun run --filter create-devos-workflow build && bun run --filter devos build",
+		"build": "bun run --filter devos-agents build && bun run --filter create-devos-plugin build && bun run --filter create-devos-workflow build && bun run --filter devos build",
 		"build:landing": "bun run --filter landing build",
 		"build:server": "bun -e \"console.log('No server workspace package is present yet. Add the ROY-120 server package, then wire this script to its build command.')\"",
 		"build:web": "bun run --filter web build",
@@ -41,7 +41,7 @@
 		"test:db": "bun run ./scripts/test-lane.ts db",
 		"test:e2e": "bun run ./scripts/test-lane.ts e2e",
 		"test:coverage": "bun run ./scripts/test-lane.ts coverage",
-		"typecheck": "bun run --filter adapters typecheck && bun run --filter create-devos-plugin typecheck && bun run --filter create-devos-workflow typecheck && bun run --filter devos-db typecheck && bun run --filter devos typecheck && bun run --filter web typecheck && bun run --filter landing typecheck",
+		"typecheck": "bun run --filter devos-agents typecheck && bun run --filter adapters typecheck && bun run --filter create-devos-plugin typecheck && bun run --filter create-devos-workflow typecheck && bun run --filter devos-db typecheck && bun run --filter devos typecheck && bun run --filter web typecheck && bun run --filter landing typecheck",
 		"format": "bun run biome format --write .",
 		"lint": "bun run biome lint .",
 		"check": "bun run biome check .",
@@ -58,6 +58,7 @@
 		"adapters": "workspace:*",
 		"create-devos-plugin": "workspace:*",
 		"create-devos-workflow": "workspace:*",
+		"devos-agents": "workspace:*",
 		"devos": "workspace:*",
 		"devos-db": "workspace:*",
 		"husky": "^9.1.7"

@@ -1,0 +1,8 @@
+{
+	"extends": "@devos/tsconfig/base.json",
+	"compilerOptions": {
+		"types": ["bun", "node"],
+		"baseUrl": "."
+	},
+	"include": ["src", "tests", "scripts"]
+}

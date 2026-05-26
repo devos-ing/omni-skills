@@ -4,6 +4,7 @@ import { logger, normalizeError } from "../../utils/logger";
 import { type LoadedConfig, getProjectById } from "../config";
 import { runAgentWithChatLog } from "./agent-chat-log";
 import { safeLinearComment } from "./integration-wrappers";
+import { WorkflowOrchestrator } from "./oop/workflow-orchestrator";
 import {
 	handlePlanningStage,
 	shouldSquashMergePullRequestForComplexityScore,
@@ -119,140 +120,128 @@ export async function runWorkflow(
 	options: RunOptions,
 	runtime: WorkflowRuntime = createWorkflowRuntime(),
 ): Promise<void> {
-	const globalPolling = resolvePollingSettings(config.polling, options);
-	const projects = pickProjects(config, options, globalPolling);
-	if (projects.length === 0) {
-		await handleNoProjectSelection(globalPolling, options, runtime);
-		return;
-	}
-
-	let projectContexts = projects.map((project) => ({
-		config: project,
-		linear: runtime.createLinearClient(project),
-	}));
-
-	if (
-		options.issueArg &&
-		!options.projectId &&
-		usesAllProjectScope(options, globalPolling) &&
-		projectContexts.length > 1
-	) {
-		projectContexts = await routeProjectContextsForTargetIssue(
-			projectContexts,
-			options.issueArg,
-		);
-		if (projectContexts.length === 0) {
-			return;
-		}
-	}
-	let cycle = 0;
-
-	while (true) {
-		cycle += 1;
-		let totalIssues = 0;
-		let cycleHadError = false;
-
-		for (const context of projectContexts) {
-			try {
-				totalIssues += await runProjectCycle(
-					context.config,
-					config.notifications,
-					options,
-					context.linear,
-					cycle,
-					globalPolling,
-					runtime,
-				);
-			} catch (error) {
-				if (!globalPolling.enabled || options.issueArg) {
-					throw error;
-				}
-				cycleHadError = true;
-				const message = error instanceof Error ? error.message : String(error);
-				await recordCliPollingEvent(context.config, globalPolling, {
-					eventType: "cycle_failed",
-					level: "error",
-					message: "Task polling cycle failed",
-					state: "error",
-					cycle,
-					lastError: message,
-					errorAt: new Date().toISOString(),
-					finishedAt: new Date().toISOString(),
-					metadata: { error: message },
-				});
-				emitPollingProgress(context.config.id, "cycle_failed", "failed", {
-					detail: `cycle ${cycle} failed`,
-					error: message,
-				});
-				const errorLogPath = projectErrorLogPath(
-					context.config.workspacePath,
-					context.config.id,
-				);
-				try {
-					await appendProjectErrorLog(
-						context.config.workspacePath,
-						context.config.id,
-						{
-							cycle,
-							message,
-							error: normalizeError(error),
-							context: {
-								projectName: context.config.name,
-								pollingIntervalMs: globalPolling.intervalMs,
-								issueArg: options.issueArg ?? null,
-							},
-						},
-					);
-				} catch (appendError) {
-					logger.error(
-						{
-							projectId: context.config.id,
-							cycle,
-							errorLogPath,
-							err: normalizeError(appendError),
-						},
-						"Failed to append polling error log entry",
-					);
-				}
-				logger.error(
-					{
-						projectId: context.config.id,
-						cycle,
-						errorLogPath,
-						err: normalizeError(error),
-					},
-					"Project cycle failed during polling; continuing",
-				);
-			}
-		}
-
-		if (
-			shouldStopPolling(
-				globalPolling,
+	await new WorkflowOrchestrator(config, options, runtime, {
+		resolvePolling: (loadedConfig, runOptions) =>
+			resolvePollingSettings(loadedConfig.polling, runOptions),
+		pickProjects,
+		usesAllProjectScope,
+		routeProjectContextsForTargetIssue,
+		handleNoProjectSelection,
+		runProjectCycle: ({ project, linear, cycle, polling }) =>
+			runProjectCycle(
+				project,
+				config.notifications,
 				options,
+				linear,
+				cycle,
+				polling,
+				runtime,
+			),
+		handleProjectCycleError: ({ error, project, cycle, polling }) =>
+			handleProjectCycleError(error, project, options, cycle, polling),
+		shouldStopPolling: ({
+			polling,
+			options: runOptions,
+			cycle,
+			totalIssues,
+			cycleHadError,
+		}) =>
+			shouldStopPolling(polling, runOptions, cycle, totalIssues, cycleHadError),
+		handlePollingStopped: ({
+			contexts,
+			polling,
+			cycle,
+			totalIssues,
+			cycleHadError,
+		}) =>
+			recordPollingStopped(
+				contexts.map((context) => context.config),
+				polling,
 				cycle,
 				totalIssues,
 				cycleHadError,
-			)
-		) {
-			await Promise.all(
-				projectContexts.map((context) =>
-					recordCliPollingEvent(context.config, globalPolling, {
-						eventType: "polling_stopped",
-						level: "info",
-						message: "Task polling stopped",
-						state: "stopped",
-						cycle,
-						finishedAt: new Date().toISOString(),
-						metadata: { totalIssues, cycleHadError },
-					}),
-				),
-			);
-			return;
-		}
+			),
+		sleepForWorkflow,
+	}).run();
+}
 
-		await sleep(globalPolling.intervalMs);
+async function handleProjectCycleError(
+	error: unknown,
+	config: ResolvedProjectConfig,
+	options: RunOptions,
+	cycle: number,
+	polling: PollingSettings,
+): Promise<void> {
+	const message = error instanceof Error ? error.message : String(error);
+	await recordCliPollingEvent(config, polling, {
+		eventType: "cycle_failed",
+		level: "error",
+		message: "Task polling cycle failed",
+		state: "error",
+		cycle,
+		lastError: message,
+		errorAt: new Date().toISOString(),
+		finishedAt: new Date().toISOString(),
+		metadata: { error: message },
+	});
+	emitPollingProgress(config.id, "cycle_failed", "failed", {
+		detail: `cycle ${cycle} failed`,
+		error: message,
+	});
+	const errorLogPath = projectErrorLogPath(config.workspacePath, config.id);
+	try {
+		await appendProjectErrorLog(config.workspacePath, config.id, {
+			cycle,
+			message,
+			error: normalizeError(error),
+			context: {
+				projectName: config.name,
+				pollingIntervalMs: polling.intervalMs,
+				issueArg: options.issueArg ?? null,
+			},
+		});
+	} catch (appendError) {
+		logger.error(
+			{
+				projectId: config.id,
+				cycle,
+				errorLogPath,
+				err: normalizeError(appendError),
+			},
+			"Failed to append polling error log entry",
+		);
 	}
+	logger.error(
+		{
+			projectId: config.id,
+			cycle,
+			errorLogPath,
+			err: normalizeError(error),
+		},
+		"Project cycle failed during polling; continuing",
+	);
+}
+
+async function recordPollingStopped(
+	projects: ResolvedProjectConfig[],
+	polling: PollingSettings,
+	cycle: number,
+	totalIssues: number,
+	cycleHadError: boolean,
+): Promise<void> {
+	await Promise.all(
+		projects.map((project) =>
+			recordCliPollingEvent(project, polling, {
+				eventType: "polling_stopped",
+				level: "info",
+				message: "Task polling stopped",
+				state: "stopped",
+				cycle,
+				finishedAt: new Date().toISOString(),
+				metadata: { totalIssues, cycleHadError },
+			}),
+		),
+	);
 }
 
 function pickProjects(
@@ -1436,18 +1425,6 @@ export async function prepareImplementationBranchForStage(
 			title: `[codex] ${state.issue.key}: ${state.issue.title}`,
 		};
 	}
-}
-
-async function handlePrCreatedStage(
-	config: ResolvedProjectConfig,
-	notifications: ResolvedNotificationConfig,
-	linear: WorkflowLinearClient,
-	state: RunState,
-): Promise<void> {
-	Object.assign(state, transitionStage(state, "in_review"));
-	await saveRunState(config.workspacePath, state);
-	await linear.markStage(state.issue.id, "in_review");
-	await linear.applyStageLabel(state.issue.id, "in_review");
 }
 
 async function handleDoneReviewMergeStage(

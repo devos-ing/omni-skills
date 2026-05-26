@@ -33,7 +33,7 @@ export function ChatMissionProgress({
 	return (
 		<section
 			className={cn(
-				"sticky top-0 z-20 grid w-full max-w-full justify-self-center gap-3 rounded-md border border-border bg-surface-input/95 px-3 py-3 text-sm text-zinc-300 backdrop-blur",
+				"mx-auto z-20 grid w-full max-w-full justify-self-center gap-3 rounded-md border border-border bg-surface-input/95 px-3 py-3 text-sm text-zinc-300 backdrop-blur",
 				missionPanelWidthClass(isExpanded),
 			)}
 			data-chat-mission-expanded={isExpanded ? "true" : "false"}
