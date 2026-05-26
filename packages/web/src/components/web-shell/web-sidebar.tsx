@@ -88,21 +88,25 @@ export function WebSidebar({
 				gridTemplateRows: "auto auto 1fr auto",
 			}}
 		>
-			<header className="flex items-center gap-3 p-4">
+			<header
+				className={cn(
+					"flex items-center gap-3 p-4",
+					!isExpanded && "grid justify-items-center gap-2 px-3",
+				)}
+			>
 				<Typography
-					className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-zinc-700 bg-surface-active text-zinc-200"
-					variant="label"
+					as="strong"
+					className={cn(
+						"min-w-0 flex-1 truncate text-zinc-100",
+						!isExpanded && "w-full text-center text-xs",
+					)}
+					variant="cardTitle"
 				>
-					R
+					DEVOS.ING
 				</Typography>
-				{isExpanded ? (
-					<Typography as="strong" className="truncate" variant="cardTitle">
-						Roy Lee&apos;s Workspace
-					</Typography>
-				) : null}
 				<Button
 					aria-label={nextSidebarLabel(mode)}
-					className="ml-auto"
+					className={cn(isExpanded && "ml-auto")}
 					onClick={onToggleMode}
 					size="icon"
 					title={nextSidebarLabel(mode)}
