@@ -19,6 +19,16 @@ const COVERAGE_GUIDANCE = [
 	"Flag missing coverage only when it creates real product or workflow risk, not because non-critical lines are uncovered.",
 ].join(" ");
 
+const SUPERPOWERS_PLANNING_GUIDANCE = [
+	"Superpowers-style planning discipline:",
+	"- If acceptance criteria are unclear, choose PLANNING_RESULT: NEEDS_INFO rather than guessing.",
+	"- Compare 2-3 viable approaches when the implementation path is not obvious.",
+	"- Choose a recommended approach and state why it best fits scope, risk, and existing repo patterns.",
+	"- Plan test-first implementation: checkpoints should name the failing test or verification signal before code changes when behavior changes.",
+	"- Include verification-before-completion expectations in Test plan so implement/review agents have fresh evidence before claiming success.",
+	"- Keep the parser contract stable: do not rename PLANNING_RESULT, SUCCESS_GOAL, COMPLEXITY, COMPLEXITY_SCORE, QUESTIONS_JSON, or SPLIT_TASKS_JSON.",
+].join("\n");
+
 export async function buildPlanPrompt(
 	skillPath: string,
 	issue: IssueRef,
@@ -73,6 +83,8 @@ export async function buildPlanPrompt(
 				]
 			: []),
 		supplementalSection,
+		"",
+		SUPERPOWERS_PLANNING_GUIDANCE,
 		"",
 		"Return exactly one planning route: PLANNING_RESULT: READY or PLANNING_RESULT: NEEDS_INFO.",
 		"For READY, include SUCCESS_GOAL with the concise acceptance goal that review/testing must use as the success scope.",

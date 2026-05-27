@@ -30,6 +30,21 @@ async function withPlanSkill<T>(callback: (skillPath: string) => Promise<T>) {
 }
 
 describe("buildPlanPrompt supplemental skills", () => {
+	it("includes Superpowers-style planning discipline without changing parser markers", async () => {
+		await withPlanSkill(async (skillPath) => {
+			const prompt = await buildPlanPrompt(skillPath, issue);
+
+			expect(prompt).toContain("Superpowers-style planning discipline");
+			expect(prompt).toContain("Compare 2-3 viable approaches");
+			expect(prompt).toContain("Choose a recommended approach");
+			expect(prompt).toContain("Plan test-first implementation");
+			expect(prompt).toContain("verification-before-completion");
+			expect(prompt).toContain("Keep the parser contract stable");
+			expect(prompt).toContain("PLANNING_RESULT: READY");
+			expect(prompt).toContain("PLANNING_RESULT: NEEDS_INFO");
+		});
+	});
+
 	it("includes auto-selected supplemental skills when provided", async () => {
 		await withPlanSkill(async (skillPath) => {
 			const prompt = await buildPlanPrompt(skillPath, issue, {
