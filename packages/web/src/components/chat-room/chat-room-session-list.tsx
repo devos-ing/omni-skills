@@ -56,8 +56,7 @@ export function ChatRoomSessionList({
 						) : null}
 						{projectGroups.map((group) => {
 							const firstSessionId = group.sessions[0]?.id ?? "";
-							const isExpanded =
-								group.isActive && !collapsedProjectIds.has(group.id);
+							const isExpanded = !collapsedProjectIds.has(group.id);
 							const GroupIcon = isExpanded ? ChevronDown : ChevronRight;
 							return (
 								<div className="grid gap-1" key={group.id}>
@@ -70,11 +69,7 @@ export function ChatRoomSessionList({
 												: "text-zinc-400 hover:bg-surface-active hover:text-zinc-200",
 										)}
 										onClick={() =>
-											onToggleProjectGroup(
-												group.id,
-												group.isActive,
-												firstSessionId,
-											)
+											onToggleProjectGroup(group.id, isExpanded, firstSessionId)
 										}
 										size="sm"
 										title={group.label}

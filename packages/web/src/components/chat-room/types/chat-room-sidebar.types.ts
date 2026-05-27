@@ -27,7 +27,7 @@ export interface ChatRoomSessionListProps {
 	onSelectSession: (sessionId: string) => void;
 	onToggleProjectGroup: (
 		groupId: string,
-		isActive: boolean,
+		isExpanded: boolean,
 		firstSessionId: string,
 	) => void;
 	onUnpinSession: (sessionId: string) => void;

@@ -61,19 +61,23 @@ export function ChatRoomSidebar({
 
 	function toggleProjectGroup(
 		groupId: string,
-		isActive: boolean,
+		isExpanded: boolean,
 		firstSessionId: string,
 	): void {
 		setCollapsedProjectIds((current) => {
 			const next = new Set(current);
-			if (!isActive || next.has(groupId)) {
-				next.delete(groupId);
+			if (isExpanded) {
+				next.add(groupId);
 				return next;
 			}
-			next.add(groupId);
+			next.delete(groupId);
 			return next;
 		});
-		if (firstSessionId !== activeSessionId) {
+		if (
+			!isExpanded &&
+			firstSessionId.length > 0 &&
+			firstSessionId !== activeSessionId
+		) {
 			onSelectSession(firstSessionId);
 		}
 	}
