@@ -38,6 +38,15 @@ describe("agent adapter factory", () => {
 		);
 	});
 
+	it("validates runtime config before creating adapters", () => {
+		expect(() =>
+			createAgentAdapter({
+				...config,
+				executionPath: "",
+			}),
+		).toThrow("Agent adapter runtime config validation failed");
+	});
+
 	it("exposes backend definitions from the shared registry", () => {
 		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
 			["codex", "claude-code", "cursor-agent"],

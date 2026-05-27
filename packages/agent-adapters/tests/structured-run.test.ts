@@ -62,6 +62,46 @@ describe("structured adapter runs", () => {
 		expect(calls).toEqual(["plan"]);
 	});
 
+	it("validates run requests before invoking legacy adapters", async () => {
+		let invoked = false;
+
+		await expect(
+			runAdapterAgent(
+				{
+					runPlan: async () => {
+						invoked = true;
+						return { finalMessage: "plan", stdout: "" };
+					},
+					runTaskIntake: async () => ({ finalMessage: "", stdout: "" }),
+					resume: async () => ({ finalMessage: "", stdout: "" }),
+					runReview: async () => ({ finalMessage: "", stdout: "" }),
+					runGithubComment: async () => ({ finalMessage: "", stdout: "" }),
+				},
+				{ role: "planning", prompt: 42 } as never,
+			),
+		).rejects.toThrow("Agent adapter run request validation failed");
+
+		expect(invoked).toBe(false);
+	});
+
+	it("validates direct provider runAgent requests before command execution", async () => {
+		const adapter = new CodexAdapter(config);
+		let invoked = false;
+		(
+			adapter as unknown as {
+				runCodex: (args: string[]) => Promise<AgentResult>;
+			}
+		).runCodex = async () => {
+			invoked = true;
+			return { finalMessage: "", stdout: "" };
+		};
+
+		await expect(
+			adapter.runAgent({ role: "planning", prompt: 42 } as never),
+		).rejects.toThrow("Agent adapter run request validation failed");
+		expect(invoked).toBe(false);
+	});
+
 	it("carries structured metadata on adapter errors", () => {
 		const error = new AgentAdapterError({
 			backend: "codex",

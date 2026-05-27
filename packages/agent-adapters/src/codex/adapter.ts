@@ -11,6 +11,10 @@ import type {
 	AgentResult,
 	CodexReasoningEffort,
 } from "../types/agent-adapter.types";
+import {
+	validateAgentAdapterRunRequest,
+	validateAgentAdapterRuntimeConfig,
+} from "../validation";
 import { buildCodexConfigOverrides } from "./config-overrides";
 import { buildCodexRuntimeInvocation } from "./docker";
 import { extractSessionId, extractUsage } from "./output";
@@ -20,7 +24,11 @@ import { resolveCodexStageConfig } from "./stage-config";
 export { extractSessionId, extractUsage } from "./output";
 
 export class CodexAdapter implements AgentAdapter {
-	constructor(private config: AgentAdapterRuntimeConfig) {}
+	constructor(config: AgentAdapterRuntimeConfig) {
+		this.config = validateAgentAdapterRuntimeConfig(config);
+	}
+
+	private config: AgentAdapterRuntimeConfig;
 
 	async runPlan(prompt: string): Promise<AgentResult> {
 		return this.runAgent({ role: "planning", prompt });
@@ -43,12 +51,13 @@ export class CodexAdapter implements AgentAdapter {
 	}
 
 	async runAgent(request: AgentAdapterRunRequest): Promise<AgentResult> {
-		const stage = resolveCodexStageConfig(this.config, request.role);
+		const validatedRequest = validateAgentAdapterRunRequest(request);
+		const stage = resolveCodexStageConfig(this.config, validatedRequest.role);
 		const outputFile = await this.nextOutputFile();
-		const prompt = renderAgentPrompt(request);
-		const args = request.sessionId
+		const prompt = renderAgentPrompt(validatedRequest);
+		const args = validatedRequest.sessionId
 			? this.buildResumeArgs(
-					request,
+					validatedRequest,
 					prompt,
 					outputFile,
 					stage.model,
@@ -56,14 +65,14 @@ export class CodexAdapter implements AgentAdapter {
 					stage.fastModeEnabled,
 				)
 			: this.buildExecArgs(
-					request,
+					validatedRequest,
 					prompt,
 					outputFile,
 					stage.model,
 					stage.reasoningEffort,
 					stage.fastModeEnabled,
 				);
-		return this.runCodex(args, request);
+		return this.runCodex(args, validatedRequest);
 	}
 
 	private buildExecArgs(

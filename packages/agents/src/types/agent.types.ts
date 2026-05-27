@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 export interface AgentRunInput<TInput = unknown> {
 	input: TInput;
 	agent?: AgentDescriptor;
@@ -28,6 +30,8 @@ export interface AgentOptions<TInput = unknown, TOutput = unknown> {
 	tools?: Tool[];
 	guardrails?: Guardrail<TInput, TOutput>[];
 	handoffs?: Handoff[];
+	inputSchema?: z.ZodType<TInput>;
+	outputSchema?: z.ZodType<TOutput>;
 	runner?: AgentRunner<TInput, TOutput>;
 }
 

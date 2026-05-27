@@ -38,37 +38,43 @@ export {
 } from "./registry";
 export { assertCommandOk, runCommand } from "./shell";
 export type { CommandResult, RunCommandOptions } from "./shell";
+import {
+	validateAgentAdapterRunRequest,
+	validateAgentAdapterRuntimeConfig,
+} from "./validation";
 
 export function createAgentAdapter(
 	config: AgentAdapterRuntimeConfig,
 	backend?: AgentBackend,
 ): AgentAdapter {
+	const validatedConfig = validateAgentAdapterRuntimeConfig(config);
 	const requestedBackend = backend ?? config.agent?.backend ?? "codex";
 	const definition = getAgentBackendDefinition(requestedBackend);
 	if (!definition) {
 		throw new Error(`Unknown agent backend: ${requestedBackend}`);
 	}
-	return definition.createAdapter(config);
+	return definition.createAdapter(validatedConfig);
 }
 
-export function runAdapterAgent(
+export async function runAdapterAgent(
 	adapter: AgentAdapter,
 	request: AgentAdapterRunRequest,
 ): Promise<AgentResult> {
+	const validatedRequest = validateAgentAdapterRunRequest(request);
 	if (adapter.runAgent) {
-		return adapter.runAgent(request);
+		return adapter.runAgent(validatedRequest);
 	}
-	if (request.sessionId) {
-		return adapter.resume(request.sessionId, request.prompt);
+	if (validatedRequest.sessionId) {
+		return adapter.resume(validatedRequest.sessionId, validatedRequest.prompt);
 	}
-	if (request.role === "task-intake") {
-		return adapter.runTaskIntake(request.prompt);
+	if (validatedRequest.role === "task-intake") {
+		return adapter.runTaskIntake(validatedRequest.prompt);
 	}
-	if (request.role === "review-testing") {
-		return adapter.runReview(request.prompt);
+	if (validatedRequest.role === "review-testing") {
+		return adapter.runReview(validatedRequest.prompt);
 	}
-	if (request.role === "github-comment") {
-		return adapter.runGithubComment(request.prompt);
+	if (validatedRequest.role === "github-comment") {
+		return adapter.runGithubComment(validatedRequest.prompt);
 	}
-	return adapter.runPlan(request.prompt);
+	return adapter.runPlan(validatedRequest.prompt);
 }

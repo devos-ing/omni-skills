@@ -13,6 +13,9 @@
 		"typecheck": "bunx tsc --noEmit",
 		"check": "biome check ."
 	},
+	"dependencies": {
+		"zod": "^4.2.0"
+	},
 	"devDependencies": {
 		"@devos/tsconfig": "workspace:*",
 		"@types/bun": "^1.3.2",

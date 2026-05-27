@@ -24,7 +24,8 @@
 		"check": "biome check ."
 	},
 	"dependencies": {
-		"devos-agents": "workspace:*"
+		"devos-agents": "workspace:*",
+		"zod": "^4.2.0"
 	},
 	"devDependencies": {
 		"@devos/tsconfig": "workspace:*",

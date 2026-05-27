@@ -7,11 +7,19 @@ import type {
 	AgentAdapterRuntimeConfig,
 	AgentResult,
 } from "../types/agent-adapter.types";
+import {
+	validateAgentAdapterRunRequest,
+	validateAgentAdapterRuntimeConfig,
+} from "../validation";
 import { mapCursorError } from "./errors";
 import { extractFinalMessage, extractSessionId, extractUsage } from "./output";
 
 export class CursorAgentAdapter implements AgentAdapter {
-	constructor(private config: AgentAdapterRuntimeConfig) {}
+	constructor(config: AgentAdapterRuntimeConfig) {
+		this.config = validateAgentAdapterRuntimeConfig(config);
+	}
+
+	private config: AgentAdapterRuntimeConfig;
 
 	async runPlan(prompt: string): Promise<AgentResult> {
 		return this.runAgent({ role: "planning", prompt });
@@ -34,11 +42,12 @@ export class CursorAgentAdapter implements AgentAdapter {
 	}
 
 	async runAgent(request: AgentAdapterRunRequest): Promise<AgentResult> {
-		const prompt = renderAgentPrompt(request);
-		const args = request.sessionId
-			? this.buildResumeArgs(request.sessionId, prompt)
+		const validatedRequest = validateAgentAdapterRunRequest(request);
+		const prompt = renderAgentPrompt(validatedRequest);
+		const args = validatedRequest.sessionId
+			? this.buildResumeArgs(validatedRequest.sessionId, prompt)
 			: this.buildNewSessionArgs(prompt);
-		return this.runCursor(args, request);
+		return this.runCursor(args, validatedRequest);
 	}
 
 	private buildNewSessionArgs(prompt: string): string[] {

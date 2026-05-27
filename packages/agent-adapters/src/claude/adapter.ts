@@ -4,26 +4,33 @@ import { emitStreamEvent } from "../streaming";
 import type {
 	AgentAdapter,
 	AgentAdapterRunRequest,
+	AgentAdapterRunRole,
 	AgentAdapterRuntimeConfig,
 	AgentResult,
 } from "../types/agent-adapter.types";
+import {
+	validateAgentAdapterRunRequest,
+	validateAgentAdapterRuntimeConfig,
+} from "../validation";
 import { mapClaudeError } from "./errors";
 import { extractFinalMessage, extractSessionId, extractUsage } from "./output";
 import { getClaudeBinaryPath } from "./path";
 
 export class ClaudeCodeAdapter implements AgentAdapter {
 	private claudePath: string;
+	private config: AgentAdapterRuntimeConfig;
 
-	constructor(private config: AgentAdapterRuntimeConfig) {
-		this.claudePath = getClaudeBinaryPath(config.codex?.binary);
+	constructor(config: AgentAdapterRuntimeConfig) {
+		this.config = validateAgentAdapterRuntimeConfig(config);
+		this.claudePath = getClaudeBinaryPath(this.config.codex.binary);
 	}
 
 	async runPlan(prompt: string): Promise<AgentResult> {
-		return this.runClaude(prompt);
+		return this.runClaude(prompt, "planning");
 	}
 
 	async runTaskIntake(prompt: string): Promise<AgentResult> {
-		return this.runClaude(prompt);
+		return this.runClaude(prompt, "task-intake");
 	}
 
 	async resume(sessionId: string, prompt: string): Promise<AgentResult> {
@@ -31,37 +38,48 @@ export class ClaudeCodeAdapter implements AgentAdapter {
 	}
 
 	async runReview(prompt: string): Promise<AgentResult> {
-		return this.runClaude(prompt);
+		return this.runClaude(prompt, "review-testing");
 	}
 
 	async runGithubComment(prompt: string): Promise<AgentResult> {
-		return this.runClaude(prompt);
+		return this.runClaude(prompt, "github-comment");
 	}
 
 	async runAgent(request: AgentAdapterRunRequest): Promise<AgentResult> {
-		const prompt = renderAgentPrompt(request);
-		const args = request.sessionId
-			? this.buildResumeArgs(request.sessionId, prompt)
+		const validatedRequest = validateAgentAdapterRunRequest(request);
+		const prompt = renderAgentPrompt(validatedRequest);
+		const args = validatedRequest.sessionId
+			? this.buildResumeArgs(validatedRequest.sessionId, prompt)
 			: this.buildNewSessionArgs(prompt);
-		return this.executeClaude(args, request);
+		return this.executeClaude(args, validatedRequest);
 	}
 
-	private runClaude(prompt: string): Promise<AgentResult> {
-		return this.executeClaude(this.buildNewSessionArgs(prompt), {
-			role: "planning",
-			prompt,
-		});
+	private runClaude(
+		prompt: string,
+		role: AgentAdapterRunRole = "planning",
+	): Promise<AgentResult> {
+		const request = validateAgentAdapterRunRequest({ role, prompt });
+		const renderedPrompt = renderAgentPrompt(request);
+		return this.executeClaude(
+			this.buildNewSessionArgs(renderedPrompt),
+			request,
+		);
 	}
 
 	private runClaudeResume(
 		sessionId: string,
 		prompt: string,
 	): Promise<AgentResult> {
-		return this.executeClaude(this.buildResumeArgs(sessionId, prompt), {
+		const request = validateAgentAdapterRunRequest({
 			role: "implementing",
 			prompt,
 			sessionId,
 		});
+		const renderedPrompt = renderAgentPrompt(request);
+		return this.executeClaude(
+			this.buildResumeArgs(sessionId, renderedPrompt),
+			request,
+		);
 	}
 
 	private buildNewSessionArgs(prompt: string): string[] {
