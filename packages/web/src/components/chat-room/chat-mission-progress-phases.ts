@@ -13,7 +13,6 @@ export const MISSION_PHASES: Array<{ id: ChatMissionPhaseId; label: string }> =
 		{ id: "plan", label: "Plan" },
 		{ id: "implement", label: "Implement" },
 		{ id: "testing", label: "Testing" },
-		{ id: "qa", label: "QA" },
 	];
 
 export function createMissionPhases({
@@ -83,9 +82,11 @@ function clampActivePhaseStatus(
 	const rawStatus = statusByPhase.get(phaseId);
 	if (phaseIndex < activeIndex) return "success";
 	if (phaseIndex > activeIndex) return "pending";
-	return rawStatus === "failed" || rawStatus === "warning"
-		? rawStatus
-		: "running";
+	if (rawStatus === "failed" || rawStatus === "warning") {
+		return rawStatus;
+	}
+	if (activePhase === "testing" && rawStatus === "success") return "success";
+	return "running";
 }
 
 function clampTerminalPhaseStatus(
@@ -116,7 +117,7 @@ function latestTerminalPhase(
 		const phase = MISSION_PHASES[index];
 		if (phase && statusByPhase.has(phase.id)) return phase.id;
 	}
-	return "qa";
+	return "testing";
 }
 
 function applyLatestResult(
@@ -126,7 +127,7 @@ function applyLatestResult(
 	if (!latestResult) return;
 	const qaStatus = resultToneToPhaseStatus(latestResult.tone);
 	statusByPhase.set("qa", qaStatus);
-	if (!statusByPhase.has("testing")) {
+	if (qaStatus === "running" || !statusByPhase.has("testing")) {
 		statusByPhase.set("testing", qaStatus === "success" ? "success" : qaStatus);
 	}
 }

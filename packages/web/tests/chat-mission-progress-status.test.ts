@@ -3,6 +3,7 @@ import { describe, expect, it } from "bun:test";
 import type { ChatMissionProgressViewModel } from "../src/components/chat-room/types/chat-mission-progress.types";
 import {
 	activityStep,
+	missionModel,
 	missionModelWithSteps,
 } from "./chat-mission-progress-fixtures";
 
@@ -13,7 +14,6 @@ describe("chat mission progress status normalization", () => {
 		expect(mission.phases.map((phase) => phase.status)).toEqual([
 			"success",
 			"running",
-			"pending",
 			"pending",
 		]);
 		expect(mission.phaseCheckpoints.plan.map((item) => item.status)).toEqual([
@@ -34,7 +34,6 @@ describe("chat mission progress status normalization", () => {
 			"success",
 			"success",
 			"running",
-			"pending",
 		]);
 		expect(mission.phaseCheckpoints.plan.map((item) => item.status)).toEqual([
 			"success",
@@ -47,11 +46,23 @@ describe("chat mission progress status normalization", () => {
 		);
 	});
 
+	it("marks testing complete when tested while the task remains in review", () => {
+		const mission = missionModel("succeeded", "in_review");
+
+		expect(mission.phases.map((phase) => phase.status)).toEqual([
+			"success",
+			"success",
+			"success",
+		]);
+		expect(mission.phaseCheckpoints.testing.map((item) => item.status)).toEqual(
+			["success"],
+		);
+	});
+
 	it("removes loading states from terminal successful missions", () => {
 		const mission = missionModelWithRunningSteps("done");
 
 		expect(mission.phases.map((phase) => phase.status)).toEqual([
-			"success",
 			"success",
 			"success",
 			"success",

@@ -110,6 +110,22 @@ export function activityStep(
 	};
 }
 
+export function progressStep(
+	stepNumber: number,
+	action: string,
+	status: string,
+	detail: Record<string, unknown>,
+): TaskActivityStepRecord {
+	return {
+		id: `progress-${stepNumber}`,
+		stepNumber,
+		action,
+		status,
+		detail: JSON.stringify(detail),
+		recordedAt: `2026-05-20T00:${String(stepNumber + 1).padStart(2, "0")}:30.000Z`,
+	};
+}
+
 function defaultActivitySteps(): TaskActivityStepRecord[] {
 	return [
 		activityStep(1, "plan", "plan"),
