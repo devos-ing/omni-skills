@@ -6,10 +6,10 @@ import type { CliExecutor } from "../types/app.types";
 import {
 	createChatSendRealtimeCallbacks,
 	publishChatAppendResult,
-	publishChatSendResult,
 	publishChatSessionEvent,
 } from "./chat-route-realtime";
 import { createChatRouteService } from "./chat-route-service";
+import { publishChatSendCompletion } from "./chat-send-background";
 import {
 	badRequest,
 	methodNotAllowed,
@@ -219,13 +219,16 @@ async function handleSendRoute(
 	if (!parsed.ok) {
 		return badRequest(parsed.error);
 	}
-	const result = await service.sendMessage(
+	const result = await service.queueMessage(
 		sessionId,
 		parsed.value,
 		createChatSendRealtimeCallbacks(realtimeEvents),
 	);
-	publishChatSendResult(realtimeEvents, result);
-	return result ? jsonSuccess(result) : notFound("Chat session not found");
+	if (!result) {
+		return notFound("Chat session not found");
+	}
+	publishChatSendCompletion(realtimeEvents, result.completion);
+	return jsonSuccess(result.accepted, { status: 202 });
 }
 
 async function parseBody<T extends z.ZodTypeAny>(

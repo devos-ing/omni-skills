@@ -5,7 +5,13 @@ import {
 	chatSessionsTable,
 	eq,
 } from "devos-db";
-import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
+import type { RealtimeEventPayload } from "../src/realtime";
+import {
+	createJsonRequest,
+	createServerTestApp,
+	realtimeEventTypes,
+	waitForRealtimeEvent,
+} from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -70,7 +76,7 @@ describe("chat routes", () => {
 
 	it("creates a default project issue for new chat sessions", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
-		const events: unknown[] = [];
+		const events: RealtimeEventPayload[] = [];
 		const app = createServerTestApp(testDatabase.db, {
 			realtimeEvents: { publish: (event) => events.push(event) },
 			workspacePath: testDatabase.path,
@@ -144,7 +150,7 @@ describe("chat routes", () => {
 	it("resolves the first chat message through task intake", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		const cliCalls: unknown[] = [];
-		const events: unknown[] = [];
+		const events: RealtimeEventPayload[] = [];
 		const app = createServerTestApp(testDatabase.db, {
 			cliExecutor: {
 				execute: async (request) => {
@@ -180,32 +186,26 @@ describe("chat routes", () => {
 			}),
 		);
 
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(202);
 		const body = (await response.json()) as {
 			issue: { content: string; id: string; status: string; title: string };
 			messages: Array<{ content: string; taskId: string | null }>;
 			session: { taskId: string | null; title: string };
 		};
-		expect(body.session.title).toBe("Build the dashboard");
+		expect(body.session.title).toBe("Untitled");
 		expect(body.session.taskId).toBe(session.taskId);
 		expect(body.issue).toMatchObject({
 			id: session.taskId,
-			title: "Build the dashboard",
-			content: "Build the dashboard",
-			status: "plan",
+			title: "Untitled chat",
+			content: "",
+			status: "backlog",
 		});
-		expect(body.messages).toHaveLength(2);
+		expect(body.messages).toHaveLength(1);
 		expect(body.messages[0]).toMatchObject({
 			content: "Build the dashboard",
 			taskId: session.taskId,
 		});
-		expect(body.messages[1]).toMatchObject({
-			content:
-				"Task TASK(owner-1)-1: Build the dashboard is ready for planning.",
-			role: "assistant",
-			kind: "task",
-			taskId: session.taskId,
-		});
+		await waitForRealtimeEvent(events, "chat.session.updated");
 		expect(cliCalls).toEqual([
 			{
 				action: "task",
@@ -218,7 +218,7 @@ describe("chat routes", () => {
 				json: true,
 			},
 		]);
-		expect(events.map((event) => (event as { type: string }).type)).toEqual([
+		expect(realtimeEventTypes(events)).toEqual([
 			"project.created",
 			"issue.created",
 			"chat.session.created",

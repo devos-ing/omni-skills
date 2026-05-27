@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
+import type { RealtimeEventPayload } from "../src/realtime";
+import type { RouteHandler } from "../src/types/app.types";
+import {
+	createJsonRequest,
+	createServerTestApp,
+	waitForRealtimeEvent,
+} from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -17,6 +23,7 @@ afterEach(async () => {
 describe("chat clarification routes", () => {
 	it("renders only the current clarification question in assistant text", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
+		const events: RealtimeEventPayload[] = [];
 		const app = createServerTestApp(testDatabase.db, {
 			cliExecutor: {
 				execute: async (request) => ({
@@ -32,6 +39,7 @@ describe("chat clarification routes", () => {
 				executeStream: async (request) => ({ status: "succeeded", request }),
 				getHistory: () => [],
 			},
+			realtimeEvents: { publish: (event) => events.push(event) },
 			workspacePath: testDatabase.path,
 		});
 		const created = await app(
@@ -43,10 +51,9 @@ describe("chat clarification routes", () => {
 				content: "Route agent choice",
 			}),
 		);
-		const body = (await unclear.json()) as {
-			messages: Array<{ content: string; kind: string }>;
-			session: { pendingQuestions: Array<{ question: string }> };
-		};
+		expect(unclear.status).toBe(202);
+		await waitForRealtimeEvent(events, "chat.session.updated");
+		const body = await readChatState(app, session.id);
 
 		expect(body.session.pendingQuestions).toEqual([
 			{ question: "Which agent?" },
@@ -59,6 +66,7 @@ describe("chat clarification routes", () => {
 	it("keeps unclear tasks in backlog and moves answered tasks to plan", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		const cliCalls: unknown[] = [];
+		const events: RealtimeEventPayload[] = [];
 		let callCount = 0;
 		const app = createServerTestApp(testDatabase.db, {
 			cliExecutor: {
@@ -78,6 +86,7 @@ describe("chat clarification routes", () => {
 				executeStream: async (request) => ({ status: "succeeded", request }),
 				getHistory: () => [],
 			},
+			realtimeEvents: { publish: (event) => events.push(event) },
 			workspacePath: testDatabase.path,
 		});
 		const created = await app(
@@ -90,16 +99,11 @@ describe("chat clarification routes", () => {
 				content: "Route agent choice",
 			}),
 		);
-		const unclearBody = (await unclear.json()) as {
-			issue: { id: string; status: string; title: string };
-			messages: Array<{ kind: string }>;
-			session: {
-				pendingQuestions: Array<{ question: string; options?: unknown[] }>;
-				pendingRequest: string | null;
-			};
-		};
+		expect(unclear.status).toBe(202);
+		await waitForRealtimeEvent(events, "chat.session.updated");
+		const unclearBody = await readChatState(app, session.id);
 
-		expect(unclearBody.issue).toMatchObject({
+		expect(findIssueUpdate(events)).toMatchObject({
 			id: session.taskId,
 			status: "backlog",
 			title: "Untitled chat",
@@ -116,18 +120,18 @@ describe("chat clarification routes", () => {
 		]);
 		expect(unclearBody.messages[1]?.kind).toBe("clarification");
 
+		events.length = 0;
 		const answered = await app(
 			createJsonRequest("POST", `/api/chat/sessions/${session.id}/send`, {
 				content: "codex",
 				answers: [{ question: "Which agent?", answer: "codex" }],
 			}),
 		);
-		const answeredBody = (await answered.json()) as {
-			issue: { content: string; id: string; status: string; title: string };
-			session: { pendingQuestions: unknown[]; pendingRequest: string | null };
-		};
+		expect(answered.status).toBe(202);
+		await waitForRealtimeEvent(events, "chat.session.updated");
+		const answeredBody = await readChatState(app, session.id);
 
-		expect(answeredBody.issue).toMatchObject({
+		expect(findIssueUpdate(events)).toMatchObject({
 			id: session.taskId,
 			title: "Route agent choice",
 			content: "Use the selected agent.",
@@ -144,6 +148,52 @@ describe("chat clarification routes", () => {
 		]);
 	});
 });
+
+interface ChatRouteState {
+	messages: Array<{ content: string; kind: string }>;
+	session: {
+		pendingQuestions: Array<{ question: string; options?: unknown[] }>;
+		pendingRequest: string | null;
+	};
+}
+
+async function readChatState(
+	app: RouteHandler,
+	sessionId: string,
+): Promise<ChatRouteState> {
+	const messagesResponse = await app(
+		new Request(`http://localhost/api/chat/sessions/${sessionId}/messages`),
+	);
+	const sessionsResponse = await app(
+		new Request("http://localhost/api/chat/sessions?workspaceId=owner-1"),
+	);
+	const messages =
+		(await messagesResponse.json()) as ChatRouteState["messages"];
+	const sessions =
+		(await sessionsResponse.json()) as ChatRouteState["session"][];
+	const session = sessions.find((item) => item.pendingRequest !== undefined);
+	if (!session) {
+		throw new Error("Expected chat session state");
+	}
+	return { messages, session };
+}
+
+function findIssueUpdate(
+	events: RealtimeEventPayload[],
+): { content?: string; id: string; status: string; title: string } | undefined {
+	return (
+		events.find((event) => event.type === "issue.updated") as
+			| {
+					issue: {
+						content?: string;
+						id: string;
+						status: string;
+						title: string;
+					};
+			  }
+			| undefined
+	)?.issue;
+}
 
 function intakeOutput(callCount: number): string {
 	return callCount === 1

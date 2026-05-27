@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import type { RealtimeEventPayload } from "../src/realtime";
-import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
+import {
+	createJsonRequest,
+	createServerTestApp,
+	waitForRealtimeEvent,
+} from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -99,6 +103,7 @@ describe("chat realtime routes", () => {
 				content: "Build it",
 			}),
 		);
+		await waitForRealtimeEvent(events, "chat.session.updated");
 		expect(eventTypes(events)).toEqual([
 			"chat.message.created",
 			"chat.stream.started",

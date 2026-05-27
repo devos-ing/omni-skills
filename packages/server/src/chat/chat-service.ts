@@ -4,7 +4,11 @@ import {
 	UNTITLED_SESSION,
 } from "./chat-defaults";
 import { mapMessage, mapSession } from "./chat-mappers";
-import { ensureIssueForSession, sendChatMessage } from "./chat-send-service";
+import {
+	ensureIssueForSession,
+	queueChatMessage,
+	sendChatMessage,
+} from "./chat-send-service";
 import { appendChatMessage, updateChatSessionRow } from "./chat-writes";
 import type {
 	ChatRepository,
@@ -79,6 +83,9 @@ export function createChatService(
 		},
 		async sendMessage(sessionId, input, stream) {
 			return sendChatMessage(repository, deps, sessionId, input, stream);
+		},
+		async queueMessage(sessionId, input, stream) {
+			return queueChatMessage(repository, deps, sessionId, input, stream);
 		},
 	};
 }

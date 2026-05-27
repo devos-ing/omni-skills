@@ -1,6 +1,7 @@
 import type { ServerDatabase } from "devos-db";
 import { boardProjectsTable, projectBoardsTable } from "devos-db";
 import { createHandleRequest } from "../src/app";
+import type { RealtimeEventPayload } from "../src/realtime";
 import type { AppDeps, RouteHandler } from "../src/types/app.types";
 
 export function createJsonRequest(
@@ -52,4 +53,21 @@ export async function seedServerTestProject(
 		createdAt: "2026-05-13T00:00:00.000Z",
 		updatedAt: "2026-05-13T00:00:00.000Z",
 	});
+}
+
+export async function waitForRealtimeEvent(
+	events: RealtimeEventPayload[],
+	type: RealtimeEventPayload["type"],
+): Promise<void> {
+	for (let attempt = 0; attempt < 100; attempt += 1) {
+		if (events.some((event) => event.type === type)) {
+			return;
+		}
+		await new Promise((resolve) => setTimeout(resolve, 10));
+	}
+	throw new Error(`Timed out waiting for ${type}`);
+}
+
+export function realtimeEventTypes(events: RealtimeEventPayload[]): string[] {
+	return events.map((event) => event.type);
 }

@@ -76,6 +76,11 @@ export interface ChatSendResult {
 	session: ChatSessionRecord;
 }
 
+export interface ChatQueuedSendResult {
+	accepted: ChatSendResult;
+	completion: Promise<ChatSendResult>;
+}
+
 export interface ChatStreamStartedPayload {
 	runId: string;
 	sessionId: string;
@@ -121,6 +126,13 @@ export type ChatRequirementResult =
 			task: { title: string; description: string };
 	  }
 	| { status: "needs_info"; questions: ChatClarificationQuestion[] };
+
+export interface ChatRequirementApplicationResult {
+	assistantKind: "task" | "clarification";
+	assistantText: string;
+	issue: BoardTaskApiRecord;
+	sessionUpdate: ChatSessionUpdateInput;
+}
 
 export interface ChatRepository {
 	addMessage(
@@ -177,6 +189,11 @@ export interface ChatService {
 		input: ChatSendInput,
 		stream?: ChatSendStreamCallbacks,
 	): Promise<ChatSendResult | null>;
+	queueMessage(
+		sessionId: string,
+		input: ChatSendInput,
+		stream?: ChatSendStreamCallbacks,
+	): Promise<ChatQueuedSendResult | null>;
 	updateSession(
 		sessionId: string,
 		input: ChatSessionUpdateInput,

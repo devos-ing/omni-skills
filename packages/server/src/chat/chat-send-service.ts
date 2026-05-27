@@ -4,25 +4,61 @@ import { collectClarificationAnswers } from "./chat-answer-metadata";
 import {
 	DEFAULT_CHAT_ISSUE_CONTENT,
 	DEFAULT_CHAT_ISSUE_TITLE,
-	UNTITLED_SESSION,
 } from "./chat-defaults";
-import { mapMessage, mapSession, titleFromMessage } from "./chat-mappers";
+import { mapMessage, mapSession } from "./chat-mappers";
+import {
+	applyRequirementResult,
+	updateSessionAfterRequirement,
+} from "./chat-requirement-result";
 import { appendChatMessage, updateChatSessionRow } from "./chat-writes";
 import type {
-	ChatClarificationQuestion,
+	ChatMessageRecord,
+	ChatQueuedSendResult,
 	ChatRepository,
 	ChatSendInput,
 	ChatSendResult,
 	ChatSendStreamCallbacks,
 	ChatServiceDeps,
-	ChatSessionUpdateInput,
 } from "./types/chat.types";
 
-interface RequirementResult {
-	assistantKind: "task" | "clarification";
-	assistantText: string;
+interface AcceptedChatSend {
 	issue: BoardTaskApiRecord;
-	sessionUpdate: ChatSessionUpdateInput;
+	requestText: string;
+	session: ChatSessionRow;
+	userRecord: ChatMessageRecord;
+}
+
+export async function queueChatMessage(
+	repository: ChatRepository,
+	deps: ChatServiceDeps,
+	sessionId: string,
+	input: ChatSendInput,
+	stream?: ChatSendStreamCallbacks,
+): Promise<ChatQueuedSendResult | null> {
+	const accepted = await acceptChatMessage(
+		repository,
+		deps,
+		sessionId,
+		input,
+		stream,
+	);
+	if (!accepted) {
+		return null;
+	}
+	return {
+		accepted: {
+			issue: accepted.issue,
+			messages: [accepted.userRecord],
+			session: mapSession(accepted.session),
+		},
+		completion: completeChatMessage(
+			repository,
+			deps,
+			sessionId,
+			accepted,
+			stream,
+		),
+	};
 }
 
 export async function sendChatMessage(
@@ -32,6 +68,23 @@ export async function sendChatMessage(
 	input: ChatSendInput,
 	stream?: ChatSendStreamCallbacks,
 ): Promise<ChatSendResult | null> {
+	const queued = await queueChatMessage(
+		repository,
+		deps,
+		sessionId,
+		input,
+		stream,
+	);
+	return queued ? queued.completion : null;
+}
+
+async function acceptChatMessage(
+	repository: ChatRepository,
+	deps: ChatServiceDeps,
+	sessionId: string,
+	input: ChatSendInput,
+	stream?: ChatSendStreamCallbacks,
+): Promise<AcceptedChatSend | null> {
 	const session = await repository.getSession(sessionId);
 	if (!session) {
 		return null;
@@ -51,24 +104,38 @@ export async function sendChatMessage(
 		sessionId,
 		userMessageId: userRecord.id,
 	});
+	return {
+		issue: linked.issue,
+		requestText: linked.session.pendingRequest ?? input.content.trim(),
+		session: linked.session,
+		userRecord,
+	};
+}
+
+async function completeChatMessage(
+	repository: ChatRepository,
+	deps: ChatServiceDeps,
+	sessionId: string,
+	accepted: AcceptedChatSend,
+	stream?: ChatSendStreamCallbacks,
+): Promise<ChatSendResult> {
 	try {
-		const requestText = linked.session.pendingRequest ?? input.content.trim();
 		const requirement = await deps.resolveTaskRequirement({
-			request: requestText,
+			request: accepted.requestText,
 			projectId:
-				linked.session.projectId ?? linked.issue.projectId ?? undefined,
+				accepted.session.projectId ?? accepted.issue.projectId ?? undefined,
 			answers: await collectClarificationAnswers(repository, sessionId),
 		});
 		const outcome = await applyRequirementResult(
 			deps,
-			linked.issue,
-			linked.session,
-			requestText,
+			accepted.issue,
+			accepted.session,
+			accepted.requestText,
 			requirement,
 		);
 		const updatedSession = await updateSessionAfterRequirement(
 			repository,
-			linked.session,
+			accepted.session,
 			outcome.sessionUpdate,
 		);
 		const assistantChunks = [outcome.assistantText];
@@ -92,7 +159,7 @@ export async function sendChatMessage(
 		return {
 			issue: outcome.issue,
 			session: mapSession(updatedSession),
-			messages: [userRecord, assistantRecord],
+			messages: [accepted.userRecord, assistantRecord],
 		};
 	} catch (error) {
 		stream?.onStreamError?.({
@@ -139,81 +206,4 @@ export async function ensureIssueForSession(
 		issue,
 		session: updated ?? { ...session, projectId, taskId: issue.id },
 	};
-}
-
-async function updateSessionAfterRequirement(
-	repository: ChatRepository,
-	session: ChatSessionRow,
-	input: ChatSessionUpdateInput,
-): Promise<ChatSessionRow> {
-	return (
-		(await updateChatSessionRow(repository, session.id, input)) ??
-		(await repository.getSession(session.id)) ??
-		session
-	);
-}
-
-async function applyRequirementResult(
-	deps: ChatServiceDeps,
-	issue: BoardTaskApiRecord,
-	session: ChatSessionRow,
-	requestText: string,
-	requirement: Awaited<ReturnType<ChatServiceDeps["resolveTaskRequirement"]>>,
-): Promise<RequirementResult> {
-	if (requirement.status === "needs_info") {
-		const updatedIssue = await deps.updateIssue(issue.id, {
-			status: "backlog",
-		});
-		return {
-			assistantKind: "clarification",
-			assistantText: clarificationText(requirement.questions),
-			issue: updatedIssue,
-			sessionUpdate: {
-				pendingRequest: requestText,
-				pendingQuestions: requirement.questions,
-				...(session.title === UNTITLED_SESSION
-					? { title: titleFromMessage(requestText) }
-					: {}),
-			},
-		};
-	}
-	const updatedIssue = await deps.updateIssue(issue.id, {
-		content: requirement.task.description,
-		status: "plan",
-		title: requirement.task.title,
-	});
-	return {
-		assistantKind: "task",
-		assistantText: `Task ${updatedIssue.taskKey}: ${updatedIssue.title} is ready for planning.`,
-		issue: updatedIssue,
-		sessionUpdate: {
-			pendingRequest: null,
-			pendingQuestions: null,
-			title: requirement.task.title,
-		},
-	};
-}
-
-function clarificationText(questions: ChatClarificationQuestion[]): string {
-	const currentQuestion = questions[0];
-	if (!currentQuestion) {
-		return "I need a bit more detail before this is ready for planning.";
-	}
-	return [
-		"I need a bit more detail before this is ready for planning:",
-		formatClarificationQuestion(currentQuestion),
-	].join("\n");
-}
-
-function formatClarificationQuestion(
-	question: ChatClarificationQuestion,
-): string {
-	const options = question.options?.length
-		? question.options
-				.map((option) => `  - ${option.label}: ${option.value}`)
-				.join("\n")
-		: "";
-	return options
-		? `- ${question.question}\n${options}`
-		: `- ${question.question}`;
 }

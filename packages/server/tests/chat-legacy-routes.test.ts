@@ -4,7 +4,12 @@ import {
 	chatMessagesTable,
 	chatSessionsTable,
 } from "devos-db";
-import { createJsonRequest, createServerTestApp } from "./app-test-helpers";
+import type { RealtimeEventPayload } from "../src/realtime";
+import {
+	createJsonRequest,
+	createServerTestApp,
+	waitForRealtimeEvent,
+} from "./app-test-helpers";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -22,6 +27,7 @@ afterEach(async () => {
 describe("legacy chat sessions", () => {
 	it("creates and attaches an issue for sessions without task ids", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
+		const events: RealtimeEventPayload[] = [];
 		const app = createServerTestApp(testDatabase.db, {
 			cliExecutor: {
 				execute: async (request) => ({
@@ -37,6 +43,7 @@ describe("legacy chat sessions", () => {
 				executeStream: async (request) => ({ status: "succeeded", request }),
 				getHistory: () => [],
 			},
+			realtimeEvents: { publish: (event) => events.push(event) },
 			workspacePath: testDatabase.path,
 		});
 		await testDatabase.db.insert(chatSessionsTable).values({
@@ -57,7 +64,7 @@ describe("legacy chat sessions", () => {
 			}),
 		);
 
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(202);
 		const body = (await response.json()) as {
 			messages: Array<{ taskId: string | null }>;
 			session: { projectId: string | null; taskId: string | null };
@@ -75,5 +82,6 @@ describe("legacy chat sessions", () => {
 		expect(tasks).toHaveLength(1);
 		expect(tasks[0]?.id).toBe(taskId);
 		expect(messages[0]?.taskId).toBe(taskId);
+		await waitForRealtimeEvent(events, "chat.session.updated");
 	});
 });
