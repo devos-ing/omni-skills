@@ -19,7 +19,7 @@ import { useRealtimeStore } from "@/lib/realtime";
 import { useChatClarificationState } from "./chat-clarification-state";
 import { createChatClarificationSubmitters } from "./chat-clarification-submitters";
 import { parseChatCommand } from "./chat-command-utils";
-import { executeCommandInput } from "./chat-room-command-actions";
+import { executeChatRoomInput } from "./chat-room-execute-input";
 import { useChatRoomMission } from "./chat-room-mission";
 import { useChatRoomDraftState } from "./chat-room-panel-draft-state";
 import { ChatRoomPanelView } from "./chat-room-panel-view";
@@ -51,7 +51,6 @@ export function ChatRoomPanel({
 		commandDraftRequest,
 		setDraft,
 	});
-
 	const currentWorkspaceQuery = useCurrentWorkspaceQuery(NO_REFETCH);
 	const workspaceId = currentWorkspaceQuery.data?.workspaceId ?? "";
 	const sessionsQuery = useChatSessionsQuery(workspaceId, NO_REFETCH);
@@ -71,7 +70,7 @@ export function ChatRoomPanel({
 		refetchIntervalMs: false,
 	});
 	const messages = messagesQuery.data ?? [];
-	const { activeTaskId, missionProgress } = useChatRoomMission(
+	const { activeTaskId, isPlanning, missionProgress } = useChatRoomMission(
 		selectedSession,
 		messages,
 	);
@@ -156,37 +155,26 @@ export function ChatRoomPanel({
 				const command = parseChatCommand(content, {
 					projectId: session.projectId,
 				});
-				await executeInput(session.id, content, command);
+				await executeChatRoomInput(
+					{
+						appendMessage: (input) => appendMessage.mutateAsync(input),
+						sendMessage: (input) => sendMessage.mutateAsync(input),
+						setStreamLines: setCommandLines,
+						startNewSession,
+						updateProject: ({ sessionId: targetSessionId, projectId }) =>
+							updateSession.mutateAsync({
+								sessionId: targetSessionId,
+								session: { projectId },
+							}),
+					},
+					session.id,
+					content,
+					command,
+				);
 			});
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Send failed");
 		}
-	}
-
-	async function executeInput(
-		sessionId: string,
-		content: string,
-		command: ReturnType<typeof parseChatCommand>,
-	): Promise<void> {
-		if (command.kind === "none") {
-			await sendMessage.mutateAsync({ sessionId, message: { content } });
-			return;
-		}
-		await executeCommandInput(
-			{
-				appendMessage: (input) => appendMessage.mutateAsync(input),
-				setStreamLines: setCommandLines,
-				startNewSession,
-				updateProject: ({ sessionId: targetSessionId, projectId }) =>
-					updateSession.mutateAsync({
-						sessionId: targetSessionId,
-						session: { projectId },
-					}),
-			},
-			sessionId,
-			content,
-			command,
-		);
 	}
 
 	async function archiveSession(sessionId: string): Promise<void> {
@@ -215,6 +203,7 @@ export function ChatRoomPanel({
 			isMessagesLoading={messagesQuery.isLoading}
 			isSessionListLoading={sessionsQuery.isLoading}
 			isSending={sendMessage.isPending}
+			isPlanning={isPlanning}
 			isTaskDetailPanelOpen={taskDetails.isOpen}
 			isThinking={isThinking}
 			missionProgress={missionProgress}

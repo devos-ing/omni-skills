@@ -17,6 +17,7 @@ import type { ChatTranscriptProps } from "./types/chat-room.types";
 export function ChatTranscript({
 	error,
 	isLoading,
+	isPlanning,
 	isThinking,
 	missionProgress,
 	messages,
@@ -42,13 +43,16 @@ export function ChatTranscript({
 		streamLines.length,
 	].join(":");
 	const showThinking = isThinking && streamLines.length === 0;
+	const showPlanning = isPlanning && !showThinking && streamLines.length === 0;
 	const showWorkingHeader =
-		Boolean(workingStartedAt) && (showThinking || streamLines.length > 0);
+		Boolean(workingStartedAt) &&
+		(showThinking || showPlanning || streamLines.length > 0);
 	const showStandaloneStream = streamLines.length > 0 && !missionProgress;
 	const hasSessionActivity =
 		messages.length > 0 ||
 		streamLines.length > 0 ||
 		Boolean(missionProgress) ||
+		showPlanning ||
 		showWorkingHeader;
 
 	useEffect(() => {
@@ -94,6 +98,7 @@ export function ChatTranscript({
 						<WorkingSectionHeader startedAt={workingStartedAt ?? ""} />
 					) : null}
 					{showThinking ? <ThinkingLine /> : null}
+					{showPlanning ? <PlanningLine /> : null}
 					{showStandaloneStream ? (
 						<div className="justify-self-start whitespace-pre-wrap rounded-md border border-border bg-surface-panel px-3 py-2 font-mono text-xs text-zinc-300">
 							{streamLines.map((line) => (
@@ -151,6 +156,10 @@ function formatElapsedSeconds(startedAt: string, now: number): number {
 
 function ThinkingLine(): ReactElement {
 	return <TextShimmer>Thinking...</TextShimmer>;
+}
+
+function PlanningLine(): ReactElement {
+	return <TextShimmer>Planning...</TextShimmer>;
 }
 
 function ChatMessageBubble({

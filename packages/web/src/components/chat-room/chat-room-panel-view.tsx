@@ -19,6 +19,7 @@ export function ChatRoomPanelView({
 	isMessagesLoading,
 	isSessionListLoading,
 	isSending,
+	isPlanning,
 	isTaskDetailPanelOpen,
 	isThinking,
 	missionProgress,
@@ -97,6 +98,7 @@ export function ChatRoomPanelView({
 					<ChatTranscript
 						error={messagesError}
 						isLoading={isMessagesLoading}
+						isPlanning={isPlanning}
 						isThinking={isThinking}
 						missionProgress={missionProgress}
 						messages={messages}

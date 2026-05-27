@@ -52,6 +52,7 @@ export interface ChatStreamLine {
 export interface ChatTranscriptProps {
 	error: Error | null;
 	isLoading: boolean;
+	isPlanning: boolean;
 	isThinking: boolean;
 	missionProgress: ChatMissionProgressViewModel | null;
 	messages: ChatMessageRecord[];
@@ -76,6 +77,7 @@ export interface ChatRoomPanelViewProps {
 	isMessagesLoading: boolean;
 	isSessionListLoading: boolean;
 	isSending: boolean;
+	isPlanning: boolean;
 	isTaskDetailPanelOpen: boolean;
 	isThinking: boolean;
 	missionProgress: ChatMissionProgressViewModel | null;

@@ -5,6 +5,11 @@ export interface ChatThinkingStateInput {
 	streamLineCount: number;
 }
 
+export interface ChatPlanningStateInput {
+	hasMissionProgress: boolean;
+	taskStatus?: string | null;
+}
+
 export function shouldShowChatThinkingIndicator({
 	isSending,
 	selectedSessionId,
@@ -17,4 +22,16 @@ export function shouldShowChatThinkingIndicator({
 		sendingSessionId === selectedSessionId &&
 		streamLineCount === 0
 	);
+}
+
+export function shouldShowChatPlanningIndicator({
+	hasMissionProgress,
+	taskStatus,
+}: ChatPlanningStateInput): boolean {
+	if (hasMissionProgress || !taskStatus) return false;
+	return isPlanningTaskStatus(taskStatus);
+}
+
+function isPlanningTaskStatus(status: string): boolean {
+	return ["plan", "planning", "todo"].includes(status.toLowerCase());
 }
