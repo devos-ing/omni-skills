@@ -38,8 +38,7 @@ describe("chat mission progress selection", () => {
 		expect(selectedCheckpointLabels(mission, "testing")).toEqual([
 			"Review testing",
 		]);
-		expect(selectedLogText(mission, "qa", liveLogLines)).toEqual([]);
-		expect(selectedCheckpointLabels(mission, "qa")).toEqual([]);
+		expect(mission.phases.map((phase) => phase.id)).not.toContain("qa");
 	});
 
 	it("keeps live output scoped to the running selected phase", () => {
@@ -51,7 +50,6 @@ describe("chat mission progress selection", () => {
 		expect(selectedLogText(mission, "testing", liveLogLines)).toEqual([
 			"Live output",
 		]);
-		expect(selectedLogText(mission, "qa", liveLogLines)).toEqual([]);
 		expect(selectedLogText(mission, "plan", liveLogLines)).toEqual([
 			"Plan output",
 		]);
