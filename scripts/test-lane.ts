@@ -57,7 +57,8 @@ const FAST_TEST_TARGETS = [
 ] as const;
 
 const DB_TEST_TARGETS = ["packages/db/tests", ...SERVER_DB_TESTS] as const;
-const E2E_TEST_TARGETS = ["e2e"] as const;
+const E2E_TEST_ROOT = path.join(import.meta.dir, "../e2e");
+const E2E_TEST_TARGETS = ["."] as const;
 
 type TestLane = "coverage" | "db" | "default" | "e2e" | "fast";
 
@@ -95,7 +96,7 @@ async function runLane(laneName: TestLane): Promise<number> {
 		return runDbLane();
 	}
 	if (laneName === "e2e") {
-		return runBunTest([...E2E_TEST_TARGETS]);
+		return runBunTest([...E2E_TEST_TARGETS], { cwd: E2E_TEST_ROOT });
 	}
 	return runCoverageLane();
 }
@@ -123,12 +124,14 @@ async function runBunTest(
 	targets: string[],
 	options: {
 		coverage?: boolean;
+		cwd?: string;
 		env?: Record<string, string>;
 	} = {},
 ): Promise<number> {
 	const args = ["test", ...coverageArgs(options.coverage), ...targets];
 	const proc = Bun.spawn({
 		cmd: ["bun", ...args],
+		cwd: options.cwd,
 		env: { ...process.env, ...options.env },
 		stderr: "inherit",
 		stdout: "inherit",

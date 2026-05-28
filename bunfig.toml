@@ -1,2 +1,5 @@
+[test]
+root = "./packages"
+
 [install.cache]
 dir = ".bun-cache"
