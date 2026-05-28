@@ -127,7 +127,7 @@ export function ChatComposer({
 						<>
 							<ChatComposerTextarea
 								activeCommandId={activeCommandId}
-								className="max-h-40 min-h-16 resize-none border-0 bg-transparent px-1 py-1 text-base leading-7 focus-visible:border-transparent focus-visible:ring-0"
+								className="min-h-0 resize-none overflow-y-hidden border-0 bg-transparent px-1 py-1 text-base leading-7 focus-visible:border-transparent focus-visible:ring-0"
 								disabled={disabled}
 								draft={draft}
 								menuId={menuId}
@@ -184,7 +184,7 @@ export function ChatComposer({
 							</Button>
 							<ChatComposerTextarea
 								activeCommandId={activeCommandId}
-								className="max-h-36 min-h-10 resize-none border-0 bg-transparent px-1 py-2 focus-visible:border-transparent focus-visible:ring-0"
+								className="min-h-0 resize-none overflow-y-hidden border-0 bg-transparent px-1 py-2 focus-visible:border-transparent focus-visible:ring-0"
 								disabled={disabled}
 								draft={draft}
 								menuId={menuId}
