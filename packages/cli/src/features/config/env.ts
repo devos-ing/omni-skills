@@ -5,11 +5,10 @@ import type {
 	ResolvedNotificationConfig,
 } from "../types";
 import { AUTO_SELECT_SKILLS_DB_FILE, SERVER_DB_DIR } from "./constants";
+import { buildEnvAgentConfig } from "./env-agent-config";
 import {
-	normalizeAgentBackend,
 	normalizeBooleanEnvValue,
 	normalizeOptionalValue,
-	normalizePermissionMode,
 	normalizeReasoningEffortValue,
 	normalizeSandboxValue,
 	parseCommaList,
@@ -43,6 +42,8 @@ export function buildEnvBase(
 	const workspacePath = env.PIV_WORKSPACE_PATH ?? cwd;
 	const sandbox = normalizeSandboxValue(env.CODEX_SANDBOX);
 	const codexHome = normalizeOptionalValue(env.CODEX_HOME);
+	const streamLogs =
+		env.PIV_DEV_MODE === "1" || env.PIV_PRINT_CODEX_LOGS === "1";
 	const serverDatabasePath =
 		normalizeOptionalValue(env.PIV_SERVER_DATABASE_PATH) ??
 		instanceServerDatabase?.databasePath ??
@@ -110,7 +111,7 @@ export function buildEnvBase(
 		},
 		codex: {
 			binary: env.CODEX_BINARY ?? "codex",
-			streamLogs: env.PIV_DEV_MODE === "1" || env.PIV_PRINT_CODEX_LOGS === "1",
+			streamLogs,
 			model: env.CODEX_MODEL,
 			reasoningEffort: normalizeReasoningEffortValue(
 				env.CODEX_REASONING_EFFORT,
@@ -174,16 +175,7 @@ export function buildEnvBase(
 				codexHomePath: normalizeOptionalValue(env.CODEX_DOCKER_CODEX_HOME_PATH),
 			},
 		},
-		cursor: {
-			binary: normalizeOptionalValue(env.CURSOR_AGENT_BINARY) ?? "cursor-agent",
-			streamLogs: env.PIV_DEV_MODE === "1" || env.PIV_PRINT_CODEX_LOGS === "1",
-			model: normalizeOptionalValue(env.CURSOR_AGENT_MODEL),
-			force: normalizeBooleanEnvValue(
-				env.CURSOR_AGENT_FORCE,
-				"CURSOR_AGENT_FORCE",
-			),
-			apiKey: normalizeOptionalValue(env.CURSOR_API_KEY),
-		},
+		...buildEnvAgentConfig(env, streamLogs),
 		skills: {
 			root: path.join(cwd, "skills"),
 			plan: path.join("piv-plan", "SKILL.md"),
@@ -203,15 +195,6 @@ export function buildEnvBase(
 				maxSelected: 3,
 			},
 			pluginSkillPaths: [],
-		},
-		agent: {
-			backend: normalizeAgentBackend(env.AGENT_BACKEND),
-		},
-		claude: {
-			model: normalizeOptionalValue(env.CLAUDE_CODE_MODEL),
-			maxTurns: parseOptionalPositiveInt(env.CLAUDE_CODE_MAX_TURNS),
-			allowedTools: parseCommaList(env.CLAUDE_CODE_ALLOWED_TOOLS),
-			permissionMode: normalizePermissionMode(env.CLAUDE_CODE_PERMISSION_MODE),
 		},
 		workflow: {
 			issueConcurrency: Number(env.PIV_ISSUE_CONCURRENCY ?? "1"),

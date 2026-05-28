@@ -85,6 +85,11 @@ const envDefaults: Record<string, string | undefined> = {
 	CURSOR_AGENT_MODEL: undefined,
 	CURSOR_AGENT_FORCE: undefined,
 	CURSOR_API_KEY: undefined,
+	OPENCODE_BINARY: undefined,
+	OPENCODE_MODEL: undefined,
+	OPENCODE_AGENT: undefined,
+	OPENCODE_ATTACH: undefined,
+	OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS: undefined,
 	PIV_SERVER_DATABASE_PATH: undefined,
 	DEVOS_SERVER_BASE_URL: undefined,
 };
@@ -471,6 +476,14 @@ describe("loadConfig", () => {
 		});
 	});
 
+	it("loads OpenCode backend from AGENT_BACKEND env", async () => {
+		process.env.AGENT_BACKEND = "opencode";
+		await withTempConfig(async (tempDir) => {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.agent?.backend).toBe("opencode");
+		});
+	});
+
 	it("defaults agent backend to undefined when not set", async () => {
 		process.env.AGENT_BACKEND = "";
 		await withTempConfig(async (tempDir) => {
@@ -502,6 +515,26 @@ describe("loadConfig", () => {
 				model: "gpt-5",
 				force: true,
 				apiKey: "cursor_secret",
+			});
+		});
+	});
+
+	it("loads OpenCode settings from env", async () => {
+		process.env.OPENCODE_BINARY = "custom-opencode";
+		process.env.OPENCODE_MODEL = "ollama/qwen2.5-coder:32b";
+		process.env.OPENCODE_AGENT = "build";
+		process.env.OPENCODE_ATTACH = "http://127.0.0.1:4096";
+		process.env.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS = "true";
+
+		await withTempConfig(async (tempDir) => {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.opencode).toEqual({
+				binary: "custom-opencode",
+				streamLogs: false,
+				model: "ollama/qwen2.5-coder:32b",
+				agent: "build",
+				attach: "http://127.0.0.1:4096",
+				dangerouslySkipPermissions: true,
 			});
 		});
 	});

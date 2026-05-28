@@ -4,7 +4,12 @@ import type {
 	AgentAdapterRuntimeConfig,
 } from "./types/agent-adapter.types";
 
-const backendSchema = z.enum(["codex", "claude-code", "cursor-agent"]);
+const backendSchema = z.enum([
+	"codex",
+	"claude-code",
+	"cursor-agent",
+	"opencode",
+]);
 const reasoningEffortSchema = z.enum(["low", "medium", "high", "xhigh"]);
 const permissionModeSchema = z.enum([
 	"default",
@@ -73,6 +78,16 @@ const runtimeConfigSchema = z.object({
 			model: z.string().optional(),
 			force: z.boolean().optional(),
 			apiKey: z.string().optional(),
+		})
+		.optional(),
+	opencode: z
+		.object({
+			binary: z.string().min(1),
+			streamLogs: z.boolean(),
+			model: z.string().optional(),
+			agent: z.string().optional(),
+			attach: z.string().optional(),
+			dangerouslySkipPermissions: z.boolean().optional(),
 		})
 		.optional(),
 	claude: z

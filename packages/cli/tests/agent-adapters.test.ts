@@ -3,10 +3,11 @@ import { type AgentBackend, createAgentAdapter } from "adapters";
 import { ClaudeCodeAdapter } from "adapters/claude";
 import { CodexAdapter } from "adapters/codex";
 import { CursorAgentAdapter } from "adapters/cursor";
+import { OpenCodeAdapter } from "adapters/opencode";
 import type { ResolvedProjectConfig } from "../src/features/types";
 
 function createConfig(
-	backend?: "codex" | "claude-code" | "cursor-agent",
+	backend?: "codex" | "claude-code" | "cursor-agent" | "opencode",
 ): ResolvedProjectConfig {
 	return {
 		id: "default",
@@ -44,6 +45,7 @@ function createConfig(
 		},
 		codex: { binary: process.execPath, streamLogs: false },
 		cursor: { binary: "cursor-agent", streamLogs: false },
+		opencode: { binary: "opencode", streamLogs: false },
 		agent: backend ? { backend } : undefined,
 		skills: {
 			root: "r",
@@ -71,6 +73,11 @@ describe("createAgentAdapter", () => {
 	it("uses cursor backend from project config", () => {
 		const adapter = createAgentAdapter(createConfig("cursor-agent"));
 		expect(adapter).toBeInstanceOf(CursorAgentAdapter);
+	});
+
+	it("uses opencode backend from project config", () => {
+		const adapter = createAgentAdapter(createConfig("opencode"));
+		expect(adapter).toBeInstanceOf(OpenCodeAdapter);
 	});
 
 	it("honors explicit backend override", () => {

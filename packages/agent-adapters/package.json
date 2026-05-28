@@ -10,6 +10,7 @@
 		"./claude-code": "./src/claude/index.ts",
 		"./codex": "./src/codex/index.ts",
 		"./cursor": "./src/cursor/index.ts",
+		"./opencode": "./src/opencode/adapter.ts",
 		"./codex/config": "./src/codex/config.ts",
 		"./codex/docker": "./src/codex/docker.ts",
 		"./codex/output": "./src/codex/output.ts",

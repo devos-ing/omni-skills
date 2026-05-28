@@ -134,7 +134,7 @@ export function normalizeAgentBackend(
 		return backend;
 	}
 	throw new Error(
-		`Invalid AGENT_BACKEND value: '${value}'. Must be 'codex', 'claude-code', or 'cursor-agent'.`,
+		`Invalid AGENT_BACKEND value: '${value}'. Must be 'codex', 'claude-code', 'cursor-agent', or 'opencode'.`,
 	);
 }
 

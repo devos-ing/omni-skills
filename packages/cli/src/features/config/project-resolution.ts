@@ -8,6 +8,7 @@ import type {
 	ResolvedProjectConfig,
 } from "../types";
 import { normalizeOptionalPath } from "./path-resolution";
+import { resolveProjectAgentConfig } from "./project-agent-config";
 import { resolveSkillsConfig } from "./skills-resolution";
 
 export function resolveProjects(
@@ -161,46 +162,13 @@ function mergeRuntime(
 				...(project.codex?.mcpServers ?? []),
 			],
 		},
-		cursor: {
-			binary:
-				project.cursor?.binary ??
-				rootDefaults.cursor?.binary ??
-				base.cursor?.binary ??
-				"cursor-agent",
-			streamLogs:
-				project.cursor?.streamLogs ??
-				rootDefaults.cursor?.streamLogs ??
-				base.cursor?.streamLogs ??
-				base.codex.streamLogs,
-			model:
-				project.cursor?.model ??
-				rootDefaults.cursor?.model ??
-				base.cursor?.model,
-			force:
-				project.cursor?.force ??
-				rootDefaults.cursor?.force ??
-				base.cursor?.force,
-			apiKey:
-				project.cursor?.apiKey ??
-				rootDefaults.cursor?.apiKey ??
-				base.cursor?.apiKey,
-		},
-		claude: {
-			...(base.claude ?? {}),
-			...(rootDefaults.claude ?? {}),
-			...(project.claude ?? {}),
-		},
+		...resolveProjectAgentConfig(base, rootDefaults, project),
 		skills: resolveSkillsConfig(
 			configCwd,
 			base.skills,
 			rootDefaults.skills,
 			project.skills,
 		),
-		agent: {
-			...base.agent,
-			...(rootDefaults.agent ?? {}),
-			...(project.agent ?? {}),
-		},
 		workflow: {
 			...base.workflow,
 			...(rootDefaults.workflow ?? {}),

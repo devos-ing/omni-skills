@@ -45,7 +45,11 @@ export interface AgentAdapter {
 	runGithubComment(prompt: string): Promise<AgentResult>;
 }
 
-export type AgentBackend = "codex" | "claude-code" | "cursor-agent";
+export type AgentBackend =
+	| "codex"
+	| "claude-code"
+	| "cursor-agent"
+	| "opencode";
 
 export interface AgentMcpServerRuntimeConfig {
 	name: string;
@@ -101,6 +105,14 @@ export interface AgentAdapterRuntimeConfig {
 		model?: string;
 		force?: boolean;
 		apiKey?: string;
+	};
+	opencode?: {
+		binary: string;
+		streamLogs: boolean;
+		model?: string;
+		agent?: string;
+		attach?: string;
+		dangerouslySkipPermissions?: boolean;
 	};
 	claude?: {
 		model?: string;

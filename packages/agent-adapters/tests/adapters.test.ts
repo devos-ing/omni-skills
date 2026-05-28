@@ -13,6 +13,7 @@ import { ClaudeCodeAdapter } from "../src/claude";
 import { CodexAdapter, extractSessionId, extractUsage } from "../src/codex";
 import { buildCodexRuntimeInvocation } from "../src/codex/docker";
 import { CursorAgentAdapter } from "../src/cursor";
+import { OpenCodeAdapter } from "../src/opencode/adapter";
 import { config } from "./fixtures";
 
 describe("agent adapter factory", () => {
@@ -24,6 +25,9 @@ describe("agent adapter factory", () => {
 		expect(
 			createAgentAdapter({ ...config, agent: { backend: "cursor-agent" } }),
 		).toBeInstanceOf(CursorAgentAdapter);
+		expect(
+			createAgentAdapter({ ...config, agent: { backend: "opencode" } }),
+		).toBeInstanceOf(OpenCodeAdapter);
 		expect(
 			createAgentAdapter(
 				{ ...config, agent: { backend: "claude-code" } },
@@ -49,10 +53,11 @@ describe("agent adapter factory", () => {
 
 	it("exposes backend definitions from the shared registry", () => {
 		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
-			["codex", "claude-code", "cursor-agent"],
+			["codex", "claude-code", "cursor-agent", "opencode"],
 		);
 		expect(normalizeAgentBackend(" Cursor-Agent ")).toBe("cursor-agent");
 		expect(normalizeAgentBackend(" Claude-Code ")).toBe("claude-code");
+		expect(normalizeAgentBackend(" OpenCode ")).toBe("opencode");
 		const codexDefinition = getAgentBackendDefinition("codex");
 		expect(codexDefinition?.defaultModel).toBe("gpt-5.5");
 		expect(codexDefinition?.createAdapter(config)).toBeInstanceOf(CodexAdapter);
@@ -70,6 +75,9 @@ describe("agent adapter factory", () => {
 			agentConfigurationDoc["claude-code"].env.map((field) => field.name),
 		).toContain("CLAUDE_CODE_MODEL");
 		expect(agentConfigurationDoc["cursor-agent"].defaults.model).toBe("auto");
+		expect(agentConfigurationDoc.opencode.defaults.model).toBe(
+			"ollama/qwen2.5-coder:32b",
+		);
 	});
 
 	it("resolves known and custom models without hard-blocking custom ids", () => {

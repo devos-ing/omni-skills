@@ -22,6 +22,15 @@ import {
 	CURSOR_DESCRIPTION,
 	CURSOR_LABEL,
 } from "./cursor/constants";
+import { OpenCodeAdapter } from "./opencode/adapter";
+import { opencodeConfigurationDoc } from "./opencode/configuration-doc";
+import {
+	OPENCODE_AVAILABLE_MODELS,
+	OPENCODE_BACKEND,
+	OPENCODE_DEFAULT_MODEL,
+	OPENCODE_DESCRIPTION,
+	OPENCODE_LABEL,
+} from "./opencode/constants";
 import type { AgentBackend } from "./types/agent-adapter.types";
 import type {
 	AgentBackendDefinition,
@@ -59,6 +68,15 @@ const agentBackendDefinitions = {
 		availableModels: CURSOR_AVAILABLE_MODELS,
 		configurationDoc: cursorConfigurationDoc,
 		createAdapter: (config) => new CursorAgentAdapter(config),
+	},
+	[OPENCODE_BACKEND]: {
+		backend: OPENCODE_BACKEND,
+		label: OPENCODE_LABEL,
+		description: OPENCODE_DESCRIPTION,
+		defaultModel: OPENCODE_DEFAULT_MODEL,
+		availableModels: OPENCODE_AVAILABLE_MODELS,
+		configurationDoc: opencodeConfigurationDoc,
+		createAdapter: (config) => new OpenCodeAdapter(config),
 	},
 } satisfies Record<AgentBackend, AgentBackendDefinition>;
 

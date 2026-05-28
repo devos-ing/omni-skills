@@ -1654,6 +1654,39 @@ describe("usage cost estimation", () => {
 		});
 	});
 
+	it("uses opencode model for opencode usage records", () => {
+		const config = createProject("default");
+		config.agent = { backend: "opencode" };
+		config.opencode = {
+			binary: "opencode",
+			streamLogs: false,
+			model: "ollama/qwen2.5-coder:32b",
+		};
+		config.usage = {
+			pricing: {
+				models: {
+					"ollama/qwen2.5-coder:32b": {
+						inputUsdPerMillion: 0.5,
+						outputUsdPerMillion: 2,
+					},
+				},
+			},
+		};
+
+		const usage = enrichUsageRecord(
+			config,
+			"implementing",
+			{ inputTokens: 1000, outputTokens: 200, totalTokens: 1200 },
+			"2026-05-26T00:00:00.000Z",
+		);
+
+		expect(usage).toMatchObject({
+			agentBackend: "opencode",
+			model: "ollama/qwen2.5-coder:32b",
+			estimatedCostMicrousd: 900,
+		});
+	});
+
 	it("leaves cost unknown without pricing or token split", () => {
 		const config = createProject("default");
 

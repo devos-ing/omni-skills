@@ -133,6 +133,14 @@ export interface ProjectRuntimeConfig {
 		force?: boolean;
 		apiKey?: string;
 	};
+	opencode?: {
+		binary: string;
+		streamLogs: boolean;
+		model?: string;
+		agent?: string;
+		attach?: string;
+		dangerouslySkipPermissions?: boolean;
+	};
 	claude?: {
 		model?: string;
 		maxTurns?: number;
@@ -145,7 +153,7 @@ export interface ProjectRuntimeConfig {
 			| "plan";
 	};
 	agent?: {
-		backend?: "codex" | "claude-code" | "cursor-agent";
+		backend?: "codex" | "claude-code" | "cursor-agent" | "opencode";
 		model?: string;
 		maxTurns?: number;
 		allowedTools?: string[];
