@@ -7,44 +7,11 @@ import {
 	DEFAULT_REASONING_EFFORTS,
 	DEFAULT_STATUS_MAP,
 	type SetupDraft,
+	createDefaultSetupInstanceDraft,
 	writeSetupFiles,
 } from "../src/features/setup";
 
-const draft: SetupDraft = {
-	workspaceName: "Demo Workspace",
-	workspacePath: "/tmp/demo",
-	executionPath: "/tmp/demo",
-	linearApiKey: "lin_secret_123",
-	notifications: {
-		email: {
-			enabled: false,
-			to: [],
-		},
-	},
-	workflow: {
-		isolatedWorktrees: true,
-	},
-	statusMap: DEFAULT_STATUS_MAP,
-	labelMap: DEFAULT_LABEL_MAP,
-	codex: {
-		reasoningEfforts: {
-			plan: DEFAULT_REASONING_EFFORTS.plan,
-			implement: DEFAULT_REASONING_EFFORTS.implement,
-			reviewTest: DEFAULT_REASONING_EFFORTS.reviewTest,
-			githubComment: DEFAULT_REASONING_EFFORTS.reviewTest,
-		},
-		models: {
-			plan: "gpt-5.5",
-			implement: "gpt-5.3-codex",
-			reviewTest: "gpt-5.3-codex",
-			githubComment: "gpt-5.3-codex",
-		},
-		plugins: ["github@openai-curated", "linear@openai-curated"],
-		skillsets: ["devos"],
-		configOverrides: { "features.codex_hooks": "true" },
-		sandbox: "workspace-write",
-	},
-};
+let draft: SetupDraft;
 let previousHome: string | undefined;
 let testHomeDir: string | undefined;
 
@@ -55,6 +22,7 @@ describe("setup database boundary", () => {
 			path.join(process.cwd(), ".tmp-setup-db-home-"),
 		);
 		process.env.HOME = testHomeDir;
+		draft = createTestDraft();
 	});
 
 	afterEach(async () => {
@@ -142,3 +110,42 @@ describe("setup database boundary", () => {
 		}
 	});
 });
+
+function createTestDraft(): SetupDraft {
+	return {
+		workspaceName: "Demo Workspace",
+		workspacePath: "/tmp/demo",
+		executionPath: "/tmp/demo",
+		linearApiKey: "lin_secret_123",
+		instance: createDefaultSetupInstanceDraft(),
+		notifications: {
+			email: {
+				enabled: false,
+				to: [],
+			},
+		},
+		workflow: {
+			isolatedWorktrees: true,
+		},
+		statusMap: DEFAULT_STATUS_MAP,
+		labelMap: DEFAULT_LABEL_MAP,
+		codex: {
+			reasoningEfforts: {
+				plan: DEFAULT_REASONING_EFFORTS.plan,
+				implement: DEFAULT_REASONING_EFFORTS.implement,
+				reviewTest: DEFAULT_REASONING_EFFORTS.reviewTest,
+				githubComment: DEFAULT_REASONING_EFFORTS.reviewTest,
+			},
+			models: {
+				plan: "gpt-5.5",
+				implement: "gpt-5.3-codex",
+				reviewTest: "gpt-5.3-codex",
+				githubComment: "gpt-5.3-codex",
+			},
+			plugins: ["github@openai-curated", "linear@openai-curated"],
+			skillsets: ["devos"],
+			configOverrides: { "features.codex_hooks": "true" },
+			sandbox: "workspace-write",
+		},
+	};
+}

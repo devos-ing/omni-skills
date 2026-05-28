@@ -1,23 +1,20 @@
 import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import {
-	devosHomeInstanceRoot,
-	instanceConfigPath,
-} from "../config/home-paths";
+import { instanceConfigPath } from "../config/home-paths";
 import {
 	DEFAULT_WORKSPACE_NAME,
 	INSTANCE_CONFIG_FILE,
 	LOCAL_WORKSPACE_ID,
 } from "./constants";
+import {
+	createDefaultSetupInstanceDraft,
+	createInstanceConfigSections,
+} from "./instance-draft";
 import type {
 	InstanceConfigLoadResult,
 	OnboardInstanceConfig,
 	OnboardWorkspaceConfig,
 } from "./types/instance-config.types";
-
-const DEFAULT_INSTANCE_ID = "default";
-const DEFAULT_INSTANCE_PORT = 3100;
-const DEFAULT_EMBEDDED_POSTGRES_PORT = 54329;
+import type { SetupInstanceDraft } from "./types/setup.types";
 
 export function renderInstanceConfig(
 	cwd: string,
@@ -90,8 +87,8 @@ export function createInstanceConfig(
 	_cwd: string,
 	updatedAt: string,
 	workspace: OnboardWorkspaceConfig = defaultWorkspaceConfig(),
+	instance: SetupInstanceDraft = createDefaultSetupInstanceDraft(),
 ): OnboardInstanceConfig {
-	const instanceRoot = devosHomeInstanceRoot(DEFAULT_INSTANCE_ID);
 	return {
 		$meta: {
 			version: 1,
@@ -99,56 +96,7 @@ export function createInstanceConfig(
 			source: "onboard",
 		},
 		workspace,
-		database: {
-			mode: "embedded-postgres",
-			embeddedPostgresDataDir: path.join(instanceRoot, "db"),
-			embeddedPostgresPort: DEFAULT_EMBEDDED_POSTGRES_PORT,
-			backup: {
-				enabled: true,
-				intervalMinutes: 60,
-				retentionDays: 30,
-				dir: path.join(instanceRoot, "data", "backups"),
-			},
-		},
-		logging: {
-			mode: "file",
-			logDir: path.join(instanceRoot, "logs"),
-		},
-		server: {
-			deploymentMode: "local_trusted",
-			exposure: "private",
-			bind: "loopback",
-			host: "127.0.0.1",
-			port: DEFAULT_INSTANCE_PORT,
-			allowedHostnames: [],
-			serveUi: true,
-		},
-		auth: {
-			baseUrlMode: "auto",
-			disableSignUp: false,
-		},
-		telemetry: {
-			enabled: true,
-		},
-		storage: {
-			provider: "local_disk",
-			localDisk: {
-				baseDir: path.join(instanceRoot, "data", "storage"),
-			},
-			s3: {
-				bucket: "devos",
-				region: "us-east-1",
-				prefix: "",
-				forcePathStyle: false,
-			},
-		},
-		secrets: {
-			provider: "local_encrypted",
-			strictMode: false,
-			localEncrypted: {
-				keyFilePath: path.join(instanceRoot, "secrets", "master.key"),
-			},
-		},
+		...createInstanceConfigSections(instance),
 		plugins: {
 			installed: [],
 		},

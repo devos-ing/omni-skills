@@ -33,12 +33,17 @@ export async function writeSetupFiles(
 	await writeFile(envPath, mergeEnvFile(existingEnv, envUpdates));
 	await saveSqliteEnv(cwd, databaseEnvUpdates);
 	const existingInstanceConfig = await loadInstanceConfig(cwd);
-	const instanceConfig = createInstanceConfig(cwd, new Date().toISOString(), {
-		id: existingInstanceConfig.ok
-			? existingInstanceConfig.config.workspace.id
-			: createWorkspaceId(),
-		name: draft.workspaceName.trim() || DEFAULT_WORKSPACE_NAME,
-	});
+	const instanceConfig = createInstanceConfig(
+		cwd,
+		new Date().toISOString(),
+		{
+			id: existingInstanceConfig.ok
+				? existingInstanceConfig.config.workspace.id
+				: createWorkspaceId(),
+			name: draft.workspaceName.trim() || DEFAULT_WORKSPACE_NAME,
+		},
+		draft.instance,
+	);
 	if (existingInstanceConfig.ok && existingInstanceConfig.config.plugins) {
 		instanceConfig.plugins = existingInstanceConfig.config.plugins;
 	}

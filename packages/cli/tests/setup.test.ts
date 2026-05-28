@@ -29,6 +29,7 @@ import {
 	type SetupDraft,
 	collectSetupChecks,
 	collectSetupDraft,
+	createDefaultSetupInstanceDraft,
 	createInstanceConfig,
 	formatSetupChecks,
 	loadInstanceConfig,
@@ -44,50 +45,12 @@ import {
 } from "../src/features/setup";
 import type { CommandResult } from "../src/utils/shell";
 
-const draft: SetupDraft = {
-	workspaceName: "Demo Workspace",
-	workspacePath: "/tmp/demo",
-	executionPath: "/tmp/demo",
-	linearApiKey: "lin_secret_123",
-	notifications: {
-		email: {
-			enabled: true,
-			resendApiKey: "re_secret_123",
-			from: "devos@example.com",
-			to: ["alerts@example.com", "ops@example.com"],
-		},
-	},
-	workflow: {
-		isolatedWorktrees: true,
-	},
-	statusMap: DEFAULT_STATUS_MAP,
-	labelMap: DEFAULT_LABEL_MAP,
-	codex: {
-		reasoningEfforts: {
-			plan: "medium",
-			implement: "low",
-			reviewTest: "medium",
-			githubComment: "medium",
-		},
-		models: {
-			plan: "gpt-5.5",
-			implement: "gpt-5.3-codex",
-			reviewTest: "gpt-5.3-codex",
-			githubComment: "gpt-5.3-codex",
-		},
-		plugins: ["github@openai-curated", "linear@openai-curated"],
-		skillsets: ["devos"],
-		configOverrides: {
-			"features.codex_hooks": "true",
-		},
-		sandbox: "workspace-write",
-	},
-};
 const checkProjectId = "demo-project";
 const checkProjectName = "Demo Project";
 const checkRepoOwner = "octo";
 const checkRepoName = "demo";
 const checkBaseBranch = "main";
+let draft: SetupDraft;
 let previousHome: string | undefined;
 let testHomeDir: string | undefined;
 
@@ -96,6 +59,7 @@ describe("setup helpers", () => {
 		previousHome = process.env.HOME;
 		testHomeDir = await mkdtemp(path.join(process.cwd(), ".tmp-setup-home-"));
 		process.env.HOME = testHomeDir;
+		draft = createTestDraft();
 	});
 
 	afterEach(async () => {
@@ -973,6 +937,49 @@ function loadedConfig({
 		workspace: {
 			id: "owner-1",
 			name: "Default Workspace",
+		},
+	};
+}
+
+function createTestDraft(): SetupDraft {
+	return {
+		workspaceName: "Demo Workspace",
+		workspacePath: "/tmp/demo",
+		executionPath: "/tmp/demo",
+		linearApiKey: "lin_secret_123",
+		instance: createDefaultSetupInstanceDraft(),
+		notifications: {
+			email: {
+				enabled: true,
+				resendApiKey: "re_secret_123",
+				from: "devos@example.com",
+				to: ["alerts@example.com", "ops@example.com"],
+			},
+		},
+		workflow: {
+			isolatedWorktrees: true,
+		},
+		statusMap: DEFAULT_STATUS_MAP,
+		labelMap: DEFAULT_LABEL_MAP,
+		codex: {
+			reasoningEfforts: {
+				plan: "medium",
+				implement: "low",
+				reviewTest: "medium",
+				githubComment: "medium",
+			},
+			models: {
+				plan: "gpt-5.5",
+				implement: "gpt-5.3-codex",
+				reviewTest: "gpt-5.3-codex",
+				githubComment: "gpt-5.3-codex",
+			},
+			plugins: ["github@openai-curated", "linear@openai-curated"],
+			skillsets: ["devos"],
+			configOverrides: {
+				"features.codex_hooks": "true",
+			},
+			sandbox: "workspace-write",
 		},
 	};
 }

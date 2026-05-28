@@ -9,6 +9,7 @@ export interface SetupDraft {
 	workspacePath: string;
 	executionPath: string;
 	linearApiKey: string;
+	instance: SetupInstanceDraft;
 	notifications: {
 		email: {
 			enabled: boolean;
@@ -53,6 +54,46 @@ export interface SetupDraft {
 		skillsets: string[];
 		configOverrides: Record<string, string>;
 		sandbox?: "read-only" | "workspace-write" | "danger-full-access";
+	};
+}
+
+export interface SetupInstanceDraft {
+	database: {
+		embeddedPostgresDataDir: string;
+		embeddedPostgresPort: number;
+		backup: {
+			enabled: boolean;
+			intervalMinutes: number;
+			retentionDays: number;
+			dir: string;
+		};
+	};
+	logging: {
+		logDir: string;
+	};
+	server: {
+		port: number;
+		allowedHostnames: string[];
+		serveUi: boolean;
+	};
+	auth: {
+		disableSignUp: boolean;
+	};
+	telemetry: {
+		enabled: boolean;
+	};
+	storage: {
+		localDiskBaseDir: string;
+		s3: {
+			bucket: string;
+			region: string;
+			prefix: string;
+			forcePathStyle: boolean;
+		};
+	};
+	secrets: {
+		strictMode: boolean;
+		keyFilePath: string;
 	};
 }
 

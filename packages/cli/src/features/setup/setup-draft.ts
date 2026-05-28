@@ -7,8 +7,9 @@ import {
 	DEFAULT_STATUS_MAP,
 	DEFAULT_WORKSPACE_NAME,
 } from "./constants";
+import { collectInstanceDraft } from "./instance-prompts";
 import type { SetupDraft, SetupDraftPromptDeps } from "./types/setup.types";
-import { resolveUserPath } from "./wizard-helpers";
+import { parseRecipients, resolveUserPath } from "./wizard-helpers";
 
 const DEFAULT_CODEX_MODELS = {
 	plan: "gpt-5.5",
@@ -27,20 +28,27 @@ export async function collectSetupDraft(
 		"Workspace name",
 		defaultWorkspaceName(executionPath),
 	);
+	const linearApiKey = await promptSecret(
+		prompts,
+		"Linear API key",
+		process.env.LINEAR_API_KEY ?? "",
+	);
+	const notifications = await collectNotificationDraft(prompts);
+	const isolatedWorktrees = await prompts.confirm({
+		message: "Use isolated worktrees?",
+		initialValue: true,
+	});
+	const instance = await collectInstanceDraft(prompts);
 
 	return {
 		workspaceName: workspaceName.trim() || DEFAULT_WORKSPACE_NAME,
 		workspacePath: executionPath,
 		executionPath,
-		linearApiKey: process.env.LINEAR_API_KEY ?? "",
-		notifications: {
-			email: {
-				enabled: false,
-				to: [],
-			},
-		},
+		linearApiKey,
+		instance,
+		notifications,
 		workflow: {
-			isolatedWorktrees: true,
+			isolatedWorktrees,
 		},
 		statusMap: { ...DEFAULT_STATUS_MAP },
 		labelMap: DEFAULT_LABEL_MAP,
@@ -63,6 +71,36 @@ export async function collectSetupDraft(
 			sandbox: "workspace-write",
 		},
 	};
+}
+
+async function collectNotificationDraft(
+	prompts: PromptAdapter,
+): Promise<SetupDraft["notifications"]> {
+	const enabled = await prompts.confirm({
+		message: "Enable email notifications?",
+		initialValue: false,
+	});
+	if (!enabled) {
+		return { email: { enabled: false, to: [] } };
+	}
+	return {
+		email: {
+			enabled: true,
+			resendApiKey: await promptSecret(prompts, "Resend API key", ""),
+			from: await promptText(prompts, "Notification from address", ""),
+			to: parseRecipients(
+				await promptText(prompts, "Notification recipients", ""),
+			),
+		},
+	};
+}
+
+async function promptSecret(
+	prompts: PromptAdapter,
+	message: string,
+	fallback: string,
+): Promise<string> {
+	return (await prompts.password({ message })).trim() || fallback;
 }
 
 function promptText(
