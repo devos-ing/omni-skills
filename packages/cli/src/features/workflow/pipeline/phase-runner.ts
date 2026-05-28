@@ -6,6 +6,7 @@ import type {
 	WorkflowMetadata,
 	WorkflowPhaseDefinition,
 } from "../types/workflow-metadata.types";
+import { formatWorkflowError } from "../utils/error-format";
 
 export interface PhaseRunnerDeps {
 	runAgent(input: PhaseAgentRunInput): Promise<PhaseAgentRunResult>;
@@ -37,20 +38,10 @@ export class PhaseRunner {
 				return {
 					status: "rejected",
 					phase,
-					error: formatError(result.reason),
+					error: formatWorkflowError(result.reason),
 				};
 			}
 		}
 		return { status: "fulfilled", phase, agents };
-	}
-}
-
-function formatError(error: unknown): string {
-	if (error instanceof Error) return error.message;
-	if (typeof error === "string") return error;
-	try {
-		return JSON.stringify(error);
-	} catch {
-		return String(error);
 	}
 }

@@ -5,6 +5,10 @@ import type {
 	WorkflowMetadata,
 	WorkflowPhaseDefinition,
 } from "../types/workflow-metadata.types";
+import {
+	findWorkflowPhaseByStage,
+	unsupportedWorkflowStageError,
+} from "../utils/workflow-phase";
 import type { PhaseRunner } from "./phase-runner";
 
 export interface PipelineManagerDeps {
@@ -28,9 +32,9 @@ export class PipelineManager {
 	}): Promise<PipelineRunResult> {
 		const phaseResults: PipelineRunResult["phaseResults"] = [];
 		while (input.shouldContinue(input.state)) {
-			const phase = this.phaseForStage(input.state.stage);
+			const phase = findWorkflowPhaseByStage(this.metadata, input.state.stage);
 			if (!phase) {
-				throw new Error(`Unsupported workflow stage: ${input.state.stage}`);
+				throw unsupportedWorkflowStageError(input.state.stage);
 			}
 			const beforePhase = await input.beforePhase?.(phase);
 			if (beforePhase === "skip") {
@@ -53,11 +57,5 @@ export class PipelineManager {
 			await input.afterPhase?.(phase);
 		}
 		return { ok: true, phaseResults };
-	}
-
-	private phaseForStage(
-		stage: RunState["stage"],
-	): WorkflowPhaseDefinition | null {
-		return this.metadata.phases.find((phase) => phase.stage === stage) ?? null;
 	}
 }
