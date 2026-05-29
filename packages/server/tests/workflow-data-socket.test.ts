@@ -122,14 +122,14 @@ describe("workflow data websocket", () => {
 
 		expect(workflow.payload).toEqual(
 			expect.objectContaining({
-				branchName: "owner-1/1",
+				branchName: "OWN-1",
 				taskKey: "TASK(owner-1)-1",
 				status: "plan",
 			}),
 		);
 		expect(intake.payload).toEqual(
 			expect.objectContaining({
-				branchName: "owner-1/2",
+				branchName: "OWN-2",
 				taskKey: "TASK(owner-1)-2",
 				status: "plan",
 				creatorId: "owner-1",

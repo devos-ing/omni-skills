@@ -8,7 +8,11 @@ export {
 } from "./database";
 export { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 export { runMigrations } from "./migrations";
-export { boardTaskBranchName, generateBoardTaskKey } from "./task-keys";
+export {
+	boardTaskBranchName,
+	boardTaskKeyScope,
+	generateBoardTaskKey,
+} from "./task-keys";
 export type { BoardTaskKeyScope } from "./types/task-keys.types";
 export {
 	recordPollingEvent,

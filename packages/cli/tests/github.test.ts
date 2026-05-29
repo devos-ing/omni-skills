@@ -31,7 +31,7 @@ describe("buildBugIssueBody", () => {
 
 	it("builds deterministic issue branch names", () => {
 		expect(issueBranchName("ENG-42")).toBe("codex/eng-42");
-		expect(issueBranchName("TASK(OWNER-1)-1", "owner-1/1")).toBe("owner-1/1");
+		expect(issueBranchName("TASK(OWNER-1)-1", "OWN-1")).toBe("OWN-1");
 	});
 });
 
@@ -452,7 +452,7 @@ describe("createDraftPrFromWorktree", () => {
 					return { code: 0, stdout: "true\n", stderr: "" };
 				}
 				if (args[0] === "branch" && args[1] === "--show-current") {
-					return { code: 0, stdout: "owner-1/1\n", stderr: "" };
+					return { code: 0, stdout: "OWN-1\n", stderr: "" };
 				}
 				if (args[0] === "diff") {
 					return { code: 1, stdout: "", stderr: "" };
@@ -480,12 +480,12 @@ describe("createDraftPrFromWorktree", () => {
 			createProjectConfig(),
 			"TASK(OWNER-1)-1",
 			"Workspace task",
-			"owner-1/1",
+			"OWN-1",
 			{ runCommand, assertCommandOk: assertOk },
 		);
 
-		expect(pr.branch).toBe("owner-1/1");
-		expect(calls).toContainEqual(["push", "-u", "origin", "owner-1/1"]);
+		expect(pr.branch).toBe("OWN-1");
+		expect(calls).toContainEqual(["push", "-u", "origin", "OWN-1"]);
 		expect(calls).toContainEqual([
 			"pr",
 			"create",
@@ -497,7 +497,7 @@ describe("createDraftPrFromWorktree", () => {
 			"--base",
 			"main",
 			"--head",
-			"owner-1/1",
+			"OWN-1",
 		]);
 	});
 });
@@ -589,16 +589,16 @@ describe("ensureIssueWorktree", () => {
 			"TASK(OWNER-1)-1",
 			undefined,
 			"/tmp/worktrees/owner-1-1",
-			"owner-1/1",
+			"OWN-1",
 			{ runCommand, assertCommandOk: assertOk },
 		);
 
-		expect(branch).toBe("owner-1/1");
+		expect(branch).toBe("OWN-1");
 		expect(calls).toContainEqual([
 			"worktree",
 			"add",
 			"-b",
-			"owner-1/1",
+			"OWN-1",
 			"/tmp/worktrees/owner-1-1",
 			"origin/main",
 		]);
@@ -950,7 +950,7 @@ describe("findOpenPullRequestForIssue", () => {
 								number: 171,
 								url: "https://github.com/acme/repo/pull/171",
 								title: "[codex] Workspace task",
-								headRefName: "owner-1/1",
+								headRefName: "OWN-1",
 							},
 						]),
 						stderr: "",
@@ -963,7 +963,7 @@ describe("findOpenPullRequestForIssue", () => {
 		const pr = await findOpenPullRequestForIssue(
 			createProjectConfig(),
 			"TASK(OWNER-1)-1",
-			"owner-1/1",
+			"OWN-1",
 			{
 				runCommand,
 				assertCommandOk: assertOk,
@@ -973,7 +973,7 @@ describe("findOpenPullRequestForIssue", () => {
 		expect(pr).toEqual({
 			number: 171,
 			url: "https://github.com/acme/repo/pull/171",
-			branch: "owner-1/1",
+			branch: "OWN-1",
 			title: "[codex] Workspace task",
 		});
 	});

@@ -45,7 +45,11 @@ export function boardTaskBranchName(taskKey: string): string | undefined {
 	if (!parsed) {
 		return undefined;
 	}
-	return `${parsed.slug}/${parsed.value}`;
+	return `${workspaceBranchPrefix(parsed.slug)}-${parsed.value}`;
+}
+
+export function boardTaskKeyScope(taskKey: string): string | undefined {
+	return parseScopedTaskKey(taskKey)?.slug;
 }
 
 async function resolveTaskKeySlug(
@@ -91,4 +95,10 @@ function parseScopedTaskKey(
 
 function formatBoardTaskKey(slug: string, value: number): string {
 	return `${TASK_KEY_PREFIX}(${slug})-${value}`;
+}
+
+function workspaceBranchPrefix(slug: string): string {
+	const letters = slug.replace(/[^a-z]/gi, "");
+	const prefix = (letters || slug).slice(0, 3).toUpperCase();
+	return prefix || TASK_KEY_PREFIX;
 }

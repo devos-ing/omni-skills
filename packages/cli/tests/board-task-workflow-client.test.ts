@@ -25,7 +25,7 @@ describe("BoardTaskWorkflowClient", () => {
 
 		const [readyTask] = await client.fetchWork();
 		expect(readyTask?.identifier).toBe("TASK(owner-1)-1");
-		expect(readyTask?.branchName).toBe("owner-1/1");
+		expect(readyTask?.branchName).toBe("OWN-1");
 		expect(
 			(await client.fetchWork(undefined, { includeUnprojected: true })).map(
 				(task) => task.identifier,
@@ -59,7 +59,7 @@ describe("BoardTaskWorkflowClient", () => {
 		await client.linkPullRequest?.("task-1", {
 			number: 42,
 			url: "https://github.com/acme/project/pull/42",
-			branch: "owner-1/1",
+			branch: "OWN-1",
 			title: "Task PR",
 		});
 
@@ -98,7 +98,7 @@ describe("BoardTaskWorkflowClient", () => {
 		const [task] = await client.fetchReviewOnlyWork();
 
 		expect(task?.identifier).toBe("TASK(owner-1)-3");
-		expect(task?.branchName).toBe("owner-1/3");
+		expect(task?.branchName).toBe("OWN-3");
 		expect(task?.pullRequest?.url).toBe(
 			"https://github.com/acme/project/pull/7",
 		);
@@ -144,25 +144,25 @@ function payloadForAction(action: string, payload: unknown): unknown {
 			task({
 				id: "task-1",
 				taskKey: "TASK(owner-1)-1",
-				branchName: "owner-1/1",
+				branchName: "OWN-1",
 				status: "todo",
 			}),
 			task({
 				id: "task-2",
 				taskKey: "TASK(owner-1)-2",
-				branchName: "owner-1/2",
+				branchName: "OWN-2",
 				status: "planning",
 			}),
 			task({
 				id: "task-3",
 				taskKey: "TASK(owner-1)-3",
-				branchName: "owner-1/3",
+				branchName: "OWN-3",
 				status: "reviewing",
 				linkedPr: "https://github.com/acme/project/pull/7",
 				pullRequest: {
 					number: 7,
 					url: "https://github.com/acme/project/pull/7",
-					branch: "owner-1/3",
+					branch: "OWN-3",
 					title: "Task PR",
 				},
 			}),
@@ -170,7 +170,7 @@ function payloadForAction(action: string, payload: unknown): unknown {
 			task({
 				id: "task-5",
 				taskKey: "TASK(owner-1)-5",
-				branchName: "owner-1/5",
+				branchName: "OWN-5",
 				projectId: null,
 				status: "todo",
 			}),

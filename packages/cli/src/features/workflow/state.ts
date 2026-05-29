@@ -11,9 +11,14 @@ const LEGACY_STATE_DIR = path.join(".devos", "runs");
 const STATE_ROOT_DIR = path.join(".devos", "projects");
 
 export function normalizeIssueKey(input: string): string {
-	const match = input.trim().match(/[A-Z]+-\d+/);
+	const trimmed = input.trim();
+	const taskMatch = trimmed.match(/TASK\(([^)]+)\)-([1-9]\d*)/i);
+	if (taskMatch) {
+		return `TASK(${taskMatch[1].toUpperCase()})-${taskMatch[2]}`;
+	}
+	const match = trimmed.match(/[A-Z]+-\d+/);
 	if (!match) {
-		return input.trim().toUpperCase();
+		return trimmed.toUpperCase();
 	}
 	return match[0].toUpperCase();
 }

@@ -7,6 +7,7 @@ import {
 	type ServerDatabase,
 	boardProjectsTable,
 	boardTaskBranchName,
+	boardTaskKeyScope,
 	boardTasksTable,
 	generateBoardTaskKey,
 	initializeServerDatabase,
@@ -136,9 +137,15 @@ describe("generateBoardTaskKey", () => {
 	);
 
 	it("formats branch names from workspace-format task keys", () => {
-		expect(boardTaskBranchName("TASK(owner-1)-4")).toBe("owner-1/4");
+		expect(boardTaskBranchName("TASK(owner-1)-4")).toBe("OWN-4");
+		expect(boardTaskBranchName("TASK(acme-workspace)-12")).toBe("ACM-12");
 		expect(boardTaskBranchName("TASK-000001")).toBeUndefined();
 		expect(boardTaskBranchName("TASK(owner-1)-004")).toBeUndefined();
+	});
+
+	it("reads workspace scopes from workspace-format task keys", () => {
+		expect(boardTaskKeyScope("TASK(owner-1)-4")).toBe("owner-1");
+		expect(boardTaskKeyScope("TASK-000001")).toBeUndefined();
 	});
 });
 

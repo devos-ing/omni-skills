@@ -33,10 +33,18 @@ export function isolatedWorktreePath(
 				config.id,
 				"worktrees",
 			);
-	const issueKey = normalizeIssueKey(state.issue.key).toLowerCase();
+	const issueKey = worktreePathKey(state);
 	return configuredRoot
 		? path.join(root, config.id, issueKey)
 		: path.join(root, issueKey);
+}
+
+function worktreePathKey(state: RunState): string {
+	const branchName = state.issue.branchName?.trim();
+	if (branchName) {
+		return branchName.replace(/[\\/]+/g, "-").toLowerCase();
+	}
+	return normalizeIssueKey(state.issue.key).toLowerCase();
 }
 
 export async function prepareIsolatedExecutionConfig(

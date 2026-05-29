@@ -2,6 +2,7 @@ import type { BoardTaskRow, ServerDatabase } from "devos-db";
 import {
 	boardProjectsTable,
 	boardTaskBranchName,
+	boardTaskKeyScope,
 	taskPullRequestsTable,
 } from "devos-db";
 import type { BoardTaskApiRecord } from "../tasks/types/task-service.types";
@@ -74,7 +75,8 @@ function resolveWorkflowBranchName(
 		? projectOwners.get(task.projectId)
 		: task.creatorId;
 	const branchName = boardTaskBranchName(task.taskKey);
-	if (!workspaceId || !branchName?.startsWith(`${workspaceId}/`)) {
+	const taskScope = boardTaskKeyScope(task.taskKey);
+	if (!workspaceId || taskScope !== workspaceId) {
 		return undefined;
 	}
 	return branchName;

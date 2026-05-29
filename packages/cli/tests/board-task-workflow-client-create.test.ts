@@ -66,7 +66,7 @@ function installWorkflowSocket(): Array<{ action: string; payload: unknown }> {
 							payload: {
 								id: `task-${index}`,
 								taskKey: `TASK(owner-1)-${index}`,
-								branchName: `owner-1/${index}`,
+								branchName: `OWN-${index}`,
 								projectId: "project-1",
 								title: body.payload.title,
 								content: "Task content",

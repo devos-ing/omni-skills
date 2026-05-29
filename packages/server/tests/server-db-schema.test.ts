@@ -247,7 +247,7 @@ describe("server drizzle schema", () => {
 			repository: "acme/repo",
 			prNumber: "42",
 			prUrl: "https://github.com/acme/repo/pull/42",
-			branch: "owner-1/1",
+			branch: "OWN-1",
 			createdAt: "2026-05-12 01:04:00",
 		};
 		const executionLog: NewTaskExecutionLogRow = {

@@ -31,6 +31,11 @@ describe("state helpers", () => {
 		expect(key).toBe("ENG-321");
 	});
 
+	it("keeps scoped task keys unique when normalizing", () => {
+		expect(normalizeIssueKey("TASK(owner-1)-34")).toBe("TASK(OWNER-1)-34");
+		expect(normalizeIssueKey("TASK(OWNER-1)-33")).toBe("TASK(OWNER-1)-33");
+	});
+
 	it("transitions stage", () => {
 		const now = new Date().toISOString();
 		const state: RunState = {

@@ -2758,8 +2758,8 @@ describe("isolated worktree workflow helpers", () => {
 		const config = createProject("default");
 		config.workflow.isolatedWorktrees = { enabled: true };
 		const state = createRunState("TASK(OWNER-1)-1", "in_progress", Date.now());
-		state.issue.branchName = "owner-1/1";
-		const ensureIssueWorktree = mock(async () => "owner-1/1");
+		state.issue.branchName = "OWN-1";
+		const ensureIssueWorktree = mock(async () => "OWN-1");
 		const runtime = {
 			ensureBaseBranchFresh: mock(async () => {}),
 			ensureIssueWorktree,
@@ -2775,14 +2775,14 @@ describe("isolated worktree workflow helpers", () => {
 		expect(state.executionWorkspace).toMatchObject({
 			mode: "git-worktree",
 			path: isolatedConfig.executionPath,
-			branch: "owner-1/1",
+			branch: "OWN-1",
 		});
 		expect(ensureIssueWorktree).toHaveBeenCalledWith(
 			config,
 			"TASK(OWNER-1)-1",
 			undefined,
 			isolatedConfig.executionPath,
-			"owner-1/1",
+			"OWN-1",
 		);
 	});
 
@@ -2940,8 +2940,8 @@ describe("prepareImplementationBranchForStage", () => {
 	it("passes board task branch names into normal branch preparation", async () => {
 		const config = createProject("default");
 		const state = createRunState("TASK(OWNER-1)-1", "in_progress", Date.now());
-		state.issue.branchName = "owner-1/1";
-		const prepareImplementationBranch = mock(async () => "owner-1/1");
+		state.issue.branchName = "OWN-1";
+		const prepareImplementationBranch = mock(async () => "OWN-1");
 		const runtime = {
 			prepareImplementationBranch,
 		} as unknown as WorkflowRuntime;
@@ -2952,10 +2952,10 @@ describe("prepareImplementationBranchForStage", () => {
 			config,
 			"TASK(OWNER-1)-1",
 			undefined,
-			"owner-1/1",
+			"OWN-1",
 		);
 		expect(state.pullRequest).toMatchObject({
-			branch: "owner-1/1",
+			branch: "OWN-1",
 			title: "[codex] TASK(OWNER-1)-1: TASK(OWNER-1)-1",
 		});
 	});
