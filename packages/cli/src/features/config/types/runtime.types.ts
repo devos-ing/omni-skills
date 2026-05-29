@@ -127,6 +127,7 @@ export interface ProjectRuntimeConfig {
 	workflow: WorkflowRuntimeConfig;
 	skills: {
 		root: string;
+		brainstorm: string;
 		plan: string;
 		implement: string;
 		reviewTest: string;

@@ -126,6 +126,19 @@ class BoardTaskWorkflowClient implements WorkflowTaskClient {
 		await this.store.addComment(issueId, body);
 	}
 
+	async listChatClarificationAnswers(issueId: string) {
+		return this.store.listChatClarificationAnswers(issueId);
+	}
+
+	async publishChatClarification(
+		issueId: string,
+		questions: Parameters<
+			BoardTaskWorkflowStore["publishChatClarification"]
+		>[1],
+	): Promise<void> {
+		await this.store.publishChatClarification(issueId, questions);
+	}
+
 	async linkPullRequest(
 		issueId: string,
 		pullRequest: PullRequestRef,

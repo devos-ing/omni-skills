@@ -12,6 +12,10 @@ export function resolveSkillsConfig(
 ): SkillConfig {
 	const root = projectOverride?.root ?? rootOverride?.root ?? base.root;
 	const merged = {
+		brainstorm:
+			projectOverride?.brainstorm ??
+			rootOverride?.brainstorm ??
+			base.brainstorm,
 		plan: projectOverride?.plan ?? rootOverride?.plan ?? base.plan,
 		implement:
 			projectOverride?.implement ?? rootOverride?.implement ?? base.implement,
@@ -32,6 +36,7 @@ export function resolveSkillsConfig(
 
 	return {
 		root,
+		brainstorm: resolveSkillPath(root, merged.brainstorm),
 		plan: resolveSkillPath(root, merged.plan),
 		implement: resolveSkillPath(root, merged.implement),
 		reviewTest: resolveSkillPath(root, merged.reviewTest),

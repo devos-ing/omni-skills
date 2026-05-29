@@ -45,6 +45,7 @@ export async function handlePlanningStage(
 	const prompt = await buildPlanPrompt(config.skills.plan, state.issue, {
 		supplementalSkills: supplemental.selected,
 		autoSelectWarnings: supplemental.warnings,
+		brainstormSummary: state.brainstormSummary,
 	});
 	const parentSessionId = await resolveParentPlanningSessionId(
 		config.workspacePath,

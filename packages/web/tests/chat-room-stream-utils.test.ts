@@ -25,6 +25,11 @@ describe("chat room stream utilities", () => {
 
 		expect([...sessionIds]).toEqual(["session-1", "session-2"]);
 	});
+
+	it("returns no running sessions without active websocket streams", () => {
+		const sessionIds = activeChatStreamSessionIds({});
+		expect([...sessionIds]).toEqual([]);
+	});
 });
 
 function chatStream(

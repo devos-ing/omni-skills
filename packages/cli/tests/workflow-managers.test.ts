@@ -77,16 +77,18 @@ describe("workflow managers", () => {
 		expect(events).toEqual(["cycle", "stopped"]);
 	});
 
-	it("models built-in metadata as plan, implement, and testing phases", () => {
+	it("models built-in metadata as brainstorm, plan, implement, and testing phases", () => {
 		const metadata = createBuiltInWorkflowMetadata(fakeProject());
 
 		expect(metadata.phases.map((phase) => phase.id)).toEqual([
+			"brainstorm",
 			"plan",
 			"implement",
 			"testing",
 		]);
 		expect(metadata.phases.flatMap((phase) => phase.agentAssignments)).toEqual(
 			expect.arrayContaining([
+				expect.objectContaining({ name: "brainstormer", role: "brainstorm" }),
 				expect.objectContaining({ name: "planner", role: "planning" }),
 				expect.objectContaining({
 					name: "implementer",
@@ -109,8 +111,11 @@ describe("workflow managers", () => {
 			},
 		});
 		const metadata = createBuiltInWorkflowMetadata(fakeProject());
-		metadata.phases[0] = {
-			...metadata.phases[0],
+		const planPhaseIndex = metadata.phases.findIndex(
+			(phase) => phase.id === "plan",
+		);
+		metadata.phases[planPhaseIndex] = {
+			...metadata.phases[planPhaseIndex],
 			agentAssignments: [
 				{ name: "a", role: "planning", required: true, skills: [] },
 				{ name: "b", role: "planning", required: true, skills: [] },
@@ -179,6 +184,7 @@ function fakeProject(): ResolvedProjectConfig {
 		workflow: { issueConcurrency: 1 },
 		skills: {
 			root: "skills",
+			brainstorm: "brainstorm",
 			plan: "plan",
 			implement: "implement",
 			reviewTest: "review",

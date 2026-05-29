@@ -25,6 +25,19 @@ export function createChatRepository(db: ServerDatabase["db"]): ChatRepository {
 				.where(eq(chatSessionsTable.id, id));
 			return session ?? null;
 		},
+		async getSessionByTaskId(taskId) {
+			const [session] = await db
+				.select()
+				.from(chatSessionsTable)
+				.where(
+					and(
+						eq(chatSessionsTable.taskId, taskId),
+						eq(chatSessionsTable.archived, false),
+					),
+				)
+				.orderBy(desc(chatSessionsTable.updatedAt));
+			return session ?? null;
+		},
 		async createSession(input: NewChatSessionRow) {
 			const [created] = await db
 				.insert(chatSessionsTable)

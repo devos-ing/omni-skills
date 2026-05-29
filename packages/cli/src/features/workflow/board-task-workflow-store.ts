@@ -45,6 +45,15 @@ export function createBoardTaskWorkflowStore(
 				commentId: crypto.randomUUID(),
 			});
 		},
+		async listChatClarificationAnswers(taskId) {
+			return client.request("chat.listClarificationAnswers", { taskId });
+		},
+		async publishChatClarification(taskId, questions) {
+			await client.request("chat.publishClarification", {
+				taskId,
+				questions,
+			});
+		},
 		async linkPullRequest(input) {
 			await client.request<WorkflowBoardTaskRecord>(
 				"tasks.linkPullRequest",

@@ -41,7 +41,7 @@ export function ChatRoomSessionRow({
 	return (
 		<div
 			className={cn(
-				"group grid min-w-0 grid-cols-[minmax(0,1fr)_2rem_2rem] gap-0.5 rounded-md border border-transparent hover:bg-surface-active hover:text-zinc-200",
+				"group grid min-w-0 grid-cols-[minmax(0,1fr)_2rem_2rem] gap-0 rounded-md border border-transparent hover:bg-surface-active hover:text-zinc-200",
 				isRunning && "border-emerald-400/30 bg-emerald-500/5",
 				session.id === activeSessionId
 					? "bg-[#111110] text-zinc-100"
@@ -49,7 +49,7 @@ export function ChatRoomSessionRow({
 			)}
 		>
 			<Button
-				className="h-auto min-w-0 justify-start gap-2 px-2 py-2 text-left text-sm"
+				className="h-auto min-w-0 justify-start gap-2 pl-2 pr-0 py-2 text-left text-sm"
 				onClick={() => onSelectSession(session.id)}
 				type="button"
 				variant="ghost"
@@ -68,7 +68,6 @@ export function ChatRoomSessionRow({
 						{session.title}
 					</Typography>
 				</span>
-				
 			</Button>
 			<Button
 				aria-label={pinLabel}

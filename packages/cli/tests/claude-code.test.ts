@@ -26,6 +26,7 @@ const baseConfig: ResolvedProjectConfig = {
 	},
 	skills: {
 		root: "r",
+		brainstorm: "b",
 		plan: "p",
 		implement: "i",
 		reviewTest: "r",

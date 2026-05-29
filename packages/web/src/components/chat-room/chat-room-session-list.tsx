@@ -135,7 +135,7 @@ export function ChatRoomSessionList({
 													session={session}
 												/>
 											))}
-											{visibleSessions.hasOverflow ? (
+											{/* {visibleSessions.hasOverflow ? (
 												<Button
 													aria-expanded={isSessionListExpanded}
 													aria-label={
@@ -164,7 +164,7 @@ export function ChatRoomSessionList({
 															: `Show ${visibleSessions.hiddenSessionCount} more`}
 													</Typography>
 												</Button>
-											) : null}
+											) : null} */}
 										</div>
 									) : null}
 								</div>

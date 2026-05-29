@@ -12,10 +12,6 @@ import { useTaskActivityQuery } from "@/lib/api/task-activity-query";
 import { summarizeTokenUsage } from "../issues-board/issue-task-detail-panel-utils";
 import { resolveMissionStatusLabel } from "./chat-mission-phase-labels";
 import {
-	createEmptyPhaseCheckpoints,
-	createPhaseCheckpoints,
-} from "./chat-mission-progress-checkpoints";
-import {
 	createEmptyPhaseLogLines,
 	createPhaseLogLines,
 } from "./chat-mission-progress-logs";
@@ -136,7 +132,6 @@ export function createChatMissionProgressModel({
 		latestResult,
 		usageSummary:
 			usageRecords.length > 0 ? summarizeTokenUsage(usageRecords) : null,
-		phaseCheckpoints: createPhaseCheckpoints({ executions, phases }),
 		phaseLogLines: createPhaseLogLines({ executions, phases }),
 		phases,
 	};
@@ -160,7 +155,6 @@ function createMissionState(
 		latestLogLines: [],
 		latestResult: null,
 		usageSummary: null,
-		phaseCheckpoints: createEmptyPhaseCheckpoints(),
 		phaseLogLines: createEmptyPhaseLogLines(),
 		phases: createMissionPhases({
 			executions: [],

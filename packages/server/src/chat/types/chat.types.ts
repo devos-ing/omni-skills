@@ -142,6 +142,7 @@ export interface ChatRepository {
 	): Promise<ChatMessageRow>;
 	createSession(input: NewChatSessionRow): Promise<ChatSessionRow>;
 	getSession(id: string): Promise<ChatSessionRow | null>;
+	getSessionByTaskId(taskId: string): Promise<ChatSessionRow | null>;
 	listMessages(sessionId: string): Promise<ChatMessageRow[]>;
 	listSessions(workspaceId: string): Promise<ChatSessionRow[]>;
 	updateSession(

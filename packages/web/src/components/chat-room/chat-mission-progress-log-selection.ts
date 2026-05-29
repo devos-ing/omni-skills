@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import type {
-	ChatMissionCheckpoint,
 	ChatMissionLogLine,
 	ChatMissionPhase,
 	ChatMissionPhaseId,
@@ -74,14 +73,4 @@ export function selectedPhaseLogLines({
 		return liveLogLines.slice(-8);
 	}
 	return mission.phaseLogLines[selectedPhase.id] ?? [];
-}
-
-export function selectedPhaseCheckpoints({
-	mission,
-	selectedPhase,
-}: {
-	mission: ChatMissionProgressViewModel;
-	selectedPhase: ChatMissionPhase;
-}): ChatMissionCheckpoint[] {
-	return mission.phaseCheckpoints[selectedPhase.id] ?? [];
 }

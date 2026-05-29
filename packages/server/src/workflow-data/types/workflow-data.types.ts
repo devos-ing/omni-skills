@@ -19,6 +19,8 @@ export type WorkflowDataAction =
 	| "tasks.update"
 	| "tasks.addComment"
 	| "tasks.linkPullRequest"
+	| "chat.publishClarification"
+	| "chat.listClarificationAnswers"
 	| "taskExecutions.start"
 	| "taskExecutions.appendStream"
 	| "taskExecutions.recordProgress"
@@ -30,6 +32,23 @@ export interface WorkflowPullRequestRecord {
 	url?: string;
 	branch: string;
 	title: string;
+}
+
+export interface WorkflowChatClarificationOption {
+	label?: string;
+	value: string;
+	description?: string;
+	recommended?: boolean;
+}
+
+export interface WorkflowChatClarificationQuestion {
+	question: string;
+	options?: WorkflowChatClarificationOption[];
+}
+
+export interface WorkflowChatClarificationAnswer {
+	question: string;
+	answer: string;
 }
 
 export interface WorkflowBoardTaskRecord {

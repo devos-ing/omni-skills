@@ -1,5 +1,7 @@
 import type {
 	WorkflowBoardTaskRecord,
+	WorkflowChatClarificationAnswer,
+	WorkflowChatClarificationQuestion,
 	WorkflowPullRequestRecord,
 } from "../workflow-data-protocol";
 
@@ -51,5 +53,12 @@ export interface BoardTaskWorkflowStore {
 	updateTask(taskId: string, values: BoardTaskUpdateInput): Promise<void>;
 	createTask(input: BoardTaskCreateInput): Promise<WorkflowBoardTaskRecord>;
 	addComment(taskId: string, body: string): Promise<void>;
+	listChatClarificationAnswers(
+		taskId: string,
+	): Promise<WorkflowChatClarificationAnswer[]>;
+	publishChatClarification(
+		taskId: string,
+		questions: WorkflowChatClarificationQuestion[],
+	): Promise<void>;
 	linkPullRequest(input: BoardTaskPullRequestLink): Promise<void>;
 }

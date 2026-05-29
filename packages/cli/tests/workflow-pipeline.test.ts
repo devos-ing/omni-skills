@@ -34,8 +34,12 @@ describe("workflow pipeline", () => {
 
 		expect(result.ok).toBe(true);
 		expect(beforePhaseCalls).toBe(1);
+		const planPhase = metadata.phases.find((phase) => phase.id === "plan");
+		if (!planPhase) {
+			throw new Error("Expected built-in metadata to include the plan phase");
+		}
 		expect(result.phaseResults).toEqual([
-			{ status: "skipped", phase: metadata.phases[0] },
+			{ status: "skipped", phase: planPhase },
 		]);
 	});
 
@@ -141,6 +145,7 @@ function fakeProject(): ResolvedProjectConfig {
 		workflow: { issueConcurrency: 1 },
 		skills: {
 			root: "skills",
+			brainstorm: "brainstorm",
 			plan: "plan",
 			implement: "implement",
 			reviewTest: "review",

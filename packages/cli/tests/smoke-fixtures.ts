@@ -74,6 +74,7 @@ export function project(id: string): ResolvedProjectConfig {
 		codex: { binary: "codex", streamLogs: false },
 		skills: {
 			root: "skills",
+			brainstorm: "skills/piv-brainstorm/SKILL.md",
 			plan: "skills/piv-plan/SKILL.md",
 			implement: "skills/piv-implement/SKILL.md",
 			reviewTest: "skills/piv-review-test/SKILL.md",

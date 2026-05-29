@@ -123,6 +123,7 @@ function required<T>(map: Map<string, T>, key: string): T {
 }
 
 export class FakeAgent implements AgentAdapter {
+	brainstorms: Array<AgentResult | Error> = [];
 	plans: Array<AgentResult | Error> = [];
 	taskIntakes: Array<AgentResult | Error> = [];
 	resumes: Array<AgentResult | Error> = [];
@@ -132,12 +133,20 @@ export class FakeAgent implements AgentAdapter {
 
 	async runAgent(request: AgentAdapterRunRequest): Promise<AgentResult> {
 		if (request.sessionId) return this.resume();
+		if (request.role === "brainstorm") return this.runBrainstorm();
 		if (request.role === "task-intake") return this.runTaskIntake();
 		if (request.role === "review-testing") return this.runReview();
 		if (request.role === "github-comment") return this.runGithubComment();
 		return this.runPlan();
 	}
 
+	async runBrainstorm(): Promise<AgentResult> {
+		return this.next(
+			this.brainstorms,
+			"brainstorm-1",
+			"BRAINSTORM_RESULT: READY\nSUMMARY: Smoke brainstorm complete.",
+		);
+	}
 	async runPlan(): Promise<AgentResult> {
 		return this.next(this.plans, "plan-1");
 	}
@@ -153,8 +162,12 @@ export class FakeAgent implements AgentAdapter {
 	async runGithubComment(): Promise<AgentResult> {
 		return this.next(this.githubComments);
 	}
-	private next(queue: Array<AgentResult | Error>, sessionId?: string) {
-		const result = queue.shift() ?? { finalMessage: "", stdout: "", sessionId };
+	private next(
+		queue: Array<AgentResult | Error>,
+		sessionId?: string,
+		finalMessage = "",
+	) {
+		const result = queue.shift() ?? { finalMessage, stdout: "", sessionId };
 		if (result instanceof Error) {
 			throw result;
 		}
@@ -234,6 +247,10 @@ export class FakeLinear {
 	async clearWorkflowStageLabels(): Promise<void> {}
 	async comment(_issueId: string, body: string): Promise<void> {
 		this.comments.push(body);
+	}
+	async publishChatClarification(): Promise<void> {}
+	async listChatClarificationAnswers(): Promise<unknown[]> {
+		return [];
 	}
 	private inProject(issue: WorkflowTaskRecord): boolean {
 		return issue.projectId === this.project.id;

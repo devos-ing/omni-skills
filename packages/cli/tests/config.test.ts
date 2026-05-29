@@ -136,6 +136,9 @@ describe("loadConfig", () => {
 			expect(config.projects[0]?.skills.plan).toBe(
 				path.join(tempDir, "skills", "piv-plan", "SKILL.md"),
 			);
+			expect(config.projects[0]?.skills.brainstorm).toBe(
+				path.join(tempDir, "skills", "piv-brainstorm", "SKILL.md"),
+			);
 			expect(config.projects[0]?.skills.implement).toBe(
 				path.join(tempDir, "skills", "piv-implement", "SKILL.md"),
 			);

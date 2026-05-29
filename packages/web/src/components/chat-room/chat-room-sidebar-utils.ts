@@ -78,10 +78,7 @@ export function buildVisibleProjectSessions({
 	return {
 		hasOverflow,
 		hiddenSessionCount: isExpanded ? 0 : hiddenSessionCount,
-		sessions:
-			isExpanded || !hasOverflow
-				? sessions
-				: sessions.slice(0, DEFAULT_VISIBLE_PROJECT_SESSION_COUNT),
+		sessions: sessions
 	};
 }
 

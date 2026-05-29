@@ -19,6 +19,8 @@ const WORKFLOW_ACTIONS = new Set<string>([
 	"tasks.update",
 	"tasks.addComment",
 	"tasks.linkPullRequest",
+	"chat.publishClarification",
+	"chat.listClarificationAnswers",
 	"taskExecutions.start",
 	"taskExecutions.appendStream",
 	"taskExecutions.recordProgress",

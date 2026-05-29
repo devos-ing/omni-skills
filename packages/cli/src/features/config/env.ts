@@ -144,6 +144,7 @@ export function buildEnvBase(
 		...buildEnvAgentConfig(env, streamLogs),
 		skills: {
 			root: path.join(cwd, "skills"),
+			brainstorm: path.join("piv-brainstorm", "SKILL.md"),
 			plan: path.join("piv-plan", "SKILL.md"),
 			implement: path.join("piv-implement", "SKILL.md"),
 			reviewTest: path.join("piv-review-test", "SKILL.md"),

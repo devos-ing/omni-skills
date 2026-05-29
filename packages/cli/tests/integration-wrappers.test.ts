@@ -65,6 +65,7 @@ function createConfig(): ResolvedProjectConfig {
 		},
 		skills: {
 			root: "/tmp/skills",
+			brainstorm: "b",
 			plan: "p",
 			implement: "i",
 			reviewTest: "r",

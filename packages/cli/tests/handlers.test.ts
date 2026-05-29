@@ -117,6 +117,7 @@ function createProject(
 		},
 		skills: {
 			root: "/tmp/skills",
+			brainstorm: "/tmp/brainstorm.md",
 			plan: "/tmp/plan.md",
 			implement: "/tmp/implement.md",
 			reviewTest: "/tmp/review.md",

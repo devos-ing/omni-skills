@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import {
 	boardTasksTable,
+	chatMessagesTable,
+	chatSessionsTable,
 	pollingEventsTable,
 	pollingStatusTable,
 	taskCommentsTable,
@@ -289,6 +291,83 @@ describe("workflow data websocket", () => {
 				status: "running",
 			}),
 		]);
+	});
+
+	it("publishes chat clarification questions and lists chat answers by task id", async () => {
+		const { socket, events, db } = await setupSocket();
+		await db.insert(chatSessionsTable).values({
+			id: "chat-1",
+			workspaceId: "owner-1",
+			projectId: "project-1",
+			taskId: "task-1",
+			title: "Task chat",
+			pendingRequest: null,
+			pendingQuestions: null,
+			archived: false,
+			createdAt: "2026-05-13T00:00:00.000Z",
+			updatedAt: "2026-05-13T00:00:00.000Z",
+		});
+		const questions = [
+			{
+				question: "Which boundary owns this?",
+				options: [
+					{
+						label: "Workflow phase",
+						value: "workflow phase",
+						recommended: true,
+					},
+				],
+			},
+		];
+
+		const publish = await sendWorkflowDataRequest(
+			socket,
+			"chat.publishClarification",
+			{
+				taskId: "task-1",
+				questions,
+			},
+		);
+		expect(publish).toMatchObject({ status: "ok" });
+		await db.insert(chatMessagesTable).values({
+			id: "answer-1",
+			sessionId: "chat-1",
+			role: "user",
+			kind: "clarification",
+			content: "workflow phase",
+			taskId: "task-1",
+			commandAction: null,
+			metadata: JSON.stringify({
+				answers: [
+					{
+						question: "Which boundary owns this?",
+						answer: "workflow phase",
+					},
+				],
+			}),
+			createdAt: "2026-05-13T00:01:00.000Z",
+		});
+		const answers = await sendWorkflowDataRequest(
+			socket,
+			"chat.listClarificationAnswers",
+			{ taskId: "task-1" },
+		);
+		const [session] = await db.select().from(chatSessionsTable);
+
+		expect(JSON.parse(session?.pendingQuestions ?? "[]")).toEqual(questions);
+		expect(answers.payload).toEqual([
+			{
+				question: "Which boundary owns this?",
+				answer: "workflow phase",
+			},
+		]);
+		expect(events.map((event) => event.type)).toEqual(
+			expect.arrayContaining([
+				"chat.message.created",
+				"chat.session.updated",
+				"issue.updated",
+			]),
+		);
 	});
 
 	it("rejects malformed frames and matches only the workflow path", async () => {

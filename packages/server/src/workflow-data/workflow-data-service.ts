@@ -2,6 +2,7 @@ import type { ServerDatabase } from "devos-db";
 import type { RealtimeEventPublisher } from "../realtime";
 import { createTaskRepository, createTaskService } from "../tasks";
 import type {
+	WorkflowChatClarificationQuestion,
 	WorkflowDataAction,
 	WorkflowDataService,
 	WorkflowPollingRecordInput,
@@ -24,6 +25,10 @@ import {
 	recordPolling,
 	updateTask,
 } from "./workflow-data-actions";
+import {
+	listChatClarificationAnswers,
+	publishChatClarification,
+} from "./workflow-data-chat-actions";
 import { WorkflowDataError, workflowError } from "./workflow-data-error";
 import {
 	appendTaskExecutionStream,
@@ -75,6 +80,19 @@ async function handleWorkflowAction(
 			return linkPullRequest(
 				context,
 				readPayload<TaskPullRequestRequest>(payload),
+			);
+		case "chat.publishClarification":
+			return publishChatClarification(
+				context,
+				readPayload<{
+					taskId: string;
+					questions: WorkflowChatClarificationQuestion[];
+				}>(payload),
+			);
+		case "chat.listClarificationAnswers":
+			return listChatClarificationAnswers(
+				context,
+				readPayload<{ taskId: string }>(payload),
 			);
 		case "taskExecutions.start":
 			return startTaskExecution(

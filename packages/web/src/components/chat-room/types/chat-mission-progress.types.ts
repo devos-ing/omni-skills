@@ -33,14 +33,6 @@ export interface ChatMissionPhase {
 	status: ChatMissionPhaseStatus;
 }
 
-export interface ChatMissionCheckpoint {
-	id: string;
-	detail?: string;
-	label: string;
-	recordedAt: string;
-	status: ChatMissionPhaseStatus;
-}
-
 export interface ChatMissionExecution {
 	id: string;
 	body: string;
@@ -77,7 +69,6 @@ export interface ChatMissionProgressViewModel {
 	latestLogLines: ChatMissionLogLine[];
 	latestResult: ChatMissionResult | null;
 	usageSummary: ChatMissionUsageSummary | null;
-	phaseCheckpoints: Record<ChatMissionPhaseId, ChatMissionCheckpoint[]>;
 	phaseLogLines: Record<ChatMissionPhaseId, ChatMissionLogLine[]>;
 	phases: ChatMissionPhase[];
 	errorMessage?: string;

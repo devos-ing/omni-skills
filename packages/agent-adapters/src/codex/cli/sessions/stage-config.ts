@@ -14,7 +14,7 @@ export function resolveCodexStageConfig(
 	config: AgentAdapterRuntimeConfig,
 	role: AgentAdapterRunRole,
 ): CodexStageConfig {
-	if (role === "planning" || role === "task-intake") {
+	if (role === "brainstorm" || role === "planning" || role === "task-intake") {
 		return {
 			model: config.codex.models?.plan ?? config.codex.model,
 			reasoningEffort:

@@ -127,6 +127,7 @@ const skillReferenceSchema = z.object({
 
 const runRequestSchema = z.object({
 	role: z.enum([
+		"brainstorm",
 		"planning",
 		"task-intake",
 		"implementing",

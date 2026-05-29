@@ -133,6 +133,7 @@ function fakeProject(id: string): ResolvedProjectConfig {
 		workflow: { issueConcurrency: 1 },
 		skills: {
 			root: "skills",
+			brainstorm: "brainstorm",
 			plan: "plan",
 			implement: "implement",
 			reviewTest: "review",

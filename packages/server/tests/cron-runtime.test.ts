@@ -162,6 +162,7 @@ function createLoadedConfig(): LoadedConfig {
 				codex: { binary: "codex", streamLogs: false },
 				skills: {
 					root: "/tmp/skills",
+					brainstorm: "/tmp/skills/default-brainstorm.md",
 					plan: "/tmp/skills/default-plan.md",
 					implement: "/tmp/skills/default-implement.md",
 					reviewTest: "/tmp/skills/default-review.md",

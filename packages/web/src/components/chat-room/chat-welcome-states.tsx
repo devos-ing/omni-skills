@@ -12,7 +12,6 @@ import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { useWorkflowComputersQuery } from "@/lib/api/queries";
 
 import { ChatComposer } from "./chat-composer";
 import type { ChatComposerProps } from "./types/chat-room.types";
@@ -22,12 +21,6 @@ const promptChips = [
 	{ icon: PenLine, label: "Write", draft: "Draft a plan for " },
 	{ icon: BookOpen, label: "Learn", draft: "Explain " },
 	{ icon: Lightbulb, label: "Decide", draft: "Help me choose between " },
-];
-
-const daemonSetupCommands = [
-	"npx devos onboard",
-	"npx devos onboard --check",
-	"devos daemon",
 ];
 
 interface ChatNoSessionHomeProps extends ChatComposerProps {
@@ -85,40 +78,6 @@ export function ChatNoSessionHome({
 					})}
 				</div>
 			</div>
-		</div>
-	);
-}
-
-export function ChatSelectedSessionWelcome(): ReactElement {
-	const computersQuery = useWorkflowComputersQuery({ refetchIntervalMs: 5000 });
-	const showDaemonSetup =
-		computersQuery.isSuccess &&
-		!computersQuery.data.some((computer) => computer.status === "online");
-
-	return (
-		<div className="mx-auto grid w-full max-w-3xl gap-8 pt-[9dvh] text-left">
-			<div className="grid gap-5">
-				<Typography
-					as="h2"
-					className="font-serif text-3xl font-normal leading-tight text-zinc-200 sm:text-4xl"
-					variant="sectionTitle"
-				>
-					Welcome, roy. I am devos.ing.
-				</Typography>
-				<Typography className="max-w-3xl font-serif text-xl leading-8 text-zinc-200">
-					Bring me a tricky workflow, a half-formed idea, or something you need
-					to ship. We will figure it out together.
-				</Typography>
-				<Typography className="font-serif text-2xl leading-8 text-zinc-200">
-					Where do you want to start?
-				</Typography>
-			</div>
-			<DevosMark size={44} />
-			{showDaemonSetup ? (
-				<pre className="m-0 max-w-full overflow-x-auto rounded-md border border-border bg-surface-panel px-4 py-3 font-mono text-xs leading-6 text-zinc-300">
-					{daemonSetupCommands.join("\n")}
-				</pre>
-			) : null}
 		</div>
 	);
 }

@@ -32,15 +32,6 @@ describe("chat mission progress status normalization", () => {
 			"running",
 			"pending",
 		]);
-		expect(mission.phaseCheckpoints.plan.map((item) => item.status)).toEqual([
-			"success",
-		]);
-		expect(
-			mission.phaseCheckpoints.implement.map((item) => item.status),
-		).toEqual(["running"]);
-		expect(mission.phaseCheckpoints.testing.map((item) => item.status)).toEqual(
-			["pending"],
-		);
 	});
 
 	it("marks upcoming stages pending after advancing to review", () => {
@@ -52,15 +43,6 @@ describe("chat mission progress status normalization", () => {
 			"success",
 			"running",
 		]);
-		expect(mission.phaseCheckpoints.plan.map((item) => item.status)).toEqual([
-			"success",
-		]);
-		expect(
-			mission.phaseCheckpoints.implement.map((item) => item.status),
-		).toEqual(["success"]);
-		expect(mission.phaseCheckpoints.testing.map((item) => item.status)).toEqual(
-			["running"],
-		);
 	});
 
 	it("marks testing complete when tested while the task remains in review", () => {
@@ -71,9 +53,6 @@ describe("chat mission progress status normalization", () => {
 			"success",
 			"success",
 		]);
-		expect(mission.phaseCheckpoints.testing.map((item) => item.status)).toEqual(
-			["success"],
-		);
 	});
 
 	it("removes loading states from terminal successful missions", () => {
@@ -85,11 +64,6 @@ describe("chat mission progress status normalization", () => {
 			"success",
 			"success",
 		]);
-		expect(
-			Object.values(mission.phaseCheckpoints)
-				.flat()
-				.map((checkpoint) => checkpoint.status),
-		).not.toContain("running");
 	});
 });
 

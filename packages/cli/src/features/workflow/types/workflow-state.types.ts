@@ -1,5 +1,8 @@
+import type { WorkflowClarificationQuestion } from "./workflow-chat.types";
+
 export type WorkflowStage =
 	| "backlog"
+	| "brainstorm"
 	| "plan"
 	| "in_progress"
 	| "in_review"
@@ -91,7 +94,7 @@ export interface SplitTaskRef {
 }
 
 export interface CodexUsageRecord {
-	stage: "planning" | "implementing" | "testing";
+	stage: "brainstorming" | "planning" | "implementing" | "testing";
 	agentBackend?: string;
 	model?: string;
 	inputTokens?: number;
@@ -102,6 +105,7 @@ export interface CodexUsageRecord {
 }
 
 export type AgentChatLogRole =
+	| "brainstorm"
 	| "planning"
 	| "implementing"
 	| "review-testing"
@@ -151,11 +155,13 @@ export interface RunState {
 	failedStage?: WorkflowStage;
 	codexSessionId?: string;
 	reviewSessionId?: string;
+	brainstormSummary?: string;
 	planSummary?: string;
 	implementationSummary?: string;
 	reviewSummary?: string;
 	testingSummary?: string;
 	successGoal?: string;
+	brainstormNeedsInfoQuestions?: WorkflowClarificationQuestion[];
 	planningNeedsInfoQuestions?: string[];
 	complexityScore?: number;
 	reviewMode?: "bot" | "human";

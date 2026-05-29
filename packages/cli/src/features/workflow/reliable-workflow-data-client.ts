@@ -14,6 +14,7 @@ const BUFFERABLE_ACTIONS = new Set<WorkflowDataAction>([
 	"tasks.update",
 	"tasks.addComment",
 	"tasks.linkPullRequest",
+	"chat.publishClarification",
 	"taskExecutions.start",
 	"taskExecutions.appendStream",
 	"taskExecutions.recordProgress",

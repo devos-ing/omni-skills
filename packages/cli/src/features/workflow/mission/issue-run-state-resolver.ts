@@ -98,6 +98,9 @@ export class IssueRunStateResolver {
 		const runState = this.buildRunState(issue, key, existing);
 		await this.refreshStoredIdentity(runState, identityRefresh);
 		Object.assign(runState, normalizeBlockedPlanningFailureForResume(runState));
+		if (runState.stage === "brainstorm" && isAssignedState) {
+			runState.brainstormNeedsInfoQuestions = undefined;
+		}
 		this.prepareReviewOnlyState(issue, runState);
 		return { runState, existing, isCanceledState };
 	}
@@ -133,7 +136,7 @@ export class IssueRunStateResolver {
 				},
 				stage: this.options.reviewOnly
 					? resolveReviewOnlyBootstrapStage(issue.state)
-					: "plan",
+					: "brainstorm",
 				reviewMode: this.options.reviewOnly ? "bot" : undefined,
 				pullRequest: issue.pullRequest,
 				bugs: [],

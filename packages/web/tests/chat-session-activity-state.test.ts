@@ -140,7 +140,6 @@ function missionWithLogs(
 		latestLogLines: logs,
 		latestResult: null,
 		usageSummary: null,
-		phaseCheckpoints: { plan: [], implement: [], testing: [], qa: [] },
 		phaseLogLines: { plan: [], implement: [], testing: [], qa: [] },
 		phases: [],
 	};

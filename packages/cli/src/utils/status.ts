@@ -2,6 +2,7 @@ import type { WorkflowStage } from "../features/types";
 
 const WORKFLOW_STAGE_EMOJI: Record<WorkflowStage, string> = {
 	backlog: "📥",
+	brainstorm: "💭",
 	plan: "🧭",
 	in_progress: "🛠️",
 	in_review: "👀",

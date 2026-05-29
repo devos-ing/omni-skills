@@ -110,6 +110,7 @@ export function shouldSkipReviewOnlyRunState(
 export function shouldRetryRunStage(stage: WorkflowStage): boolean {
 	return (
 		stage === "backlog" ||
+		stage === "brainstorm" ||
 		stage === "plan" ||
 		stage === "in_progress" ||
 		stage === "in_review"

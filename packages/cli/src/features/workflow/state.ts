@@ -175,6 +175,9 @@ function normalizeRunStateStages(state: MaybeLegacyRunState): RunState {
 }
 
 function normalizeWorkflowStage(stage: string): WorkflowStage {
+	if (stage === "brainstorming") {
+		return "brainstorm";
+	}
 	if (stage === "received" || stage === "planning") {
 		return "plan";
 	}
@@ -194,6 +197,7 @@ function normalizeWorkflowStage(stage: string): WorkflowStage {
 	}
 	if (
 		stage === "backlog" ||
+		stage === "brainstorm" ||
 		stage === "plan" ||
 		stage === "in_progress" ||
 		stage === "in_review" ||

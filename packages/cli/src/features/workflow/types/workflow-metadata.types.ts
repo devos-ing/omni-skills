@@ -9,7 +9,11 @@ import type {
 import type { WorkflowAgentRole } from "./workflow-agent.types";
 import type { WorkflowTaskClient } from "./workflow.types";
 
-export type BuiltInWorkflowPhaseId = "plan" | "implement" | "testing";
+export type BuiltInWorkflowPhaseId =
+	| "brainstorm"
+	| "plan"
+	| "implement"
+	| "testing";
 
 export interface WorkflowAgentAssignment {
 	name: string;

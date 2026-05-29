@@ -10,11 +10,16 @@ import {
 	applyRequirementResult,
 	updateSessionAfterRequirement,
 } from "./chat-requirement-result";
+import {
+	completeWorkflowClarificationAnswer,
+	shouldCompleteWorkflowClarification,
+} from "./chat-workflow-clarification";
 import { appendChatMessage, updateChatSessionRow } from "./chat-writes";
 import type {
 	ChatMessageRecord,
 	ChatQueuedSendResult,
 	ChatRepository,
+	ChatSendAnswer,
 	ChatSendInput,
 	ChatSendResult,
 	ChatSendStreamCallbacks,
@@ -22,6 +27,7 @@ import type {
 } from "./types/chat.types";
 
 interface AcceptedChatSend {
+	answers: ChatSendAnswer[];
 	issue: BoardTaskApiRecord;
 	requestText: string;
 	session: ChatSessionRow;
@@ -106,6 +112,7 @@ async function acceptChatMessage(
 		userMessageId: userRecord.id,
 	});
 	return {
+		answers: input.answers ?? [],
 		issue: linked.issue,
 		requestText: linked.session.pendingRequest ?? input.content.trim(),
 		session: linked.session,
@@ -121,6 +128,15 @@ async function completeChatMessage(
 	stream?: ChatSendStreamCallbacks,
 ): Promise<ChatSendResult> {
 	try {
+		if (shouldCompleteWorkflowClarification(accepted)) {
+			return completeWorkflowClarificationAnswer({
+				repository,
+				deps,
+				sessionId,
+				accepted,
+				stream,
+			});
+		}
 		const requirement = await deps.resolveTaskRequirement({
 			request: accepted.requestText,
 			projectId:

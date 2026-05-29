@@ -1,6 +1,7 @@
 import type { AgentSkillReference } from "devos-agents";
 
 export type WorkflowAgentRole =
+	| "brainstorm"
 	| "planning"
 	| "implementing"
 	| "review-testing"

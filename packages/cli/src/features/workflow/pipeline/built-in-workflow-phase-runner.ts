@@ -1,11 +1,13 @@
 import { logger } from "../../../utils/logger";
 import { runAgentWithChatLog } from "../agents/agent-chat-log";
+import { handleBrainstormStage } from "../brainstorm/brainstorm";
 import { handleImplementingStage } from "../implementation/implement-stage";
 import { safeNotifyTaskOutcome as safeNotifyTaskOutcomeWithDeps } from "../integration-wrappers";
 import { buildIssueJobLogFields } from "../mission/issue-job-log-fields";
 import { handlePlanningStage } from "../planning/plan";
 import { handleReviewTestingStage } from "../review/review-orchestrator";
 import { saveRunState, transitionStage } from "../state";
+import type { BrainstormTaskClient } from "../types/brainstorm.types";
 import type {
 	BuiltInWorkflowPhaseHandlers,
 	BuiltInWorkflowPhaseRunInput,
@@ -32,6 +34,23 @@ export class BuiltInWorkflowPhaseRunner {
 
 	private createDefaultHandlers(): BuiltInWorkflowPhaseHandlers {
 		return {
+			brainstorm: (input) =>
+				handleBrainstormStage(
+					input.config,
+					input.agent,
+					input.taskClient as unknown as BrainstormTaskClient,
+					input.state,
+					{
+						runAgentWithChatLog,
+						appendCodexUsage,
+						saveRunState,
+						transitionStage,
+						loggerInfo: logger.info.bind(logger),
+						buildIssueJobLogFields: (runState, stage, stageOptions) => ({
+							...buildIssueJobLogFields(runState, stage, stageOptions),
+						}),
+					},
+				),
 			plan: (input) => this.handlePlan(input),
 			implement: (input) =>
 				handleImplementingStage(

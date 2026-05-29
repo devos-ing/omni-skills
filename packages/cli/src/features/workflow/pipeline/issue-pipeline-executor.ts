@@ -99,6 +99,10 @@ export class IssuePipelineExecutor {
 			state.stage !== "done" &&
 			state.stage !== "canceled" &&
 			state.stage !== "failed" &&
+			!(
+				state.stage === "brainstorm" &&
+				Boolean(state.brainstormNeedsInfoQuestions?.length)
+			) &&
 			(!this.options.reviewOnly || isReviewOnlyExecutableStage(state.stage)) &&
 			!(state.stage === "in_review" && state.humanReviewNotifiedAt)
 		);

@@ -21,6 +21,7 @@ function createConfig(): ResolvedProjectConfig {
 		workflow: { issueConcurrency: 1 },
 		skills: {
 			root: "/tmp/skills",
+			brainstorm: "/tmp/skills/piv-brainstorm/SKILL.md",
 			plan: "/tmp/skills/piv-plan/SKILL.md",
 			implement: "/tmp/skills/piv-implement/SKILL.md",
 			reviewTest: "/tmp/skills/piv-review-test/SKILL.md",

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { BugRecord, IssueRef, PullRequestRef } from "../features/types";
 import type {
+	BrainstormPromptOptions,
 	PlanPromptOptions,
 	ReviewPromptOptions,
 } from "./types/prompt.types";
@@ -29,6 +30,44 @@ const SUPERPOWERS_PLANNING_GUIDANCE = [
 	"- Keep the parser contract stable: do not rename PLANNING_RESULT, SUCCESS_GOAL, COMPLEXITY, COMPLEXITY_SCORE, QUESTIONS_JSON, or SPLIT_TASKS_JSON.",
 ].join("\n");
 
+export async function buildBrainstormPrompt(
+	skillPath: string,
+	issue: IssueRef,
+	options?: BrainstormPromptOptions,
+): Promise<string> {
+	const skill = await loadSkillText(skillPath);
+	const issueDescription = issue.description?.trim();
+	const answers = options?.answers ?? [];
+	const answerSection =
+		answers.length > 0
+			? [
+					"",
+					"Previous brainstorm clarification answers:",
+					...answers.map(
+						(answer, index) =>
+							`${index + 1}. Q: ${answer.question}\n   A: ${answer.answer}`,
+					),
+				].join("\n")
+			: "";
+	return [
+		"You are the brainstorming agent in the devos.ing workflow.",
+		"Use this skill:",
+		skill,
+		"",
+		`Workflow task: ${issue.key}`,
+		`Title: ${issue.title}`,
+		...(issueDescription ? [`Description: ${issueDescription}`] : []),
+		`URL: ${issue.url}`,
+		answerSection,
+		"",
+		"Clarify the user's intent, scope, constraints, and tradeoffs before planning.",
+		"Return exactly one route: BRAINSTORM_RESULT: READY or BRAINSTORM_RESULT: NEEDS_INFO.",
+		"For READY, include SUMMARY with concise context the planning agent should use.",
+		"For NEEDS_INFO, include QUESTIONS_JSON with one to three questions.",
+		"Each question may include options. Each option must include value, may include label and description, and may set recommended true for the best model recommendation.",
+	].join("\n");
+}
+
 export async function buildPlanPrompt(
 	skillPath: string,
 	issue: IssueRef,
@@ -37,6 +76,7 @@ export async function buildPlanPrompt(
 	const skill = await loadSkillText(skillPath);
 	const supplementalSkills = options?.supplementalSkills ?? [];
 	const warnings = options?.autoSelectWarnings ?? [];
+	const brainstormSummary = options?.brainstormSummary?.trim();
 	const issueDescription = issue.description?.trim();
 	const parentIssue = issue.parentIssue;
 
@@ -81,6 +121,9 @@ export async function buildPlanPrompt(
 					`Parent URL: ${parentIssue.url}`,
 					"Continue under the parent task context; keep this child issue scoped to its assigned subtask.",
 				]
+			: []),
+		...(brainstormSummary
+			? ["", "Brainstorm context:", brainstormSummary]
 			: []),
 		supplementalSection,
 		"",

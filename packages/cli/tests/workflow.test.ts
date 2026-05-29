@@ -1149,6 +1149,8 @@ describe("runWorkflow parallel issue regression", () => {
 							},
 						]),
 						isAssignedState: mock(async () => true),
+						listChatClarificationAnswers: mock(async () => []),
+						publishChatClarification: mock(async () => {}),
 						markStage,
 						comment: mock(async () => {}),
 						clearWorkflowStageLabels: mock(async () => {}),
@@ -1164,7 +1166,7 @@ describe("runWorkflow parallel issue regression", () => {
 		expect(output).toContain("previousIssueId=old-task-id");
 		expect(output).toContain("issueId=new-task-id");
 		expect(output).toContain("Taking issue job");
-		expect(output).toContain("stage=plan");
+		expect(output).toContain("stage=brainstorm");
 		expect(output).not.toContain("resumed=true");
 		expect(markStage).toHaveBeenCalledWith("new-task-id", "canceled");
 
@@ -1213,6 +1215,8 @@ describe("runWorkflow parallel issue regression", () => {
 							},
 						]),
 						isAssignedState: mock(async () => true),
+						listChatClarificationAnswers: mock(async () => []),
+						publishChatClarification: mock(async () => {}),
 						markStage,
 						comment: mock(async () => {}),
 						clearWorkflowStageLabels: mock(async () => {}),
@@ -1227,7 +1231,7 @@ describe("runWorkflow parallel issue regression", () => {
 			"WARN  Discarding stale local run state because server task is available again",
 		);
 		expect(output).toContain("issueKey=ENG-61");
-		expect(output).toContain("stage=plan");
+		expect(output).toContain("stage=brainstorm");
 		expect(output).not.toContain("resumed=true");
 
 		const saved = JSON.parse(
@@ -1265,6 +1269,8 @@ describe("runWorkflow canceled Linear issue intake", () => {
 				({
 					fetchWork: mock(async () => [issue]),
 					isAssignedState: mock(async () => false),
+					listChatClarificationAnswers: mock(async () => []),
+					publishChatClarification: mock(async () => {}),
 					markStage,
 					comment: mock(async () => {}),
 					clearWorkflowStageLabels: mock(async () => {}),
@@ -3037,24 +3043,28 @@ function createLoadedConfigWithProjects(
 }
 
 function createComplexPlanningAgent(): AgentAdapter {
+	const planResult = async () => ({
+		finalMessage: [
+			"PLANNING_RESULT: READY",
+			"SUCCESS_GOAL: Split the blocked issue into a child task.",
+			"COMPLEXITY: COMPLEX",
+			"COMPLEXITY_SCORE: 4",
+			"SPLIT_TASKS_JSON:",
+			JSON.stringify([
+				{
+					title: "Child task",
+					description: "Implement the child task.",
+				},
+			]),
+		].join("\n"),
+		stdout: "",
+		sessionId: "plan-session",
+	});
 	return {
-		runPlan: mock(async () => ({
-			finalMessage: [
-				"PLANNING_RESULT: READY",
-				"SUCCESS_GOAL: Split the blocked issue into a child task.",
-				"COMPLEXITY: COMPLEX",
-				"COMPLEXITY_SCORE: 4",
-				"SPLIT_TASKS_JSON:",
-				JSON.stringify([
-					{
-						title: "Child task",
-						description: "Implement the child task.",
-					},
-				]),
-			].join("\n"),
-			stdout: "",
-			sessionId: "plan-session",
-		})),
+		runAgent: mock(async (request: { role: string }) =>
+			request.role === "brainstorm" ? brainstormReadyResult() : planResult(),
+		),
+		runPlan: mock(planResult),
 		runTaskIntake: mock(async () => ({ finalMessage: "", stdout: "" })),
 		resume: mock(async () => ({ finalMessage: "", stdout: "" })),
 		runReview: mock(async () => ({ finalMessage: "", stdout: "" })),
@@ -3089,6 +3099,7 @@ function createProject(id: string): ResolvedProjectConfig {
 		},
 		skills: {
 			root: "/tmp/skills",
+			brainstorm: "/tmp/brainstorm.md",
 			plan: "/tmp/plan.md",
 			implement: "/tmp/implement.md",
 			reviewTest: "/tmp/review.md",
@@ -3130,20 +3141,32 @@ function createRunState(
 }
 
 function createNeedsInfoPlanningAgent(): AgentAdapter {
+	const planResult = async () => ({
+		finalMessage: [
+			"PLANNING_RESULT: NEEDS_INFO",
+			"QUESTIONS_JSON:",
+			JSON.stringify(["Which task behavior should change?"]),
+		].join("\n"),
+		stdout: "",
+		sessionId: "needs-info-session",
+	});
 	return {
-		runPlan: mock(async () => ({
-			finalMessage: [
-				"PLANNING_RESULT: NEEDS_INFO",
-				"QUESTIONS_JSON:",
-				JSON.stringify(["Which task behavior should change?"]),
-			].join("\n"),
-			stdout: "",
-			sessionId: "needs-info-session",
-		})),
+		runAgent: mock(async (request: { role: string }) =>
+			request.role === "brainstorm" ? brainstormReadyResult() : planResult(),
+		),
+		runPlan: mock(planResult),
 		runTaskIntake: mock(async () => ({ finalMessage: "", stdout: "" })),
 		resume: mock(async () => ({ finalMessage: "", stdout: "" })),
 		runReview: mock(async () => ({ finalMessage: "", stdout: "" })),
 		runGithubComment: mock(async () => ({ finalMessage: "", stdout: "" })),
+	};
+}
+
+function brainstormReadyResult() {
+	return {
+		finalMessage: "BRAINSTORM_RESULT: READY\nSUMMARY: Ready to plan.",
+		stdout: "",
+		sessionId: "brainstorm-session",
 	};
 }
 

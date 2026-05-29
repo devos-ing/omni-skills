@@ -18,6 +18,7 @@ export interface AgentResult {
 }
 
 export type AgentAdapterRunRole =
+	| "brainstorm"
 	| "planning"
 	| "task-intake"
 	| "implementing"

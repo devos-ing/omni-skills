@@ -105,7 +105,7 @@ describe("chat mission progress", () => {
 		expect(isMissionVisibleStatus("failed")).toBe(true);
 	});
 
-	it("maps task activity into status, notes, logs, steps, and result", () => {
+	it("maps task activity into status, notes, logs, and result", () => {
 		const mission = missionModel();
 
 		expect(mission.statusLabel).toBe("Implementing");
@@ -142,20 +142,10 @@ describe("chat mission progress", () => {
 		expect(mission.phaseLogLines.testing).toEqual([
 			expect.objectContaining({ text: "Testing output" }),
 		]);
-		expect(mission.phaseCheckpoints.plan.map((item) => item.label)).toEqual([
-			"Plan",
-			"Split tasks",
-		]);
-		expect(
-			mission.phaseCheckpoints.implement.map((item) => item.label),
-		).toEqual(["Implementation", "Prepare pr"]);
-		expect(mission.phaseCheckpoints.testing.map((item) => item.label)).toEqual([
-			"Review testing",
-		]);
-		expect(mission.phaseCheckpoints.qa).toEqual([]);
+		expect("phaseCheckpoints" in mission).toBe(false);
 	});
 
-	it("shows workflow progress steps instead of raw planning checkpoints", () => {
+	it("keeps workflow progress in phase logs instead of checkpoint progress", () => {
 		const mission = missionModelWithSteps({
 			taskStatus: "in_progress",
 			steps: [
@@ -192,24 +182,13 @@ describe("chat mission progress", () => {
 			],
 		});
 
-		expect(
-			mission.phaseCheckpoints.plan.map(({ label, status }) => ({
-				label,
-				status,
-			})),
-		).toEqual([
-			{ label: "Planning issue", status: "success" },
-			{ label: "Plan", status: "success" },
-		]);
-		expect(
-			mission.phaseCheckpoints.implement.map(({ label, status }) => ({
-				label,
-				status,
-			})),
-		).toEqual([{ label: "Implementing issue", status: "running" }]);
-		expect(
-			mission.phaseCheckpoints.plan.map((item) => item.label),
-		).not.toContain("Inspect current files and validation details.");
+		expect("phaseCheckpoints" in mission).toBe(false);
+		expect(mission.phaseLogLines.plan.map((item) => item.text)).toContain(
+			"Plan output",
+		);
+		expect(mission.phaseLogLines.plan.map((item) => item.text)).not.toContain(
+			"Inspect current files and validation details.",
+		);
 	});
 
 	it("summarizes estimated usage on the mission model", () => {

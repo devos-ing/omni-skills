@@ -5,10 +5,8 @@ import type { ReactElement } from "react";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
-import { MissionCheckpointPanel } from "./chat-mission-checkpoint-panel";
 import { MissionLogPanel } from "./chat-mission-log-panel";
 import {
-	selectedPhaseCheckpoints,
 	selectedPhaseLogLines,
 	useMissionPhaseSelection,
 } from "./chat-mission-progress-log-selection";
@@ -35,7 +33,6 @@ export function MissionBody({
 		mission,
 		selectedPhase,
 	});
-	const checkpoints = selectedPhaseCheckpoints({ mission, selectedPhase });
 	return (
 		<div className="grid gap-3">
 			<MissionHeader mission={mission} />
@@ -44,10 +41,6 @@ export function MissionBody({
 				phases={mission.phases}
 				selectedPhaseId={selectedPhaseId}
 				onSelectPhase={selectPhase}
-			/>
-			<MissionCheckpointPanel
-				checkpoints={checkpoints}
-				phaseLabel={selectedPhase.label}
 			/>
 			<MissionLogPanel lines={logLines} phaseLabel={selectedPhase.label} />
 		</div>
@@ -100,7 +93,7 @@ function WorkflowPhases({
 }): ReactElement {
 	return (
 		<div
-			className="grid gap-2 sm:grid-cols-[repeat(4,minmax(0,1fr))]"
+			className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))]"
 			data-mission-workflow="true"
 		>
 			{phases.map((phase, index) => (

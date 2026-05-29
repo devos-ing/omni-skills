@@ -1,12 +1,9 @@
 "use client";
-
-import { type ReactElement, useEffect, useRef, useState } from "react";
-
 import { TextShimmer } from "@/components/loading/text-shimmer";
 import { Typography } from "@/components/ui/typography";
 import type { ChatMessageRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
-
+import { type ReactElement, useEffect, useRef, useState } from "react";
 import { resolveChatMessageDisplay } from "./chat-message-display";
 import { ChatMissionProgress } from "./chat-mission-progress";
 import { resolveMissionPlanMessageContent } from "./chat-plan-message-state";
@@ -14,9 +11,7 @@ import { ChatSessionActivityBubbles } from "./chat-session-activity-bubbles";
 import { createChatSessionActivityBubbles } from "./chat-session-activity-state";
 import { ChatTranscriptSkeleton } from "./chat-transcript-skeleton";
 import { formatWaitDurationLabel } from "./chat-wait-label";
-import { ChatSelectedSessionWelcome } from "./chat-welcome-states";
 import type { ChatTranscriptProps } from "./types/chat-room.types";
-
 export function ChatTranscript({
 	error,
 	isLoading,
@@ -102,9 +97,6 @@ export function ChatTranscript({
 				>
 					{isLoading ? <ChatTranscriptSkeleton /> : null}
 					{error ? <ErrorLine text={error.message} /> : null}
-					{!isLoading && messages.length === 0 && !missionProgress ? (
-						<ChatSelectedSessionWelcome />
-					) : null}
 					{messages.map((message) => (
 						<ChatMessageBubble key={message.id} message={message} />
 					))}
@@ -158,11 +150,19 @@ function WorkingSectionHeader({
 }
 
 function ThinkingLine(): ReactElement {
-	return <div className='p-1'><TextShimmer>Thinking...</TextShimmer></div>;
+	return (
+		<div className="p-1">
+			<TextShimmer>Thinking...</TextShimmer>
+		</div>
+	);
 }
 
 function PlanningLine(): ReactElement {
-	return <div className='p-1'><TextShimmer>Planning...</TextShimmer></div>;
+	return (
+		<div className="p-1">
+			<TextShimmer>Planning...</TextShimmer>
+		</div>
+	);
 }
 
 function ChatMessageBubble({

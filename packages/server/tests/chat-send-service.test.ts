@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 import type {
 	BoardProjectRow,
 	ChatMessageRow,
@@ -102,6 +102,60 @@ describe("chat send service streaming", () => {
 			{ type: "error", error: "update exploded" },
 		]);
 	});
+
+	it("accepts workflow clarification answers without rerunning task intake", async () => {
+		const session = chatSession({
+			pendingQuestions: JSON.stringify([
+				{
+					question: "Which boundary owns this?",
+					options: [
+						{
+							label: "Workflow phase",
+							value: "workflow phase",
+							recommended: true,
+						},
+					],
+				},
+			]),
+		});
+		const issue = boardTask();
+		const messages: ChatMessageRow[] = [];
+		const repository = createRepository(session, messages);
+		const resolveTaskRequirement = mock(async () => ({
+			status: "ready" as const,
+			task: { title: "unused", description: "unused" },
+		}));
+		const updateIssue = mock(async (_issueId: string, input) => ({
+			...issue,
+			...input,
+		}));
+		const deps: ChatServiceDeps = {
+			ensureDefaultProject: async () => defaultProject(),
+			createIssue: async () => issue,
+			getIssue: async () => issue,
+			resolveTaskRequirement,
+			updateIssue,
+		};
+
+		const result = await sendChatMessage(repository, deps, session.id, {
+			content: "workflow phase",
+			answers: [
+				{
+					question: "Which boundary owns this?",
+					answer: "workflow phase",
+				},
+			],
+		});
+
+		expect(resolveTaskRequirement).not.toHaveBeenCalled();
+		expect(updateIssue).toHaveBeenCalledWith(
+			"task-1",
+			expect.objectContaining({ status: "plan" }),
+		);
+		expect(result?.session.pendingQuestions).toEqual([]);
+		expect(result?.session.pendingRequest).toBeNull();
+		expect(result?.messages.at(-1)).toMatchObject({ role: "assistant" });
+	});
 });
 
 function createRepository(
@@ -121,6 +175,7 @@ function createRepository(
 		},
 		createSession: async (input: NewChatSessionRow) => input as ChatSessionRow,
 		getSession: async () => session,
+		getSessionByTaskId: async () => session,
 		listMessages: async () => messages,
 		listSessions: async () => [session],
 		updateSession: async (_id: string, input: Partial<NewChatSessionRow>) => ({
@@ -130,7 +185,7 @@ function createRepository(
 	};
 }
 
-function chatSession(): ChatSessionRow {
+function chatSession(overrides: Partial<ChatSessionRow> = {}): ChatSessionRow {
 	return {
 		id: "session-1",
 		workspaceId: "owner-1",
@@ -142,6 +197,7 @@ function chatSession(): ChatSessionRow {
 		archived: false,
 		createdAt: "2026-05-16T00:00:00.000Z",
 		updatedAt: "2026-05-16T00:00:00.000Z",
+		...overrides,
 	};
 }
 
