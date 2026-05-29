@@ -127,7 +127,10 @@ describe("chat routes", () => {
 			type: "project.created",
 			project: { id: "default" },
 		});
-		expect(events[1]).toMatchObject({ type: "issue.created", issue: task });
+		expect(events[1]).toMatchObject({
+			type: "issue.created",
+			issue: { id: task?.id, assigneeId: null },
+		});
 		expect(events[2]).toMatchObject({
 			type: "chat.session.created",
 			session: { id: body.id },

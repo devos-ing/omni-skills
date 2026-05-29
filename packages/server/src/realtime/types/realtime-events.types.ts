@@ -1,4 +1,4 @@
-import type { BoardProjectRow, BoardTaskRow } from "devos-db";
+import type { BoardProjectRow } from "devos-db";
 import type { WorkflowProgressEvent } from "devos/features/server";
 import type {
 	ChatMessageRecord,
@@ -9,6 +9,7 @@ import type {
 	ChatStreamStartedPayload,
 } from "../../chat";
 import type { InboxMessageRecord } from "../../inbox";
+import type { BoardTaskApiRecord } from "../../tasks/types/task-service.types";
 
 export type RealtimeIssueEventType =
 	| "issue.created"
@@ -49,7 +50,7 @@ export interface RealtimeProjectRecord {
 	updatedAt: string;
 }
 
-export type RealtimeIssueRecord = BoardTaskRow;
+export type RealtimeIssueRecord = BoardTaskApiRecord;
 export type RealtimeInboxMessageRecord = InboxMessageRecord;
 export type RealtimeChatSessionRecord = ChatSessionRecord;
 export type RealtimeChatMessageRecord = ChatMessageRecord;

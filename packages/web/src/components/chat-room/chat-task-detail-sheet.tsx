@@ -160,18 +160,6 @@ function ReadOnlyTaskDetails({
 						"No linked pull request"
 					)}
 				</DetailField>
-				<DetailField label="Linear">
-					{task.linearUrl ? (
-						<ExternalLinkValue
-							href={task.linearUrl}
-							label={
-								task.linearIdentifier ?? task.linearIssueId ?? task.linearUrl
-							}
-						/>
-					) : (
-						(task.linearIdentifier ?? task.linearIssueId ?? "None")
-					)}
-				</DetailField>
 				<DetailField label="Created">
 					{formatDateTime(task.createdAt)}
 				</DetailField>

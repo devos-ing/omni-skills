@@ -20,7 +20,6 @@ import { useUpdateBoardTaskMutation } from "@/lib/api/queries";
 
 import {
 	DetailField,
-	ExternalLinkValue,
 	createDetailDraft,
 	createSaveRequest,
 	formatDateTime,
@@ -185,18 +184,6 @@ export function IssueDetailEditor({
 						value={draft.linkedPr}
 					/>
 				</EditableField>
-				<DetailField label="Linear">
-					{task.linearUrl ? (
-						<ExternalLinkValue
-							href={task.linearUrl}
-							label={
-								task.linearIdentifier ?? task.linearIssueId ?? task.linearUrl
-							}
-						/>
-					) : (
-						(task.linearIdentifier ?? task.linearIssueId ?? "None")
-					)}
-				</DetailField>
 				<DetailField label="Created">
 					{formatDateTime(task.createdAt)}
 				</DetailField>

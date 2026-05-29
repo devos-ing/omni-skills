@@ -3,14 +3,13 @@
 import {
 	Bot,
 	CalendarDays,
-	ChevronDown,
 	Circle,
 	Clock3,
 	GitPullRequest,
 	Hash,
 	UserRound,
 } from "lucide-react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import {
 	Sheet,
@@ -24,8 +23,13 @@ import { useBoardTaskQuery, useTokenUsageQuery } from "@/lib/api/queries";
 
 import { ExternalLinkValue, formatDateTime } from "./issue-detail-editor-utils";
 import {
+	MetricRow,
+	PanelSection,
+	PanelState,
+	PropertyRow,
+} from "./issue-task-detail-panel-parts";
+import {
 	formatDueDate,
-	formatTokenCount,
 	summarizeTokenUsage,
 } from "./issue-task-detail-panel-utils";
 import {
@@ -38,6 +42,8 @@ interface IssueTaskDetailPanelProps {
 	taskId: string | null;
 	onClose: () => void;
 }
+
+type TaskPanelProps = { task: ProjectBoardTaskRecord };
 
 export function IssueTaskDetailPanel({
 	taskId,
@@ -89,7 +95,7 @@ function renderPanelContent(
 	);
 }
 
-function PanelHeader({ task }: { task: ProjectBoardTaskRecord }): ReactElement {
+function PanelHeader({ task }: TaskPanelProps): ReactElement {
 	return (
 		<SheetHeader className="pr-8">
 			<Typography variant="eyebrow">{task.taskKey}</Typography>
@@ -105,11 +111,7 @@ function PanelHeader({ task }: { task: ProjectBoardTaskRecord }): ReactElement {
 	);
 }
 
-function TaskProperties({
-	task,
-}: {
-	task: ProjectBoardTaskRecord;
-}): ReactElement {
+function TaskProperties({ task }: TaskPanelProps): ReactElement {
 	const AssigneeIcon = isAgentTask(task) ? Bot : UserRound;
 	return (
 		<PanelSection title="Properties">
@@ -126,22 +128,17 @@ function TaskProperties({
 				{formatDueDate(task.dueDate)}
 			</PropertyRow>
 			<PropertyRow icon={<GitPullRequest size={17} />} label="Pull request">
-				{task.linearUrl ? (
-					<ExternalLinkValue
-						href={task.linearUrl}
-						label={
-							task.linearIdentifier ?? task.linearIssueId ?? task.linearUrl
-						}
-					/>
+				{task.linkedPr ? (
+					<ExternalLinkValue href={task.linkedPr} />
 				) : (
-					(task.linkedPr ?? "No linked pull request")
+					"No linked pull request"
 				)}
 			</PropertyRow>
 		</PanelSection>
 	);
 }
 
-function TaskDetails({ task }: { task: ProjectBoardTaskRecord }): ReactElement {
+function TaskDetails({ task }: TaskPanelProps): ReactElement {
 	return (
 		<PanelSection title="Details">
 			<PropertyRow icon={<UserRound size={17} />} label="Created by">
@@ -180,80 +177,5 @@ function TokenUsageSection({
 				</>
 			)}
 		</PanelSection>
-	);
-}
-
-function PanelSection({
-	children,
-	title,
-}: {
-	children: ReactNode;
-	title: string;
-}): ReactElement {
-	return (
-		<details className="group grid gap-3" open>
-			<Typography
-				as="summary"
-				className="flex cursor-pointer list-none items-center gap-2"
-				variant="sectionTitle"
-			>
-				<Typography as="span" variant="sectionTitle">
-					{title}
-				</Typography>
-				<ChevronDown className="transition group-open:rotate-180" size={16} />
-			</Typography>
-			<div className="mt-3 grid gap-3">{children}</div>
-		</details>
-	);
-}
-
-function PropertyRow({
-	children,
-	icon,
-	label,
-}: {
-	children: ReactNode;
-	icon: ReactElement;
-	label: string;
-}): ReactElement {
-	return (
-		<div className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-3 text-sm">
-			<Typography variant="description">{label}</Typography>
-			<Typography
-				as="span"
-				className="flex min-w-0 items-center gap-2 break-words text-zinc-200"
-			>
-				<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-active text-zinc-400">
-					{icon}
-				</span>
-				<Typography as="span" className="min-w-0 break-words">
-					{children}
-				</Typography>
-			</Typography>
-		</div>
-	);
-}
-
-function MetricRow({
-	label,
-	value,
-}: {
-	label: string;
-	value: number;
-}): ReactElement {
-	return (
-		<div className="grid grid-cols-[5rem_1fr] gap-3 text-sm">
-			<Typography variant="description">{label}</Typography>
-			<Typography as="span" className="text-zinc-200" variant="cardTitle">
-				{formatTokenCount(value)}
-			</Typography>
-		</div>
-	);
-}
-function PanelState({ label }: { label: string }): ReactElement {
-	return (
-		<div className="grid min-h-[24rem] place-items-center px-6 text-sm text-muted-foreground">
-			<Typography variant="description">{label}</Typography>
-		</div>
 	);
 }

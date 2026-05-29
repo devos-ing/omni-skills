@@ -107,9 +107,6 @@ export function createBoardRepository(
 					dueDate: boardTasksTable.dueDate,
 					creatorId: boardTasksTable.creatorId,
 					linkedPr: boardTasksTable.linkedPr,
-					linearIssueId: boardTasksTable.linearIssueId,
-					linearIdentifier: boardTasksTable.linearIdentifier,
-					linearUrl: boardTasksTable.linearUrl,
 					createdAt: boardTasksTable.createdAt,
 					updatedAt: boardTasksTable.updatedAt,
 				})

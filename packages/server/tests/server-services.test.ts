@@ -5,7 +5,7 @@ import type { ProjectRepository } from "../src/projects";
 import { createEntityCrudService } from "../src/routes/entity-crud-service";
 import type { EntityCrudRepository } from "../src/routes/types/entity-crud-service.types";
 import { createTaskService, parseTaskIntakeOutput } from "../src/tasks";
-import type { BoardTaskApiRecord, TaskRepository } from "../src/tasks";
+import type { BoardTaskRepositoryRecord, TaskRepository } from "../src/tasks";
 
 describe("server services", () => {
 	it("keeps project business rules out of controllers", async () => {
@@ -66,7 +66,7 @@ describe("server services", () => {
 	it("creates task defaults and rejects empty task updates", async () => {
 		const createdTasks: unknown[] = [];
 		const keyScopes: unknown[] = [];
-		const storedTasks = new Map<string, BoardTaskApiRecord>();
+		const storedTasks = new Map<string, BoardTaskRepositoryRecord>();
 		const service = createTaskService({
 			listTasks: async () => [],
 			getTask: async (id) => storedTasks.get(id) ?? null,
@@ -93,9 +93,9 @@ describe("server services", () => {
 					projectId: input.projectId ?? null,
 					dueDate: input.dueDate ?? null,
 					linkedPr: input.linkedPr ?? null,
-					linearIssueId: input.linearIssueId ?? null,
-					linearIdentifier: input.linearIdentifier ?? null,
-					linearUrl: input.linearUrl ?? null,
+					linearIssueId: null,
+					linearIdentifier: null,
+					linearUrl: null,
 				};
 				createdTasks.push(created);
 				storedTasks.set(created.id, created);
@@ -117,10 +117,10 @@ describe("server services", () => {
 		expect(createdTasks[0]).toMatchObject({
 			taskKey: "TASK(owner-1)-1",
 			projectId: null,
-			linearIdentifier: null,
-			linearIssueId: null,
-			linearUrl: null,
 		});
+		expect(created.status === "ok" ? created.value : {}).not.toHaveProperty(
+			"linearIdentifier",
+		);
 		expect(keyScopes).toEqual([{ projectId: null, creatorId: "owner-1" }]);
 
 		const emptyUpdate = await service.updateTask("task-1", {});

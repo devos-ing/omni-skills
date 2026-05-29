@@ -12,9 +12,6 @@ export interface ProjectBoardTaskRecord {
 	creatorId: string;
 	assigneeId: string | null;
 	linkedPr: string | null;
-	linearIssueId: string | null;
-	linearIdentifier: string | null;
-	linearUrl: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

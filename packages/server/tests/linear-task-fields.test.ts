@@ -1,104 +1,11 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { eq } from "devos-db";
-import {
-	type ServerDatabase,
-	boardProjectsTable,
-	boardTasksTable,
-	initializeServerDatabase,
-	projectBoardsTable,
-} from "devos-db";
-import { createBoardReadModels } from "../src/board-read-models";
-import { createServerTestApp } from "./app-test-helpers";
-import {
-	type DrizzleServerTestDatabase,
-	createDrizzleServerTestDatabase,
-} from "./server-db-test-helpers";
+import { boardTasksTable, initializeServerDatabase } from "devos-db";
 
-let testDatabase: DrizzleServerTestDatabase | undefined;
-
-afterEach(async () => {
-	if (testDatabase) {
-		await testDatabase.cleanup();
-		testDatabase = undefined;
-	}
-});
-
-describe("linear task reference fields", () => {
-	it("creates, updates, lists, and reads Linear refs through task routes", async () => {
-		testDatabase = await createDrizzleServerTestDatabase();
-		const app = createApp(testDatabase.db);
-		await seedProject(testDatabase.db);
-
-		const createResponse = await app(
-			new Request("http://localhost/api/tasks", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({
-					projectId: "project-1",
-					title: "Task 1",
-					content: "Body",
-					priority: 1,
-					status: "planning",
-					creatorId: "owner-1",
-					linearIssueId: "lin-issue-1",
-					linearIdentifier: "ROY-233",
-					linearUrl: "https://linear.app/roy/issue/ROY-233/task",
-				}),
-			}),
-		);
-		expect(createResponse.status).toBe(201);
-		const created = (await createResponse.json()) as {
-			id: string;
-			linearIdentifier: string;
-		};
-		expect(created.linearIdentifier).toBe("ROY-233");
-
-		const updateResponse = await app(
-			new Request(`http://localhost/api/tasks/${created.id}`, {
-				method: "PATCH",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({
-					linearIdentifier: "ROY-234",
-					linearUrl: null,
-				}),
-			}),
-		);
-		expect(updateResponse.status).toBe(200);
-		const updated = (await updateResponse.json()) as {
-			linearIdentifier: string;
-			linearUrl: string | null;
-		};
-		expect(updated.linearIdentifier).toBe("ROY-234");
-		expect(updated.linearUrl).toBeNull();
-
-		const listResponse = await app(
-			new Request("http://localhost/api/tasks", { method: "GET" }),
-		);
-		const [listed] = (await listResponse.json()) as Array<{
-			linearIssueId: string;
-			linearIdentifier: string;
-			linearUrl: string | null;
-		}>;
-		expect(listed).toMatchObject({
-			linearIssueId: "lin-issue-1",
-			linearIdentifier: "ROY-234",
-			linearUrl: null,
-		});
-
-		const board = await createBoardReadModels(testDatabase.db).getProjectBoard(
-			"owner-1",
-			"project-1",
-		);
-		expect(board.tasks[0]).toMatchObject({
-			linearIssueId: "lin-issue-1",
-			linearIdentifier: "ROY-234",
-			linearUrl: null,
-		});
-	});
-
+describe("legacy linear task reference fields", () => {
 	it("adds Linear ref columns when opening an existing board task table", async () => {
 		const tempDir = await mkdtemp(path.join(os.tmpdir(), "adhd-linear-db-"));
 		const databasePath = path.join(tempDir, "db");
@@ -155,28 +62,3 @@ describe("linear task reference fields", () => {
 		}
 	});
 });
-
-function createApp(db: ServerDatabase["db"]) {
-	return createServerTestApp(db);
-}
-
-async function seedProject(db: ServerDatabase["db"]) {
-	await db.insert(projectBoardsTable).values({
-		id: "board-1",
-		name: "Board",
-		description: "Test board",
-		ownerId: "owner-1",
-		createdAt: "2026-05-15T00:00:00.000Z",
-		updatedAt: "2026-05-15T00:00:00.000Z",
-	});
-	await db.insert(boardProjectsTable).values({
-		id: "project-1",
-		boardId: "board-1",
-		externalProjectId: null,
-		name: "Project",
-		description: null,
-		ownerId: "owner-1",
-		createdAt: "2026-05-15T00:00:00.000Z",
-		updatedAt: "2026-05-15T00:00:00.000Z",
-	});
-}

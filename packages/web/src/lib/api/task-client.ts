@@ -75,9 +75,6 @@ export function parseProjectBoardTaskRecord(
 		creatorId: readString(row, "creatorId", TASKS_PATH),
 		assigneeId: readOptionalNullableString(row, "assigneeId"),
 		linkedPr: readNullableString(row, "linkedPr", TASKS_PATH),
-		linearIssueId: readOptionalNullableString(row, "linearIssueId"),
-		linearIdentifier: readOptionalNullableString(row, "linearIdentifier"),
-		linearUrl: readOptionalNullableString(row, "linearUrl"),
 		createdAt: readString(row, "createdAt", TASKS_PATH),
 		updatedAt: readString(row, "updatedAt", TASKS_PATH),
 	};

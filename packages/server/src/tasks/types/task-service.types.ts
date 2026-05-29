@@ -13,26 +13,42 @@ import type {
 	TaskActivitySourceRows,
 } from "./task-activity.types";
 
-export type BoardTaskApiRecord = BoardTaskRow & {
+export type BoardTaskRepositoryRecord = BoardTaskRow & {
 	assigneeId: string | null;
 };
 
+export interface BoardTaskApiRecord {
+	id: string;
+	taskKey: string;
+	projectId: string | null;
+	title: string;
+	content: string;
+	priority: number;
+	status: string;
+	dueDate: string | null;
+	creatorId: string;
+	assigneeId: string | null;
+	linkedPr: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface TaskRepository {
-	listTasks(): Promise<BoardTaskApiRecord[]>;
-	getTask(id: string): Promise<BoardTaskApiRecord | null>;
+	listTasks(): Promise<BoardTaskRepositoryRecord[]>;
+	getTask(id: string): Promise<BoardTaskRepositoryRecord | null>;
 	getTaskActivity(id: string): Promise<TaskActivitySourceRows | null>;
 	projectExists(id: string): Promise<boolean>;
 	nextTaskKey(scope: BoardTaskKeyScope): Promise<string>;
 	createTask(
 		input: NewBoardTaskRow,
 		assigneeId?: string | null,
-	): Promise<BoardTaskApiRecord>;
+	): Promise<BoardTaskRepositoryRecord>;
 	updateTask(
 		id: string,
 		input: Partial<NewBoardTaskRow>,
 		assigneeId?: string | null,
-	): Promise<BoardTaskApiRecord | null>;
-	deleteTask(id: string): Promise<BoardTaskApiRecord | null>;
+	): Promise<BoardTaskRepositoryRecord | null>;
+	deleteTask(id: string): Promise<BoardTaskRepositoryRecord | null>;
 	addTaskComment(input: NewTaskCommentRow): Promise<void>;
 }
 

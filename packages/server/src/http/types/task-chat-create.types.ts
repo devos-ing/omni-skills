@@ -1,4 +1,5 @@
 import type { BoardTaskRow } from "devos-db";
+import type { BoardTaskApiRecord } from "../../tasks/types/task-service.types";
 
 export interface TaskChatCreateAnswer {
 	question: string;
@@ -40,7 +41,7 @@ export type TaskChatCreateRequirementResult =
 export type TaskChatCreateResponse =
 	| {
 			status: "created";
-			task: BoardTaskRow;
+			task: BoardTaskApiRecord;
 	  }
 	| { status: "needs_info"; questions: TaskChatCreateQuestion[] }
 	| { status: "db_error"; error: string };

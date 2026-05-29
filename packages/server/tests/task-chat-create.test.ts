@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { type BoardTaskRow, boardTasksTable } from "devos-db";
 import { createBoardRepository } from "../src/board";
+import type { BoardTaskApiRecord } from "../src/tasks";
 import {
 	type DrizzleServerTestDatabase,
 	createDrizzleServerTestDatabase,
@@ -14,7 +15,7 @@ import {
 
 let testDatabase: DrizzleServerTestDatabase | undefined;
 
-type BoardTaskApiRow = BoardTaskRow & { assigneeId: string | null };
+type BoardTaskApiRow = BoardTaskApiRecord;
 
 afterEach(async () => {
 	if (testDatabase) {
@@ -383,5 +384,10 @@ describe("chat task create route", () => {
 
 function withoutAssigneeId(task: BoardTaskApiRow): BoardTaskRow {
 	const { assigneeId: _assigneeId, ...row } = task;
-	return row;
+	return {
+		...row,
+		linearIssueId: null,
+		linearIdentifier: null,
+		linearUrl: null,
+	};
 }

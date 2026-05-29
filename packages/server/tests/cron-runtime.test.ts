@@ -155,23 +155,6 @@ function createLoadedConfig(): LoadedConfig {
 				workspacePath: "/tmp/ws",
 				executionPath: "/tmp/ws",
 				repo: { owner: "acme", name: "repo", baseBranch: "main" },
-				linear: {
-					apiKey: "k",
-					apiUrl: "https://api.linear.app/graphql",
-					pollLimit: 10,
-					statusMap: {
-						backlog: "Backlog",
-						assigned: "Todo",
-						plan: "In Progress",
-						in_progress: "In Progress",
-						in_review: "In Review",
-						canceled: "Canceled",
-						failed: "Failed",
-						done: "Done",
-					},
-					labelMap: {},
-					autoCreateLabels: true,
-				},
 				github: { useGhCli: true, defaultBugLabel: "bug" },
 				server: {
 					database: { databasePath: "/tmp/devos.sqlite", port: 54329 },

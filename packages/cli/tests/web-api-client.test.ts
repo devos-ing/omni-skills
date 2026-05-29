@@ -30,9 +30,6 @@ describe("web api client task create", () => {
 						dueDate: null,
 						creatorId: "owner-1",
 						linkedPr: "https://linear.example/ROY-1",
-						linearIssueId: "lin-1",
-						linearIdentifier: "ROY-1",
-						linearUrl: "https://linear.example/ROY-1",
 						createdAt: "2026-05-13T00:00:00.000Z",
 						updatedAt: "2026-05-13T00:00:00.000Z",
 					},
@@ -105,7 +102,6 @@ describe("web api client task create", () => {
 			throw new Error("Expected created task response");
 		}
 		expect(response.task.projectId).toBeNull();
-		expect(response.task.linearIdentifier).toBeNull();
 		expect(calls).toEqual([
 			{
 				url: "http://localhost:3000/api/tasks/chat-create",
@@ -151,9 +147,6 @@ describe("web api client task create", () => {
 			status: "created",
 			task: {
 				content: "Legacy task body",
-				linearIssueId: null,
-				linearIdentifier: null,
-				linearUrl: null,
 			},
 		});
 	});

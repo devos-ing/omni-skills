@@ -3,6 +3,7 @@ import type { UpdateTaskPayload } from "../http/types/project-task-api.types";
 import { composeTaskActivity } from "./task-activity-compose";
 import type {
 	BoardTaskApiRecord,
+	BoardTaskRepositoryRecord,
 	TaskRepository,
 	TaskService,
 } from "./types/task-service.types";
@@ -18,9 +19,6 @@ const UPDATE_ACTIVITY_FIELDS: Array<keyof UpdateTaskPayload> = [
 	"assigneeId",
 	"dueDate",
 	"linkedPr",
-	"linearIssueId",
-	"linearIdentifier",
-	"linearUrl",
 ];
 const LEGACY_PR_CREATED_STATUS = "pr_created";
 const LEGACY_PLANNING_STATUS = "planning";
@@ -31,11 +29,14 @@ const LEGACY_REVIEW_STATUSES = ["reviewing", "testing"] as const;
 export function createTaskService(repository: TaskRepository): TaskService {
 	return {
 		async listTasks() {
-			return { status: "ok", value: await repository.listTasks() };
+			const tasks = await repository.listTasks();
+			return { status: "ok", value: tasks.map(toTaskApiRecord) };
 		},
 		async getTask(id) {
 			const task = await repository.getTask(id);
-			return task ? { status: "ok", value: task } : { status: "not_found" };
+			return task
+				? { status: "ok", value: toTaskApiRecord(task) }
+				: { status: "not_found" };
 		},
 		async getTaskActivity(id) {
 			const rows = await repository.getTaskActivity(id);
@@ -69,15 +70,12 @@ export function createTaskService(repository: TaskRepository): TaskService {
 						dueDate: input.dueDate ?? null,
 						creatorId: input.creatorId,
 						linkedPr: input.linkedPr ?? null,
-						linearIssueId: input.linearIssueId ?? null,
-						linearIdentifier: input.linearIdentifier ?? null,
-						linearUrl: input.linearUrl ?? null,
 						createdAt: now,
 						updatedAt: now,
 					},
 					input.assigneeId ?? null,
 				);
-				return { status: "ok", value: created };
+				return { status: "ok", value: toTaskApiRecord(created) };
 			} catch (error) {
 				return mapMutationError(error);
 			}
@@ -97,7 +95,7 @@ export function createTaskService(repository: TaskRepository): TaskService {
 					projectId: projectId ?? null,
 					status: normalizeTaskStatus(task.status),
 				});
-				return { status: "ok", value: created };
+				return { status: "ok", value: toTaskApiRecord(created) };
 			} catch (error) {
 				return mapMutationError(error);
 			}
@@ -146,7 +144,7 @@ export function createTaskService(repository: TaskRepository): TaskService {
 					}
 				}
 				return updated
-					? { status: "ok", value: updated }
+					? { status: "ok", value: toTaskApiRecord(updated) }
 					: { status: "not_found" };
 			} catch (error) {
 				return mapMutationError(error);
@@ -156,7 +154,7 @@ export function createTaskService(repository: TaskRepository): TaskService {
 			try {
 				const deleted = await repository.deleteTask(id);
 				return deleted
-					? { status: "ok", value: deleted }
+					? { status: "ok", value: toTaskApiRecord(deleted) }
 					: { status: "not_found" };
 			} catch (error) {
 				return mapMutationError(error);
@@ -166,8 +164,8 @@ export function createTaskService(repository: TaskRepository): TaskService {
 }
 
 function describeTaskUpdate(
-	existing: BoardTaskApiRecord,
-	updated: BoardTaskApiRecord,
+	existing: BoardTaskRepositoryRecord,
+	updated: BoardTaskRepositoryRecord,
 	input: UpdateTaskPayload,
 ): string | null {
 	const lines = UPDATE_ACTIVITY_FIELDS.flatMap((field) => {
@@ -181,6 +179,24 @@ function describeTaskUpdate(
 		];
 	});
 	return lines.length > 0 ? lines.join("\n") : null;
+}
+
+function toTaskApiRecord(task: BoardTaskRepositoryRecord): BoardTaskApiRecord {
+	return {
+		id: task.id,
+		taskKey: task.taskKey,
+		projectId: task.projectId,
+		title: task.title,
+		content: task.content,
+		priority: task.priority,
+		status: task.status,
+		dueDate: task.dueDate,
+		creatorId: task.creatorId,
+		assigneeId: task.assigneeId,
+		linkedPr: task.linkedPr,
+		createdAt: task.createdAt,
+		updatedAt: task.updatedAt,
+	};
 }
 
 function fieldLabel(field: keyof UpdateTaskPayload): string {

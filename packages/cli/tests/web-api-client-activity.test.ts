@@ -82,9 +82,6 @@ describe("web api client task activity", () => {
 			creatorId: "roy",
 			assigneeId: null,
 			linkedPr: null,
-			linearIssueId: null,
-			linearIdentifier: null,
-			linearUrl: null,
 			createdAt: "2026-05-15T07:41:12.103Z",
 			updatedAt: "2026-05-15T17:35:54.733Z",
 		});

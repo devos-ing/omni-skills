@@ -8,6 +8,7 @@ import type {
 	TaskChatCreateResponse,
 } from "../http/types/task-chat-create.types";
 import type { CliExecutor } from "../types/app.types";
+import type { BoardTaskApiRecord } from "./types/task-service.types";
 
 export async function composeTaskChatCreate(
 	input: TaskChatCreateRequest,
@@ -18,7 +19,7 @@ export async function composeTaskChatCreate(
 		persistCreatedTask(
 			input: TaskChatCreateRequest,
 			task: BoardTaskRow,
-		): Promise<BoardTaskRow>;
+		): Promise<BoardTaskApiRecord>;
 	},
 ): Promise<TaskChatCreateResponse> {
 	const intake = await settle(() => deps.runTaskIntake(input));

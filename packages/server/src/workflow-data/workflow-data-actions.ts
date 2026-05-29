@@ -90,9 +90,6 @@ export async function createIntakeTask(
 		dueDate: null,
 		creatorId: project?.ownerId ?? DEFAULT_TASK_CREATOR_ID,
 		linkedPr: null,
-		linearIssueId: null,
-		linearIdentifier: null,
-		linearUrl: null,
 	});
 }
 
@@ -135,8 +132,15 @@ export async function addComment(
 	if (!task) {
 		throw workflowError("not_found", "Task not found");
 	}
-	context.realtimeEvents?.publish({ type: "issue.updated", issue: task });
-	return (await withPullRequests(context.db, [task]))[0] ?? task;
+	const refreshed = assertTaskResult(
+		await context.taskService.getTask(input.taskId),
+		"Task read failed",
+	);
+	context.realtimeEvents?.publish({
+		type: "issue.updated",
+		issue: refreshed,
+	});
+	return (await withPullRequests(context.db, [refreshed]))[0] ?? refreshed;
 }
 
 export async function linkPullRequest(

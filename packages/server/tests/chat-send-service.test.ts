@@ -158,9 +158,6 @@ function boardTask(): BoardTaskApiRecord {
 		creatorId: "owner-1",
 		assigneeId: null,
 		linkedPr: null,
-		linearIssueId: null,
-		linearIdentifier: null,
-		linearUrl: null,
 		createdAt: "2026-05-16T00:00:00.000Z",
 		updatedAt: "2026-05-16T00:00:00.000Z",
 	};

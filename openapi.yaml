@@ -854,15 +854,6 @@ components:
         linkedPr:
           type: string
           nullable: true
-        linearIssueId:
-          type: string
-          nullable: true
-        linearIdentifier:
-          type: string
-          nullable: true
-        linearUrl:
-          type: string
-          nullable: true
     ProjectBoardRecord:
       type: object
       additionalProperties: false
@@ -928,15 +919,6 @@ components:
         creatorId:
           type: string
         linkedPr:
-          type: string
-          nullable: true
-        linearIssueId:
-          type: string
-          nullable: true
-        linearIdentifier:
-          type: string
-          nullable: true
-        linearUrl:
           type: string
           nullable: true
         createdAt:

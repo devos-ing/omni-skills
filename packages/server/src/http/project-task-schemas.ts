@@ -45,9 +45,6 @@ const createTaskSchema = z.object({
 	assigneeId: optionalNullableString,
 	dueDate: optionalTimestamp,
 	linkedPr: optionalNullableString,
-	linearIssueId: optionalNullableString,
-	linearIdentifier: optionalNullableString,
-	linearUrl: optionalNullableString,
 });
 
 const updateTaskSchema = z.object({
@@ -61,9 +58,6 @@ const updateTaskSchema = z.object({
 	assigneeId: optionalNullableString,
 	dueDate: optionalTimestamp,
 	linkedPr: optionalNullableString,
-	linearIssueId: optionalNullableString,
-	linearIdentifier: optionalNullableString,
-	linearUrl: optionalNullableString,
 });
 
 export function parseCreateProjectPayload(

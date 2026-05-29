@@ -116,9 +116,8 @@ describe("board repository", () => {
 				?.tasks[0]?.status,
 		).toBe("in_review");
 		expect(
-			board?.statusColumns.find((column) => column.status === "plan")?.tasks[0]
-				?.linearIdentifier,
-		).toBe("ROY-233");
+			board?.statusColumns.find((column) => column.status === "plan")?.tasks[0],
+		).not.toHaveProperty("linearIdentifier");
 	});
 
 	it("returns null for workspace/project mismatch and unknown projects", async () => {

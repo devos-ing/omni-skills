@@ -39,9 +39,6 @@ export interface CreateTaskPayload {
 	assigneeId?: string | null;
 	dueDate?: string | null;
 	linkedPr?: string | null;
-	linearIssueId?: string | null;
-	linearIdentifier?: string | null;
-	linearUrl?: string | null;
 }
 
 export interface UpdateTaskPayload {
@@ -55,7 +52,4 @@ export interface UpdateTaskPayload {
 	assigneeId?: string | null;
 	dueDate?: string | null;
 	linkedPr?: string | null;
-	linearIssueId?: string | null;
-	linearIdentifier?: string | null;
-	linearUrl?: string | null;
 }

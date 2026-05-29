@@ -12,7 +12,7 @@ import {
 import type { BoardTaskRow, NewBoardTaskRow } from "devos-db";
 import { deleteTaskExecutionRecords, deleteTaskRelations } from "./task-delete";
 import type {
-	BoardTaskApiRecord,
+	BoardTaskRepositoryRecord,
 	TaskRepository,
 } from "./types/task-service.types";
 
@@ -121,7 +121,7 @@ type DbExecutor = Pick<ServerDatabase["db"], "delete" | "insert" | "select">;
 async function withAssignees(
 	db: DbExecutor,
 	tasks: BoardTaskRow[],
-): Promise<BoardTaskApiRecord[]> {
+): Promise<BoardTaskRepositoryRecord[]> {
 	if (tasks.length === 0) {
 		return [];
 	}
@@ -145,7 +145,7 @@ async function withAssignees(
 async function withAssignee(
 	db: DbExecutor,
 	task: BoardTaskRow,
-): Promise<BoardTaskApiRecord> {
+): Promise<BoardTaskRepositoryRecord> {
 	return {
 		...task,
 		assigneeId: await readTaskAssignee(db, task.id),
@@ -155,7 +155,7 @@ async function withAssignee(
 async function readTaskForDelete(
 	db: DbExecutor,
 	taskId: string,
-): Promise<BoardTaskApiRecord | null> {
+): Promise<BoardTaskRepositoryRecord | null> {
 	const [task] = await db
 		.select()
 		.from(boardTasksTable)
