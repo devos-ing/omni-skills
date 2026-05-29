@@ -201,8 +201,11 @@ export function TaskCreatePanel(): ReactElement {
 									{clarificationStep.currentQuestion.options.map((option) => (
 										<ClarificationOptionButton
 											key={option.value}
-											onSelect={(value) =>
-												updateAnswer(clarificationStep.currentIndex, value)
+											onSelect={() =>
+												updateAnswer(
+													clarificationStep.currentIndex,
+													option.value,
+												)
 											}
 											option={option}
 											selected={

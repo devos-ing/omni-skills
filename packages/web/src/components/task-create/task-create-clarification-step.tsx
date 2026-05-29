@@ -35,7 +35,7 @@ export function TaskCreateClarificationStep({
 					{question.options.map((option) => (
 						<ClarificationOptionButton
 							key={option.value}
-							onSelect={(value) => onAnswerChange(currentIndex, value)}
+							onSelect={() => onAnswerChange(currentIndex, option.value)}
 							option={option}
 							selected={answer === option.value}
 						/>

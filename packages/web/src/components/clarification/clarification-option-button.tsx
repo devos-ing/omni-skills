@@ -10,7 +10,7 @@ interface ClarificationOptionButtonProps {
 	disabled?: boolean;
 	option: TaskClarificationOption;
 	selected: boolean;
-	onSelect: (value: string) => void;
+	onSelect: () => void;
 }
 
 export function ClarificationOptionButton({
@@ -22,7 +22,7 @@ export function ClarificationOptionButton({
 	return (
 		<Button
 			disabled={disabled}
-			onClick={() => onSelect(option.value)}
+			onClick={onSelect}
 			size="sm"
 			type="button"
 			variant={selected ? "default" : "secondary"}

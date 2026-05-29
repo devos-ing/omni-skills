@@ -102,7 +102,7 @@ export interface ChatRoomPanelViewProps {
 	onToggleTaskDetails: () => void;
 	onSearch: () => void;
 	onSelectCommand: (value: string) => void;
-	onSelectOption: (index: number, value: string) => void;
+	onSelectOption: (index: number, value: string) => Promise<void> | void;
 	onSelectSession: (sessionId: string) => void;
 	onSubmit: () => void;
 	onSubmitAnswers: () => void;
@@ -125,7 +125,7 @@ export interface ChatClarificationComposerProps {
 	pendingQuestionIndex: number;
 	questions: TaskClarificationQuestion[];
 	onAnswerChange: (index: number, value: string) => void;
-	onSelectOption: (index: number, value: string) => void;
+	onSelectOption: (index: number, value: string) => Promise<void> | void;
 	onSubmit: () => void;
 }
 

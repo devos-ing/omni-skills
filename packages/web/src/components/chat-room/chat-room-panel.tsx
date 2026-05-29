@@ -230,7 +230,7 @@ export function ChatRoomPanel({
 			}}
 			onSelectCommand={setDraft}
 			onSelectOption={(index, value) =>
-				void clarificationSubmitters.submitAnswerValue(index, value)
+				clarificationSubmitters.submitAnswerValue(index, value)
 			}
 			onSelectSession={(sessionId) => {
 				setActiveSessionId(sessionId);

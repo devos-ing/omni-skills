@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent, ReactElement } from "react";
+import { type KeyboardEvent, type ReactElement, useState } from "react";
 
 import { ClarificationOptionButton } from "@/components/clarification/clarification-option-button";
 import { resolveClarificationStep } from "@/components/clarification/clarification-queue-utils";
@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
 
+import {
+	isChatClarificationOptionSelected,
+	resolveChatClarificationOptionAnswer,
+} from "./chat-clarification-option-answer";
 import type { ChatClarificationComposerProps } from "./types/chat-room.types";
 
 export function ChatClarificationComposer({
@@ -19,16 +23,28 @@ export function ChatClarificationComposer({
 	onSelectOption,
 	onSubmit,
 }: ChatClarificationComposerProps): ReactElement | null {
+	const [isSubmittingOption, setIsSubmittingOption] = useState(false);
 	const step = resolveClarificationStep(questions, pendingQuestionIndex);
 	const answer = answers[step.currentIndex] ?? "";
+	const controlsDisabled = disabled || isSubmittingOption;
 	const canSubmit = step.currentQuestion !== null && answer.trim().length > 0;
 
 	function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
-		if (event.key !== "Enter" || !canSubmit || disabled) {
+		if (event.key !== "Enter" || !canSubmit || controlsDisabled) {
 			return;
 		}
 		event.preventDefault();
 		onSubmit();
+	}
+
+	async function handleSelectOption(optionAnswer: string): Promise<void> {
+		if (controlsDisabled) return;
+		setIsSubmittingOption(true);
+		try {
+			await onSelectOption(step.currentIndex, optionAnswer);
+		} finally {
+			setIsSubmittingOption(false);
+		}
 	}
 
 	if (!step.currentQuestion) {
@@ -49,11 +65,15 @@ export function ChatClarificationComposer({
 						<div className="flex flex-wrap gap-2">
 							{step.currentQuestion.options.map((option) => (
 								<ClarificationOptionButton
-									disabled={disabled}
+									disabled={controlsDisabled}
 									key={option.value}
-									onSelect={(value) => onSelectOption(step.currentIndex, value)}
+									onSelect={() =>
+										void handleSelectOption(
+											resolveChatClarificationOptionAnswer(option),
+										)
+									}
 									option={option}
-									selected={answer === option.value}
+									selected={isChatClarificationOptionSelected(answer, option)}
 								/>
 							))}
 						</div>
@@ -61,7 +81,7 @@ export function ChatClarificationComposer({
 					<div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
 						<Input
 							aria-labelledby={`clarification-composer-question-${step.currentIndex}`}
-							disabled={disabled}
+							disabled={controlsDisabled}
 							id={`clarification-composer-answer-${step.currentIndex}`}
 							onChange={(event) =>
 								onAnswerChange(step.currentIndex, event.target.value)
@@ -71,7 +91,7 @@ export function ChatClarificationComposer({
 							value={answer}
 						/>
 						<Button
-							disabled={disabled || !canSubmit}
+							disabled={controlsDisabled || !canSubmit}
 							onClick={onSubmit}
 							type="button"
 						>
