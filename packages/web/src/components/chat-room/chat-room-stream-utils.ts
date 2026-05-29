@@ -29,3 +29,18 @@ export function hasLoadingChatStreamForSession(
 		(stream) => stream.sessionId === sessionId && stream.status === "loading",
 	);
 }
+
+export function chatStreamActivityStartedAtForSession(
+	streamsByRunId: Record<string, RealtimeChatStreamBuffer>,
+	sessionId: string,
+): string | null {
+	const starts = Object.values(streamsByRunId)
+		.filter(
+			(stream) =>
+				stream.sessionId === sessionId &&
+				(stream.status === "loading" || stream.status === "streaming"),
+		)
+		.map((stream) => stream.startedAt)
+		.sort((left, right) => left.localeCompare(right));
+	return starts[0] ?? null;
+}

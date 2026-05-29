@@ -16,6 +16,7 @@ describe("chat stream realtime store", () => {
 		expect(state.chatStreamsByRunId["run-1"]).toMatchObject({
 			content: "",
 			sessionId: "session-1",
+			startedAt: "2026-05-16T00:00:00.000Z",
 			status: "loading",
 		});
 		state = applyRealtimeEvent(state, chatStreamDeltaEvent("Updated task "));
@@ -27,7 +28,9 @@ describe("chat stream realtime store", () => {
 		expect(state.chatStreamsByRunId["run-1"]).toMatchObject({
 			content: "Updated task TASK(owner-1)-1: Build it",
 			sessionId: "session-1",
+			startedAt: "2026-05-16T00:00:00.000Z",
 			status: "streaming",
+			updatedAt: "2026-05-16T00:00:01.000Z",
 		});
 
 		state = applyRealtimeEvent(

@@ -26,6 +26,7 @@ export interface RealtimeChatStreamBuffer {
 	status: "loading" | "streaming" | "completed" | "error";
 	error: string | null;
 	completedMessageId: string | null;
+	startedAt: string;
 	updatedAt: string;
 }
 

@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 import { ChatEnvironmentPanel } from "./chat-environment-panel";
 import { resolveChatMessageDisplay } from "./chat-message-display";
 import { ChatMissionProgress } from "./chat-mission-progress";
+import { resolveMissionPlanMessageContent } from "./chat-plan-message-state";
 import { ChatTranscriptSkeleton } from "./chat-transcript-skeleton";
+import { formatWaitDurationLabel } from "./chat-wait-label";
 import { ChatSelectedSessionWelcome } from "./chat-welcome-states";
 import type { ChatTranscriptProps } from "./types/chat-room.types";
 
@@ -44,6 +46,10 @@ export function ChatTranscript({
 	].join(":");
 	const showThinking = isThinking && streamLines.length === 0;
 	const showPlanning = isPlanning && !showThinking && streamLines.length === 0;
+	const planMessageContent = resolveMissionPlanMessageContent(
+		missionProgress,
+		messages,
+	);
 	const showWorkingHeader =
 		Boolean(workingStartedAt) &&
 		(showThinking || showPlanning || streamLines.length > 0);
@@ -94,6 +100,9 @@ export function ChatTranscript({
 					{messages.map((message) => (
 						<ChatMessageBubble key={message.id} message={message} />
 					))}
+					{planMessageContent ? (
+						<PlanMessage content={planMessageContent} />
+					) : null}
 					{showWorkingHeader ? (
 						<WorkingSectionHeader startedAt={workingStartedAt ?? ""} />
 					) : null}
@@ -139,19 +148,11 @@ function WorkingSectionHeader({
 	return (
 		<div className="grid gap-4 pt-2">
 			<Typography className="" variant="description">
-				Working for {formatElapsedSeconds(startedAt, now)}s
+				{formatWaitDurationLabel(startedAt, now)}
 			</Typography>
 			<div className="h-px bg-surface-active" />
 		</div>
 	);
-}
-
-function formatElapsedSeconds(startedAt: string, now: number): number {
-	const startedTime = new Date(startedAt).getTime();
-	if (!Number.isFinite(startedTime)) {
-		return 1;
-	}
-	return Math.max(1, Math.floor((now - startedTime) / 1000));
 }
 
 function ThinkingLine(): ReactElement {
@@ -173,7 +174,7 @@ function ChatMessageBubble({
 		return <AssistantNote message={message} />;
 	}
 	if (display === "plan") {
-		return <PlanMessage message={message} />;
+		return <PlanMessage content={message.content} />;
 	}
 	const isError = display === "error";
 	return (
@@ -211,11 +212,7 @@ function AssistantNote({
 	);
 }
 
-function PlanMessage({
-	message,
-}: {
-	message: ChatMessageRecord;
-}): ReactElement {
+function PlanMessage({ content }: { content: string }): ReactElement {
 	return (
 		<article
 			className="grid max-w-[min(46rem,94%)] justify-self-start gap-2 rounded-md border border-blue-900/50 bg-surface-plan px-3 py-2 text-sm text-zinc-200"
@@ -225,7 +222,7 @@ function PlanMessage({
 				Plan
 			</Typography>
 			<Typography className="whitespace-pre-wrap break-words leading-6">
-				{message.content}
+				{content}
 			</Typography>
 		</article>
 	);

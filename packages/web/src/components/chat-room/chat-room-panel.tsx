@@ -81,13 +81,14 @@ export function ChatRoomPanel({
 	const chatStreamsByRunId = useRealtimeStore(
 		(state) => state.chatStreamsByRunId,
 	);
-	const { isThinking, streamLines } = resolveChatRoomStreamState(
-		commandLines,
-		chatStreamsByRunId,
-		selectedSessionId,
-		sendMessage.isPending,
-		sendMessage.variables?.sessionId,
-	);
+	const { activityStartedAt, isThinking, streamLines } =
+		resolveChatRoomStreamState(
+			commandLines,
+			chatStreamsByRunId,
+			selectedSessionId,
+			sendMessage.isPending,
+			sendMessage.variables?.sessionId,
+		);
 	const mutationBusy =
 		createSession.isPending ||
 		updateSession.isPending ||
@@ -213,7 +214,7 @@ export function ChatRoomPanel({
 			sessions={sessions}
 			sessionsError={sessionsQuery.error}
 			streamLines={streamLines}
-			workingStartedAt={workingStartedAt}
+			workingStartedAt={workingStartedAt ?? activityStartedAt}
 			onAnswerChange={(index, value) =>
 				clarificationState.updateAnswerDraft(selectedSessionId, index, value)
 			}
