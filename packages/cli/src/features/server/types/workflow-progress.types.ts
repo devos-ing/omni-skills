@@ -20,8 +20,13 @@ export interface WorkflowProgressBase {
 	schema: typeof WORKFLOW_PROGRESS_SCHEMA;
 	emittedAt: string;
 	projectId?: string;
+	taskId?: string;
 	issueKey?: string;
 	stage?: string;
+	agentRole?: AgentChatLogRole;
+	agentBackend?: string;
+	agentModel?: string;
+	phrase?: string;
 }
 
 export interface WorkflowStageProgressEvent extends WorkflowProgressBase {
@@ -41,7 +46,6 @@ export interface WorkflowActionProgressEvent extends WorkflowProgressBase {
 	kind: "action";
 	action: string;
 	status: WorkflowProgressStatus;
-	agentRole?: AgentChatLogRole;
 	detail?: string;
 	error?: string;
 }

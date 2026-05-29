@@ -13,6 +13,7 @@ import type {
 } from "./types/workflow-data.types";
 import type { WorkflowDataContext } from "./workflow-data-actions";
 import { workflowError } from "./workflow-data-error";
+import { streamExecutionMetadata } from "./workflow-execution-stream-metadata";
 import { appendMarkedStream, streamEventMarker } from "./workflow-stream-log";
 import { recordTaskExecutionUsage } from "./workflow-token-usage-actions";
 
@@ -69,6 +70,7 @@ export async function appendTaskExecutionStream(
 		input.executionLogId,
 		{
 			kind: "log",
+			...streamExecutionMetadata(input, existing.taskId),
 			stream: input.stream,
 			level: input.stream === "stderr" ? "error" : "info",
 			message: input.text,

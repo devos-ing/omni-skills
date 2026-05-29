@@ -8,6 +8,7 @@ import { createReliableWorkflowDataClient } from "./reliable-workflow-data-clien
 import { enrichUsageRecord } from "./usage-cost";
 import type {
 	WorkflowDataAction,
+	WorkflowTaskExecutionStreamInput,
 	WorkflowTaskExecutionUsageInput,
 } from "./workflow-data-protocol";
 
@@ -79,6 +80,7 @@ export function createWorkflowExecutionRecorder(
 					enqueue("taskExecutions.appendStream", {
 						executionLogId,
 						eventId: eventId(executionLogId, sequence),
+						...streamMetadata(event),
 						stream: event.stream,
 						text: event.message,
 						emittedAt: event.emittedAt,
@@ -152,6 +154,21 @@ function matchesRunState(
 		return false;
 	}
 	return event.issueKey === state.issue.key;
+}
+
+function streamMetadata(
+	event: WorkflowProgressEvent,
+): Partial<WorkflowTaskExecutionStreamInput> {
+	return {
+		projectId: event.projectId,
+		taskId: event.taskId,
+		issueKey: event.issueKey,
+		stage: event.stage,
+		agentRole: event.agentRole,
+		agentBackend: event.agentBackend,
+		agentModel: event.agentModel,
+		phrase: event.phrase,
+	};
 }
 
 function eventId(executionLogId: string, sequence: number): string {

@@ -82,8 +82,16 @@ export interface WorkflowTaskExecutionStartInput {
 export interface WorkflowTaskExecutionStreamInput {
 	executionLogId: string;
 	eventId: string;
+	projectId?: string;
+	taskId?: string;
+	issueKey?: string;
+	stage?: string;
 	stream: "stdout" | "stderr" | "daemon";
 	text: string;
+	agentRole?: string;
+	agentBackend?: string;
+	agentModel?: string;
+	phrase?: string;
 	emittedAt?: string;
 }
 

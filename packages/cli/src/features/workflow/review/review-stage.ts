@@ -8,6 +8,7 @@ import {
 	buildReviewComment,
 } from "../../../utils/comments";
 import type { ResolvedProjectConfig, RunState } from "../../types";
+import { resolveAgentLogMetadata } from "../agents/agent-log-metadata";
 import { emitActionProgress, emitStageProgress } from "../progress";
 import type {
 	HandleReviewTestingStageDeps,
@@ -51,6 +52,7 @@ export async function handleReviewTestingStage(
 		projectId: config.id,
 		issue: state.issue,
 		agentRole: "review-testing",
+		...resolveAgentLogMetadata(config, "review-testing"),
 		skillPath: config.skills.reviewTest,
 		prompt,
 		invoke: ({ onStream } = { onStream: () => {} }) =>
@@ -109,6 +111,7 @@ export async function handleReviewTestingStage(
 				projectId: config.id,
 				issue: state.issue,
 				agentRole: "github-comment",
+				...resolveAgentLogMetadata(config, "github-comment"),
 				skillPath: config.skills.githubComment,
 				prompt: githubCommentPrompt,
 				invoke: ({ onStream } = { onStream: () => {} }) =>

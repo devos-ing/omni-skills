@@ -14,6 +14,9 @@ interface RunAgentWithChatLogOptions {
 	projectId: string;
 	issue: RunState["issue"];
 	agentRole: AgentChatLogRole;
+	agentBackend?: string;
+	agentModel?: string;
+	phrase?: string;
 	skillPath: string;
 	prompt: string;
 	invoke: (input?: {
@@ -71,7 +74,9 @@ function emitAgentStreamLog(
 	}
 	emitWorkflowProgress({
 		kind: "log",
+		...agentProgressMetadata(options),
 		projectId: options.projectId,
+		taskId: options.issue.id,
 		issueKey: options.issue.key,
 		stage: options.agentRole,
 		stream: event.stream,
@@ -87,11 +92,12 @@ function emitAgentProgress(
 ): void {
 	emitWorkflowProgress({
 		kind: "action",
+		...agentProgressMetadata(options),
 		projectId: options.projectId,
+		taskId: options.issue.id,
 		issueKey: options.issue.key,
 		stage: options.agentRole,
 		action: "agent",
-		agentRole: options.agentRole,
 		status,
 		...(error ? { error } : {}),
 	});
@@ -109,7 +115,9 @@ function emitAgentOutputLog(
 	}
 	emitWorkflowProgress({
 		kind: "log",
+		...agentProgressMetadata(options),
 		projectId: options.projectId,
+		taskId: options.issue.id,
 		issueKey: options.issue.key,
 		stage: options.agentRole,
 		stream: "stdout",
@@ -124,13 +132,24 @@ function emitAgentErrorLog(
 ): void {
 	emitWorkflowProgress({
 		kind: "log",
+		...agentProgressMetadata(options),
 		projectId: options.projectId,
+		taskId: options.issue.id,
 		issueKey: options.issue.key,
 		stage: options.agentRole,
 		stream: "stderr",
 		level: "error",
 		message,
 	});
+}
+
+function agentProgressMetadata(options: RunAgentWithChatLogOptions) {
+	return {
+		agentRole: options.agentRole,
+		agentBackend: options.agentBackend,
+		agentModel: options.agentModel,
+		phrase: options.phrase ?? options.agentRole,
+	};
 }
 
 async function persistAgentChatLog(

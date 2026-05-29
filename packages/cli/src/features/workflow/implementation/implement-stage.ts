@@ -9,6 +9,7 @@ import type {
 	WorkflowStage,
 } from "../../types";
 import { runAgentWithChatLog } from "../agents/agent-chat-log";
+import { resolveAgentLogMetadata } from "../agents/agent-log-metadata";
 import { buildIssueJobLogFields } from "../mission/issue-job-log-fields";
 import { saveRunState, transitionStage } from "../state";
 import type {
@@ -74,6 +75,7 @@ export async function handleImplementingStage(
 		projectId: config.id,
 		issue: state.issue,
 		agentRole: "implementing",
+		...resolveAgentLogMetadata(config, "implementing"),
 		skillPath: config.skills.implement,
 		prompt,
 		invoke: ({ onStream } = { onStream: () => {} }) =>

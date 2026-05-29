@@ -11,6 +11,7 @@ import type {
 	ResolvedProjectConfig,
 	RunState,
 } from "../../types";
+import { resolveAgentLogMetadata } from "../agents/agent-log-metadata";
 import {
 	emitActionProgress,
 	emitPlanningSummaryProgress,
@@ -26,10 +27,6 @@ import { parsePlannerDecision } from "./plan-parsing";
 import { buildPlannerRepairPrompt } from "./plan-repair-prompt";
 
 const HUMAN_REVIEW_COMPLEXITY_THRESHOLD = 5;
-const DEFAULT_NEEDS_INFO_QUESTIONS = [
-	"What outcome should this task accomplish, and how should review/testing verify it?",
-];
-
 export async function handlePlanningStage(
 	config: ResolvedProjectConfig,
 	agent: AgentAdapter,
@@ -59,6 +56,7 @@ export async function handlePlanningStage(
 		projectId: config.id,
 		issue: state.issue,
 		agentRole: "planning",
+		...resolveAgentLogMetadata(config, "planning"),
 		skillPath: config.skills.plan,
 		prompt,
 		invoke: ({ onStream } = { onStream: () => {} }) =>
@@ -90,6 +88,7 @@ export async function handlePlanningStage(
 			projectId: config.id,
 			issue: state.issue,
 			agentRole: "planning",
+			...resolveAgentLogMetadata(config, "planning"),
 			skillPath: config.skills.plan,
 			prompt: repairPrompt,
 			invoke: ({ onStream } = { onStream: () => {} }) =>
@@ -114,7 +113,9 @@ export async function handlePlanningStage(
 			}
 			parsedPlan = {
 				result: "NEEDS_INFO",
-				questions: DEFAULT_NEEDS_INFO_QUESTIONS,
+				questions: [
+					"What outcome should this task accomplish, and how should review/testing verify it?",
+				],
 			};
 		}
 	}
