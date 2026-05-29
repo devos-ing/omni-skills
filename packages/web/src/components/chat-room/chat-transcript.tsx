@@ -7,10 +7,11 @@ import { Typography } from "@/components/ui/typography";
 import type { ChatMessageRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-import { ChatEnvironmentPanel } from "./chat-environment-panel";
 import { resolveChatMessageDisplay } from "./chat-message-display";
 import { ChatMissionProgress } from "./chat-mission-progress";
 import { resolveMissionPlanMessageContent } from "./chat-plan-message-state";
+import { ChatSessionActivityBubbles } from "./chat-session-activity-bubbles";
+import { createChatSessionActivityBubbles } from "./chat-session-activity-state";
 import { ChatTranscriptSkeleton } from "./chat-transcript-skeleton";
 import { formatWaitDurationLabel } from "./chat-wait-label";
 import { ChatSelectedSessionWelcome } from "./chat-welcome-states";
@@ -26,7 +27,6 @@ export function ChatTranscript({
 	session,
 	streamLines,
 	workingStartedAt,
-	onDraftCommand,
 }: ChatTranscriptProps): ReactElement {
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const previousSessionIdRef = useRef<string | null>(null);
@@ -36,6 +36,10 @@ export function ChatTranscript({
 	const missionIsPending =
 		Boolean(sessionTaskId) &&
 		(missionTaskId !== sessionTaskId || missionProgress?.state === "loading");
+	const activityBubbles = createChatSessionActivityBubbles({
+		missionProgress,
+		streamLines,
+	});
 	const renderedContentKey = [
 		messages.length,
 		missionProgress?.updatedAt ?? "",
@@ -43,24 +47,28 @@ export function ChatTranscript({
 		missionProgress?.executions.length ?? 0,
 		missionProgress?.latestLogLines.length ?? 0,
 		streamLines.length,
+		activityBubbles.map((bubble) => bubble.id).join(","),
 	].join(":");
-	const showThinking = isThinking && streamLines.length === 0;
-	const showPlanning = isPlanning && !showThinking && streamLines.length === 0;
+	const hasActivityBubbles = activityBubbles.length > 0;
+	const showThinking =
+		isThinking && streamLines.length === 0 && !hasActivityBubbles;
+	const showPlanning =
+		isPlanning &&
+		!showThinking &&
+		streamLines.length === 0 &&
+		!hasActivityBubbles;
 	const planMessageContent = resolveMissionPlanMessageContent(
 		missionProgress,
 		messages,
 	);
 	const showWorkingHeader =
 		Boolean(workingStartedAt) &&
-		(showThinking || showPlanning || streamLines.length > 0);
-	const showStandaloneStream = streamLines.length > 0 && !missionProgress;
-	const hasSessionActivity =
-		messages.length > 0 ||
-		streamLines.length > 0 ||
-		Boolean(missionProgress) ||
-		showPlanning ||
-		showWorkingHeader;
-
+		(showThinking ||
+			showPlanning ||
+			streamLines.length > 0 ||
+			hasActivityBubbles);
+	const showStandaloneStream =
+		streamLines.length > 0 && !missionProgress && !hasActivityBubbles;
 	useEffect(() => {
 		if (!sessionId) {
 			previousSessionIdRef.current = null;
@@ -106,6 +114,7 @@ export function ChatTranscript({
 					{showWorkingHeader ? (
 						<WorkingSectionHeader startedAt={workingStartedAt ?? ""} />
 					) : null}
+					<ChatSessionActivityBubbles bubbles={activityBubbles} />
 					{showThinking ? <ThinkingLine /> : null}
 					{showPlanning ? <PlanningLine /> : null}
 					{showStandaloneStream ? (
@@ -122,13 +131,6 @@ export function ChatTranscript({
 					) : null}
 				</div>
 			</div>
-			{/* {hasSessionActivity ? (
-				<ChatEnvironmentPanel
-					missionProgress={missionProgress}
-					projectId={session?.projectId ?? null}
-					onDraftCommand={onDraftCommand}
-				/>
-			) : null} */}
 		</div>
 	);
 }
