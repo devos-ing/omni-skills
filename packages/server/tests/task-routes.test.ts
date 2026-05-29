@@ -28,6 +28,50 @@ afterEach(async () => {
 });
 
 describe("task routes", () => {
+	it("does not expose legacy Linear fields in task route responses", async () => {
+		testDatabase = await createDrizzleServerTestDatabase();
+		const app = createTaskRouteTestApp(testDatabase.db);
+		await seedTaskRouteProject(testDatabase.db, "project-1");
+
+		const createResponse = await app(
+			new Request("http://localhost/api/tasks", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					projectId: "project-1",
+					title: "Task 1",
+					content: "Body",
+					priority: 1,
+					status: "open",
+					creatorId: "owner-1",
+					linearIssueId: "lin-issue-1",
+					linearIdentifier: "ROY-233",
+					linearUrl: "https://linear.app/roy/issue/ROY-233/task",
+				}),
+			}),
+		);
+		expect(createResponse.status).toBe(201);
+		const created = (await createResponse.json()) as Record<string, unknown>;
+		expectNoLegacyLinearFields(created);
+
+		const listResponse = await app(
+			new Request("http://localhost/api/tasks", { method: "GET" }),
+		);
+		expect(listResponse.status).toBe(200);
+		const listed = (await listResponse.json()) as Record<string, unknown>[];
+		expectNoLegacyLinearFields(listed[0] ?? {});
+
+		const readResponse = await app(
+			new Request(`http://localhost/api/tasks/${String(created.id)}`, {
+				method: "GET",
+			}),
+		);
+		expect(readResponse.status).toBe(200);
+		expectNoLegacyLinearFields(
+			(await readResponse.json()) as Record<string, unknown>,
+		);
+	});
+
 	it("supports task CRUD/list", async () => {
 		testDatabase = await createDrizzleServerTestDatabase();
 		const app = createTaskRouteTestApp(testDatabase.db);
@@ -430,3 +474,9 @@ describe("task routes", () => {
 		expect(response.status).toBe(404);
 	});
 });
+
+function expectNoLegacyLinearFields(payload: Record<string, unknown>): void {
+	expect(payload).not.toHaveProperty("linearIssueId");
+	expect(payload).not.toHaveProperty("linearIdentifier");
+	expect(payload).not.toHaveProperty("linearUrl");
+}
