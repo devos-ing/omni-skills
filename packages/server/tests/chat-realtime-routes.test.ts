@@ -123,7 +123,7 @@ describe("chat realtime routes", () => {
 			{
 				type: "chat.stream.delta",
 				stream: {
-					delta: "Task TASK(owner-1)-1: Build it is ready for planning.",
+					delta: "Task OWN-1: Build it is ready for planning.",
 				},
 			},
 			{ type: "chat.stream.completed", stream: { sessionId: session.id } },

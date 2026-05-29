@@ -84,7 +84,7 @@ describe("server services", () => {
 			projectExists: async (id) => id === "project-1",
 			nextTaskKey: async (scope) => {
 				keyScopes.push(scope);
-				return "TASK(owner-1)-1";
+				return "OWN-1";
 			},
 			createTask: async (input, assigneeId) => {
 				const created = {
@@ -115,7 +115,7 @@ describe("server services", () => {
 		});
 		expect(created.status).toBe("ok");
 		expect(createdTasks[0]).toMatchObject({
-			taskKey: "TASK(owner-1)-1",
+			taskKey: "OWN-1",
 			projectId: null,
 		});
 		expect(created.status === "ok" ? created.value : {}).not.toHaveProperty(

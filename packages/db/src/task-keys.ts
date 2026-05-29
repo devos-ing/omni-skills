@@ -11,6 +11,7 @@ export async function generateBoardTaskKey(
 	scope: BoardTaskKeyScope,
 ): Promise<string> {
 	const slug = await resolveTaskKeySlug(db, scope);
+	const prefix = workspaceBranchPrefix(slug);
 	const rows = await db
 		.select({
 			creatorId: boardTasksTable.creatorId,
@@ -25,22 +26,35 @@ export async function generateBoardTaskKey(
 		projects.map((project) => [project.id, project.ownerId]),
 	);
 	let max = 0;
+	const usedCompactValues = new Set<number>();
 	for (const row of rows) {
+		const compact = parseCompactTaskKey(row.taskKey);
+		if (compact?.prefix === prefix) {
+			usedCompactValues.add(compact.value);
+		}
 		const rowSlug = row.projectId
 			? projectOwners.get(row.projectId)
 			: row.creatorId;
 		if (rowSlug !== slug) {
 			continue;
 		}
-		const value = parseScopedTaskKeyNumber(row.taskKey);
+		const value = parseTaskKeyNumber(row.taskKey);
 		if (value > max) {
 			max = value;
 		}
 	}
-	return formatBoardTaskKey(slug, max + 1);
+	let next = max + 1;
+	while (usedCompactValues.has(next)) {
+		next += 1;
+	}
+	return formatBoardTaskKey(slug, next);
 }
 
 export function boardTaskBranchName(taskKey: string): string | undefined {
+	const compact = parseCompactTaskKey(taskKey);
+	if (compact) {
+		return `${compact.prefix}-${compact.value}`;
+	}
 	const parsed = parseScopedTaskKey(taskKey);
 	if (!parsed) {
 		return undefined;
@@ -66,8 +80,12 @@ async function resolveTaskKeySlug(
 	return project?.ownerId ?? scope.projectId.trim();
 }
 
-function parseScopedTaskKeyNumber(taskKey: string): number {
-	return parseScopedTaskKey(taskKey)?.value ?? 0;
+function parseTaskKeyNumber(taskKey: string): number {
+	return (
+		parseCompactTaskKey(taskKey)?.value ??
+		parseScopedTaskKey(taskKey)?.value ??
+		0
+	);
 }
 
 function parseScopedTaskKey(
@@ -93,8 +111,31 @@ function parseScopedTaskKey(
 	return { slug, value: parsed };
 }
 
+function parseCompactTaskKey(
+	taskKey: string,
+): { prefix: string; value: number } | undefined {
+	const match = taskKey.match(/^([A-Z]{3})-([1-9]\d*)$/);
+	if (!match) {
+		return undefined;
+	}
+	const prefix = match[1];
+	const suffix = match[2];
+	if (!prefix || !suffix) {
+		return undefined;
+	}
+	const parsed = Number(suffix);
+	if (
+		!Number.isSafeInteger(parsed) ||
+		parsed <= 0 ||
+		String(parsed) !== suffix
+	) {
+		return undefined;
+	}
+	return { prefix, value: parsed };
+}
+
 function formatBoardTaskKey(slug: string, value: number): string {
-	return `${TASK_KEY_PREFIX}(${slug})-${value}`;
+	return `${workspaceBranchPrefix(slug)}-${value}`;
 }
 
 function workspaceBranchPrefix(slug: string): string {

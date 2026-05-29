@@ -145,7 +145,7 @@ describe("runTaskIntake", () => {
 			{
 				createTask: async (input) => {
 					created.push(input.title);
-					return createdTask("task-1", "TASK(default)-1", input.title);
+					return createdTask("task-1", "DEF-1", input.title);
 				},
 			},
 			{ request: "task cli", askQuestion: async () => "" },
@@ -168,7 +168,7 @@ describe("runTaskIntake", () => {
 			),
 			{
 				createTask: async (input) =>
-					createdTask("task-2", "TASK(default)-2", input.title),
+					createdTask("task-2", "DEF-2", input.title),
 			},
 			{
 				request: "create task",
@@ -193,7 +193,7 @@ describe("runTaskIntake", () => {
 			),
 			{
 				createTask: async (input) =>
-					createdTask("task-3", "TASK(default)-3", input.title),
+					createdTask("task-3", "DEF-3", input.title),
 			},
 			{
 				request: "create task",

@@ -148,7 +148,7 @@ function chatSession(): ChatSessionRow {
 function boardTask(): BoardTaskApiRecord {
 	return {
 		id: "task-1",
-		taskKey: "TASK(owner-1)-1",
+		taskKey: "OWN-1",
 		projectId: "default",
 		title: DEFAULT_CHAT_ISSUE_TITLE,
 		content: DEFAULT_CHAT_ISSUE_CONTENT,

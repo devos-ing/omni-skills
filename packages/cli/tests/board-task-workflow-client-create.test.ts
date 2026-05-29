@@ -19,15 +19,15 @@ describe("BoardTaskWorkflowClient task creation", () => {
 		const todo = await client.createTodoIssueFromPlan(
 			{
 				id: "parent-1",
-				key: "TASK(owner-1)-1",
+				key: "OWN-1",
 				title: "Parent",
 				url: "devos://tasks/parent-1",
 			},
 			{ title: "Planned task", description: "Ready to run." },
 		);
 
-		expect(backlog.identifier).toBe("TASK(owner-1)-1");
-		expect(todo.identifier).toBe("TASK(owner-1)-2");
+		expect(backlog.identifier).toBe("OWN-1");
+		expect(todo.identifier).toBe("OWN-2");
 		expect(calls.map((call) => call.action)).toEqual([
 			"tasks.createWorkflowTask",
 			"tasks.createWorkflowTask",
@@ -65,7 +65,7 @@ function installWorkflowSocket(): Array<{ action: string; payload: unknown }> {
 							status: "ok",
 							payload: {
 								id: `task-${index}`,
-								taskKey: `TASK(owner-1)-${index}`,
+								taskKey: `OWN-${index}`,
 								branchName: `OWN-${index}`,
 								projectId: "project-1",
 								title: body.payload.title,

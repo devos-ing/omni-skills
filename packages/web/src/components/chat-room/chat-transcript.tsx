@@ -158,11 +158,11 @@ function WorkingSectionHeader({
 }
 
 function ThinkingLine(): ReactElement {
-	return <TextShimmer>Thinking...</TextShimmer>;
+	return <div className='p-1'><TextShimmer>Thinking...</TextShimmer></div>;
 }
 
 function PlanningLine(): ReactElement {
-	return <TextShimmer>Planning...</TextShimmer>;
+	return <div className='p-1'><TextShimmer>Planning...</TextShimmer></div>;
 }
 
 function ChatMessageBubble({

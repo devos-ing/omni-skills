@@ -128,7 +128,7 @@ async function insertSeedRows(db: ServerDb) {
 		.insert(boardTasksTable)
 		.values({
 			id: "dev-task",
-			taskKey: "TASK(dev-project)-1",
+			taskKey: "DEV-1",
 			projectId: "dev-project",
 			title: "Explore devos.ing",
 			content: "Seeded task for local development.",

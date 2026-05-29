@@ -85,19 +85,19 @@ describe("generateBoardTaskKey", () => {
 					projectId: "project-1",
 					creatorId: "owner-1",
 				}),
-			).resolves.toBe("TASK(owner-1)-14");
+			).resolves.toBe("OWN-14");
 			await expect(
 				generateBoardTaskKey(db, {
 					projectId: "project-2",
 					creatorId: "owner-1",
 				}),
-			).resolves.toBe("TASK(owner-1)-14");
+			).resolves.toBe("OWN-14");
 			await expect(
 				generateBoardTaskKey(db, {
 					projectId: "project-3",
 					creatorId: "owner-2",
 				}),
-			).resolves.toBe("TASK(owner-2)-21");
+			).resolves.toBe("OWN-21");
 		},
 		EMBEDDED_POSTGRES_TEST_TIMEOUT_MS,
 	);
@@ -128,10 +128,10 @@ describe("generateBoardTaskKey", () => {
 
 			await expect(
 				generateBoardTaskKey(db, { projectId: null, creatorId: "owner-1" }),
-			).resolves.toBe("TASK(owner-1)-4");
+			).resolves.toBe("OWN-4");
 			await expect(
 				generateBoardTaskKey(db, { projectId: null, creatorId: "owner-3" }),
-			).resolves.toBe("TASK(owner-3)-1");
+			).resolves.toBe("OWN-1");
 		},
 		EMBEDDED_POSTGRES_TEST_TIMEOUT_MS,
 	);
@@ -139,6 +139,7 @@ describe("generateBoardTaskKey", () => {
 	it("formats branch names from workspace-format task keys", () => {
 		expect(boardTaskBranchName("TASK(owner-1)-4")).toBe("OWN-4");
 		expect(boardTaskBranchName("TASK(acme-workspace)-12")).toBe("ACM-12");
+		expect(boardTaskBranchName("OWN-4")).toBe("OWN-4");
 		expect(boardTaskBranchName("TASK-000001")).toBeUndefined();
 		expect(boardTaskBranchName("TASK(owner-1)-004")).toBeUndefined();
 	});

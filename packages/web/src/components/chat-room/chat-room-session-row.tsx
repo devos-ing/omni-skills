@@ -54,11 +54,6 @@ export function ChatRoomSessionRow({
 				type="button"
 				variant="ghost"
 			>
-				<span className="min-w-0 flex-1">
-					<Typography as="span" className="block truncate">
-						{session.title}
-					</Typography>
-				</span>
 				{isRunning ? (
 					<span
 						className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-emerald-300"
@@ -68,6 +63,12 @@ export function ChatRoomSessionRow({
 						<span className="sr-only">AI model running</span>
 					</span>
 				) : null}
+				<span className="min-w-0 flex-1">
+					<Typography as="span" className="block truncate">
+						{session.title}
+					</Typography>
+				</span>
+				
 			</Button>
 			<Button
 				aria-label={pinLabel}

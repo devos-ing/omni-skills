@@ -48,7 +48,7 @@ describe("createBoardTaskCreator", () => {
 			description: "Create tasks from CLI.",
 		});
 
-		expect(task.taskKey).toBe("TASK(owner-1)-1");
+		expect(task.taskKey).toBe("OWN-1");
 		expect(calls).toEqual([
 			{
 				action: "tasks.createIntakeTask",
@@ -65,7 +65,7 @@ describe("createBoardTaskCreator", () => {
 function createdTask(title: string) {
 	return {
 		id: "task-1",
-		taskKey: "TASK(owner-1)-1",
+		taskKey: "OWN-1",
 		projectId: "project-1",
 		title,
 		content: "Create tasks from CLI.",

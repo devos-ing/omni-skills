@@ -24,18 +24,16 @@ describe("BoardTaskWorkflowClient", () => {
 		const client = createBoardTaskWorkflowClient(config);
 
 		const [readyTask] = await client.fetchWork();
-		expect(readyTask?.identifier).toBe("TASK(owner-1)-1");
+		expect(readyTask?.identifier).toBe("OWN-1");
 		expect(readyTask?.branchName).toBe("OWN-1");
 		expect(
 			(await client.fetchWork(undefined, { includeUnprojected: true })).map(
 				(task) => task.identifier,
 			),
-		).toEqual(["TASK(owner-1)-1", "TASK(owner-1)-2", "TASK(owner-1)-5"]);
+		).toEqual(["OWN-1", "OWN-2", "OWN-5"]);
 		expect(
-			(await client.fetchWork("TASK(owner-1)-2")).map(
-				(task) => task.identifier,
-			),
-		).toEqual(["TASK(owner-1)-2"]);
+			(await client.fetchWork("OWN-2")).map((task) => task.identifier),
+		).toEqual(["OWN-2"]);
 		expect(await client.isAssignedState("todo")).toBe(true);
 		expect(await client.isAssignedState("planning")).toBe(true);
 		expect(calls.map((call) => call.body.action)).toEqual([
@@ -97,7 +95,7 @@ describe("BoardTaskWorkflowClient", () => {
 
 		const [task] = await client.fetchReviewOnlyWork();
 
-		expect(task?.identifier).toBe("TASK(owner-1)-3");
+		expect(task?.identifier).toBe("OWN-3");
 		expect(task?.branchName).toBe("OWN-3");
 		expect(task?.pullRequest?.url).toBe(
 			"https://github.com/acme/project/pull/7",
@@ -143,19 +141,19 @@ function payloadForAction(action: string, payload: unknown): unknown {
 		return [
 			task({
 				id: "task-1",
-				taskKey: "TASK(owner-1)-1",
+				taskKey: "OWN-1",
 				branchName: "OWN-1",
 				status: "todo",
 			}),
 			task({
 				id: "task-2",
-				taskKey: "TASK(owner-1)-2",
+				taskKey: "OWN-2",
 				branchName: "OWN-2",
 				status: "planning",
 			}),
 			task({
 				id: "task-3",
-				taskKey: "TASK(owner-1)-3",
+				taskKey: "OWN-3",
 				branchName: "OWN-3",
 				status: "reviewing",
 				linkedPr: "https://github.com/acme/project/pull/7",
@@ -166,10 +164,10 @@ function payloadForAction(action: string, payload: unknown): unknown {
 					title: "Task PR",
 				},
 			}),
-			task({ id: "task-4", taskKey: "TASK(other)-4", projectId: "other" }),
+			task({ id: "task-4", taskKey: "OTH-4", projectId: "other" }),
 			task({
 				id: "task-5",
-				taskKey: "TASK(owner-1)-5",
+				taskKey: "OWN-5",
 				branchName: "OWN-5",
 				projectId: null,
 				status: "todo",
@@ -179,7 +177,7 @@ function payloadForAction(action: string, payload: unknown): unknown {
 	if (action === "tasks.update" && isRecord(payload)) {
 		return task({ id: String(payload.taskId), status: "implementing" });
 	}
-	return task({ id: "task-1", taskKey: "TASK(owner-1)-1" });
+	return task({ id: "task-1", taskKey: "OWN-1" });
 }
 
 function task(overrides: Record<string, unknown> = {}) {

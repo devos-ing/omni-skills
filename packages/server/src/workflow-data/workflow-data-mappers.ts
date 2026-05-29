@@ -76,7 +76,7 @@ function resolveWorkflowBranchName(
 		: task.creatorId;
 	const branchName = boardTaskBranchName(task.taskKey);
 	const taskScope = boardTaskKeyScope(task.taskKey);
-	if (!workspaceId || taskScope !== workspaceId) {
+	if (!branchName || !workspaceId || (taskScope && taskScope !== workspaceId)) {
 		return undefined;
 	}
 	return branchName;

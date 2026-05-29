@@ -100,7 +100,7 @@ describe("task routes", () => {
 			title: string;
 		};
 		expect(created.title).toBe("Task 1");
-		expect(created.taskKey).toBe("TASK(owner-1)-1");
+		expect(created.taskKey).toBe("OWN-1");
 		expect(created.assigneeId).toBe("owner-2");
 
 		const unassignedResponse = await app(
@@ -122,7 +122,7 @@ describe("task routes", () => {
 			taskKey: string;
 		};
 		expect(unassigned.projectId).toBeNull();
-		expect(unassigned.taskKey).toBe("TASK(owner-1)-2");
+		expect(unassigned.taskKey).toBe("OWN-2");
 
 		const titleOnlyResponse = await app(
 			new Request("http://localhost/api/tasks", {
