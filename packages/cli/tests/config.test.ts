@@ -74,6 +74,7 @@ const envDefaults: Record<string, string | undefined> = {
 const envKeys = Object.keys(envDefaults);
 
 const previousEnv: Record<string, string | undefined> = {};
+let previousFetch: typeof fetch | undefined;
 let previousHome: string | undefined;
 let testHomeDir: string | undefined;
 
@@ -82,6 +83,10 @@ describe("loadConfig", () => {
 		previousHome = process.env.HOME;
 		testHomeDir = await mkdtemp(path.join(process.cwd(), ".tmp-config-home-"));
 		process.env.HOME = testHomeDir;
+		previousFetch = globalThis.fetch;
+		globalThis.fetch = mock(async () =>
+			Response.json([]),
+		) as unknown as typeof fetch;
 		for (const key of envKeys) {
 			previousEnv[key] = process.env[key];
 			process.env[key] = envDefaults[key];
@@ -92,6 +97,10 @@ describe("loadConfig", () => {
 		for (const key of envKeys) {
 			process.env[key] = previousEnv[key];
 		}
+		if (previousFetch) {
+			globalThis.fetch = previousFetch;
+		}
+		previousFetch = undefined;
 		process.env.HOME = previousHome;
 		const homeDir = testHomeDir;
 		previousHome = undefined;
