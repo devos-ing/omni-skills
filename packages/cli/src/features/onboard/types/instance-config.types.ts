@@ -29,6 +29,7 @@ export interface OnboardWorkspaceConfig {
 }
 
 export type OnboardModelStage =
+	| "brainstorm"
 	| "githubComment"
 	| "implement"
 	| "plan"

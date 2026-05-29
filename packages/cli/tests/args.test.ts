@@ -124,6 +124,36 @@ describe("createCliProgram help and core commands", () => {
 		]);
 	});
 
+	it("routes brainstorm model setting commands", async () => {
+		const result = await captureWithRuntime([
+			"bun",
+			"devos",
+			"models",
+			"set",
+			"--stage",
+			"brainstorm",
+			"--model",
+			"gpt-5.4-mini",
+			"--reasoning-effort",
+			"xhigh",
+		]);
+
+		expect(result.calls).toEqual([
+			{
+				name: "models",
+				payload: {
+					command: {
+						action: "set",
+						stage: "brainstorm",
+						model: "gpt-5.4-mini",
+						reasoningEffort: "xhigh",
+					},
+					cwd: "/tmp/devos-test",
+				},
+			},
+		]);
+	});
+
 	it("rejects unknown commands", async () => {
 		const unknown = await expectCommanderError([
 			"bun",

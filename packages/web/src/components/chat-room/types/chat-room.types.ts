@@ -56,6 +56,7 @@ export interface ChatTranscriptProps {
 	isThinking: boolean;
 	missionProgress: ChatMissionProgressViewModel | null;
 	messages: ChatMessageRecord[];
+	showMissionSkeleton: boolean;
 	session: ChatSessionRecord | null;
 	streamLines: ChatStreamLine[];
 	workingStartedAt: string | null;

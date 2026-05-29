@@ -50,6 +50,24 @@ describe("models command", () => {
 		expect(loaded.config.codex?.reasoningEfforts?.plan).toBe("high");
 	});
 
+	it("lists brainstorm model and reasoning settings", async () => {
+		await writeInstanceConfig({
+			codex: {
+				models: { brainstorm: "gpt-5.4-mini" },
+				reasoningEfforts: { brainstorm: "xhigh" },
+			},
+		});
+		let output = "";
+
+		await handleModelsCommand({ action: "list" }, "/tmp/project", {
+			write: (message) => {
+				output += message;
+			},
+		});
+
+		expect(output).toContain("brainstorm\tgpt-5.4-mini\txhigh");
+	});
+
 	it("clears one stage without removing other stage settings", async () => {
 		await writeInstanceConfig({
 			codex: {

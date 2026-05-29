@@ -441,6 +441,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PollingStatusResponse'
+  /api/settings/models:
+    get:
+      tags: [Settings]
+      summary: Read workflow model and reasoning settings
+      responses:
+        '200':
+          description: Workflow model settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsModelsResponse'
+        '404':
+          $ref: '#/components/responses/TypedError'
+    patch:
+      tags: [Settings]
+      summary: Update workflow model and reasoning settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsModelsUpdateRequest'
+      responses:
+        '200':
+          description: Updated workflow model settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsModelsResponse'
+        '400':
+          $ref: '#/components/responses/TypedError'
+        '404':
+          $ref: '#/components/responses/TypedError'
   /api/workspaces/{workspaceId}/projects:
     parameters:
       - $ref: '#/components/parameters/WorkspaceId'
@@ -614,6 +647,79 @@ components:
       allOf:
         - $ref: '#/components/schemas/SkillPatchFields'
         - minProperties: 1
+    SettingsModelsResponse:
+      type: object
+      additionalProperties: false
+      required: [stages, availableModels, reasoningEfforts]
+      properties:
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsModelStage'
+        availableModels:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsModelOption'
+        reasoningEfforts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsReasoningEffort'
+    SettingsModelStage:
+      type: object
+      additionalProperties: false
+      required: [id, label]
+      properties:
+        id:
+          type: string
+          enum: [brainstorm, plan, implement, testing]
+        label:
+          type: string
+        model:
+          type: string
+        reasoningEffort:
+          $ref: '#/components/schemas/SettingsReasoningEffort'
+    SettingsModelOption:
+      type: object
+      additionalProperties: false
+      required: [id, label, description]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        defaultFor:
+          type: array
+          items:
+            type: string
+    SettingsModelsUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [stages]
+      properties:
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsModelStageUpdate'
+    SettingsModelStageUpdate:
+      type: object
+      additionalProperties: false
+      required: [id]
+      properties:
+        id:
+          type: string
+          enum: [brainstorm, plan, implement, testing]
+        model:
+          type: string
+          nullable: true
+        reasoningEffort:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/SettingsReasoningEffort'
+    SettingsReasoningEffort:
+      type: string
+      enum: [low, medium, high, xhigh]
     SkillPatchFields:
       type: object
       additionalProperties: false

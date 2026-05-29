@@ -8,7 +8,7 @@ import type {
 	ModelsStage,
 } from "../types/args.types";
 
-const STAGE_LABELS = "plan, implement, review-test, github-comment";
+const STAGE_LABELS = "brainstorm, plan, implement, review-test, github-comment";
 const REASONING_LABELS = "low, medium, high, xhigh";
 
 export function registerModelsCommand(
@@ -69,6 +69,7 @@ function parseSetOptions(
 }
 
 function parseStage(value: string | undefined, command: Command): ModelsStage {
+	if (value === "brainstorm") return "brainstorm";
 	if (value === "plan") return "plan";
 	if (value === "implement") return "implement";
 	if (

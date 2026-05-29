@@ -15,6 +15,7 @@ import type {
 import { parseRecipients, resolveUserPath } from "./wizard-helpers";
 
 const DEFAULT_CODEX_MODELS = {
+	brainstorm: "gpt-5.5",
 	plan: "gpt-5.5",
 	implement: "gpt-5.3-codex",
 	reviewTest: "gpt-5.3-codex",
@@ -51,12 +52,14 @@ export async function collectOnboardDraft(
 		labelMap: DEFAULT_LABEL_MAP,
 		codex: {
 			reasoningEfforts: {
+				brainstorm: DEFAULT_REASONING_EFFORTS.plan,
 				plan: DEFAULT_REASONING_EFFORTS.plan,
 				implement: DEFAULT_REASONING_EFFORTS.implement,
 				reviewTest: DEFAULT_REASONING_EFFORTS.reviewTest,
 				githubComment: DEFAULT_REASONING_EFFORTS.reviewTest,
 			},
 			models: {
+				brainstorm: DEFAULT_CODEX_MODELS.brainstorm,
 				plan: DEFAULT_CODEX_MODELS.plan,
 				implement: DEFAULT_CODEX_MODELS.implement,
 				reviewTest: DEFAULT_CODEX_MODELS.reviewTest,

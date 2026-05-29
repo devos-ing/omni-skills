@@ -6,6 +6,7 @@ import type {
 
 export type AgentStage =
 	| "taskIntake"
+	| "brainstorm"
 	| "plan"
 	| "implement"
 	| "reviewTest"

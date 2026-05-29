@@ -955,12 +955,14 @@ function createTestDraft(): OnboardDraft {
 		labelMap: DEFAULT_LABEL_MAP,
 		codex: {
 			reasoningEfforts: {
+				brainstorm: "high",
 				plan: "medium",
 				implement: "low",
 				reviewTest: "medium",
 				githubComment: "medium",
 			},
 			models: {
+				brainstorm: "gpt-5.5",
 				plan: "gpt-5.5",
 				implement: "gpt-5.3-codex",
 				reviewTest: "gpt-5.3-codex",

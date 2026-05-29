@@ -5,44 +5,23 @@ import type { ReactElement } from "react";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
-import { MissionLogPanel } from "./chat-mission-log-panel";
-import {
-	selectedPhaseLogLines,
-	useMissionPhaseSelection,
-} from "./chat-mission-progress-log-selection";
 import { MissionStatusIcon } from "./chat-mission-progress-status-icon";
 import { MissionUsageSummary } from "./chat-mission-usage-summary";
 import type {
-	ChatMissionLogLine,
 	ChatMissionPhase,
-	ChatMissionPhaseId,
 	ChatMissionProgressViewModel,
 } from "./types/chat-mission-progress.types";
 
 export function MissionBody({
-	liveLogLines,
 	mission,
 }: {
-	liveLogLines: ChatMissionLogLine[];
 	mission: ChatMissionProgressViewModel;
 }): ReactElement {
-	const { selectedPhase, selectedPhaseId, selectPhase } =
-		useMissionPhaseSelection(mission);
-	const logLines = selectedPhaseLogLines({
-		liveLogLines,
-		mission,
-		selectedPhase,
-	});
 	return (
 		<div className="grid gap-3">
 			<MissionHeader mission={mission} />
 			<MissionUsageSummary mission={mission} />
-			<WorkflowPhases
-				phases={mission.phases}
-				selectedPhaseId={selectedPhaseId}
-				onSelectPhase={selectPhase}
-			/>
-			<MissionLogPanel lines={logLines} phaseLabel={selectedPhase.label} />
+			<WorkflowPhases phases={mission.phases} />
 		</div>
 	);
 }
@@ -83,27 +62,15 @@ function MissionHeader({
 }
 
 function WorkflowPhases({
-	onSelectPhase,
 	phases,
-	selectedPhaseId,
-}: {
-	onSelectPhase: (phaseId: ChatMissionPhaseId) => void;
-	phases: ChatMissionPhase[];
-	selectedPhaseId: ChatMissionPhaseId;
-}): ReactElement {
+}: { phases: ChatMissionPhase[] }): ReactElement {
 	return (
 		<div
 			className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))]"
 			data-mission-workflow="true"
 		>
 			{phases.map((phase, index) => (
-				<PhaseNode
-					isFirst={index === 0}
-					isSelected={phase.id === selectedPhaseId}
-					key={phase.id}
-					phase={phase}
-					onSelectPhase={onSelectPhase}
-				/>
+				<PhaseNode isFirst={index === 0} key={phase.id} phase={phase} />
 			))}
 		</div>
 	);
@@ -111,35 +78,25 @@ function WorkflowPhases({
 
 function PhaseNode({
 	isFirst,
-	isSelected,
-	onSelectPhase,
 	phase,
 }: {
 	isFirst: boolean;
-	isSelected: boolean;
-	onSelectPhase: (phaseId: ChatMissionPhaseId) => void;
 	phase: ChatMissionPhase;
 }): ReactElement {
 	return (
-		<button
-			aria-label={`Show ${phase.label} output`}
-			aria-pressed={isSelected}
+		<div
 			className={cn(
-				"relative grid min-h-20 gap-2 rounded-md border bg-surface-panel px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-zinc-500",
+				"relative grid min-h-20 gap-2 rounded-md border bg-surface-panel px-3 py-2 text-left",
 				phase.status === "success" && "border-emerald-900/70",
 				phase.status === "failed" && "border-red-900/70 bg-red-950/20",
 				phase.status === "running" && "border-sky-900/70",
 				phase.status === "warning" && "border-amber-900/70",
 				phase.status === "pending" && "border-border",
-				isSelected && "bg-surface-active ring-1 ring-zinc-500",
 				!isFirst &&
 					"before:absolute before:-left-2 before:top-1/2 before:hidden before:h-px before:w-2 before:bg-border sm:before:block",
 			)}
 			data-mission-phase={phase.id}
-			data-mission-phase-selected={isSelected ? "true" : "false"}
 			data-mission-phase-status={phase.status}
-			onClick={() => onSelectPhase(phase.id)}
-			type="button"
 		>
 			<div className="flex items-center gap-2">
 				<MissionStatusIcon status={phase.status} />
@@ -150,6 +107,6 @@ function PhaseNode({
 			<Typography className="capitalize text-muted-foreground" variant="muted">
 				{phase.status}
 			</Typography>
-		</button>
+		</div>
 	);
 }

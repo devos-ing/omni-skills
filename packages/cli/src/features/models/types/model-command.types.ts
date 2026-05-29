@@ -3,7 +3,12 @@ import type {
 	OnboardInstanceConfig,
 } from "../../onboard";
 
-export type ModelStage = "githubComment" | "implement" | "plan" | "reviewTest";
+export type ModelStage =
+	| "brainstorm"
+	| "githubComment"
+	| "implement"
+	| "plan"
+	| "reviewTest";
 
 export type ModelReasoningEffort = "high" | "low" | "medium" | "xhigh";
 

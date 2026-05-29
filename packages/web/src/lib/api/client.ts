@@ -10,6 +10,7 @@ import {
 	parseHealthResponse,
 	parseServerList,
 } from "./server-state-client";
+import { createSettingsApiMethods } from "./settings-client";
 import { createTaskApiMethods } from "./task-client";
 import type {
 	ApiClient,
@@ -42,6 +43,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 	);
 	const inboxApiMethods = createInboxApiMethods(requestWithBase);
 	const taskApiMethods = createTaskApiMethods(requestWithBase);
+	const settingsApiMethods = createSettingsApiMethods(requestWithBase);
 	const workflowComputerApiMethods =
 		createWorkflowComputerApiMethods(requestWithBase);
 	const workspaceApiMethods = createWorkspaceApiMethods(requestWithBase);
@@ -52,6 +54,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 		...boardApiMethods,
 		...chatApiMethods,
 		...commandStreamApiMethods,
+		...settingsApiMethods,
 		...workflowComputerApiMethods,
 		...workspaceApiMethods,
 		...workspaceEnvironmentApiMethods,

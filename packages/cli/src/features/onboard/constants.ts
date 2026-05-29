@@ -30,6 +30,7 @@ export const DEFAULT_LABEL_MAP: OnboardDraft["labelMap"] = {
 };
 
 export const DEFAULT_REASONING_EFFORTS = {
+	brainstorm: "high",
 	plan: "high",
 	implement: "medium",
 	reviewTest: "medium",

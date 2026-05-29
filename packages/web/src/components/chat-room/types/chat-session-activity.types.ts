@@ -7,8 +7,20 @@ export type ChatSessionActivityKind =
 	| "coding"
 	| "tool";
 
-export interface ChatSessionActivityBubble {
+export interface ChatSessionActivityDetail {
+	id: string;
+	text: string;
+}
+
+export interface ChatSessionActivityMatch {
+	detailText: string;
+	kind: ChatSessionActivityKind;
+	summary: string;
+}
+
+export interface ChatSessionActivitySection {
+	details: ChatSessionActivityDetail[];
 	id: string;
 	kind: ChatSessionActivityKind;
-	label: string;
+	summary: string;
 }

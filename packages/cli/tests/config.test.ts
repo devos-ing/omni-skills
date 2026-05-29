@@ -26,15 +26,18 @@ const envDefaults: Record<string, string | undefined> = {
 	CODEX_HOME: undefined,
 	CODEX_MODEL: undefined,
 	CODEX_REASONING_EFFORT: undefined,
+	CODEX_REASONING_EFFORT_BRAINSTORM: undefined,
 	CODEX_REASONING_EFFORT_PLAN: undefined,
 	CODEX_REASONING_EFFORT_IMPLEMENT: undefined,
 	CODEX_REASONING_EFFORT_REVIEW_TEST: undefined,
 	CODEX_REASONING_EFFORT_GITHUB_COMMENT: undefined,
 	CODEX_FAST_MODE_PLAN: undefined,
+	CODEX_FAST_MODE_BRAINSTORM: undefined,
 	CODEX_FAST_MODE_IMPLEMENT: undefined,
 	CODEX_FAST_MODE_REVIEW_TEST: undefined,
 	CODEX_FAST_MODE_GITHUB_COMMENT: undefined,
 	CODEX_MODEL_PLAN: undefined,
+	CODEX_MODEL_BRAINSTORM: undefined,
 	CODEX_MODEL_IMPLEMENT: undefined,
 	CODEX_MODEL_REVIEW_TEST: undefined,
 	CODEX_MODEL_GITHUB_COMMENT: undefined,
@@ -395,11 +398,13 @@ describe("loadConfig", () => {
 			...createInstanceConfig(tempDir, "2026-05-29T00:00:00.000Z"),
 			codex: {
 				models: {
+					brainstorm: "gpt-5.4-mini",
 					plan: "gpt-5.5",
 					implement: "gpt-5.3-codex",
 					reviewTest: "gpt-5.3-codex",
 				},
 				reasoningEfforts: {
+					brainstorm: "xhigh",
 					plan: "high",
 					implement: "medium",
 					reviewTest: "high",
@@ -415,11 +420,13 @@ describe("loadConfig", () => {
 		try {
 			const config = await loadConfig(tempDir);
 			expect(config.projects[0]?.codex.models).toMatchObject({
+				brainstorm: "gpt-5.4-mini",
 				plan: "gpt-5.5",
 				implement: "gpt-5.3-codex",
 				reviewTest: "gpt-5.3-codex",
 			});
 			expect(config.projects[0]?.codex.reasoningEfforts).toMatchObject({
+				brainstorm: "xhigh",
 				plan: "high",
 				implement: "medium",
 				reviewTest: "high",

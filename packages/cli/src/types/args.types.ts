@@ -68,7 +68,12 @@ export type TaskCreateCommanderOptions = ProjectCommanderOptions & {
 	json?: boolean;
 };
 
-export type ModelsStage = "githubComment" | "implement" | "plan" | "reviewTest";
+export type ModelsStage =
+	| "brainstorm"
+	| "githubComment"
+	| "implement"
+	| "plan"
+	| "reviewTest";
 
 export type ModelsReasoningEffort = "high" | "low" | "medium" | "xhigh";
 

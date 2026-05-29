@@ -14,7 +14,21 @@ export function resolveCodexStageConfig(
 	config: AgentAdapterRuntimeConfig,
 	role: AgentAdapterRunRole,
 ): CodexStageConfig {
-	if (role === "brainstorm" || role === "planning" || role === "task-intake") {
+	if (role === "brainstorm") {
+		return {
+			model:
+				config.codex.models?.brainstorm ??
+				config.codex.models?.plan ??
+				config.codex.model,
+			reasoningEffort:
+				config.codex.reasoningEfforts?.brainstorm ??
+				config.codex.reasoningEfforts?.plan ??
+				config.codex.reasoningEffort,
+			fastModeEnabled:
+				config.codex.fastModes?.brainstorm ?? config.codex.fastModes?.plan,
+		};
+	}
+	if (role === "planning" || role === "task-intake") {
 		return {
 			model: config.codex.models?.plan ?? config.codex.model,
 			reasoningEffort:

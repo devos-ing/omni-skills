@@ -58,6 +58,11 @@ export function resolveUsageModel(
 	stage: UsageStage,
 ): string | undefined {
 	const fallback = resolveFallbackModel(config);
+	if (stage === "brainstorming") {
+		return (
+			config.codex.models?.brainstorm ?? config.codex.models?.plan ?? fallback
+		);
+	}
 	if (stage === "planning") {
 		return config.codex.models?.plan ?? fallback;
 	}

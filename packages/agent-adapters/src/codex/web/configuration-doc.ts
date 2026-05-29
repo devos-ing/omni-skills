@@ -15,6 +15,11 @@ export const codexConfigurationDoc = {
 	env: [
 		field("AGENT_BACKEND", "Agent backend", "Use 'codex' for Codex."),
 		field("CODEX_MODEL", "Default model", "Fallback Codex model."),
+		field(
+			"CODEX_MODEL_BRAINSTORM",
+			"Brainstorm model",
+			"Brainstorm stage model.",
+		),
 		field("CODEX_MODEL_PLAN", "Planning model", "Planning stage model."),
 		field(
 			"CODEX_MODEL_IMPLEMENT",
@@ -35,6 +40,11 @@ export const codexConfigurationDoc = {
 	configFields: [
 		field("agent.backend", "Agent backend", "Project agent backend."),
 		field("codex.model", "Default model", "Fallback Codex model."),
+		field(
+			"codex.models.brainstorm",
+			"Brainstorm model",
+			"Brainstorm stage model.",
+		),
 		field("codex.models.plan", "Planning model", "Planning stage model."),
 		field(
 			"codex.models.implement",

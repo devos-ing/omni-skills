@@ -18,6 +18,7 @@ import type {
 	WorkflowCommandStreamFrame,
 	WorkflowWorkerDispatchFrame,
 } from "./types/workflow-data.types";
+import { recordWorkflowCommandHistory } from "./workflow-command-history";
 
 const DEFAULT_HISTORY_LIMIT = 100;
 const NO_WORKER_ERROR = "No CLI worker connected to /api/workflow";
@@ -41,7 +42,9 @@ export function createWorkflowCommandBroker(
 	const history: CliCommandExecutionHistoryEntry[] = [];
 	const computers = new Map<string, RegisteredWorkflowComputer>();
 	const pending = new Map<string, PendingCommand>();
+	const queuedRequestIds: string[] = [];
 	let activeWorker: ActiveWorker | undefined;
+	let activeRequestId: string | undefined;
 
 	const broker: WorkflowCommandBroker = {
 		dispatchCommand: (frame, emit) =>
@@ -65,9 +68,18 @@ export function createWorkflowCommandBroker(
 			command.emit(frame);
 			if (frame.type === "complete") {
 				pending.delete(frame.requestId);
+				if (activeRequestId === frame.requestId) {
+					activeRequestId = undefined;
+				}
 				const result = frame.result as CliCommandExecutionResult;
-				recordHistory(history, historyLimit, command.requestedAt, result);
+				recordWorkflowCommandHistory(
+					history,
+					historyLimit,
+					command.requestedAt,
+					result,
+				);
 				command.resolve(result);
+				drainQueue();
 			}
 		},
 		registerWorker(socket, workerId, computer) {
@@ -107,19 +119,41 @@ export function createWorkflowCommandBroker(
 				requestId,
 				result: result as WorkflowCliCommandExecutionResult,
 			});
-			recordHistory(history, historyLimit, requestedAt, result);
+			recordWorkflowCommandHistory(history, historyLimit, requestedAt, result);
 			return Promise.resolve(result);
 		}
 		return new Promise((resolve) => {
 			pending.set(requestId, { emit, request, requestedAt, resolve });
-			worker.socket.send(
-				JSON.stringify({
-					type: "cli.dispatch",
-					requestId,
-					request: request as WorkflowCliCommandRequest,
-				} satisfies WorkflowWorkerDispatchFrame),
-			);
+			queuedRequestIds.push(requestId);
+			drainQueue();
 		});
+	}
+
+	function drainQueue(): void {
+		if (activeRequestId) {
+			return;
+		}
+		const worker = activeWorker;
+		if (!worker || worker.socket.readyState !== WebSocket.OPEN) {
+			return;
+		}
+		const requestId = queuedRequestIds.shift();
+		if (!requestId) {
+			return;
+		}
+		const command = pending.get(requestId);
+		if (!command) {
+			drainQueue();
+			return;
+		}
+		activeRequestId = requestId;
+		worker.socket.send(
+			JSON.stringify({
+				type: "cli.dispatch",
+				requestId,
+				request: command.request as WorkflowCliCommandRequest,
+			} satisfies WorkflowWorkerDispatchFrame),
+		);
 	}
 
 	function failPending(error: string): void {
@@ -131,10 +165,17 @@ export function createWorkflowCommandBroker(
 				requestId,
 				result: result as WorkflowCliCommandExecutionResult,
 			});
-			recordHistory(history, historyLimit, command.requestedAt, result);
+			recordWorkflowCommandHistory(
+				history,
+				historyLimit,
+				command.requestedAt,
+				result,
+			);
 			command.resolve(result);
 		}
 		pending.clear();
+		queuedRequestIds.length = 0;
+		activeRequestId = undefined;
 	}
 
 	function registerComputer(
@@ -202,27 +243,4 @@ function toCommandStreamEvent(
 ): Parameters<CliCommandStreamEmit>[0] {
 	const { requestId: _requestId, ...event } = frame;
 	return event as Parameters<CliCommandStreamEmit>[0];
-}
-
-function recordHistory(
-	history: CliCommandExecutionHistoryEntry[],
-	historyLimit: number,
-	requestedAt: string,
-	result: CliCommandExecutionResult,
-): void {
-	history.push({
-		requestedAt,
-		finishedAt: new Date().toISOString(),
-		request: result.request,
-		status: result.status,
-		command: result.invocation?.command,
-		args: result.invocation?.args,
-		exitCode: result.commandResult?.code,
-		stdout: result.commandResult?.stdout,
-		stderr: result.commandResult?.stderr,
-		error: result.error,
-	});
-	if (history.length > historyLimit) {
-		history.splice(0, history.length - historyLimit);
-	}
 }

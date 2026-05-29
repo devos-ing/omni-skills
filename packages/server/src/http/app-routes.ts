@@ -17,6 +17,7 @@ import {
 	methodNotAllowedResponse,
 	serverErrorResponse,
 } from "./response";
+import { handleSettingsRoute } from "./settings-routes";
 import { handleTasksRoute } from "./tasks-routes";
 import type { RouteRegistryEntry } from "./types/route-registry.types";
 import { handleWorkspaceBoardRoute } from "./workspace-board-routes";
@@ -87,6 +88,9 @@ export function createAppRoutes(deps: AppDeps): RouteRegistryEntry[] {
 		),
 		route("workspace-board", (request, { pathname }) =>
 			handleWorkspaceBoardRoute(request, deps.boardRepository, pathname),
+		),
+		route("settings", (request, { pathname }) =>
+			handleSettingsRoute(request, pathname, workspacePath),
 		),
 		route("entity-crud", (request, { pathname }) =>
 			handleEntityCrudRoute(request, deps, pathname),

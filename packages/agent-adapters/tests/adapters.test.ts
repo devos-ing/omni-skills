@@ -127,7 +127,20 @@ describe("codex adapter", () => {
 	});
 
 	it("builds stage-specific command arguments", async () => {
-		const adapter = new CodexAdapter(config);
+		const adapter = new CodexAdapter({
+			...config,
+			codex: {
+				...config.codex,
+				models: {
+					...config.codex.models,
+					brainstorm: "gpt-5.4-mini",
+				},
+				reasoningEfforts: {
+					...config.codex.reasoningEfforts,
+					brainstorm: "xhigh",
+				},
+			},
+		});
 		const calls: string[][] = [];
 		(
 			adapter as unknown as {
@@ -141,17 +154,23 @@ describe("codex adapter", () => {
 			adapter as unknown as { nextOutputFile: () => Promise<string> }
 		).nextOutputFile = async () => "/tmp/out.txt";
 
+		await adapter.runAgent?.({
+			role: "brainstorm",
+			prompt: "brainstorm prompt",
+		});
 		await adapter.runPlan("plan prompt");
 		await adapter.resume("session-1", "implement prompt");
 		await adapter.runGithubComment("comment prompt");
 
-		expect(calls[0]).toContain("gpt-5.5");
-		expect(calls[0]).toContain('model_reasoning_effort="high"');
-		expect(calls[0]).toContain('service_tier="fast"');
-		expect(calls[1]).toContain("gpt-5.3-codex");
-		expect(calls[1]).toContain('model_reasoning_effort="low"');
-		expect(calls[2]).toContain("gpt-5.4-mini");
-		expect(calls[2]).not.toContain('service_tier="fast"');
+		expect(calls[0]).toContain("gpt-5.4-mini");
+		expect(calls[0]).toContain('model_reasoning_effort="xhigh"');
+		expect(calls[1]).toContain("gpt-5.5");
+		expect(calls[1]).toContain('model_reasoning_effort="high"');
+		expect(calls[1]).toContain('service_tier="fast"');
+		expect(calls[2]).toContain("gpt-5.3-codex");
+		expect(calls[2]).toContain('model_reasoning_effort="low"');
+		expect(calls[3]).toContain("gpt-5.4-mini");
+		expect(calls[3]).not.toContain('service_tier="fast"');
 	});
 
 	it("wraps codex args in docker when configured", () => {

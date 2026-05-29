@@ -1,14 +1,20 @@
 "use client";
 import { TextShimmer } from "@/components/loading/text-shimmer";
 import { Typography } from "@/components/ui/typography";
-import type { ChatMessageRecord } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import { type ReactElement, useEffect, useRef, useState } from "react";
-import { resolveChatMessageDisplay } from "./chat-message-display";
+import {
+	ChatMessageBubble,
+	ErrorLine,
+	PlanMessage,
+} from "./chat-message-bubbles";
 import { ChatMissionProgress } from "./chat-mission-progress";
+import { ChatMissionProgressSkeleton } from "./chat-mission-progress-skeleton";
 import { resolveMissionPlanMessageContent } from "./chat-plan-message-state";
-import { ChatSessionActivityBubbles } from "./chat-session-activity-bubbles";
-import { createChatSessionActivityBubbles } from "./chat-session-activity-state";
+import { ChatSessionActivitySections } from "./chat-session-activity-bubbles";
+import { createChatSessionActivitySections } from "./chat-session-activity-state";
+import { ChatSessionAgentOutputBubbles } from "./chat-session-agent-output-bubbles";
+import { createChatSessionAgentOutputs } from "./chat-session-agent-output-state";
+import { ChatStandaloneStreamBlock } from "./chat-standalone-stream-block";
 import { ChatTranscriptSkeleton } from "./chat-transcript-skeleton";
 import { formatWaitDurationLabel } from "./chat-wait-label";
 import type { ChatTranscriptProps } from "./types/chat-room.types";
@@ -19,6 +25,7 @@ export function ChatTranscript({
 	isThinking,
 	missionProgress,
 	messages,
+	showMissionSkeleton,
 	session,
 	streamLines,
 	workingStartedAt,
@@ -31,8 +38,18 @@ export function ChatTranscript({
 	const missionIsPending =
 		Boolean(sessionTaskId) &&
 		(missionTaskId !== sessionTaskId || missionProgress?.state === "loading");
-	const activityBubbles = createChatSessionActivityBubbles({
+	const activitySections = createChatSessionActivitySections({
 		missionProgress,
+		streamLines,
+	});
+	const planMessageContent = resolveMissionPlanMessageContent(
+		missionProgress,
+		messages,
+	);
+	const agentOutputs = createChatSessionAgentOutputs({
+		messages,
+		missionProgress,
+		planMessageContent,
 		streamLines,
 	});
 	const renderedContentKey = [
@@ -42,28 +59,39 @@ export function ChatTranscript({
 		missionProgress?.executions.length ?? 0,
 		missionProgress?.latestLogLines.length ?? 0,
 		streamLines.length,
-		activityBubbles.map((bubble) => bubble.id).join(","),
+		activitySections
+			.map(
+				(section) =>
+					`${section.id}:${section.details.map((detail) => detail.id).join("|")}`,
+			)
+			.join(","),
+		agentOutputs.map((output) => output.id).join(","),
 	].join(":");
-	const hasActivityBubbles = activityBubbles.length > 0;
+	const hasActivitySections = activitySections.length > 0;
+	const hasAgentOutputs = agentOutputs.length > 0;
 	const showThinking =
-		isThinking && streamLines.length === 0 && !hasActivityBubbles;
+		isThinking &&
+		streamLines.length === 0 &&
+		!hasActivitySections &&
+		!hasAgentOutputs;
 	const showPlanning =
 		isPlanning &&
 		!showThinking &&
 		streamLines.length === 0 &&
-		!hasActivityBubbles;
-	const planMessageContent = resolveMissionPlanMessageContent(
-		missionProgress,
-		messages,
-	);
+		!hasActivitySections &&
+		!hasAgentOutputs;
 	const showWorkingHeader =
 		Boolean(workingStartedAt) &&
 		(showThinking ||
 			showPlanning ||
 			streamLines.length > 0 ||
-			hasActivityBubbles);
+			hasActivitySections ||
+			hasAgentOutputs);
 	const showStandaloneStream =
-		streamLines.length > 0 && !missionProgress && !hasActivityBubbles;
+		streamLines.length > 0 &&
+		!missionProgress &&
+		!hasActivitySections &&
+		!hasAgentOutputs;
 	useEffect(() => {
 		if (!sessionId) {
 			previousSessionIdRef.current = null;
@@ -87,10 +115,11 @@ export function ChatTranscript({
 			ref={scrollContainerRef}
 		>
 			<div className="mx-auto flex flex-col min-w-0 max-w-6xl gap-4">
-				<ChatMissionProgress
-					liveLogLines={streamLines}
-					mission={missionProgress}
-				/>
+				{showMissionSkeleton ? (
+					<ChatMissionProgressSkeleton />
+				) : (
+					<ChatMissionProgress mission={missionProgress} />
+				)}
 				<div
 					className="mx-auto grid w-full min-w-0 max-w-4xl gap-4"
 					data-chat-transcript-message-column="true"
@@ -106,20 +135,12 @@ export function ChatTranscript({
 					{showWorkingHeader ? (
 						<WorkingSectionHeader startedAt={workingStartedAt ?? ""} />
 					) : null}
-					<ChatSessionActivityBubbles bubbles={activityBubbles} />
+					<ChatSessionAgentOutputBubbles outputs={agentOutputs} />
+					<ChatSessionActivitySections sections={activitySections} />
 					{showThinking ? <ThinkingLine /> : null}
 					{showPlanning ? <PlanningLine /> : null}
 					{showStandaloneStream ? (
-						<div className="justify-self-start whitespace-pre-wrap rounded-md border border-border bg-surface-panel px-3 py-2 font-mono text-xs text-zinc-300">
-							{streamLines.map((line) => (
-								<div
-									className={line.stream === "stderr" ? "text-red-200" : ""}
-									key={line.id}
-								>
-									{line.text}
-								</div>
-							))}
-						</div>
+						<ChatStandaloneStreamBlock lines={streamLines} />
 					) : null}
 				</div>
 			</div>
@@ -162,81 +183,5 @@ function PlanningLine(): ReactElement {
 		<div className="p-1">
 			<TextShimmer>Planning...</TextShimmer>
 		</div>
-	);
-}
-
-function ChatMessageBubble({
-	message,
-}: {
-	message: ChatMessageRecord;
-}): ReactElement {
-	const isUser = message.role === "user";
-	const display = resolveChatMessageDisplay(message);
-	if (display === "assistant-note") {
-		return <AssistantNote message={message} />;
-	}
-	if (display === "plan") {
-		return <PlanMessage content={message.content} />;
-	}
-	const isError = display === "error";
-	return (
-		<article
-			data-chat-message-display={display}
-			className={cn(
-				"grid max-w-[min(42rem,90%)] gap-2 rounded-md border px-3 py-2 text-sm",
-				isUser
-					? "justify-self-end border-zinc-700 bg-surface-active text-zinc-100"
-					: "justify-self-start border-border bg-surface-panel text-zinc-200",
-				isError && "border-red-900/60 bg-red-950/30 text-red-100",
-			)}
-		>
-			<Typography className="whitespace-pre-wrap break-words leading-6">
-				{message.content}
-			</Typography>
-		</article>
-	);
-}
-
-function AssistantNote({
-	message,
-}: {
-	message: ChatMessageRecord;
-}): ReactElement {
-	return (
-		<article
-			className="grid max-w-[min(42rem,90%)] justify-self-start gap-2 px-1 py-1 text-sm text-zinc-300"
-			data-chat-message-display="assistant-note"
-		>
-			<Typography className="whitespace-pre-wrap break-words leading-6">
-				{message.content}
-			</Typography>
-		</article>
-	);
-}
-
-function PlanMessage({ content }: { content: string }): ReactElement {
-	return (
-		<article
-			className="grid max-w-[min(46rem,94%)] justify-self-start gap-2 rounded-md border border-blue-900/50 bg-surface-plan px-3 py-2 text-sm text-zinc-200"
-			data-chat-message-display="plan"
-		>
-			<Typography className="text-blue-300" variant="eyebrow">
-				Plan
-			</Typography>
-			<Typography className="whitespace-pre-wrap break-words leading-6">
-				{content}
-			</Typography>
-		</article>
-	);
-}
-
-function ErrorLine({ text }: { text: string }): ReactElement {
-	return (
-		<Typography
-			className="rounded-md border border-red-900/60 bg-red-950/30 px-3 py-2 text-red-100"
-			variant="error"
-		>
-			{text}
-		</Typography>
 	);
 }

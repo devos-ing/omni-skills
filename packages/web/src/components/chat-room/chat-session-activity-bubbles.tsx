@@ -1,34 +1,62 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { TextShimmer } from "@/components/loading/text-shimmer";
 
-import type { ChatSessionActivityBubble } from "./types/chat-session-activity.types";
+import type { ChatSessionActivitySection } from "./types/chat-session-activity.types";
 
-export function ChatSessionActivityBubbles({
-	bubbles,
+export function ChatSessionActivitySections({
+	sections,
 }: {
-	bubbles: ChatSessionActivityBubble[];
+	sections: ChatSessionActivitySection[];
 }): ReactElement | null {
-	if (bubbles.length === 0) return null;
+	if (sections.length === 0) return null;
 	return (
 		<>
-			{bubbles.map((bubble) => (
-				<ActivityBubble key={bubble.id} bubble={bubble} />
+			{sections.map((section) => (
+				<ActivitySection key={section.id} section={section} />
 			))}
 		</>
 	);
 }
 
-function ActivityBubble({
-	bubble,
+function ActivitySection({
+	section,
 }: {
-	bubble: ChatSessionActivityBubble;
+	section: ChatSessionActivitySection;
 }): ReactElement {
+	const logCount =
+		section.details.length === 1 ? "1 log" : `${section.details.length} logs`;
 	return (
-		<article className="grid max-w-[min(28rem,88%)] justify-self-start rounded-md border border-border bg-surface-panel px-3 py-2 text-sm text-zinc-300">
-			<TextShimmer>{bubble.label}</TextShimmer>
-		</article>
+		<details
+			className="group grid max-w-[min(34rem,90%)] justify-self-start rounded-md border border-border bg-surface-panel px-3 py-2 text-sm text-zinc-300"
+			data-chat-activity-section={section.id}
+		>
+			<summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+				<span className="min-w-0 flex-1">
+					<TextShimmer>{section.summary}</TextShimmer>
+				</span>
+				<span className="shrink-0 text-xs text-muted-foreground">
+					{logCount}
+				</span>
+				<ChevronDown
+					aria-hidden="true"
+					className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+				/>
+			</summary>
+			<ol className="mt-2 grid gap-1 border-t border-border/70 pt-2">
+				{section.details.map((detail) => (
+					<li
+						className="min-w-0 break-words font-mono text-[11px] leading-5 text-zinc-400"
+						data-chat-activity-detail={detail.id}
+						key={detail.id}
+					>
+						{detail.text}
+					</li>
+				))}
+			</ol>
+		</details>
 	);
 }

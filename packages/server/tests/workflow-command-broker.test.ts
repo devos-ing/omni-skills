@@ -91,6 +91,57 @@ describe("workflow command broker", () => {
 		});
 	});
 
+	it("queues later commands until the active CLI command completes", async () => {
+		const broker = createWorkflowCommandBroker();
+		const worker = new FakeWorkflowSocket();
+		broker.registerWorker(worker, "worker-1");
+
+		const running = broker.dispatchCommand(
+			{ type: "command", requestId: "req-run", request: { action: "run" } },
+			() => {},
+		);
+		const queued = broker.dispatchCommand(
+			{
+				type: "command",
+				requestId: "req-task",
+				request: { action: "task", taskAction: "create" },
+			},
+			() => {},
+		);
+
+		expect(worker.sent).toHaveLength(1);
+		expect(JSON.parse(worker.sent[0] ?? "")).toMatchObject({
+			requestId: "req-run",
+		});
+
+		broker.handleWorkerFrame({
+			type: "complete",
+			requestId: "req-run",
+			result: { status: "succeeded", request: { action: "run" } },
+		});
+
+		await running;
+		expect(worker.sent).toHaveLength(2);
+		expect(JSON.parse(worker.sent[1] ?? "")).toMatchObject({
+			requestId: "req-task",
+		});
+
+		broker.handleWorkerFrame({
+			type: "complete",
+			requestId: "req-task",
+			result: {
+				status: "succeeded",
+				request: { action: "task", taskAction: "create" },
+			},
+		});
+
+		await queued;
+		expect(broker.getHistory().map((entry) => entry.request.action)).toEqual([
+			"run",
+			"task",
+		]);
+	});
+
 	it("fails pending command dispatch when the active worker closes", async () => {
 		const broker = createWorkflowCommandBroker();
 		const worker = new FakeWorkflowSocket();

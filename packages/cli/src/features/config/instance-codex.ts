@@ -16,6 +16,7 @@ export interface InstanceCodexConfig {
 }
 
 const MODEL_STAGES = [
+	"brainstorm",
 	"plan",
 	"implement",
 	"reviewTest",

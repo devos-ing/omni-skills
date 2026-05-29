@@ -20,6 +20,10 @@ import type {
 	SkillRecord,
 	TokenUsageRecord,
 } from "./server-state.types";
+import type {
+	SettingsModelsResponse,
+	SettingsModelsUpdateRequest,
+} from "./settings.types";
 import type { TaskActivityResponse } from "./task-activity.types";
 import type {
 	ProjectBoardRecord,
@@ -45,6 +49,15 @@ export type {
 	TaskMutationRequest,
 } from "./task.types";
 export type { PollingStatusResponse } from "./polling-status.types";
+export type {
+	SettingsModelOption,
+	SettingsModelStage,
+	SettingsModelStageId,
+	SettingsModelStageUpdate,
+	SettingsModelsResponse,
+	SettingsModelsUpdateRequest,
+	SettingsReasoningEffort,
+} from "./settings.types";
 export type {
 	AgentRecord,
 	AgentUpdateRequest,
@@ -195,6 +208,13 @@ export interface ApiClient extends WorkflowComputerApiMethods {
 	listPollingStatus(
 		options?: HealthRequestOptions,
 	): Promise<PollingStatusResponse>;
+	getModelSettings(
+		options?: HealthRequestOptions,
+	): Promise<SettingsModelsResponse>;
+	updateModelSettings(
+		request: SettingsModelsUpdateRequest,
+		options?: HealthRequestOptions,
+	): Promise<SettingsModelsResponse>;
 	listBoardTasks(
 		options?: HealthRequestOptions,
 	): Promise<ProjectBoardTaskRecord[]>;

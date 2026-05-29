@@ -25,6 +25,7 @@ const sandboxSchema = z.enum([
 ]);
 
 const stageConfigSchema = z.object({
+	brainstorm: z.string().optional(),
 	plan: z.string().optional(),
 	implement: z.string().optional(),
 	reviewTest: z.string().optional(),
@@ -49,6 +50,7 @@ const runtimeConfigSchema = z.object({
 		models: stageConfigSchema.optional(),
 		reasoningEfforts: z
 			.object({
+				brainstorm: reasoningEffortSchema.optional(),
 				plan: reasoningEffortSchema.optional(),
 				implement: reasoningEffortSchema.optional(),
 				reviewTest: reasoningEffortSchema.optional(),
@@ -57,6 +59,7 @@ const runtimeConfigSchema = z.object({
 			.optional(),
 		fastModes: z
 			.object({
+				brainstorm: z.boolean().optional(),
 				plan: z.boolean().optional(),
 				implement: z.boolean().optional(),
 				reviewTest: z.boolean().optional(),

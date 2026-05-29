@@ -84,12 +84,17 @@ export function buildEnvBase(
 				"CODEX_REASONING_EFFORT",
 			),
 			models: {
+				brainstorm: env.CODEX_MODEL_BRAINSTORM,
 				plan: env.CODEX_MODEL_PLAN,
 				implement: env.CODEX_MODEL_IMPLEMENT,
 				reviewTest: env.CODEX_MODEL_REVIEW_TEST,
 				githubComment: env.CODEX_MODEL_GITHUB_COMMENT,
 			},
 			reasoningEfforts: {
+				brainstorm: normalizeReasoningEffortValue(
+					env.CODEX_REASONING_EFFORT_BRAINSTORM,
+					"CODEX_REASONING_EFFORT_BRAINSTORM",
+				),
 				plan: normalizeReasoningEffortValue(
 					env.CODEX_REASONING_EFFORT_PLAN,
 					"CODEX_REASONING_EFFORT_PLAN",
@@ -108,6 +113,10 @@ export function buildEnvBase(
 				),
 			},
 			fastModes: {
+				brainstorm: normalizeBooleanEnvValue(
+					env.CODEX_FAST_MODE_BRAINSTORM,
+					"CODEX_FAST_MODE_BRAINSTORM",
+				),
 				plan: normalizeBooleanEnvValue(
 					env.CODEX_FAST_MODE_PLAN,
 					"CODEX_FAST_MODE_PLAN",

@@ -7,20 +7,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatWorkflowLoadingLabel } from "./chat-mission-phase-labels";
 import { MissionBody } from "./chat-mission-progress-sections";
-import type {
-	ChatMissionLogLine,
-	ChatMissionProgressViewModel,
-} from "./types/chat-mission-progress.types";
+import type { ChatMissionProgressViewModel } from "./types/chat-mission-progress.types";
 
 export function missionPanelWidthClass(isExpanded: boolean): string {
 	return isExpanded ? "max-w-6xl" : "max-w-4xl";
 }
 
 export function ChatMissionProgress({
-	liveLogLines = [],
 	mission,
 }: {
-	liveLogLines?: ChatMissionLogLine[];
 	mission: ChatMissionProgressViewModel | null;
 }): ReactElement | null {
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -62,9 +57,7 @@ export function ChatMissionProgress({
 					label={mission.errorMessage ?? "Mission progress unavailable."}
 				/>
 			) : null}
-			{mission.state === "ready" ? (
-				<MissionBody liveLogLines={liveLogLines} mission={mission} />
-			) : null}
+			{mission.state === "ready" ? <MissionBody mission={mission} /> : null}
 		</section>
 	);
 }

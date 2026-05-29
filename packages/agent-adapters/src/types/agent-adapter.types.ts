@@ -68,18 +68,21 @@ export interface AgentAdapterRuntimeConfig {
 		model?: string;
 		reasoningEffort?: CodexReasoningEffort;
 		models?: {
+			brainstorm?: string;
 			plan?: string;
 			implement?: string;
 			reviewTest?: string;
 			githubComment?: string;
 		};
 		reasoningEfforts?: {
+			brainstorm?: CodexReasoningEffort;
 			plan?: CodexReasoningEffort;
 			implement?: CodexReasoningEffort;
 			reviewTest?: CodexReasoningEffort;
 			githubComment?: CodexReasoningEffort;
 		};
 		fastModes?: {
+			brainstorm?: boolean;
 			plan?: boolean;
 			implement?: boolean;
 			reviewTest?: boolean;

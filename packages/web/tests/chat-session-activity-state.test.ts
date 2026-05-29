@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { createChatSessionActivityBubbles } from "../src/components/chat-room/chat-session-activity-state";
+import { createChatSessionActivitySections } from "../src/components/chat-room/chat-session-activity-state";
 import type { ChatMissionProgressViewModel } from "../src/components/chat-room/types/chat-mission-progress.types";
 import type { ChatStreamLine } from "../src/components/chat-room/types/chat-room.types";
 
 describe("chat session activity state", () => {
-	it("collapses repeated file reads into one latest activity bubble", () => {
-		const bubbles = createChatSessionActivityBubbles({
+	it("groups repeated file reads into one expandable activity section", () => {
+		const sections = createChatSessionActivitySections({
 			missionProgress: null,
 			streamLines: [
 				streamLine("line-1", "cat packages/web/AGENTS.md"),
@@ -13,17 +13,27 @@ describe("chat session activity state", () => {
 			],
 		});
 
-		expect(bubbles).toEqual([
+		expect(sections).toEqual([
 			{
-				id: "stream:line-2:reading-files",
+				details: [
+					{
+						id: "stream:line-1:reading-files",
+						text: "cat packages/web/AGENTS.md",
+					},
+					{
+						id: "stream:line-2:reading-files",
+						text: "sed -n 1,120p packages/web/src/page.tsx",
+					},
+				],
+				id: "reading-files:reading-files",
 				kind: "reading-files",
-				label: "Reading files...",
+				summary: "Reading files...",
 			},
 		]);
 	});
 
-	it("uses the latest recognized mission log instead of old raw output", () => {
-		const bubbles = createChatSessionActivityBubbles({
+	it("keeps read, write, and research logs in separate summary sections", () => {
+		const sections = createChatSessionActivitySections({
 			missionProgress: missionWithLogs([
 				{ id: "line-1", stream: "stdout", text: "rg streamLines packages/web" },
 				{
@@ -31,21 +41,42 @@ describe("chat session activity state", () => {
 					stream: "stdout",
 					text: "apply_patch chat-transcript.tsx",
 				},
+				{
+					id: "line-3",
+					stream: "stdout",
+					text: "web.run search_query app router examples",
+				},
 			]),
 			streamLines: [],
 		});
 
-		expect(bubbles).toEqual([
+		expect(
+			sections.map((section) => ({
+				details: section.details.map((detail) => detail.text),
+				kind: section.kind,
+				summary: section.summary,
+			})),
+		).toEqual([
 			{
-				id: "mission:line-2:writing",
+				details: ["rg streamLines packages/web"],
+				kind: "reading-files",
+				summary: "Reading files...",
+			},
+			{
+				details: ["apply_patch chat-transcript.tsx"],
 				kind: "writing",
-				label: "Writing changes...",
+				summary: "Writing changes...",
+			},
+			{
+				details: ["web.run search_query app router examples"],
+				kind: "browsing",
+				summary: "Researching...",
 			},
 		]);
 	});
 
 	it("surfaces MCP activity with the plugin name when structured data has it", () => {
-		const bubbles = createChatSessionActivityBubbles({
+		const sections = createChatSessionActivitySections({
 			missionProgress: missionWithLogs([
 				{
 					id: "line-1",
@@ -59,39 +90,45 @@ describe("chat session activity state", () => {
 			streamLines: [],
 		});
 
-		expect(bubbles).toEqual([
+		expect(sections).toEqual([
 			{
-				id: "mission:line-1:tool",
+				details: [
+					{
+						id: "mission:line-1:tool",
+						text: "Running mcp__github__search_issues",
+					},
+				],
+				id: "tool:running-mcp-github",
 				kind: "tool",
-				label: "Running MCP: GitHub...",
+				summary: "Running MCP: GitHub...",
 			},
 		]);
 	});
 
 	it("classifies skills, docs, browsing, and coding conservatively", () => {
-		expect(activityLabel("Reading skills/plan/SKILL.md")).toBe(
+		expect(activitySummary("Reading skills/plan/SKILL.md")).toBe(
 			"Reading skills...",
 		);
-		expect(activityLabel("Searching OpenAI docs for Responses API")).toBe(
+		expect(activitySummary("Searching OpenAI docs for Responses API")).toBe(
 			"Reading docs...",
 		);
-		expect(activityLabel("web.run search_query app router examples")).toBe(
-			"Browsing websites...",
+		expect(activitySummary("web.run search_query app router examples")).toBe(
+			"Researching...",
 		);
-		expect(activityLabel("bun test packages/web/tests/chat-room.test.ts")).toBe(
-			"Coding...",
-		);
+		expect(
+			activitySummary("bun test packages/web/tests/chat-room.test.ts"),
+		).toBe("Coding...");
 	});
 
 	it("suppresses unknown output and terminal mission activity", () => {
 		expect(
-			createChatSessionActivityBubbles({
+			createChatSessionActivitySections({
 				missionProgress: null,
 				streamLines: [streamLine("line-1", "agent output is still warming up")],
 			}),
 		).toEqual([]);
 		expect(
-			createChatSessionActivityBubbles({
+			createChatSessionActivitySections({
 				missionProgress: missionWithLogs(
 					[
 						{
@@ -106,13 +143,39 @@ describe("chat session activity state", () => {
 			}),
 		).toEqual([]);
 	});
+
+	it("hides stale activity after the testing phase is done", () => {
+		expect(
+			createChatSessionActivitySections({
+				missionProgress: {
+					...missionWithLogs([
+						{
+							id: "line-1",
+							stream: "stdout",
+							text: "bun test packages/web/tests/chat-session.test.ts",
+						},
+					]),
+					latestResult: { label: "succeeded", tone: "success" },
+					phases: [
+						{ id: "plan", label: "Planning", status: "success" },
+						{ id: "implement", label: "Implementing", status: "success" },
+						{ id: "testing", label: "Testing", status: "success" },
+					],
+					status: "in_review",
+				},
+				streamLines: [
+					streamLine("stream-1", "web.run search_query implementation notes"),
+				],
+			}),
+		).toEqual([]);
+	});
 });
 
-function activityLabel(text: string): string | undefined {
-	return createChatSessionActivityBubbles({
+function activitySummary(text: string): string | undefined {
+	return createChatSessionActivitySections({
 		missionProgress: null,
 		streamLines: [streamLine("line-1", text)],
-	})[0]?.label;
+	})[0]?.summary;
 }
 
 function streamLine(id: string, text: string): ChatStreamLine {
@@ -141,6 +204,10 @@ function missionWithLogs(
 		latestResult: null,
 		usageSummary: null,
 		phaseLogLines: { plan: [], implement: [], testing: [], qa: [] },
-		phases: [],
+		phases: [
+			{ id: "plan", label: "Planning", status: "success" },
+			{ id: "implement", label: "Implementing", status: "running" },
+			{ id: "testing", label: "Testing", status: "pending" },
+		],
 	};
 }

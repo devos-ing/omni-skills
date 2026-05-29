@@ -12,6 +12,7 @@ export const CODEX_DESCRIPTION =
 export const CODEX_DEFAULT_MODEL = "gpt-5.5";
 
 export const CODEX_DEFAULT_STAGE_MODELS = {
+	brainstorm: "gpt-5.5",
 	plan: "gpt-5.5",
 	implement: "gpt-5.3-codex",
 	reviewTest: "gpt-5.3-codex",
@@ -34,7 +35,10 @@ export const CODEX_AVAILABLE_MODELS = [
 		"Lower-latency OpenAI model for lightweight agent tasks.",
 		["githubComment"],
 	),
-	model("gpt-5.5", "GPT-5.5", "Frontier OpenAI planning model.", ["plan"]),
+	model("gpt-5.5", "GPT-5.5", "Frontier OpenAI planning model.", [
+		"brainstorm",
+		"plan",
+	]),
 ] as const satisfies readonly AgentModelDefinition[];
 
 function model(

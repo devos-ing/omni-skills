@@ -42,6 +42,8 @@ const IMPLEMENTED_ROUTES = [
 	["POST", "/api/notifications"],
 	["POST", "/api/notifications/email"],
 	["GET", "/api/polling/status"],
+	["GET", "/api/settings/models"],
+	["PATCH", "/api/settings/models"],
 ] as const;
 
 function extractOpenApiRoutes(openApiDocument: string): Set<string> {

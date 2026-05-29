@@ -38,12 +38,14 @@ export interface OnboardDraft {
 	codex: {
 		reasoningEffort?: CodexReasoningEffort;
 		reasoningEfforts?: {
+			brainstorm?: CodexReasoningEffort;
 			plan?: CodexReasoningEffort;
 			implement?: CodexReasoningEffort;
 			reviewTest?: CodexReasoningEffort;
 			githubComment?: CodexReasoningEffort;
 		};
 		models: {
+			brainstorm: string;
 			plan: string;
 			implement: string;
 			reviewTest: string;

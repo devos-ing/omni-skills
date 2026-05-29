@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { AgentMonitorShell } from "@/components/agent-monitor/agent-monitor-shell";
+import { SettingsModelsPanel } from "@/components/settings/settings-models-panel";
 import { TaskCreatePanel } from "@/components/task-create/task-create-panel";
 import { Typography } from "@/components/ui/typography";
 
@@ -50,8 +51,14 @@ export function OperatorSectionPanel({
 					minWidth: 0,
 				}}
 			>
-				<TaskCreatePanel />
-				<AgentMonitorShell />
+				{sectionKey === "settings" ? (
+					<SettingsModelsPanel />
+				) : (
+					<>
+						<TaskCreatePanel />
+						<AgentMonitorShell />
+					</>
+				)}
 			</div>
 		</section>
 	);

@@ -6,7 +6,13 @@ import type {
 	ModelsCommandDeps,
 } from "./types/model-command.types";
 
-const STAGES = ["plan", "implement", "reviewTest", "githubComment"] as const;
+const STAGES = [
+	"brainstorm",
+	"plan",
+	"implement",
+	"reviewTest",
+	"githubComment",
+] as const;
 
 export async function handleModelsCommand(
 	command: ModelsCommand,

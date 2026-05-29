@@ -29,6 +29,13 @@ function resolveCodexModel(
 	config: ResolvedProjectConfig,
 	agentRole: AgentChatLogRole,
 ): string | undefined {
+	if (agentRole === "brainstorm") {
+		return (
+			config.codex.models?.brainstorm ??
+			config.codex.models?.plan ??
+			config.codex.model
+		);
+	}
 	if (agentRole === "planning") {
 		return config.codex.models?.plan ?? config.codex.model;
 	}
