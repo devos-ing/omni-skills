@@ -12,7 +12,6 @@ import type {
 	WorkflowRuntime,
 	WorkflowTaskClient,
 } from "../types/workflow.types";
-import { sortIssuesByPriority } from "../workflow-issue-sort";
 import {
 	buildPrioritizedIssueQueue as buildPrioritizedIssueQueueHelper,
 	buildReviewOnlyIssueQueue,
@@ -43,7 +42,7 @@ export class IssueQueueBuilder {
 			);
 			const reviewOnlyIssues = await this.fetchReviewOnlyIssues(runStates);
 			return {
-				issueQueue: sortIssuesByPriority(reviewOnlyIssues),
+				issueQueue: reviewOnlyIssues,
 				staleRetryCount: 0,
 			};
 		}
@@ -175,9 +174,7 @@ export function buildPrioritizedIssueQueue(
 	assignedIssues: WorkflowIssue[],
 	staleRetryIssues: WorkflowIssue[],
 ): WorkflowIssue[] {
-	return sortIssuesByPriority(
-		buildPrioritizedIssueQueueHelper(assignedIssues, staleRetryIssues),
-	);
+	return buildPrioritizedIssueQueueHelper(assignedIssues, staleRetryIssues);
 }
 
 function toWorkflowIssue(issue: WorkflowIssue): WorkflowIssue {

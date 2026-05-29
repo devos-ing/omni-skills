@@ -186,7 +186,7 @@ export function buildReviewOnlyIssueQueue(
 	}
 
 	return {
-		issueQueue,
+		issueQueue: buildPrioritizedIssueQueue(issueQueue, []),
 		mergedCandidateCount: merged.length,
 		discoveredPrCount,
 		skippedWithoutPr,
