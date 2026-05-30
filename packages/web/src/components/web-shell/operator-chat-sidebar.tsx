@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactElement, useState } from "react";
+import { type ReactElement, memo, useState } from "react";
 import { toast } from "sonner";
 
 import { ChatRoomSidebar } from "@/components/chat-room/chat-room-sidebar";
@@ -15,19 +15,17 @@ import { useCurrentWorkspaceQuery } from "@/lib/api/queries";
 import { useWorkspaceProjectsQuery } from "@/lib/api/realtime-queries";
 import { useRealtimeStore } from "@/lib/realtime";
 
+import { areOperatorChatSidebarPropsEqual } from "./operator-chat-sidebar-render-utils";
+import type { OperatorChatSidebarProps } from "./types/operator-chat-sidebar.types";
+
 const NO_REFETCH = { refetchIntervalMs: false } as const;
 
-export function OperatorChatSidebar({
+function OperatorChatSidebarView({
 	activeSessionId,
 	isMobileOpen,
 	onCloseMobileSidebar,
 	onSearch,
-}: {
-	activeSessionId: string;
-	isMobileOpen: boolean;
-	onCloseMobileSidebar: () => void;
-	onSearch: () => void;
-}): ReactElement {
+}: OperatorChatSidebarProps): ReactElement {
 	const [isSessionSidebarCollapsed, setIsSessionSidebarCollapsed] =
 		useState(false);
 	const router = useRouter();
@@ -114,3 +112,10 @@ export function OperatorChatSidebar({
 		</>
 	);
 }
+
+export const OperatorChatSidebar = memo(
+	OperatorChatSidebarView,
+	areOperatorChatSidebarPropsEqual,
+);
+
+OperatorChatSidebar.displayName = "OperatorChatSidebar";

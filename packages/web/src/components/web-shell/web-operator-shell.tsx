@@ -28,6 +28,7 @@ import type {
 	CommandDraftRequest,
 	OperatorIssueActionsContextValue,
 } from "./types/operator-issue-actions.types";
+import { WebOperatorLayout } from "./web-operator-layout";
 import { hrefForNavKey, navItems } from "./web-shell.constants";
 
 function getActiveNavKey(pathname: string): SidebarNavKey {
@@ -126,44 +127,51 @@ export function WebOperatorShell({
 	);
 
 	return (
-		<main className="relative grid h-[100dvh] max-h-[100dvh] min-w-0 grid-rows-[minmax(0,1fr)] overflow-x-clip bg-background md:grid-cols-[auto_minmax(0,1fr)]">
-			<OperatorChatSidebar
-				activeSessionId={activeSessionId}
-				isMobileOpen={isChatSidebarMobileOpen}
-				onCloseMobileSidebar={closeChatSidebar}
-				onSearch={openSearch}
-			/>
-			{!isChatSurface ? (
-				<Button
-					aria-label="Open chat sidebar"
-					className="absolute left-4 top-4 z-20 cursor-pointer md:hidden"
-					onClick={openChatSidebar}
-					size="icon"
-					type="button"
-					variant="ghost"
-				>
-					<PanelLeft size={17} />
-				</Button>
-			) : null}
+		<WebOperatorLayout
+			mobileSidebarTrigger={
+				!isChatSurface ? (
+					<Button
+						aria-label="Open chat sidebar"
+						className="absolute left-4 top-4 z-20 cursor-pointer md:hidden"
+						onClick={openChatSidebar}
+						size="icon"
+						type="button"
+						variant="ghost"
+					>
+						<PanelLeft size={17} />
+					</Button>
+				) : null
+			}
+			overlays={
+				<CommandSearchDialog
+					activeKey={activeNavKey}
+					boardError={searchTasksQuery.error}
+					commandHistory={commandHistoryQuery.data}
+					commandHistoryError={commandHistoryQuery.error}
+					isBoardLoading={searchTasksQuery.isLoading}
+					isCommandHistoryLoading={commandHistoryQuery.isLoading}
+					isOpen={isSearchOpen}
+					navItems={navItems}
+					onClose={() => setIsSearchOpen(false)}
+					onNavigate={navigateToSection}
+					onNewIssue={createIssue}
+					onOpenIssue={openIssue}
+					onSelectCommand={selectChatCommandDraft}
+					tasks={searchTasksQuery.data}
+				/>
+			}
+			sidebar={
+				<OperatorChatSidebar
+					activeSessionId={activeSessionId}
+					isMobileOpen={isChatSidebarMobileOpen}
+					onCloseMobileSidebar={closeChatSidebar}
+					onSearch={openSearch}
+				/>
+			}
+		>
 			<OperatorIssueActionsProvider value={issueActionsValue}>
-				<div className="min-h-0 min-w-0">{children}</div>
+				{children}
 			</OperatorIssueActionsProvider>
-			<CommandSearchDialog
-				activeKey={activeNavKey}
-				boardError={searchTasksQuery.error}
-				commandHistory={commandHistoryQuery.data}
-				commandHistoryError={commandHistoryQuery.error}
-				isBoardLoading={searchTasksQuery.isLoading}
-				isCommandHistoryLoading={commandHistoryQuery.isLoading}
-				isOpen={isSearchOpen}
-				navItems={navItems}
-				onClose={() => setIsSearchOpen(false)}
-				onNavigate={navigateToSection}
-				onNewIssue={createIssue}
-				onOpenIssue={openIssue}
-				onSelectCommand={selectChatCommandDraft}
-				tasks={searchTasksQuery.data}
-			/>
-		</main>
+		</WebOperatorLayout>
 	);
 }
