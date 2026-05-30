@@ -1,7 +1,7 @@
 {
 	"extends": "@devos/tsconfig/base.json",
 	"compilerOptions": {
-		"types": ["bun"],
+		"types": ["bun", "node"],
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
