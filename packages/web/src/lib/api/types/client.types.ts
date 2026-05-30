@@ -14,6 +14,7 @@ import type {
 import type { PollingStatusResponse } from "./polling-status.types";
 import type {
 	AgentRecord,
+	AgentStatus,
 	AgentUpdateRequest,
 	CommandHistoryRecord,
 	JobRecord,
@@ -60,6 +61,7 @@ export type {
 } from "./settings.types";
 export type {
 	AgentRecord,
+	AgentStatus,
 	AgentUpdateRequest,
 	CommandHistoryRecord,
 	JobRecord,

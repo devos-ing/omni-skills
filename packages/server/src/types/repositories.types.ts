@@ -22,6 +22,9 @@ export interface JobRecord {
 	createdAt: string;
 }
 
+export type AgentReasoningEffort = "high" | "low" | "medium" | "xhigh";
+export type AgentStatus = "offline" | "online";
+
 export interface AgentRecord {
 	id: string;
 	name: string;
@@ -30,6 +33,8 @@ export interface AgentRecord {
 	runtime: string;
 	backend: string;
 	model: string;
+	reasoningEffort: AgentReasoningEffort | null;
+	status: AgentStatus;
 	concurrency: number;
 	owner: string;
 	createdAt: string;

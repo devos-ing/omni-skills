@@ -70,6 +70,8 @@ describe("read repositories", () => {
 				runtime: "codex",
 				backend: "codex",
 				model: "gpt-5",
+				reasoningEffort: null,
+				status: "online",
 				concurrency: 2,
 				owner: "owner-1",
 				createdAt: "2026-05-12T00:02:00.000Z",

@@ -23,6 +23,8 @@ describe("db boundary export", () => {
 			runtime: "codex",
 			backend: "codex",
 			model: "gpt-5",
+			reasoningEffort: null,
+			status: "online",
 			concurrency: 1,
 			owner: "owner-1",
 			createdAt: "2026-05-13 00:00:00",

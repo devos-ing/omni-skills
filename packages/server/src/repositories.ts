@@ -1,4 +1,9 @@
 import type { ServerDatabase } from "devos-db";
+import {
+	parseAgentReasoningEffort,
+	parseAgentStatus,
+	parseStringList,
+} from "./repositories-agent-utils";
 import type {
 	AgentRecord,
 	BoardProjectRecord,
@@ -30,24 +35,6 @@ function normalizeTimestamp(value: string | number | Date | null): string {
 		return parsed.toISOString();
 	}
 	return value;
-}
-
-function parseStringList(value: string | number | Date | null): string[] {
-	if (typeof value !== "string") {
-		return [];
-	}
-	try {
-		const parsed = JSON.parse(value) as unknown;
-		if (
-			!Array.isArray(parsed) ||
-			!parsed.every((entry) => typeof entry === "string")
-		) {
-			return [];
-		}
-		return parsed;
-	} catch {
-		return [];
-	}
 }
 
 async function readRows<T>(
@@ -107,7 +94,7 @@ export function createReadRepositories(
 		listAgents: async () =>
 			readRows(
 				database,
-				`SELECT id, name, description, logo, runtime, backend, model, concurrency, owner, created_at, updated_at, skills, recent_work, activity, instructions
+				`SELECT id, name, description, logo, runtime, backend, model, reasoning_effort, status, concurrency, owner, created_at, updated_at, skills, recent_work, activity, instructions
 				 FROM agents
 				 ORDER BY id ASC`,
 				(row): AgentRecord => ({
@@ -118,6 +105,8 @@ export function createReadRepositories(
 					runtime: String(row.runtime),
 					backend: String(row.backend),
 					model: String(row.model),
+					reasoningEffort: parseAgentReasoningEffort(row.reasoning_effort),
+					status: parseAgentStatus(row.status),
 					concurrency: Number(row.concurrency),
 					owner: String(row.owner),
 					createdAt: normalizeTimestamp(row.created_at),

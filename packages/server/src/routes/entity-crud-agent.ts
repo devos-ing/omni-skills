@@ -10,6 +10,8 @@ import type {
 const nonEmptyString = z.string().trim().min(1);
 const optionalMetadataString = z.string();
 const stringList = z.array(nonEmptyString);
+const agentStatus = z.enum(["offline", "online"]);
+const reasoningEffort = z.enum(["low", "medium", "high", "xhigh"]).nullable();
 
 const agentCreateSchema = z.object({
 	id: nonEmptyString,
@@ -19,6 +21,8 @@ const agentCreateSchema = z.object({
 	runtime: nonEmptyString.optional(),
 	backend: nonEmptyString,
 	model: nonEmptyString,
+	reasoningEffort: reasoningEffort.optional(),
+	status: agentStatus.optional(),
 	concurrency: z.number().int().positive().optional(),
 	owner: nonEmptyString.optional(),
 	createdAt: nonEmptyString,
@@ -36,6 +40,8 @@ const agentUpdateSchema = z.object({
 	runtime: nonEmptyString.optional(),
 	backend: nonEmptyString.optional(),
 	model: nonEmptyString.optional(),
+	reasoningEffort: reasoningEffort.optional(),
+	status: agentStatus.optional(),
 	concurrency: z.number().int().positive().optional(),
 	owner: nonEmptyString.optional(),
 	createdAt: nonEmptyString.optional(),
@@ -87,6 +93,8 @@ export function toStoredAgentCreatePayload(
 		runtime: payload.runtime ?? payload.backend,
 		backend: payload.backend,
 		model: payload.model,
+		reasoningEffort: payload.reasoningEffort ?? null,
+		status: payload.status ?? "online",
 		concurrency: payload.concurrency ?? 1,
 		owner: payload.owner ?? "unassigned",
 		createdAt: payload.createdAt,
@@ -125,6 +133,8 @@ export function toAgentRecord(row: AgentRow): AgentRecord {
 		runtime: row.runtime,
 		backend: row.backend,
 		model: row.model,
+		reasoningEffort: parseStoredReasoningEffort(row.reasoningEffort),
+		status: row.status as AgentRecord["status"],
 		concurrency: row.concurrency,
 		owner: row.owner,
 		createdAt: row.createdAt,
@@ -134,6 +144,20 @@ export function toAgentRecord(row: AgentRow): AgentRecord {
 		activity: parseStringList(row.activity),
 		instructions: row.instructions,
 	};
+}
+
+function parseStoredReasoningEffort(
+	value: string | null,
+): AgentRecord["reasoningEffort"] {
+	if (
+		value === "low" ||
+		value === "medium" ||
+		value === "high" ||
+		value === "xhigh"
+	) {
+		return value;
+	}
+	return null;
 }
 
 function parseStringList(value: string): string[] {

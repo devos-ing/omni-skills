@@ -29,6 +29,8 @@ describe("agent and skill CRUD routes", () => {
 			runtime: "codex",
 			backend: "codex",
 			model: "gpt-5",
+			reasoningEffort: "high",
+			status: "offline",
 			concurrency: 2,
 			owner: "roy",
 			createdAt: "2026-05-12 00:02:00",
@@ -58,6 +60,8 @@ describe("agent and skill CRUD routes", () => {
 		const updateResponse = await app(
 			createJsonRequest("PATCH", "/api/agents/agent-1", {
 				model: "gpt-5.1",
+				reasoningEffort: "xhigh",
+				status: "online",
 				concurrency: 4,
 				skills: ["adhd-review"],
 			}),
@@ -66,6 +70,8 @@ describe("agent and skill CRUD routes", () => {
 		expect(await updateResponse.json()).toEqual({
 			...payload,
 			model: "gpt-5.1",
+			reasoningEffort: "xhigh",
+			status: "online",
 			concurrency: 4,
 			skills: ["adhd-review"],
 		});
@@ -123,6 +129,8 @@ describe("agent and skill CRUD routes", () => {
 			description: "",
 			logo: "",
 			model: "gpt-5.1",
+			reasoningEffort: null,
+			status: "online",
 			instructions: "",
 		});
 	});

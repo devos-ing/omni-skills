@@ -8,6 +8,8 @@ export const agentsTable = pgTable("agents", {
 	runtime: text("runtime").notNull(),
 	backend: text("backend").notNull(),
 	model: text("model").notNull(),
+	reasoningEffort: text("reasoning_effort"),
+	status: text("status").notNull().default("online"),
 	concurrency: integer("concurrency").notNull(),
 	owner: text("owner").notNull(),
 	createdAt: timestamp("created_at", { mode: "string" }).notNull(),

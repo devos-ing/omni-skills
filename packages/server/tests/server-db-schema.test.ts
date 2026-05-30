@@ -87,6 +87,8 @@ describe("server drizzle schema", () => {
 			runtime: "codex",
 			backend: "codex",
 			model: "gpt-5",
+			reasoningEffort: null,
+			status: "online",
 			concurrency: 2,
 			owner: "owner-1",
 			createdAt: "2026-05-12 00:02:00",
@@ -168,7 +170,11 @@ describe("server drizzle schema", () => {
 		expect(tokenUsageRow?.estimatedCostMicrousd).toBe(200);
 		expect(tokenUsageRow?.recordedAt).toBe(tokenUsage.recordedAt);
 		expect(jobRow).toEqual(job);
-		expect(agentRow).toEqual(agent);
+		expect(agentRow).toEqual({
+			...agent,
+			reasoningEffort: null,
+			status: "online",
+		});
 		expect(skillRow).toEqual(skill);
 		expect(commandHistoryRow).toEqual(commandHistory);
 		expect(inboxMessageRow).toEqual({

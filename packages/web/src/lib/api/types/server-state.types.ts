@@ -1,3 +1,5 @@
+import type { SettingsReasoningEffort } from "./settings.types";
+
 export interface TokenUsageRecord {
 	id: string;
 	runId: string;
@@ -22,6 +24,8 @@ export interface JobRecord {
 	createdAt: string;
 }
 
+export type AgentStatus = "offline" | "online";
+
 export interface AgentRecord {
 	id: string;
 	name: string;
@@ -30,6 +34,8 @@ export interface AgentRecord {
 	runtime: string;
 	backend: string;
 	model: string;
+	reasoningEffort: SettingsReasoningEffort | null;
+	status: AgentStatus;
 	concurrency: number;
 	owner: string;
 	createdAt: string;
@@ -47,6 +53,8 @@ export interface AgentUpdateRequest {
 	runtime?: string;
 	backend?: string;
 	model?: string;
+	reasoningEffort?: SettingsReasoningEffort | null;
+	status?: AgentStatus;
 	concurrency?: number;
 	owner?: string;
 	createdAt?: string;

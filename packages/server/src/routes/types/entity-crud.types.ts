@@ -1,5 +1,9 @@
 import type { AgentRow, SkillRow } from "devos-db";
-import type { AgentRecord } from "../../types/repositories.types";
+import type {
+	AgentReasoningEffort,
+	AgentRecord,
+	AgentStatus,
+} from "../../types/repositories.types";
 
 export interface AgentCreatePayload {
 	id: string;
@@ -9,6 +13,8 @@ export interface AgentCreatePayload {
 	runtime?: string;
 	backend: string;
 	model: string;
+	reasoningEffort?: AgentReasoningEffort | null;
+	status?: AgentStatus;
 	concurrency?: number;
 	owner?: string;
 	createdAt: string;
@@ -26,6 +32,8 @@ export interface AgentUpdatePayload {
 	runtime?: string;
 	backend?: string;
 	model?: string;
+	reasoningEffort?: AgentReasoningEffort | null;
+	status?: AgentStatus;
 	concurrency?: number;
 	owner?: string;
 	createdAt?: string;

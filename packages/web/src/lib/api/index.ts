@@ -3,6 +3,7 @@ export { ApiRequestError, isApiRequestError } from "./response-utils";
 export { createWebApiClient } from "./web-client";
 export type {
 	AgentRecord,
+	AgentStatus,
 	AgentUpdateRequest,
 	ApiClient,
 	ApiClientOptions,
@@ -27,6 +28,7 @@ export type {
 	ProjectBoardStatusColumn,
 	ProjectBoardTaskRecord,
 	SkillRecord,
+	SettingsReasoningEffort,
 	TaskClarificationOption,
 	TaskClarificationQuestion,
 	TaskMutationRequest,

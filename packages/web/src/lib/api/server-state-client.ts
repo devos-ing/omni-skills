@@ -9,6 +9,7 @@ import {
 } from "./response-utils";
 import type {
 	AgentRecord,
+	AgentStatus,
 	CommandHistoryRecord,
 	HealthResponse,
 	JobRecord,
@@ -76,6 +77,8 @@ export function parseAgentRecord(payload: unknown): AgentRecord {
 		runtime: readString(row, "runtime", "/api/agents"),
 		backend: readString(row, "backend", "/api/agents"),
 		model: readString(row, "model", "/api/agents"),
+		reasoningEffort: parseAgentReasoningEffort(row),
+		status: parseAgentStatus(row),
 		concurrency: readNumber(row, "concurrency", "/api/agents"),
 		owner: readString(row, "owner", "/api/agents"),
 		createdAt: readString(row, "createdAt", "/api/agents"),
@@ -85,6 +88,30 @@ export function parseAgentRecord(payload: unknown): AgentRecord {
 		activity: readStringArray(row, "activity", "/api/agents"),
 		instructions: readString(row, "instructions", "/api/agents"),
 	};
+}
+
+function parseAgentReasoningEffort(
+	row: Record<string, unknown>,
+): AgentRecord["reasoningEffort"] {
+	const value = readNullableString(row, "reasoningEffort", "/api/agents");
+	if (
+		value === null ||
+		value === "low" ||
+		value === "medium" ||
+		value === "high" ||
+		value === "xhigh"
+	) {
+		return value;
+	}
+	throw new Error("Invalid /api/agents response field 'reasoningEffort'");
+}
+
+function parseAgentStatus(row: Record<string, unknown>): AgentStatus {
+	const value = readString(row, "status", "/api/agents");
+	if (value === "offline" || value === "online") {
+		return value;
+	}
+	throw new Error("Invalid /api/agents response field 'status'");
 }
 
 export function parseSkillRecord(payload: unknown): SkillRecord {

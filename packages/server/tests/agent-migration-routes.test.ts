@@ -53,6 +53,8 @@ describe("agent migration routes", () => {
 					runtime: "codex",
 					backend: "codex",
 					model: "gpt-5",
+					reasoningEffort: null,
+					status: "online",
 					concurrency: 1,
 					owner: "unassigned",
 					skills: [],

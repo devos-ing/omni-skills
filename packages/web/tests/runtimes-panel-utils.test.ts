@@ -15,6 +15,8 @@ function createAgent(overrides: Partial<AgentRecord>): AgentRecord {
 		runtime: "codex",
 		backend: "codex",
 		model: "gpt-5",
+		reasoningEffort: null,
+		status: "online",
 		concurrency: 1,
 		owner: "roy",
 		createdAt: "2026-05-20T00:00:00.000Z",
