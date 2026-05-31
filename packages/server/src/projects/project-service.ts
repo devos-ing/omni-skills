@@ -28,6 +28,7 @@ export function createProjectService(
 					boardId: input.boardId,
 					externalProjectId: input.externalProjectId ?? null,
 					name: input.name,
+					emoji: input.emoji ?? null,
 					description: input.description ?? null,
 					repoOwner: input.repoOwner ?? null,
 					repoName: input.repoName ?? null,

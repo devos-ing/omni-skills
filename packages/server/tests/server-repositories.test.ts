@@ -115,6 +115,7 @@ describe("read repositories", () => {
 				boardId: "board-1",
 				externalProjectId: "ext-project-42",
 				name: "API Hardening",
+				emoji: null,
 				description: "Contract and route updates",
 				repoOwner: null,
 				repoName: null,

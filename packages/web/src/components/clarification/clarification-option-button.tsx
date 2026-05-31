@@ -25,7 +25,7 @@ export function ClarificationOptionButton({
 			onClick={onSelect}
 			size="sm"
 			type="button"
-			className='justify-start'
+			className="justify-start"
 			variant={selected ? "default" : "secondary"}
 		>
 			<Typography as="span">{option.label}</Typography>

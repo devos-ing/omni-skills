@@ -35,7 +35,10 @@ export {
 	useDeleteBoardTaskMutation,
 	useUpdateBoardTaskMutation,
 } from "./board-task-mutations";
-export { useCreateProjectMutation } from "./project-mutations";
+export {
+	useCreateProjectMutation,
+	useUpdateProjectMutation,
+} from "./project-mutations";
 export { serverStateQueryKeys } from "./query-keys";
 
 const apiClient = createWebApiClient();

@@ -1,7 +1,26 @@
-export interface CreateProjectPayload {
+export interface WorkspaceProjectRecord {
+	id: string;
 	boardId: string;
+	workspaceId: string;
+	externalProjectId: string | null;
 	name: string;
+	emoji: string | null;
+	description: string | null;
+	repoOwner: string | null;
+	repoName: string | null;
+	baseBranch: string | null;
+	localFolder: string | null;
+	lead: string | null;
+	category: string | null;
+	priority: number | null;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface ProjectCreateRequest {
+	boardId: string;
 	ownerId: string;
+	name: string;
 	emoji?: string | null;
 	externalProjectId?: string | null;
 	description?: string | null;
@@ -14,10 +33,10 @@ export interface CreateProjectPayload {
 	priority?: number | null;
 }
 
-export interface UpdateProjectPayload {
+export interface ProjectUpdateRequest {
 	boardId?: string;
-	name?: string;
 	ownerId?: string;
+	name?: string;
 	emoji?: string | null;
 	externalProjectId?: string | null;
 	description?: string | null;
@@ -30,28 +49,7 @@ export interface UpdateProjectPayload {
 	priority?: number | null;
 }
 
-export interface CreateTaskPayload {
-	taskKey?: string;
-	projectId?: string | null;
-	title: string;
-	content: string;
-	priority: number;
-	status: string;
-	creatorId: string;
-	assigneeId?: string | null;
-	dueDate?: string | null;
-	linkedPr?: string | null;
-}
-
-export interface UpdateTaskPayload {
-	taskKey?: string;
-	projectId?: string | null;
-	title?: string;
-	content?: string;
-	priority?: number;
-	status?: string;
-	creatorId?: string;
-	assigneeId?: string | null;
-	dueDate?: string | null;
-	linkedPr?: string | null;
+export interface WorkspaceProjectsResponse {
+	workspaceId: string;
+	projects: WorkspaceProjectRecord[];
 }

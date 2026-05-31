@@ -1,12 +1,19 @@
 import { describe, expect, it } from "bun:test";
+import * as projectUtils from "../src/components/projects/projects-panel-utils";
 import {
+	DEFAULT_PROJECT_EMOJI,
 	EMPTY_PROJECT_FORM_STATE,
 	buildProjectCreateRequest,
 	buildProjectDisplayRows,
 	filterProjects,
 	formatProjectCreatedAt,
 } from "../src/components/projects/projects-panel-utils";
-import type { WorkspaceProjectRecord } from "../src/lib/api";
+import type { ProjectFormState } from "../src/components/projects/types/projects-panel.types";
+import type {
+	GitHubRepositoryRecord,
+	ProjectUpdateRequest,
+	WorkspaceProjectRecord,
+} from "../src/lib/api";
 
 const defaults = {
 	boardId: "board-1",
@@ -14,17 +21,15 @@ const defaults = {
 };
 
 describe("projects panel create request builder", () => {
-	it("maps a GitHub HTTPS repository URL to the API request", () => {
+	it("maps a manual owner/repo repository to the API request", () => {
 		const request = buildProjectCreateRequest(
 			{
+				...EMPTY_PROJECT_FORM_STATE,
 				name: "  Web Project  ",
-				externalProjectId: "  external-1  ",
+				emoji: "🧭",
 				description: "  Created from UI  ",
-				repositoryUrl: "  https://github.com/octo/demo.git  ",
-				localFolder: "  /tmp/demo  ",
-				lead: "  Roy  ",
-				category: "  platform  ",
-				priority: " 2 ",
+				repositoryMode: "manual",
+				manualRepository: "  octo/demo  ",
 			},
 			defaults,
 		);
@@ -33,40 +38,41 @@ describe("projects panel create request builder", () => {
 			boardId: "board-1",
 			ownerId: "owner-1",
 			name: "Web Project",
-			externalProjectId: "external-1",
+			emoji: "🧭",
+			externalProjectId: null,
 			description: "Created from UI",
 			repoOwner: "octo",
 			repoName: "demo",
 			baseBranch: "main",
-			localFolder: "/tmp/demo",
-			lead: "Roy",
-			category: "platform",
-			priority: 2,
+			localFolder: null,
+			lead: null,
+			category: null,
+			priority: null,
 		});
 	});
 
-	it("parses supported GitHub repository URL forms", () => {
-		const cases = [
-			"https://github.com/octo/demo",
-			"https://github.com/octo/demo.git",
-			"git@github.com:octo/demo.git",
-			"ssh://git@github.com/octo/demo.git",
-		];
+	it("maps a discovered GitHub repository option to the API request", () => {
+		const request = buildProjectCreateRequest(
+			{
+				...EMPTY_PROJECT_FORM_STATE,
+				name: "Web Project",
+				repositoryMode: "select",
+				selectedRepository: "octo/core",
+			},
+			defaults,
+			[
+				repositoryOption({
+					id: "octo/core",
+					name: "core",
+					nameWithOwner: "octo/core",
+					defaultBranch: "trunk",
+				}),
+			],
+		);
 
-		for (const repositoryUrl of cases) {
-			const request = buildProjectCreateRequest(
-				{
-					...EMPTY_PROJECT_FORM_STATE,
-					name: "Web Project",
-					repositoryUrl,
-				},
-				defaults,
-			);
-
-			expect(request.repoOwner).toBe("octo");
-			expect(request.repoName).toBe("demo");
-			expect(request.baseBranch).toBe("main");
-		}
+		expect(request.repoOwner).toBe("octo");
+		expect(request.repoName).toBe("core");
+		expect(request.baseBranch).toBe("trunk");
 	});
 
 	it("normalizes optional blank fields to null", () => {
@@ -82,6 +88,7 @@ describe("projects panel create request builder", () => {
 			boardId: "board-1",
 			ownerId: "owner-1",
 			name: "Web Project",
+			emoji: DEFAULT_PROJECT_EMOJI,
 			externalProjectId: null,
 			description: null,
 			repoOwner: null,
@@ -94,36 +101,144 @@ describe("projects panel create request builder", () => {
 		});
 	});
 
-	it("requires a valid GitHub repository URL when one is provided", () => {
+	it("requires a valid owner/repo repository when one is provided", () => {
 		expect(() =>
 			buildProjectCreateRequest(
 				{
 					...EMPTY_PROJECT_FORM_STATE,
 					name: "Web Project",
-					repositoryUrl: "https://gitlab.com/octo/demo",
+					repositoryMode: "manual",
+					manualRepository: "https://github.com/octo/demo",
 				},
 				defaults,
 			),
-		).toThrow("Repository URL must be a GitHub HTTPS or SSH clone URL");
+		).toThrow("Repository must be owner/repo");
 	});
 
-	it("requires a project name and integer priority", () => {
+	it("requires a project name", () => {
 		expect(() =>
 			buildProjectCreateRequest(
 				{ ...EMPTY_PROJECT_FORM_STATE, name: " " },
 				defaults,
 			),
 		).toThrow("Project name is required");
-		expect(() =>
-			buildProjectCreateRequest(
+	});
+});
+
+describe("projects panel edit request builder", () => {
+	it("prefills editable project metadata from an existing project", () => {
+		const buildProjectEditFormState = (
+			projectUtils as {
+				buildProjectEditFormState?: (
+					project: WorkspaceProjectRecord,
+				) => ProjectFormState;
+			}
+		).buildProjectEditFormState;
+
+		expect(buildProjectEditFormState?.(buildProject())).toEqual({
+			name: "Project",
+			emoji: DEFAULT_PROJECT_EMOJI,
+			description: "Project description",
+			repositoryMode: "manual",
+			selectedRepository: "",
+			manualRepository: "devos/show-me-ur-agents",
+			lead: "",
+			priority: "2",
+		});
+	});
+
+	it("maps editable metadata and selected repository to an update request", () => {
+		const buildProjectUpdateRequest = (
+			projectUtils as {
+				buildProjectUpdateRequest?: (
+					form: ProjectFormState,
+					repositories: GitHubRepositoryRecord[],
+				) => ProjectUpdateRequest;
+			}
+		).buildProjectUpdateRequest;
+
+		expect(
+			buildProjectUpdateRequest?.(
 				{
 					...EMPTY_PROJECT_FORM_STATE,
-					name: "Web Project",
-					priority: "1.5",
+					name: "  Web Project Updated  ",
+					emoji: "🚀",
+					description: "  Edited from UI  ",
+					repositoryMode: "select",
+					selectedRepository: "octo/core",
+					lead: "  Roy  ",
+					priority: "3",
 				},
-				defaults,
+				[
+					repositoryOption({
+						id: "octo/core",
+						name: "core",
+						nameWithOwner: "octo/core",
+						defaultBranch: "trunk",
+					}),
+				],
 			),
-		).toThrow("Priority must be an integer");
+		).toEqual({
+			name: "Web Project Updated",
+			emoji: "🚀",
+			description: "Edited from UI",
+			repoOwner: "octo",
+			repoName: "core",
+			baseBranch: "trunk",
+			lead: "Roy",
+			priority: 3,
+		});
+	});
+
+	it("clears optional edit fields when left blank", () => {
+		const buildProjectUpdateRequest = (
+			projectUtils as {
+				buildProjectUpdateRequest?: (
+					form: ProjectFormState,
+					repositories?: GitHubRepositoryRecord[],
+				) => ProjectUpdateRequest;
+			}
+		).buildProjectUpdateRequest;
+
+		expect(
+			buildProjectUpdateRequest?.({
+				...EMPTY_PROJECT_FORM_STATE,
+				name: "Web Project",
+				emoji: " ",
+				description: " ",
+				repositoryMode: "manual",
+				manualRepository: " ",
+				lead: " ",
+				priority: " ",
+			}),
+		).toMatchObject({
+			name: "Web Project",
+			emoji: DEFAULT_PROJECT_EMOJI,
+			description: null,
+			repoOwner: null,
+			repoName: null,
+			baseBranch: null,
+			lead: null,
+			priority: null,
+		});
+	});
+
+	it("requires edit priority to be a whole number when provided", () => {
+		const buildProjectUpdateRequest = (
+			projectUtils as {
+				buildProjectUpdateRequest?: (
+					form: ProjectFormState,
+				) => ProjectUpdateRequest;
+			}
+		).buildProjectUpdateRequest;
+
+		expect(() =>
+			buildProjectUpdateRequest?.({
+				...EMPTY_PROJECT_FORM_STATE,
+				name: "Web Project",
+				priority: "high",
+			}),
+		).toThrow("Priority must be a whole number");
 	});
 });
 
@@ -159,6 +274,7 @@ describe("projects panel table helpers", () => {
 		);
 
 		expect(row).toMatchObject({
+			emojiLabel: DEFAULT_PROJECT_EMOJI,
 			priorityLabel: "--",
 			categoryLabel: "--",
 			repositoryLabel: "--",
@@ -193,6 +309,7 @@ function buildProject(
 		workspaceId: "owner-1",
 		externalProjectId: null,
 		name: "Project",
+		emoji: null,
 		description: "Project description",
 		repoOwner: "devos",
 		repoName: "show-me-ur-agents",
@@ -203,6 +320,20 @@ function buildProject(
 		priority: 2,
 		createdAt: "2026-05-25T00:00:00.000Z",
 		updatedAt: "2026-05-25T00:00:00.000Z",
+		...overrides,
+	};
+}
+
+function repositoryOption(
+	overrides: Partial<GitHubRepositoryRecord> = {},
+): GitHubRepositoryRecord {
+	return {
+		id: "octo/demo",
+		owner: "octo",
+		name: "demo",
+		nameWithOwner: "octo/demo",
+		defaultBranch: "main",
+		isPrivate: false,
 		...overrides,
 	};
 }

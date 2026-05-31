@@ -21,6 +21,7 @@ describe("request schemas", () => {
 				boardId: "board-1",
 				name: "Website",
 				ownerId: "user-1",
+				emoji: "🧭",
 				description: null,
 				repoOwner: "octo",
 				repoName: "repo",

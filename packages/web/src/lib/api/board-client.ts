@@ -12,6 +12,7 @@ import type {
 	ProjectBoardRecord,
 	ProjectBoardStatusColumn,
 	ProjectCreateRequest,
+	ProjectUpdateRequest,
 	WorkspaceProjectRecord,
 	WorkspaceProjectsResponse,
 } from "./types/client.types";
@@ -27,6 +28,7 @@ function parseWorkspaceProjectRecord(payload: unknown): WorkspaceProjectRecord {
 		workspaceId: readWorkspaceId(row, endpoint),
 		externalProjectId: readNullableString(row, "externalProjectId", endpoint),
 		name: readString(row, "name", endpoint),
+		emoji: readOptionalProjectEmoji(row, endpoint),
 		description: readNullableString(row, "description", endpoint),
 		repoOwner: readNullableString(row, "repoOwner", endpoint),
 		repoName: readNullableString(row, "repoName", endpoint),
@@ -38,6 +40,13 @@ function parseWorkspaceProjectRecord(payload: unknown): WorkspaceProjectRecord {
 		createdAt: readString(row, "createdAt", endpoint),
 		updatedAt: readString(row, "updatedAt", endpoint),
 	};
+}
+
+function readOptionalProjectEmoji(
+	row: Record<string, unknown>,
+	endpoint: string,
+): string | null {
+	return "emoji" in row ? readNullableString(row, "emoji", endpoint) : null;
 }
 
 function readWorkspaceId(
@@ -100,6 +109,10 @@ function projectBoardPath(workspaceId: string, projectId: string): string {
 	return `${workspaceProjectsPath(workspaceId)}/${encodePathSegment(projectId)}/board`;
 }
 
+function projectPath(projectId: string): string {
+	return `/api/projects/${encodePathSegment(projectId)}`;
+}
+
 export interface BoardApiMethods {
 	listWorkspaceProjects(
 		workspaceId: string,
@@ -107,6 +120,11 @@ export interface BoardApiMethods {
 	): Promise<WorkspaceProjectRecord[]>;
 	createProject(
 		request: ProjectCreateRequest,
+		options?: HealthRequestOptions,
+	): Promise<WorkspaceProjectRecord>;
+	updateProject(
+		projectId: string,
+		request: ProjectUpdateRequest,
 		options?: HealthRequestOptions,
 	): Promise<WorkspaceProjectRecord>;
 	getProjectBoard(
@@ -137,6 +155,15 @@ export function createBoardApiMethods(
 			const payload = await requestWithBase(
 				"/api/projects",
 				"POST",
+				options,
+				request,
+			);
+			return parseWorkspaceProjectRecord(payload);
+		},
+		async updateProject(projectId, request, options) {
+			const payload = await requestWithBase(
+				projectPath(projectId),
+				"PATCH",
 				options,
 				request,
 			);

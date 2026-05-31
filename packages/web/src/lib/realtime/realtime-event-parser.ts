@@ -147,6 +147,7 @@ function parseProject(value: unknown): WorkspaceProjectRecord {
 		workspaceId: readString(row, "workspaceId"),
 		externalProjectId: readNullableString(row, "externalProjectId"),
 		name: readString(row, "name"),
+		emoji: readNullableString(row, "emoji"),
 		description: readNullableString(row, "description"),
 		repoOwner: readNullableString(row, "repoOwner"),
 		repoName: readNullableString(row, "repoName"),

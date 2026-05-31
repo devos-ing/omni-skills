@@ -1,36 +1,34 @@
 "use client";
 
-import { Folder } from "lucide-react";
+import { Pencil } from "lucide-react";
 import type { ReactElement } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
-import type {
-	ProjectDisplayRow,
-	ProjectTableDensity,
-} from "./types/projects-panel.types";
+import type { ProjectDisplayRow } from "./types/projects-panel.types";
 
-const PROJECT_TABLE_COLUMN_COUNT = 6;
+const PROJECT_TABLE_COLUMN_COUNT = 7;
 
 interface ProjectsTableProps {
-	density: ProjectTableDensity;
 	error: Error | null;
 	isLoading: boolean;
 	rows: ProjectDisplayRow[];
 	searchQuery: string;
 	totalCount: number;
+	onEditProject: (row: ProjectDisplayRow) => void;
 }
 
 export function ProjectsTable({
-	density,
 	error,
 	isLoading,
 	rows,
 	searchQuery,
 	totalCount,
+	onEditProject,
 }: ProjectsTableProps): ReactElement {
-	const rowPadding = density === "compact" ? "px-4 py-2.5" : "px-4 py-4";
+	const rowPadding = "px-4 py-4";
 	const stateLabel = resolveProjectTableState({
 		error,
 		isLoading,
@@ -40,18 +38,19 @@ export function ProjectsTable({
 	});
 
 	return (
-		<section className="min-h-0 overflow-hidden rounded-lg border border-border bg-surface-input">
+		<section className="min-h-0 overflow-hidden bg-card">
 			<div className="h-full overflow-x-auto">
 				<table className="h-full w-full min-w-[58rem] table-fixed border-collapse">
 					<colgroup>
-						<col className="w-[34%]" />
-						<col className="w-[10%]" />
-						<col className="w-[14%]" />
+						<col className="w-[30%]" />
+						<col className="w-[9%]" />
+						<col className="w-[13%]" />
 						<col className="w-[18%]" />
-						<col className="w-[12%]" />
-						<col className="w-[12%]" />
+						<col className="w-[11%]" />
+						<col className="w-[10%]" />
+						<col className="w-[9%]" />
 					</colgroup>
-					<thead className="bg-card text-left text-xs font-medium text-muted-foreground">
+					<thead className="sticky top-0 z-10 bg-surface-panel text-left text-xs font-medium text-muted-foreground">
 						<tr className="border-b border-border">
 							<TableHeaderCell label="Name" />
 							<TableHeaderCell label="Priority" />
@@ -59,6 +58,7 @@ export function ProjectsTable({
 							<TableHeaderCell label="Repository" />
 							<TableHeaderCell label="Lead" />
 							<TableHeaderCell label="Created" />
+							<TableHeaderCell label="" />
 						</tr>
 					</thead>
 					<tbody className="text-sm text-zinc-300">
@@ -77,6 +77,7 @@ export function ProjectsTable({
 							rows.map((row) => (
 								<ProjectTableRow
 									key={row.project.id}
+									onEditProject={onEditProject}
 									row={row}
 									rowPadding={rowPadding}
 								/>
@@ -102,9 +103,11 @@ function TableHeaderCell({ label }: { label: string }): ReactElement {
 }
 
 function ProjectTableRow({
+	onEditProject,
 	row,
 	rowPadding,
 }: {
+	onEditProject: (row: ProjectDisplayRow) => void;
 	row: ProjectDisplayRow;
 	rowPadding: string;
 }): ReactElement {
@@ -112,11 +115,11 @@ function ProjectTableRow({
 		<tr className="border-b border-border/80 last:border-b-0 hover:bg-surface-hover/60">
 			<td className={cn(rowPadding, "align-middle")}>
 				<div className="flex min-w-0 items-center gap-3">
-					<span className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-zinc-700 bg-surface-hover text-zinc-400">
-						<Folder size={14} />
+					<span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-surface-input text-xl">
+						{row.emojiLabel}
 					</span>
 					<div className="min-w-0">
-						<Typography className="truncate" variant="cardTitle">
+						<Typography className="truncate text-base" variant="cardTitle">
 							{row.project.name}
 						</Typography>
 						<Typography className="truncate" variant="muted">
@@ -146,6 +149,18 @@ function ProjectTableRow({
 					{row.createdLabel}
 				</Typography>
 			</Typography>
+			<td className={cn(rowPadding, "align-middle")}>
+				<Button
+					aria-label={`Edit ${row.project.name}`}
+					onClick={() => onEditProject(row)}
+					size="sm"
+					type="button"
+					variant="ghost"
+				>
+					<Pencil size={15} />
+					Edit
+				</Button>
+			</td>
 		</tr>
 	);
 }

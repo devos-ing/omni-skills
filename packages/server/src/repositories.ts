@@ -163,7 +163,7 @@ export function createReadRepositories(
 		listBoardProjects: () =>
 			readRows(
 				database,
-				`SELECT id, board_id, external_project_id, name, description,
+				`SELECT id, board_id, external_project_id, name, emoji, description,
 					 repo_owner, repo_name, base_branch, local_folder, lead, category,
 					 priority, owner_id, created_at, updated_at
 				 FROM board_projects
@@ -176,6 +176,7 @@ export function createReadRepositories(
 							? null
 							: String(row.external_project_id),
 					name: String(row.name),
+					emoji: row.emoji === null ? null : String(row.emoji),
 					description:
 						row.description === null ? null : String(row.description),
 					repoOwner: row.repo_owner === null ? null : String(row.repo_owner),

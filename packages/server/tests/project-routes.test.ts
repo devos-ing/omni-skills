@@ -38,6 +38,7 @@ describe("project routes", () => {
 					boardId: "board-1",
 					name: "Core",
 					ownerId: "owner-1",
+					emoji: "🧭",
 					description: "desc",
 					repoOwner: "octo",
 					repoName: "core",
@@ -53,6 +54,7 @@ describe("project routes", () => {
 		const created = (await createResponse.json()) as {
 			id: string;
 			name: string;
+			emoji: string | null;
 			repoOwner: string | null;
 			repoName: string | null;
 			baseBranch: string | null;
@@ -62,6 +64,7 @@ describe("project routes", () => {
 			priority: number | null;
 		};
 		expect(created.name).toBe("Core");
+		expect(created.emoji).toBe("🧭");
 		expect(created.repoOwner).toBe("octo");
 		expect(created.repoName).toBe("core");
 		expect(created.baseBranch).toBe("main");

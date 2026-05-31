@@ -21,6 +21,7 @@ const createProjectSchema = z.object({
 	boardId: nonEmptyString,
 	name: nonEmptyString,
 	ownerId: nonEmptyString,
+	emoji: optionalNullableString,
 	externalProjectId: optionalNullableString,
 	description: optionalNullableString,
 	repoOwner: optionalNullableString,

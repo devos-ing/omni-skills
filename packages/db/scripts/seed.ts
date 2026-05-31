@@ -81,6 +81,7 @@ async function insertSeedRows(db: ServerDb) {
 			boardId: "dev-board",
 			externalProjectId: "dev-project",
 			name: "Dev Project",
+			emoji: "🧭",
 			description: "Local development project",
 			repoOwner: "devos",
 			repoName: "show-me-ur-agents",

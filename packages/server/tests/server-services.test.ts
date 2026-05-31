@@ -19,6 +19,7 @@ describe("server services", () => {
 				return {
 					...input,
 					description: input.description ?? null,
+					emoji: input.emoji ?? null,
 					externalProjectId: input.externalProjectId ?? null,
 					repoOwner: input.repoOwner ?? null,
 					repoName: input.repoName ?? null,
@@ -50,6 +51,7 @@ describe("server services", () => {
 		expect(createdProjects[0]).toMatchObject({
 			boardId: "board-1",
 			description: null,
+			emoji: null,
 			externalProjectId: null,
 			repoOwner: null,
 			repoName: null,

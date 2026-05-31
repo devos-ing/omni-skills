@@ -1,13 +1,15 @@
 import type { WorkspaceProjectRecord } from "@/lib/api";
 
+export type ProjectRepositoryMode = "select" | "manual";
+
 export interface ProjectFormState {
 	name: string;
-	externalProjectId: string;
+	emoji: string;
 	description: string;
-	repositoryUrl: string;
-	localFolder: string;
+	repositoryMode: ProjectRepositoryMode;
+	selectedRepository: string;
+	manualRepository: string;
 	lead: string;
-	category: string;
 	priority: string;
 }
 
@@ -16,22 +18,11 @@ export interface ProjectCreateDefaults {
 	ownerId: string;
 }
 
-export interface ProjectFieldConfig {
-	name: keyof ProjectFormState;
-	label: string;
-	placeholder?: string;
-	type?: "number" | "text";
-}
-
-export interface ProjectFieldGroup {
-	title: string;
-	fields: ProjectFieldConfig[];
-}
-
 export type ProjectTableDensity = "compact" | "comfortable";
 
 export interface ProjectDisplayRow {
 	project: WorkspaceProjectRecord;
+	emojiLabel: string;
 	priorityLabel: string;
 	categoryLabel: string;
 	repositoryLabel: string;

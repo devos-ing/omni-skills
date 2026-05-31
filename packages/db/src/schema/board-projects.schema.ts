@@ -8,6 +8,7 @@ export const boardProjectsTable = pgTable("board_projects", {
 		.references(() => projectBoardsTable.id),
 	externalProjectId: text("external_project_id"),
 	name: text("name").notNull(),
+	emoji: text("emoji"),
 	description: text("description"),
 	repoOwner: text("repo_owner"),
 	repoName: text("repo_name"),

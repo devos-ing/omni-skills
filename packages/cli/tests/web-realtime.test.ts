@@ -203,6 +203,7 @@ function projectRecord(
 		workspaceId: "owner-1",
 		externalProjectId: null,
 		name: "Project",
+		emoji: null,
 		description: null,
 		repoOwner: null,
 		repoName: null,

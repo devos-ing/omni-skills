@@ -148,7 +148,7 @@ export function ChatComposer({
 								>
 									<Plus size={18} />
 								</Button> */}
-								<div/>
+								<div />
 								<div className="flex min-w-0 items-center gap-2">
 									<Typography
 										className="hidden truncate sm:inline"

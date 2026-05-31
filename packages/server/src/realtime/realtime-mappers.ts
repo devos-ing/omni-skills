@@ -10,6 +10,7 @@ export function toRealtimeProjectRecord(
 		workspaceId: project.ownerId,
 		externalProjectId: project.externalProjectId,
 		name: project.name,
+		emoji: project.emoji,
 		description: project.description,
 		repoOwner: project.repoOwner,
 		repoName: project.repoName,

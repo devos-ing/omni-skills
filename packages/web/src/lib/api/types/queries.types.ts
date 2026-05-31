@@ -1,4 +1,8 @@
-import type { AgentUpdateRequest, ProjectCreateRequest } from "./client.types";
+import type {
+	AgentUpdateRequest,
+	ProjectCreateRequest,
+	ProjectUpdateRequest,
+} from "./client.types";
 import type { InboxMessageScope } from "./client.types";
 
 export interface ServerStateQueryOptions {
@@ -30,6 +34,11 @@ export interface BoardTaskUpdateMutationInput {
 }
 
 export type ProjectCreateMutationInput = ProjectCreateRequest;
+
+export interface ProjectUpdateMutationInput {
+	projectId: string;
+	project: ProjectUpdateRequest;
+}
 
 export interface AgentUpdateMutationInput {
 	agentId: string;

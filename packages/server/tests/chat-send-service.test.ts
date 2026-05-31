@@ -225,6 +225,7 @@ function defaultProject(): BoardProjectRow {
 		boardId: "board-1",
 		externalProjectId: null,
 		name: "Default Project",
+		emoji: null,
 		description: null,
 		ownerId: "owner-1",
 		repoOwner: null,

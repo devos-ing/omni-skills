@@ -88,6 +88,7 @@ export async function ensureLocalDefaultProjectWithStatus(
 			boardId: LOCAL_BOARD_ID,
 			externalProjectId: null,
 			name: DEFAULT_PROJECT_NAME,
+			emoji: "🧭",
 			description: "Default project for chat sessions",
 			repoOwner: null,
 			repoName: null,

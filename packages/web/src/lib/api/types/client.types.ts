@@ -11,7 +11,19 @@ import type {
 	CliCommandStreamHandler,
 	CliCommandStreamRequest,
 } from "./command-stream-client.types";
+import type {
+	GitHubRepositoriesResponse,
+	GitHubRepositoryRecord,
+} from "./github.types";
+import type { HealthRequestOptions, HealthResponse } from "./health.types";
+import type { InboxMessageRecord, InboxMessageScope } from "./inbox.types";
 import type { PollingStatusResponse } from "./polling-status.types";
+import type {
+	ProjectCreateRequest,
+	ProjectUpdateRequest,
+	WorkspaceProjectRecord,
+	WorkspaceProjectsResponse,
+} from "./project.types";
 import type {
 	AgentRecord,
 	AgentStatus,
@@ -37,6 +49,7 @@ import type {
 } from "./task.types";
 import type { WorkflowComputerApiMethods } from "./workflow-computer.types";
 import type { WorkspaceEnvironmentResponse } from "./workspace-environment.types";
+import type { CurrentWorkspaceRecord } from "./workspace.types";
 
 export type {
 	ProjectBoardRecord,
@@ -84,72 +97,19 @@ export type {
 	ChatSessionRecord,
 	ChatSessionUpdateRequest,
 } from "./chat.types";
-
-export type HealthResponse = { status: "ok" };
-
-export interface HealthRequestOptions {
-	signal?: AbortSignal;
-}
-
-export interface CurrentWorkspaceRecord {
-	workspaceId: string;
-	name: string;
-}
-
-export interface WorkspaceProjectRecord {
-	id: string;
-	boardId: string;
-	workspaceId: string;
-	externalProjectId: string | null;
-	name: string;
-	description: string | null;
-	repoOwner: string | null;
-	repoName: string | null;
-	baseBranch: string | null;
-	localFolder: string | null;
-	lead: string | null;
-	category: string | null;
-	priority: number | null;
-	createdAt: string;
-	updatedAt: string;
-}
-
-export interface ProjectCreateRequest {
-	boardId: string;
-	ownerId: string;
-	name: string;
-	externalProjectId?: string | null;
-	description?: string | null;
-	repoOwner?: string | null;
-	repoName?: string | null;
-	baseBranch?: string | null;
-	localFolder?: string | null;
-	lead?: string | null;
-	category?: string | null;
-	priority?: number | null;
-}
-
-export interface InboxMessageScope {
-	workspaceId: string;
-	userId: string;
-	runId: string;
-}
-
-export interface InboxMessageRecord extends InboxMessageScope {
-	id: string;
-	source: string;
-	kind: string;
-	body: string;
-	taskId: string | null;
-	agentId: string | null;
-	metadata: Record<string, unknown> | null;
-	createdAt: string;
-}
-
-export interface WorkspaceProjectsResponse {
-	workspaceId: string;
-	projects: WorkspaceProjectRecord[];
-}
+export type { HealthRequestOptions, HealthResponse } from "./health.types";
+export type { CurrentWorkspaceRecord } from "./workspace.types";
+export type {
+	ProjectCreateRequest,
+	ProjectUpdateRequest,
+	WorkspaceProjectRecord,
+	WorkspaceProjectsResponse,
+} from "./project.types";
+export type {
+	GitHubRepositoriesResponse,
+	GitHubRepositoryRecord,
+} from "./github.types";
+export type { InboxMessageRecord, InboxMessageScope } from "./inbox.types";
 
 export interface ApiClientOptions {
 	baseUrl?: string;
@@ -236,11 +196,19 @@ export interface ApiClient extends WorkflowComputerApiMethods {
 		request: ProjectCreateRequest,
 		options?: HealthRequestOptions,
 	): Promise<WorkspaceProjectRecord>;
+	updateProject(
+		projectId: string,
+		request: ProjectUpdateRequest,
+		options?: HealthRequestOptions,
+	): Promise<WorkspaceProjectRecord>;
 	getProjectBoard(
 		workspaceId: string,
 		projectId: string,
 		options?: HealthRequestOptions,
 	): Promise<ProjectBoardRecord>;
+	listGitHubRepositories(
+		options?: HealthRequestOptions,
+	): Promise<GitHubRepositoriesResponse>;
 	listInboxMessages(
 		scope: InboxMessageScope,
 		options?: HealthRequestOptions,

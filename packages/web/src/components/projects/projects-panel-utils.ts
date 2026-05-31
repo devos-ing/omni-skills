@@ -1,76 +1,93 @@
-import type { ProjectCreateRequest, WorkspaceProjectRecord } from "@/lib/api";
+import type {
+	GitHubRepositoryRecord,
+	ProjectCreateRequest,
+	ProjectUpdateRequest,
+	WorkspaceProjectRecord,
+} from "@/lib/api";
 import type {
 	ProjectCreateDefaults,
 	ProjectDisplayRow,
-	ProjectFieldGroup,
 	ProjectFormState,
 } from "./types/projects-panel.types";
 
 const EMPTY_LABEL = "--";
+export const DEFAULT_PROJECT_EMOJI = "📁";
 
 export const EMPTY_PROJECT_FORM_STATE: ProjectFormState = {
 	name: "",
-	externalProjectId: "",
+	emoji: DEFAULT_PROJECT_EMOJI,
 	description: "",
-	repositoryUrl: "",
-	localFolder: "",
+	repositoryMode: "select",
+	selectedRepository: "",
+	manualRepository: "",
 	lead: "",
-	category: "",
 	priority: "",
 };
-
-export const PROJECT_FORM_FIELD_GROUPS: ProjectFieldGroup[] = [
-	{
-		title: "Identity",
-		fields: [
-			{ name: "name", label: "Project name" },
-			{ name: "externalProjectId", label: "External project ID" },
-			{ name: "description", label: "Description" },
-		],
-	},
-	{
-		title: "Repository",
-		fields: [
-			{
-				name: "repositoryUrl",
-				label: "Repository URL",
-				placeholder: "https://github.com/org/repo",
-			},
-			{ name: "localFolder", label: "Local folder" },
-		],
-	},
-	{
-		title: "Ownership",
-		fields: [
-			{ name: "lead", label: "Lead" },
-			{ name: "category", label: "Category" },
-			{ name: "priority", label: "Priority", type: "number" },
-		],
-	},
-];
 
 export function buildProjectCreateRequest(
 	form: ProjectFormState,
 	defaults: ProjectCreateDefaults,
+	repositories: GitHubRepositoryRecord[] = [],
 ): ProjectCreateRequest {
 	const name = form.name.trim();
 	if (!name) {
 		throw new Error("Project name is required");
 	}
-	const repository = parseGitHubRepositoryUrl(form.repositoryUrl);
+	const repository = resolveRepository(form, repositories);
 	return {
 		boardId: defaults.boardId,
 		ownerId: defaults.ownerId,
 		name,
-		externalProjectId: optionalText(form.externalProjectId),
+		emoji: optionalText(form.emoji) ?? DEFAULT_PROJECT_EMOJI,
+		externalProjectId: null,
 		description: optionalText(form.description),
 		repoOwner: repository?.owner ?? null,
 		repoName: repository?.name ?? null,
-		baseBranch: repository ? "main" : null,
-		localFolder: optionalText(form.localFolder),
+		baseBranch: repository?.defaultBranch ?? null,
+		localFolder: null,
 		lead: optionalText(form.lead),
-		category: optionalText(form.category),
+		category: null,
 		priority: optionalPriority(form.priority),
+	};
+}
+
+export function buildProjectUpdateRequest(
+	form: ProjectFormState,
+	repositories: GitHubRepositoryRecord[] = [],
+): ProjectUpdateRequest {
+	const name = form.name.trim();
+	if (!name) {
+		throw new Error("Project name is required");
+	}
+	const repository = resolveRepository(form, repositories);
+	return {
+		name,
+		emoji: optionalText(form.emoji) ?? DEFAULT_PROJECT_EMOJI,
+		description: optionalText(form.description),
+		repoOwner: repository?.owner ?? null,
+		repoName: repository?.name ?? null,
+		baseBranch: repository?.defaultBranch ?? null,
+		lead: optionalText(form.lead),
+		priority: optionalPriority(form.priority),
+	};
+}
+
+export function buildProjectEditFormState(
+	project: WorkspaceProjectRecord,
+): ProjectFormState {
+	const manualRepository =
+		project.repoOwner && project.repoName
+			? `${project.repoOwner}/${project.repoName}`
+			: "";
+	return {
+		...EMPTY_PROJECT_FORM_STATE,
+		name: project.name,
+		emoji: project.emoji ?? DEFAULT_PROJECT_EMOJI,
+		description: project.description ?? "",
+		repositoryMode: "manual",
+		manualRepository,
+		lead: project.lead ?? "",
+		priority: project.priority === null ? "" : String(project.priority),
 	};
 }
 
@@ -93,6 +110,7 @@ export function buildProjectDisplayRows(
 ): ProjectDisplayRow[] {
 	return projects.map((project) => ({
 		project,
+		emojiLabel: formatOptionalLabel(project.emoji, DEFAULT_PROJECT_EMOJI),
 		priorityLabel: formatProjectPriority(project.priority),
 		categoryLabel: formatOptionalLabel(project.category),
 		repositoryLabel: formatProjectRepository(project),
@@ -166,37 +184,53 @@ function optionalPriority(value: string): number | null {
 	if (!trimmed) {
 		return null;
 	}
-	const parsed = Number(trimmed);
-	if (!Number.isInteger(parsed)) {
-		throw new Error("Priority must be an integer");
+	const priority = Number(trimmed);
+	if (!Number.isInteger(priority)) {
+		throw new Error("Priority must be a whole number");
 	}
-	return parsed;
+	return priority;
 }
 
-function parseGitHubRepositoryUrl(
-	value: string,
-): { owner: string; name: string } | null {
-	const trimmed = value.trim();
+function resolveRepository(
+	form: ProjectFormState,
+	repositories: GitHubRepositoryRecord[],
+): { owner: string; name: string; defaultBranch: string } | null {
+	const selected =
+		form.repositoryMode === "manual"
+			? form.manualRepository
+			: form.selectedRepository;
+	const trimmed = selected.trim();
 	if (!trimmed) {
 		return null;
 	}
-	const match =
-		/^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?$/.exec(trimmed) ??
-		/^git@github\.com:([^/\s]+)\/([^/\s]+?)(?:\.git)?$/.exec(trimmed) ??
-		/^ssh:\/\/git@github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?$/.exec(trimmed);
-	if (!match) {
-		throw new Error("Repository URL must be a GitHub HTTPS or SSH clone URL");
+	const repository = repositories.find(
+		(option) => option.nameWithOwner === trimmed,
+	);
+	if (repository) {
+		return {
+			owner: repository.owner,
+			name: repository.name,
+			defaultBranch: repository.defaultBranch ?? "main",
+		};
 	}
-	return { owner: match[1], name: match[2] };
+	const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(trimmed);
+	if (!match) {
+		throw new Error("Repository must be owner/repo");
+	}
+	return { owner: match[1], name: match[2], defaultBranch: "main" };
 }
 
-function formatOptionalLabel(value: string | null): string {
-	return value?.trim() || EMPTY_LABEL;
+function formatOptionalLabel(
+	value: string | null,
+	fallback = EMPTY_LABEL,
+): string {
+	return value?.trim() || fallback;
 }
 
 function projectSearchText(project: WorkspaceProjectRecord): string {
 	return [
 		project.name,
+		project.emoji,
 		project.description,
 		project.externalProjectId,
 		project.repoOwner,

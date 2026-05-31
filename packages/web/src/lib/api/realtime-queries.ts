@@ -3,6 +3,7 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { serverStateQueryKeys } from "./query-keys";
 import type {
+	GitHubRepositoriesResponse,
 	InboxMessageRecord,
 	InboxMessageScope,
 	ProjectBoardRecord,
@@ -36,6 +37,17 @@ export function useProjectBoardQuery(
 		queryFn: () => apiClient.getProjectBoard(workspaceId, projectId),
 		enabled:
 			Boolean(workspaceId) && Boolean(projectId) && options?.enabled !== false,
+		refetchInterval: resolveRefetchInterval(options),
+	});
+}
+
+export function useGitHubRepositoriesQuery(
+	options?: ServerStateQueryOptions,
+): UseQueryResult<GitHubRepositoriesResponse, Error> {
+	return useQuery({
+		queryKey: serverStateQueryKeys.gitHubRepositories,
+		queryFn: () => apiClient.listGitHubRepositories(),
+		enabled: options?.enabled !== false,
 		refetchInterval: resolveRefetchInterval(options),
 	});
 }

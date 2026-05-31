@@ -7,6 +7,7 @@ import { handleEntityCrudRequest, matchCrudRoute } from "../routes/entity-crud";
 import type { AppDeps } from "../types/app.types";
 import { handleChatRoute } from "./chat-routes";
 import { handleCliRoute } from "./cli-routes";
+import { handleGitHubRepositoriesRoute } from "./github-repositories-routes";
 import { handleInboxMessagesRoute } from "./inbox-routes";
 import { handlePollingStatusRoute } from "./polling-status-routes";
 import { handleProjectsRoute } from "./projects-routes";
@@ -91,6 +92,9 @@ export function createAppRoutes(deps: AppDeps): RouteRegistryEntry[] {
 		),
 		route("settings", (request, { pathname }) =>
 			handleSettingsRoute(request, pathname, workspacePath),
+		),
+		route("github-repositories", (request, { pathname }) =>
+			handleGitHubRepositoriesRoute(request, pathname, workspacePath),
 		),
 		route("entity-crud", (request, { pathname }) =>
 			handleEntityCrudRoute(request, deps, pathname, workspacePath),

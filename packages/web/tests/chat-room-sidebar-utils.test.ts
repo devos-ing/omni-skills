@@ -260,6 +260,7 @@ function buildProject(
 		workspaceId: "workspace-1",
 		externalProjectId: null,
 		name: "Project A",
+		emoji: null,
 		description: null,
 		repoOwner: null,
 		repoName: null,
