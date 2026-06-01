@@ -3,6 +3,7 @@ dist/
 packages/*/.next/
 .bun-cache/
 .devos/
+.superpowers/
 *.log
 *.tsbuildinfo
 .npm-cache/

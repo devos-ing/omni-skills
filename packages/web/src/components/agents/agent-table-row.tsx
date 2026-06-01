@@ -1,6 +1,7 @@
-import { Bot, Cpu, Pencil } from "lucide-react";
+import { Cpu, Pencil } from "lucide-react";
 import type { ReactElement } from "react";
 
+import { PixelRobotAvatar } from "@/components/pixel-robot-avatar/pixel-robot-avatar";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
@@ -17,9 +18,13 @@ export function AgentTableRow({
 		<tr className="border-b border-border/70 hover:bg-surface-hover/50">
 			<td className="px-4 py-4">
 				<div className="flex min-w-0 items-center gap-3">
-					<div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-surface-input">
-						<Bot className="text-zinc-400" size={18} />
-					</div>
+					<PixelRobotAvatar
+						className="rounded-md bg-surface-input"
+						label={`${row.name} avatar`}
+						seed={row.id || row.name}
+						size={40}
+						status={row.status}
+					/>
 					<div className="min-w-0">
 						<Typography className="truncate text-base text-zinc-100">
 							{row.name}
