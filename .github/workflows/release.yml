@@ -79,21 +79,74 @@ jobs:
           bun pm pack --ignore-scripts
           mv "devos-${GITHUB_REF_NAME#v}.tgz" "../../dist-release/devos-${GITHUB_REF_NAME#v}.tgz"
 
+      - name: Build release notes
+        run: |
+          notes_path="dist-release/release-notes.md"
+          previous_tag="$(
+            git tag --sort=-version:refname |
+              grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+              grep -v "^${GITHUB_REF_NAME}$" |
+              head -n 1 || true
+          )"
+          release_commit="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+
+          if [[ -n "${previous_tag}" ]]; then
+            release_range="${previous_tag}..${GITHUB_REF_NAME}"
+            range_label="${previous_tag}...${GITHUB_REF_NAME}"
+          else
+            release_range="${GITHUB_REF_NAME}"
+            range_label="${GITHUB_REF_NAME}"
+          fi
+
+          changelog="$(
+            git log --first-parent --pretty=format:'- %s (%h)' "${release_range}" || true
+          )"
+          merge_commits="$(
+            git log --merges --first-parent --pretty=format:'- %s (%h)' "${release_range}" || true
+          )"
+
+          {
+            echo "## Changelog"
+            echo
+            echo "Range: ${range_label}"
+            echo
+            if [[ -n "${changelog}" ]]; then
+              echo "${changelog}"
+            else
+              echo "_No commits found for this release range._"
+            fi
+            echo
+            echo
+            echo "## Merge Commits"
+            echo
+            if [[ -n "${merge_commits}" ]]; then
+              echo "${merge_commits}"
+            else
+              echo "_No merge commits in this release range._"
+            fi
+            echo
+            echo
+            echo "## Release Commit"
+            echo
+            echo "- ${release_commit}"
+          } > "${notes_path}"
+
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           asset="dist-release/devos-${GITHUB_REF_NAME#v}.tgz"
+          notes_path="dist-release/release-notes.md"
 
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release edit "${GITHUB_REF_NAME}" \
               --title "devos ${GITHUB_REF_NAME}" \
-              --notes "Release ${GITHUB_REF_NAME}"
+              --notes-file "${notes_path}"
             gh release upload "${GITHUB_REF_NAME}" "${asset}" --clobber
           else
             gh release create "${GITHUB_REF_NAME}" \
               "${asset}" \
               --title "devos ${GITHUB_REF_NAME}" \
-              --notes "Release ${GITHUB_REF_NAME}" \
+              --notes-file "${notes_path}" \
               --verify-tag
           fi
