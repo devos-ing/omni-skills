@@ -36,9 +36,9 @@ export function Nav(): ReactElement {
 					</a> */}
 					<a
 						className="group inline-flex items-center gap-1.5 border-2 border-foreground bg-[var(--neon-pink)] px-4 py-1.5 text-foreground text-sm tracking-tight shadow-retro-sm transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0_0_var(--foreground)]"
-						href="#start"
+						href="https://github.com/1997roylee/devos.ing"
 					>
-						Get started
+						Github
 						<ArrowUpRight className="h-3.5 w-3.5" />
 					</a>
 				</div>

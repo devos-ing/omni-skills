@@ -28,7 +28,7 @@ export function RedesignLandingPage(): ReactElement {
 				<Telegram />
 				<Features />
 				<SkillsTree />
-				<Metrics />
+				{/* <Metrics /> */}
 				<CTA />
 			</main>
 			<Footer />

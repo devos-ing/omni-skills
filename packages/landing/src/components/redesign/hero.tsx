@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { FloatingDecor } from "@/components/redesign/hero-illustrations";
 import { ProductPreview } from "@/components/redesign/product-preview";
+import InstallBlock from "./install-block";
 
 export function Hero(): ReactElement {
 	return (
@@ -36,7 +37,7 @@ export function Hero(): ReactElement {
 					board, watch your agents run the loop, and stay in sync from Telegram
 					- wherever you are.
 				</p>
-				<div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10 sm:gap-4">
+				{/* <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10 sm:gap-4">
 					<a
 						className="group inline-flex items-center gap-2 border-2 border-foreground bg-[var(--neon-pink)] px-4 py-2.5 text-foreground text-sm shadow-retro transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0_0_var(--foreground)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0_0_var(--foreground)] sm:px-6 sm:py-3 sm:text-base"
 						href="https://github.com/1997roylee/devos.ing"
@@ -53,6 +54,9 @@ export function Hero(): ReactElement {
 						<Play className="h-3.5 w-3.5 fill-current" />
 						WATCH DEMO
 					</a>
+				</div> */}
+				<div className="max-w-2xl mx-auto pt-6 w-full">
+					<InstallBlock />
 				</div>
 				<p className="mt-6 px-2 text-center font-mono text-[10px] text-foreground/60 tracking-wider sm:text-xs">
 					{"\u2605"} RUNS LOCALLY {"\u2605"} YOUR MACHINE {"\u2605"} YOUR KEYS{" "}
