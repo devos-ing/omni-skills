@@ -26,14 +26,14 @@
 		"@devos/tsconfig": "workspace:*",
 		"@types/bun": "^1.3.2",
 		"@types/node": "^24.10.0",
+		"adapters": "workspace:*",
+		"create-devos-plugin": "workspace:*",
+		"devos-agents": "workspace:*",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.4.0",
-		"adapters": "workspace:*",
 		"commander": "^14.0.3",
-		"create-devos-plugin": "workspace:*",
-		"devos-agents": "workspace:*",
 		"picocolors": "^1.1.1"
 	}
 }

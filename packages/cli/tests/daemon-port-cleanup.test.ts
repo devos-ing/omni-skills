@@ -65,6 +65,7 @@ describe("runProductionDaemon port cleanup", () => {
 			waitForWebReady: readyImmediately,
 		});
 
+		await flushAsyncWork();
 		harness.children[0]?.emit("close", 7, null);
 
 		await expect(done).resolves.toBe(7);
@@ -206,3 +207,8 @@ function createDaemonHarness(): {
 }
 
 async function readyImmediately(): Promise<void> {}
+
+async function flushAsyncWork(): Promise<void> {
+	await Promise.resolve();
+	await Promise.resolve();
+}

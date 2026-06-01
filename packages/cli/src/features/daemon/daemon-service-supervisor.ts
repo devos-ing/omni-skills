@@ -16,7 +16,6 @@ const SIGNALS = ["SIGINT", "SIGTERM"] as const;
 export function startDaemonServices(
 	input: DaemonStartupInput,
 	signalTarget: DaemonSignalTarget,
-	workflowWorker: WorkflowCommandWorker,
 	cleanupPorts: DaemonPortCleanup,
 	ports: DaemonPortCleanupPorts,
 ): Promise<number> {
@@ -25,6 +24,7 @@ export function startDaemonServices(
 		let readiness: DaemonReadinessHandle | undefined;
 		let resolved = false;
 		let isShuttingDown = false;
+		let workflowWorker: WorkflowCommandWorker | undefined;
 
 		const finish = (code: number, cleanupOnFailure = false) => {
 			if (resolved) return;
@@ -35,7 +35,7 @@ export function startDaemonServices(
 			}
 			void (async () => {
 				if (cleanupOnFailure) await cleanupPorts(ports);
-				await workflowWorker.stop();
+				await workflowWorker?.stop();
 				resolve(code);
 			})();
 		};
@@ -86,7 +86,16 @@ export function startDaemonServices(
 			signalTarget.on(signal, signalHandlers[signal]);
 		}
 
-		void startDaemonServicesInOrder(input, startChild, () => resolved)
+		const startWorker = () => {
+			workflowWorker = input.startWorkflowWorker();
+		};
+
+		void startDaemonServicesInOrder(
+			input,
+			startChild,
+			startWorker,
+			() => resolved,
+		)
 			.then(() => {
 				if (!resolved) {
 					readiness = scheduleDaemonReadyMessage({
@@ -107,6 +116,7 @@ export function startDaemonServices(
 async function startDaemonServicesInOrder(
 	input: DaemonStartupInput,
 	startChild: (service: DaemonServiceCommand) => DaemonChild,
+	startWorker: () => void,
 	isResolved: () => boolean,
 ): Promise<void> {
 	const [server, web, poller] = input.services;
@@ -116,6 +126,7 @@ async function startDaemonServicesInOrder(
 	startChild(server);
 	await input.waitForServerReady(input.serverHealthUrl, isResolved);
 	if (isResolved()) return;
+	startWorker();
 	startChild(web);
 	await input.waitForWebReady(input.webUrl, isResolved);
 	if (isResolved()) return;

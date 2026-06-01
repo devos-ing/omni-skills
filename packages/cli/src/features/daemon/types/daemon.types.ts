@@ -119,6 +119,7 @@ export interface DaemonStartupInput {
 	serverHealthUrl: string;
 	services: DaemonServiceCommand[];
 	spawnChild: DaemonSpawn;
+	startWorkflowWorker: () => WorkflowCommandWorker;
 	waitForServerReady: NonNullable<
 		RunProductionDaemonOptions["waitForServerReady"]
 	>;

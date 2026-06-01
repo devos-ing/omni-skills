@@ -19,16 +19,6 @@ export class DaemonManager {
 
 	async runProduction(): Promise<number> {
 		const context = this.createContext();
-		const workflowWorker = (
-			this.options.startWorkflowWorker ?? startWorkflowCommandWorker
-		)({
-			cwd: context.cwd,
-			env: {
-				...context.workspaceEnv,
-				DEVOS_SERVER_BASE_URL: context.serverBaseUrl,
-				DEVOS_WORKFLOW_WS_URL: context.workflowWsUrl,
-			},
-		});
 		return startDaemonServices(
 			{
 				cwd: context.cwd,
@@ -40,6 +30,15 @@ export class DaemonManager {
 				serverHealthUrl: context.serverHealthUrl,
 				webUrl: context.webUrl,
 				spawnChild: context.spawnChild,
+				startWorkflowWorker: () =>
+					(this.options.startWorkflowWorker ?? startWorkflowCommandWorker)({
+						cwd: context.cwd,
+						env: {
+							...context.workspaceEnv,
+							DEVOS_SERVER_BASE_URL: context.serverBaseUrl,
+							DEVOS_WORKFLOW_WS_URL: context.workflowWsUrl,
+						},
+					}),
 				waitForServerReady:
 					this.options.waitForServerReady ?? waitForDaemonHttpReady,
 				waitForWebReady: this.options.waitForWebReady ?? waitForDaemonHttpReady,
@@ -47,7 +46,6 @@ export class DaemonManager {
 				write: this.options.write,
 			},
 			this.options.signalTarget ?? process,
-			workflowWorker,
 			this.options.cleanupPorts ?? cleanupDaemonPorts,
 			context.ports,
 		);

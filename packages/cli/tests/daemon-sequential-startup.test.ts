@@ -9,14 +9,16 @@ import {
 } from "../src/features/daemon";
 
 describe("runProductionDaemon sequential startup", () => {
-	it("starts server, then web, then workflow poller after readiness", async () => {
+	it("starts server, then workflow worker and web, then workflow poller after readiness", async () => {
 		const harness = createSequentialHarness();
 		const done = harness.start();
 
+		expect(harness.startupOrder).toEqual(["server"]);
 		expect(harness.calls.map((call) => call.name)).toEqual(["server"]);
 		expect(harness.readinessUrls).toEqual(["http://127.0.0.1:3001/health"]);
 
 		await harness.readyServer();
+		expect(harness.startupOrder).toEqual(["server", "workflow-worker", "web"]);
 		expect(harness.calls.map((call) => call.name)).toEqual(["server", "web"]);
 		expect(harness.readinessUrls).toEqual([
 			"http://127.0.0.1:3001/health",
@@ -24,6 +26,12 @@ describe("runProductionDaemon sequential startup", () => {
 		]);
 
 		await harness.readyWeb();
+		expect(harness.startupOrder).toEqual([
+			"server",
+			"workflow-worker",
+			"web",
+			"workflow-poller",
+		]);
 		expect(harness.calls.map((call) => call.name)).toEqual([
 			"server",
 			"web",
@@ -41,12 +49,13 @@ describe("runProductionDaemon sequential startup", () => {
 		await harness.failServer();
 
 		await expect(done).resolves.toBe(1);
+		expect(harness.startupOrder).toEqual(["server"]);
 		expect(harness.calls.map((call) => call.name)).toEqual(["server"]);
 		expect(harness.children[0]?.signals).toEqual(["SIGTERM"]);
 		expect(harness.cleanupCalls).toEqual([
 			{ serverPort: "3001", webPort: "3000" },
 		]);
-		expect(harness.workflowWorkerStopped).toBe(true);
+		expect(harness.workflowWorkerStopped).toBe(false);
 	});
 
 	it("does not start polling when web readiness fails", async () => {
@@ -57,6 +66,7 @@ describe("runProductionDaemon sequential startup", () => {
 		await harness.failWeb();
 
 		await expect(done).resolves.toBe(1);
+		expect(harness.startupOrder).toEqual(["server", "workflow-worker", "web"]);
 		expect(harness.calls.map((call) => call.name)).toEqual(["server", "web"]);
 		expect(harness.children[0]?.signals).toEqual(["SIGTERM"]);
 		expect(harness.children[1]?.signals).toEqual(["SIGTERM"]);
@@ -97,6 +107,7 @@ function createSequentialHarness(): {
 	readyServer(): Promise<void>;
 	readyWeb(): Promise<void>;
 	start(): Promise<number>;
+	startupOrder: string[];
 	workflowWorkerStopped: boolean;
 } {
 	const serverReady = createDeferred<void>();
@@ -107,6 +118,7 @@ function createSequentialHarness(): {
 		cleanupCalls: [] as Array<{ serverPort: string; webPort: string }>,
 		readinessUrls: [] as string[],
 		signalTarget: new FakeSignalTarget(),
+		startupOrder: [] as string[],
 		workflowWorkerStopped: false,
 		failServer: async () => {
 			serverReady.reject(new Error("server not ready"));
@@ -133,17 +145,22 @@ function createSequentialHarness(): {
 				},
 				spawnChild: harness.spawnChild,
 				signalTarget: harness.signalTarget,
-				startWorkflowWorker: () => ({
-					workerId: "worker-1",
-					stop: async () => {
-						harness.workflowWorkerStopped = true;
-					},
-				}),
+				startWorkflowWorker: () => {
+					harness.startupOrder.push("workflow-worker");
+					return {
+						workerId: "worker-1",
+						stop: async () => {
+							harness.workflowWorkerStopped = true;
+						},
+					};
+				},
 				waitForServerReady: harness.waitForServerReady,
 				waitForWebReady: harness.waitForWebReady,
 			}),
 		spawnChild: ((command: string, args: string[]) => {
-			harness.calls.push({ name: serviceName(command, args) });
+			const name = serviceName(command, args);
+			harness.calls.push({ name });
+			harness.startupOrder.push(name);
 			const child = new FakeDaemonChild();
 			harness.children.push(child);
 			return child;
