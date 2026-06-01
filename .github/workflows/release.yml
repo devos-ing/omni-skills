@@ -43,7 +43,13 @@ jobs:
           fi
 
       - name: Run CLI release gate
-        run: bun run release:cli
+        run: |
+          bun run --filter devos check
+          bun run --filter devos typecheck
+          bun run --filter devos test
+          bun run --filter devos build
+          cd packages/cli
+          bun pm pack --dry-run --ignore-scripts
 
       - name: Pack CLI tarball
         run: |
