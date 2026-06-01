@@ -8,9 +8,15 @@ function jsonResponse(payload: unknown, status = 200): Response {
 	});
 }
 
+function fetchStub(
+	handler: (input: URL | RequestInfo, init?: RequestInit) => Promise<Response>,
+): typeof fetch {
+	return handler as unknown as typeof fetch;
+}
+
 describe("GitHub repository search service", () => {
 	it("maps GitHub repository search results into stable records", async () => {
-		const fetchFn = (async (input: URL | RequestInfo, init?: RequestInit) => {
+		const fetchFn = fetchStub(async (input, init) => {
 			expect(String(input)).toBe(
 				"https://api.github.com/search/repositories?q=show-me-ur-agents&per_page=8",
 			);
@@ -54,7 +60,7 @@ describe("GitHub repository search service", () => {
 					},
 				],
 			});
-		}) as typeof fetch;
+		});
 
 		const result = await searchGitHubRepositories({
 			query: " show-me-ur-agents ",
@@ -95,8 +101,9 @@ describe("GitHub repository search service", () => {
 			status: "invalid_query",
 		});
 
-		const unauthorizedFetch = (async () =>
-			jsonResponse({ message: "Bad credentials" }, 401)) as typeof fetch;
+		const unauthorizedFetch = fetchStub(async () =>
+			jsonResponse({ message: "Bad credentials" }, 401),
+		);
 		expect(
 			await searchGitHubRepositories({
 				query: "repo",
@@ -104,8 +111,9 @@ describe("GitHub repository search service", () => {
 			}),
 		).toEqual({ status: "auth_unavailable" });
 
-		const rateLimitedFetch = (async () =>
-			jsonResponse({ message: "rate limited" }, 403)) as typeof fetch;
+		const rateLimitedFetch = fetchStub(async () =>
+			jsonResponse({ message: "rate limited" }, 403),
+		);
 		expect(
 			await searchGitHubRepositories({
 				query: "repo",
@@ -113,9 +121,9 @@ describe("GitHub repository search service", () => {
 			}),
 		).toEqual({ status: "rate_limited" });
 
-		const failingFetch = (async () => {
+		const failingFetch = fetchStub(async () => {
 			throw new Error("network down");
-		}) as typeof fetch;
+		});
 		expect(
 			await searchGitHubRepositories({
 				query: "repo",
