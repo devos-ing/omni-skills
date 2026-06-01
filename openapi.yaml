@@ -290,6 +290,20 @@ paths:
           description: Archived chat session.
         '404':
           $ref: '#/components/responses/TypedError'
+  /api/chat/sessions/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Chat]
+      responses:
+        '200':
+          description: Current chat session runtime status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionStatusResponse'
+        '404':
+          $ref: '#/components/responses/TypedError'
   /api/chat/sessions/{id}/messages:
     parameters:
       - $ref: '#/components/parameters/Id'
@@ -1177,6 +1191,19 @@ components:
           nullable: true
           items:
             $ref: '#/components/schemas/ClarificationQuestion'
+    ChatSessionStatusResponse:
+      type: object
+      additionalProperties: false
+      required: [sessionId, taskId, status]
+      properties:
+        sessionId: { type: string, minLength: 1 }
+        taskId:
+          type: string
+          minLength: 1
+          nullable: true
+        status:
+          type: string
+          enum: [running, idle, archived]
     ChatMessageCreateRequest:
       type: object
       additionalProperties: false

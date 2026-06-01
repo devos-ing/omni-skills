@@ -8,22 +8,22 @@ export async function waitForTaskWorkflowIdle(
 	db: ServerDatabase["db"],
 	taskId: string,
 ): Promise<void> {
-	while (await isLatestTaskExecutionRunning(db, taskId)) {
+	while ((await readLatestTaskExecutionStatus(db, taskId)) === "running") {
 		await sleep(WORKFLOW_IDLE_POLL_INTERVAL_MS);
 	}
 }
 
-async function isLatestTaskExecutionRunning(
+export async function readLatestTaskExecutionStatus(
 	db: ServerDatabase["db"],
 	taskId: string,
-): Promise<boolean> {
+): Promise<string | null> {
 	const [latest] = await db
 		.select({ status: taskExecutionLogsTable.status })
 		.from(taskExecutionLogsTable)
 		.where(eq(taskExecutionLogsTable.taskId, taskId))
 		.orderBy(desc(taskExecutionLogsTable.startedAt))
 		.limit(1);
-	return latest?.status === "running";
+	return latest?.status ?? null;
 }
 
 function sleep(ms: number): Promise<void> {

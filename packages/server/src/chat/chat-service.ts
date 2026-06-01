@@ -59,6 +59,28 @@ export function createChatService(
 			}
 			return (await repository.listMessages(sessionId)).map(mapMessage);
 		},
+		async getSessionStatus(sessionId) {
+			const session = await repository.getSession(sessionId);
+			if (!session) {
+				return null;
+			}
+			if (session.archived) {
+				return {
+					sessionId: session.id,
+					taskId: session.taskId,
+					status: "archived",
+				};
+			}
+			const latestStatus =
+				session.taskId && repository.getLatestTaskExecutionStatus
+					? await repository.getLatestTaskExecutionStatus(session.taskId)
+					: null;
+			return {
+				sessionId: session.id,
+				taskId: session.taskId,
+				status: latestStatus === "running" ? "running" : "idle",
+			};
+		},
 		async addMessage(sessionId, input) {
 			const session = await repository.getSession(sessionId);
 			if (!session) {

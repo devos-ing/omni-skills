@@ -20,6 +20,14 @@ export interface ChatSessionRecord
 	pendingQuestions: ChatClarificationQuestion[];
 }
 
+export type ChatSessionRuntimeStatus = "running" | "idle" | "archived";
+
+export interface ChatSessionStatusRecord {
+	sessionId: string;
+	taskId: string | null;
+	status: ChatSessionRuntimeStatus;
+}
+
 export interface ChatClarificationOption {
 	label: string;
 	value: string;
@@ -143,6 +151,7 @@ export interface ChatRepository {
 	createSession(input: NewChatSessionRow): Promise<ChatSessionRow>;
 	getSession(id: string): Promise<ChatSessionRow | null>;
 	getSessionByTaskId(taskId: string): Promise<ChatSessionRow | null>;
+	getLatestTaskExecutionStatus?(taskId: string): Promise<string | null>;
 	listMessages(sessionId: string): Promise<ChatMessageRow[]>;
 	listSessions(workspaceId: string): Promise<ChatSessionRow[]>;
 	updateSession(
@@ -186,6 +195,7 @@ export interface ChatService {
 	): Promise<ChatAddMessageResult | null>;
 	createSession(input: ChatSessionCreateInput): Promise<ChatSessionRecord>;
 	getMessages(sessionId: string): Promise<ChatMessageRecord[] | null>;
+	getSessionStatus(sessionId: string): Promise<ChatSessionStatusRecord | null>;
 	listSessions(workspaceId: string): Promise<ChatSessionRecord[]>;
 	sendMessage(
 		sessionId: string,

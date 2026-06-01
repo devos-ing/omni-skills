@@ -2,6 +2,7 @@ import { and, asc, desc, eq } from "devos-db";
 import type { ServerDatabase } from "devos-db";
 import { chatMessagesTable, chatSessionsTable } from "devos-db";
 import type { NewChatMessageRow, NewChatSessionRow } from "devos-db";
+import { readLatestTaskExecutionStatus } from "./chat-workflow-idle";
 import type { ChatRepository } from "./types/chat.types";
 
 export function createChatRepository(db: ServerDatabase["db"]): ChatRepository {
@@ -38,6 +39,8 @@ export function createChatRepository(db: ServerDatabase["db"]): ChatRepository {
 				.orderBy(desc(chatSessionsTable.updatedAt));
 			return session ?? null;
 		},
+		getLatestTaskExecutionStatus: (taskId) =>
+			readLatestTaskExecutionStatus(db, taskId),
 		async createSession(input: NewChatSessionRow) {
 			const [created] = await db
 				.insert(chatSessionsTable)

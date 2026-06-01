@@ -30,6 +30,7 @@ const IMPLEMENTED_ROUTES = [
 	["POST", "/api/chat/sessions"],
 	["PATCH", "/api/chat/sessions/{id}"],
 	["DELETE", "/api/chat/sessions/{id}"],
+	["GET", "/api/chat/sessions/{id}/status"],
 	["GET", "/api/chat/sessions/{id}/messages"],
 	["POST", "/api/chat/sessions/{id}/messages"],
 	["POST", "/api/chat/sessions/{id}/send"],

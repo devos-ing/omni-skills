@@ -23,6 +23,7 @@ const SESSIONS_PATH = "/api/chat/sessions";
 const SESSION_PATH = /^\/api\/chat\/sessions\/([^/]+)\/?$/;
 const MESSAGES_PATH = /^\/api\/chat\/sessions\/([^/]+)\/messages\/?$/;
 const SEND_PATH = /^\/api\/chat\/sessions\/([^/]+)\/send\/?$/;
+const SESSION_STATUS_PATH = /^\/api\/chat\/sessions\/([^/]+)\/status\/?$/;
 
 export async function handleChatRoute(
 	request: Request,
@@ -52,6 +53,14 @@ export async function handleChatRoute(
 			realtimeEvents,
 		);
 	}
+	const statusMatch = pathname.match(SESSION_STATUS_PATH);
+	if (statusMatch?.[1]) {
+		return handleStatusRoute(
+			request,
+			service,
+			decodeURIComponent(statusMatch[1]),
+		);
+	}
 	const messagesMatch = pathname.match(MESSAGES_PATH);
 	if (messagesMatch?.[1]) {
 		return handleMessagesRoute(
@@ -71,6 +80,18 @@ export async function handleChatRoute(
 		);
 	}
 	return null;
+}
+
+async function handleStatusRoute(
+	request: Request,
+	service: ReturnType<typeof createChatRouteService>,
+	sessionId: string,
+): Promise<Response> {
+	if (request.method !== "GET") {
+		return methodNotAllowed();
+	}
+	const status = await service.getSessionStatus(sessionId);
+	return status ? jsonSuccess(status) : notFound("Chat session not found");
 }
 
 async function handleSessionsRoute(
