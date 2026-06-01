@@ -7,6 +7,7 @@ import { handleEntityCrudRequest, matchCrudRoute } from "../routes/entity-crud";
 import type { AppDeps } from "../types/app.types";
 import { handleChatRoute } from "./chat-routes";
 import { handleCliRoute } from "./cli-routes";
+import { handleGitHubRoute } from "./github-routes";
 import { handleInboxMessagesRoute } from "./inbox-routes";
 import { handlePollingStatusRoute } from "./polling-status-routes";
 import { handleProjectsRoute } from "./projects-routes";
@@ -43,6 +44,9 @@ export function createAppRoutes(deps: AppDeps): RouteRegistryEntry[] {
 				name: workspace.name,
 			});
 		}),
+		route("github", (request, { pathname }) =>
+			handleGitHubRoute(request, pathname, deps.githubRepositorySearchFetch),
+		),
 		route(
 			"workspace-environment",
 			async (request, { pathname }) =>

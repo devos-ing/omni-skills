@@ -28,6 +28,7 @@ export interface AppDeps {
 	cliExecutor: CliExecutor;
 	db?: ServerDatabase["db"];
 	boardRepository?: BoardRepository;
+	githubRepositorySearchFetch?: typeof fetch;
 	notificationSender?: {
 		sendNotification(request: NotificationServerRequest): Promise<void>;
 	};
