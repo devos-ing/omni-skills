@@ -28,7 +28,6 @@ export function createChatSessionActivitySections({
 	missionProgress,
 	streamLines,
 }: CreateChatSessionActivityInput): ChatSessionActivitySection[] {
-	if (!shouldShowActivityForMission(missionProgress)) return [];
 	const sections: ChatSessionActivitySection[] = [];
 	const sectionById = new Map<string, ChatSessionActivitySection>();
 	for (const event of activityEvents({ missionProgress, streamLines })) {
@@ -55,14 +54,6 @@ export function createChatSessionActivitySections({
 	return sections.slice(-MAX_SECTIONS);
 }
 
-function shouldShowActivityForMission(
-	missionProgress: ChatMissionProgressViewModel | null,
-): boolean {
-	if (!missionProgress || missionProgress.state !== "ready") return true;
-	if (!isActiveMission(missionProgress)) return false;
-	return missionProgress.phases.some((phase) => phase.status === "running");
-}
-
 function activityEvents({
 	missionProgress,
 	streamLines,
@@ -72,11 +63,18 @@ function activityEvents({
 		source: "stream" as const,
 		text: line.text,
 	}));
-	if (!isActiveMission(missionProgress)) return events;
+	if (!shouldShowMissionActivity(missionProgress)) return events;
 	return [
 		...events,
 		...missionProgress.latestLogLines.map((line) => missionEvent(line)),
 	];
+}
+
+function shouldShowMissionActivity(
+	missionProgress: ChatMissionProgressViewModel | null,
+): missionProgress is ChatMissionProgressViewModel {
+	if (!isActiveMission(missionProgress)) return false;
+	return missionProgress.phases.some((phase) => phase.status === "running");
 }
 
 function missionEvent(line: ChatMissionLogLine): ActivityEvent {

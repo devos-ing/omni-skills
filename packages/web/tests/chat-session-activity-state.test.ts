@@ -163,11 +163,43 @@ describe("chat session activity state", () => {
 					],
 					status: "in_review",
 				},
-				streamLines: [
-					streamLine("stream-1", "web.run search_query implementation notes"),
-				],
+				streamLines: [],
 			}),
 		).toEqual([]);
+	});
+
+	it("keeps live stream actions visible when mission logs are terminal", () => {
+		const sections = createChatSessionActivitySections({
+			missionProgress: {
+				...missionWithLogs(
+					[
+						{
+							id: "line-1",
+							stream: "stdout",
+							text: "bun test packages/web/tests/chat-session.test.ts",
+						},
+					],
+					"done",
+				),
+				phases: [
+					{ id: "plan", label: "Planning", status: "success" },
+					{ id: "implement", label: "Implementing", status: "success" },
+					{ id: "testing", label: "Testing", status: "success" },
+				],
+			},
+			streamLines: [
+				streamLine("stream-1", "web.run search_query implementation notes"),
+			],
+		});
+
+		expect(sections).toHaveLength(1);
+		expect(sections[0]?.summary).toBe("Researching...");
+		expect(sections[0]?.details).toEqual([
+			{
+				id: "stream:stream-1:browsing",
+				text: "web.run search_query implementation notes",
+			},
+		]);
 	});
 });
 
