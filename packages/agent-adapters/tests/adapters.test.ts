@@ -13,6 +13,7 @@ import { ClaudeCodeAdapter } from "../src/claude";
 import { CodexAdapter, extractSessionId, extractUsage } from "../src/codex";
 import { buildCodexRuntimeInvocation } from "../src/codex/docker";
 import { CursorAgentAdapter } from "../src/cursor";
+import { GitHubCopilotAdapter } from "../src/github-copilot/adapter";
 import { OpenCodeAdapter } from "../src/opencode/adapter";
 import { config } from "./fixtures";
 
@@ -25,6 +26,9 @@ describe("agent adapter factory", () => {
 		expect(
 			createAgentAdapter({ ...config, agent: { backend: "cursor-agent" } }),
 		).toBeInstanceOf(CursorAgentAdapter);
+		expect(
+			createAgentAdapter({ ...config, agent: { backend: "github-copilot" } }),
+		).toBeInstanceOf(GitHubCopilotAdapter);
 		expect(
 			createAgentAdapter({ ...config, agent: { backend: "opencode" } }),
 		).toBeInstanceOf(OpenCodeAdapter);
@@ -53,9 +57,10 @@ describe("agent adapter factory", () => {
 
 	it("exposes backend definitions from the shared registry", () => {
 		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
-			["codex", "claude-code", "cursor-agent", "opencode"],
+			["codex", "claude-code", "cursor-agent", "github-copilot", "opencode"],
 		);
 		expect(normalizeAgentBackend(" Cursor-Agent ")).toBe("cursor-agent");
+		expect(normalizeAgentBackend(" GitHub-Copilot ")).toBe("github-copilot");
 		expect(normalizeAgentBackend(" Claude-Code ")).toBe("claude-code");
 		expect(normalizeAgentBackend(" OpenCode ")).toBe("opencode");
 		const codexDefinition = getAgentBackendDefinition("codex");
@@ -75,6 +80,7 @@ describe("agent adapter factory", () => {
 			agentConfigurationDoc["claude-code"].env.map((field) => field.name),
 		).toContain("CLAUDE_CODE_MODEL");
 		expect(agentConfigurationDoc["cursor-agent"].defaults.model).toBe("auto");
+		expect(agentConfigurationDoc["github-copilot"].defaults.model).toBe("auto");
 		expect(agentConfigurationDoc.opencode.defaults.model).toBe(
 			"ollama/qwen2.5-coder:32b",
 		);

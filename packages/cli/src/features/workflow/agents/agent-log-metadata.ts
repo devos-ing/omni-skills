@@ -21,6 +21,9 @@ function resolveAgentModel(
 	if (config.agent.model) return config.agent.model;
 	if (config.agent.backend === "claude-code") return config.claude?.model;
 	if (config.agent.backend === "cursor-agent") return config.cursor?.model;
+	if (config.agent.backend === "github-copilot") {
+		return config.githubCopilot?.model;
+	}
 	if (config.agent.backend === "opencode") return config.opencode?.model;
 	return undefined;
 }

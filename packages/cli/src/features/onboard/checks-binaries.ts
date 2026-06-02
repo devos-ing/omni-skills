@@ -4,6 +4,7 @@ import {
 	commandFailureMessage,
 	formatMissingCursorAgentMessage,
 	formatMissingDockerMessage,
+	formatMissingGitHubCopilotMessage,
 	formatMissingRtkMessage,
 	safeRun,
 } from "./checks-helpers";
@@ -157,6 +158,33 @@ export async function addBinaryChecks(
 						name: "Cursor Agent binary",
 						status: "fail",
 						message: formatMissingCursorAgentMessage(cursorBinary),
+					},
+		);
+	}
+
+	const githubCopilotBackends = config.projects.filter(
+		(project) => project.agent?.backend === "github-copilot",
+	);
+	if (githubCopilotBackends.length > 0) {
+		const copilotBinary =
+			githubCopilotBackends[0]?.githubCopilot?.binary ?? "copilot";
+		const copilot = await safeRun(
+			commandRunner,
+			copilotBinary,
+			["--version"],
+			commandCwd,
+		);
+		checks.push(
+			copilot.code === 0
+				? {
+						name: "GitHub Copilot binary",
+						status: "pass",
+						message: `${copilotBinary} is available`,
+					}
+				: {
+						name: "GitHub Copilot binary",
+						status: "fail",
+						message: formatMissingGitHubCopilotMessage(copilotBinary),
 					},
 		);
 	}

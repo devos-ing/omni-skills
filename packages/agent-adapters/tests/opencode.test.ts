@@ -34,7 +34,7 @@ describe("opencode registry", () => {
 			createAgentAdapter({ ...config, agent: { backend: "opencode" } }),
 		).toBeInstanceOf(OpenCodeAdapter);
 		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
-			["codex", "claude-code", "cursor-agent", "opencode"],
+			["codex", "claude-code", "cursor-agent", "github-copilot", "opencode"],
 		);
 		expect(normalizeAgentBackend(" OpenCode ")).toBe("opencode");
 		expect(availableAgentModels.opencode[0]?.id).toBe(

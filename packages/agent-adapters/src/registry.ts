@@ -22,6 +22,15 @@ import {
 	CURSOR_DESCRIPTION,
 	CURSOR_LABEL,
 } from "./cursor/constants";
+import { GitHubCopilotAdapter } from "./github-copilot/adapter";
+import { githubCopilotConfigurationDoc } from "./github-copilot/configuration-doc";
+import {
+	GITHUB_COPILOT_AVAILABLE_MODELS,
+	GITHUB_COPILOT_BACKEND,
+	GITHUB_COPILOT_DEFAULT_MODEL,
+	GITHUB_COPILOT_DESCRIPTION,
+	GITHUB_COPILOT_LABEL,
+} from "./github-copilot/constants";
 import { OpenCodeAdapter } from "./opencode/adapter";
 import { opencodeConfigurationDoc } from "./opencode/configuration-doc";
 import {
@@ -68,6 +77,15 @@ const agentBackendDefinitions = {
 		availableModels: CURSOR_AVAILABLE_MODELS,
 		configurationDoc: cursorConfigurationDoc,
 		createAdapter: (config) => new CursorAgentAdapter(config),
+	},
+	[GITHUB_COPILOT_BACKEND]: {
+		backend: GITHUB_COPILOT_BACKEND,
+		label: GITHUB_COPILOT_LABEL,
+		description: GITHUB_COPILOT_DESCRIPTION,
+		defaultModel: GITHUB_COPILOT_DEFAULT_MODEL,
+		availableModels: GITHUB_COPILOT_AVAILABLE_MODELS,
+		configurationDoc: githubCopilotConfigurationDoc,
+		createAdapter: (config) => new GitHubCopilotAdapter(config),
 	},
 	[OPENCODE_BACKEND]: {
 		backend: OPENCODE_BACKEND,

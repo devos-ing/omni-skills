@@ -1,4 +1,6 @@
 import { access } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { runCommand } from "../../utils/shell";
 import { loadConfig, loadResolvedEnv } from "../config";
 import type { LoadedConfig } from "../config";
@@ -17,6 +19,7 @@ export async function collectOnboardChecks(
 	const instanceLoader = deps.loadInstanceConfig ?? loadInstanceConfig;
 	const commandRunner = deps.runCommand ?? runCommand;
 	const accessPath = deps.access ?? access;
+	const readText = deps.readFile ?? readFile;
 	const checks: OnboardCheck[] = [];
 
 	const { check, config, instanceResult } = await collectConfigFileCheck({
@@ -36,11 +39,61 @@ export async function collectOnboardChecks(
 	);
 	if (!config) return checks;
 
+	await addTrackedConfigSecretCheck(checks, cwd, config, readText);
 	await addProjectPathChecks(checks, config, accessPath);
 	await addSkillChecks(checks, config, accessPath);
 	await addAutoSelectChecks(checks, config, accessPath);
 	await addBinaryChecks(checks, config, commandRunner, cwd);
 	return checks;
+}
+
+async function addTrackedConfigSecretCheck(
+	checks: OnboardCheck[],
+	cwd: string,
+	config: LoadedConfig,
+	readText: NonNullable<OnboardCheckDeps["readFile"]>,
+): Promise<void> {
+	const secretValues = new Set<string>();
+	for (const project of config.projects) {
+		if (project.cursor?.apiKey) secretValues.add(project.cursor.apiKey);
+		if (project.githubCopilot?.githubToken) {
+			secretValues.add(project.githubCopilot.githubToken);
+		}
+	}
+	if (config.notifications.email.resendApiKey) {
+		secretValues.add(config.notifications.email.resendApiKey);
+	}
+
+	const configPath = path.join(cwd, "devos.config.ts");
+	const content = await readOptionalText(configPath, readText);
+	if (content) {
+		for (const secret of secretValues) {
+			if (secret.length >= 8 && content.includes(secret)) {
+				checks.push({
+					name: "Tracked config secrets",
+					status: "fail",
+					message: "devos.config.ts contains a configured secret",
+				});
+				return;
+			}
+		}
+	}
+	checks.push({
+		name: "Tracked config secrets",
+		status: "pass",
+		message: "no configured secrets found in tracked config files",
+	});
+}
+
+async function readOptionalText(
+	filePath: string,
+	readText: NonNullable<OnboardCheckDeps["readFile"]>,
+): Promise<string | undefined> {
+	try {
+		return await readText(filePath, "utf8");
+	} catch {
+		return undefined;
+	}
 }
 
 async function loadEnvForChecks(

@@ -7,6 +7,7 @@ import type {
 const backendSchema = z.enum([
 	"codex",
 	"claude-code",
+	"github-copilot",
 	"cursor-agent",
 	"opencode",
 ]);
@@ -91,6 +92,18 @@ const runtimeConfigSchema = z.object({
 			agent: z.string().optional(),
 			attach: z.string().optional(),
 			dangerouslySkipPermissions: z.boolean().optional(),
+		})
+		.optional(),
+	githubCopilot: z
+		.object({
+			binary: z.string().min(1),
+			streamLogs: z.boolean(),
+			model: z.string().optional(),
+			copilotHome: z.string().optional(),
+			githubToken: z.string().optional(),
+			allowAllTools: z.boolean().optional(),
+			allowTools: z.array(z.string()).optional(),
+			denyTools: z.array(z.string()).optional(),
 		})
 		.optional(),
 	claude: z

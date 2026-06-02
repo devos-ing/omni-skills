@@ -3,11 +3,17 @@ import { type AgentBackend, createAgentAdapter } from "adapters";
 import { ClaudeCodeAdapter } from "adapters/claude";
 import { CodexAdapter } from "adapters/codex";
 import { CursorAgentAdapter } from "adapters/cursor";
+import { GitHubCopilotAdapter } from "adapters/github-copilot";
 import { OpenCodeAdapter } from "adapters/opencode";
 import type { ResolvedProjectConfig } from "../src/features/types";
 
 function createConfig(
-	backend?: "codex" | "claude-code" | "cursor-agent" | "opencode",
+	backend?:
+		| "codex"
+		| "claude-code"
+		| "github-copilot"
+		| "cursor-agent"
+		| "opencode",
 ): ResolvedProjectConfig {
 	return {
 		id: "default",
@@ -24,6 +30,7 @@ function createConfig(
 		},
 		codex: { binary: process.execPath, streamLogs: false },
 		cursor: { binary: "cursor-agent", streamLogs: false },
+		githubCopilot: { binary: "copilot", streamLogs: false },
 		opencode: { binary: "opencode", streamLogs: false },
 		agent: backend ? { backend } : undefined,
 		skills: {
@@ -53,6 +60,11 @@ describe("createAgentAdapter", () => {
 	it("uses cursor backend from project config", () => {
 		const adapter = createAgentAdapter(createConfig("cursor-agent"));
 		expect(adapter).toBeInstanceOf(CursorAgentAdapter);
+	});
+
+	it("uses github copilot backend from project config", () => {
+		const adapter = createAgentAdapter(createConfig("github-copilot"));
+		expect(adapter).toBeInstanceOf(GitHubCopilotAdapter);
 	});
 
 	it("uses opencode backend from project config", () => {

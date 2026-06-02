@@ -699,6 +699,42 @@ describe("onboard helpers", () => {
 		});
 	});
 
+	it("reports github copilot provider and binary failures", async () => {
+		const checks = await collectOnboardChecks(
+			"/tmp/demo",
+			onboardCheckDeps({
+				loadConfig: async () =>
+					loadedConfig({
+						linearApiKey: "lin_secret_123",
+						agentBackend: "github-copilot",
+						githubCopilotBinary: "custom-copilot",
+					}),
+				access: async () => {},
+				readFile: async () => "",
+				runCommand: async (command) =>
+					command === "custom-copilot"
+						? {
+								code: 1,
+								stdout: "",
+								stderr: "command not found: custom-copilot",
+							}
+						: okCommand(),
+			}),
+		);
+
+		expect(checks).toContainEqual({
+			name: "LLM provider",
+			status: "pass",
+			message: "configured: github-copilot",
+		});
+		expect(checks).toContainEqual({
+			name: "GitHub Copilot binary",
+			status: "fail",
+			message:
+				"custom-copilot binary not found. Install GitHub Copilot CLI or set GITHUB_COPILOT_BINARY",
+		});
+	});
+
 	it("passes onboard checks without tracker API keys", async () => {
 		const checks = await collectOnboardChecks(
 			"/tmp/demo",
@@ -792,6 +828,29 @@ describe("onboard helpers", () => {
 			name: "Skill auto-select database (demo-project)",
 			status: "fail",
 			message: "/tmp/demo/skills.db does not exist or is not accessible",
+		});
+	});
+
+	it("reports github copilot tokens in tracked config", async () => {
+		const checks = await collectOnboardChecks(
+			"/tmp/demo",
+			onboardCheckDeps({
+				loadConfig: async () =>
+					loadedConfig({
+						linearApiKey: "lin_secret_123",
+						githubCopilotToken: "copilot_secret_123",
+					}),
+				access: async () => {},
+				readFile: async (filePath) =>
+					filePath.endsWith("devos.config.ts") ? "copilot_secret_123" : "",
+				runCommand: async () => okCommand(),
+			}),
+		);
+
+		expect(checks).toContainEqual({
+			name: "Tracked config secrets",
+			status: "fail",
+			message: "devos.config.ts contains a configured secret",
 		});
 	});
 
@@ -896,12 +955,16 @@ function loadedConfig({
 	agentBackend,
 	cursorApiKey,
 	cursorBinary = "cursor-agent",
+	githubCopilotBinary = "copilot",
+	githubCopilotToken,
 }: {
 	linearApiKey?: string;
 	dockerEnabled?: boolean;
-	agentBackend?: "codex" | "claude-code" | "cursor-agent";
+	agentBackend?: "codex" | "claude-code" | "github-copilot" | "cursor-agent";
 	cursorApiKey?: string;
 	cursorBinary?: string;
+	githubCopilotBinary?: string;
+	githubCopilotToken?: string;
 }): LoadedConfig {
 	return {
 		projects: [
@@ -929,6 +992,11 @@ function loadedConfig({
 				cursor: {
 					binary: cursorBinary,
 					apiKey: cursorApiKey,
+					streamLogs: false,
+				},
+				githubCopilot: {
+					binary: githubCopilotBinary,
+					githubToken: githubCopilotToken,
 					streamLogs: false,
 				},
 				github: {

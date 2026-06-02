@@ -70,6 +70,13 @@ const envDefaults: Record<string, string | undefined> = {
 	CURSOR_AGENT_MODEL: undefined,
 	CURSOR_AGENT_FORCE: undefined,
 	CURSOR_API_KEY: undefined,
+	GITHUB_COPILOT_BINARY: undefined,
+	GITHUB_COPILOT_MODEL: undefined,
+	GITHUB_COPILOT_HOME: undefined,
+	GITHUB_COPILOT_TOKEN: undefined,
+	GITHUB_COPILOT_ALLOW_ALL_TOOLS: undefined,
+	GITHUB_COPILOT_ALLOW_TOOLS: undefined,
+	GITHUB_COPILOT_DENY_TOOLS: undefined,
 	OPENCODE_BINARY: undefined,
 	OPENCODE_MODEL: undefined,
 	OPENCODE_AGENT: undefined,
@@ -515,6 +522,14 @@ describe("loadConfig", () => {
 		});
 	});
 
+	it("loads GitHub Copilot backend from AGENT_BACKEND env", async () => {
+		process.env.AGENT_BACKEND = "github-copilot";
+		await withTempConfig(async (tempDir) => {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.agent?.backend).toBe("github-copilot");
+		});
+	});
+
 	it("defaults agent backend to undefined when not set", async () => {
 		process.env.AGENT_BACKEND = "";
 		await withTempConfig(async (tempDir) => {
@@ -566,6 +581,30 @@ describe("loadConfig", () => {
 				agent: "build",
 				attach: "http://127.0.0.1:4096",
 				dangerouslySkipPermissions: true,
+			});
+		});
+	});
+
+	it("loads GitHub Copilot settings from env", async () => {
+		process.env.GITHUB_COPILOT_BINARY = "custom-copilot";
+		process.env.GITHUB_COPILOT_MODEL = "gpt-5";
+		process.env.GITHUB_COPILOT_HOME = "/tmp/copilot";
+		process.env.GITHUB_COPILOT_TOKEN = "copilot_secret";
+		process.env.GITHUB_COPILOT_ALLOW_ALL_TOOLS = "true";
+		process.env.GITHUB_COPILOT_ALLOW_TOOLS = "shell(git),file(*)";
+		process.env.GITHUB_COPILOT_DENY_TOOLS = "shell(rm)";
+
+		await withTempConfig(async (tempDir) => {
+			const config = await loadConfig(tempDir);
+			expect(config.projects[0]?.githubCopilot).toEqual({
+				binary: "custom-copilot",
+				streamLogs: false,
+				model: "gpt-5",
+				copilotHome: "/tmp/copilot",
+				githubToken: "copilot_secret",
+				allowAllTools: true,
+				allowTools: ["shell(git)", "file(*)"],
+				denyTools: ["shell(rm)"],
 			});
 		});
 	});

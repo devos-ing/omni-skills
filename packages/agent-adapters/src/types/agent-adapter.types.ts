@@ -49,6 +49,7 @@ export interface AgentAdapter {
 export type AgentBackend =
 	| "codex"
 	| "claude-code"
+	| "github-copilot"
 	| "cursor-agent"
 	| "opencode";
 
@@ -117,6 +118,16 @@ export interface AgentAdapterRuntimeConfig {
 		agent?: string;
 		attach?: string;
 		dangerouslySkipPermissions?: boolean;
+	};
+	githubCopilot?: {
+		binary: string;
+		streamLogs: boolean;
+		model?: string;
+		copilotHome?: string;
+		githubToken?: string;
+		allowAllTools?: boolean;
+		allowTools?: string[];
+		denyTools?: string[];
 	};
 	claude?: {
 		model?: string;

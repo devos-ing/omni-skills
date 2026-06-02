@@ -42,3 +42,9 @@ export function formatMissingDockerMessage(
 export function formatMissingCursorAgentMessage(cursorBinary: string): string {
 	return `${cursorBinary} binary not found. Install Cursor Agent CLI and run: cursor-agent login`;
 }
+
+export function formatMissingGitHubCopilotMessage(
+	copilotBinary: string,
+): string {
+	return `${copilotBinary} binary not found. Install GitHub Copilot CLI or set GITHUB_COPILOT_BINARY`;
+}

@@ -33,7 +33,7 @@ describe("cursor agent registry", () => {
 			createAgentAdapter({ ...config, agent: { backend: "cursor-agent" } }),
 		).toBeInstanceOf(CursorAgentAdapter);
 		expect(listAgentBackends().map((definition) => definition.backend)).toEqual(
-			["codex", "claude-code", "cursor-agent", "opencode"],
+			["codex", "claude-code", "cursor-agent", "github-copilot", "opencode"],
 		);
 		expect(normalizeAgentBackend(" Cursor-Agent ")).toBe("cursor-agent");
 		expect(availableAgentModels["cursor-agent"][0]?.id).toBe("auto");

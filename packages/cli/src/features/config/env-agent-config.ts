@@ -13,7 +13,10 @@ type Env = Record<string, string | undefined>;
 export function buildEnvAgentConfig(
 	env: Env,
 	streamLogs: boolean,
-): Pick<ProjectRuntimeConfig, "agent" | "claude" | "cursor" | "opencode"> {
+): Pick<
+	ProjectRuntimeConfig,
+	"agent" | "claude" | "cursor" | "githubCopilot" | "opencode"
+> {
 	return {
 		cursor: {
 			binary: normalizeOptionalValue(env.CURSOR_AGENT_BINARY) ?? "cursor-agent",
@@ -35,6 +38,19 @@ export function buildEnvAgentConfig(
 				env.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS,
 				"OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS",
 			),
+		},
+		githubCopilot: {
+			binary: normalizeOptionalValue(env.GITHUB_COPILOT_BINARY) ?? "copilot",
+			streamLogs,
+			model: normalizeOptionalValue(env.GITHUB_COPILOT_MODEL),
+			copilotHome: normalizeOptionalValue(env.GITHUB_COPILOT_HOME),
+			githubToken: normalizeOptionalValue(env.GITHUB_COPILOT_TOKEN),
+			allowAllTools: normalizeBooleanEnvValue(
+				env.GITHUB_COPILOT_ALLOW_ALL_TOOLS,
+				"GITHUB_COPILOT_ALLOW_ALL_TOOLS",
+			),
+			allowTools: parseCommaList(env.GITHUB_COPILOT_ALLOW_TOOLS),
+			denyTools: parseCommaList(env.GITHUB_COPILOT_DENY_TOOLS),
 		},
 		agent: {
 			backend: normalizeAgentBackend(env.AGENT_BACKEND),

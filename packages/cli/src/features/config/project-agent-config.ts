@@ -6,7 +6,7 @@ import type {
 
 type AgentConfig = Pick<
 	ProjectRuntimeConfig,
-	"agent" | "claude" | "cursor" | "opencode"
+	"agent" | "claude" | "cursor" | "githubCopilot" | "opencode"
 >;
 
 export function resolveProjectAgentConfig(
@@ -66,6 +66,42 @@ export function resolveProjectAgentConfig(
 				project.opencode?.dangerouslySkipPermissions ??
 				rootDefaults.opencode?.dangerouslySkipPermissions ??
 				base.opencode?.dangerouslySkipPermissions,
+		},
+		githubCopilot: {
+			binary:
+				project.githubCopilot?.binary ??
+				rootDefaults.githubCopilot?.binary ??
+				base.githubCopilot?.binary ??
+				"copilot",
+			streamLogs:
+				project.githubCopilot?.streamLogs ??
+				rootDefaults.githubCopilot?.streamLogs ??
+				base.githubCopilot?.streamLogs ??
+				base.codex.streamLogs,
+			model:
+				project.githubCopilot?.model ??
+				rootDefaults.githubCopilot?.model ??
+				base.githubCopilot?.model,
+			copilotHome:
+				project.githubCopilot?.copilotHome ??
+				rootDefaults.githubCopilot?.copilotHome ??
+				base.githubCopilot?.copilotHome,
+			githubToken:
+				project.githubCopilot?.githubToken ??
+				rootDefaults.githubCopilot?.githubToken ??
+				base.githubCopilot?.githubToken,
+			allowAllTools:
+				project.githubCopilot?.allowAllTools ??
+				rootDefaults.githubCopilot?.allowAllTools ??
+				base.githubCopilot?.allowAllTools,
+			allowTools:
+				project.githubCopilot?.allowTools ??
+				rootDefaults.githubCopilot?.allowTools ??
+				base.githubCopilot?.allowTools,
+			denyTools:
+				project.githubCopilot?.denyTools ??
+				rootDefaults.githubCopilot?.denyTools ??
+				base.githubCopilot?.denyTools,
 		},
 		claude: {
 			...(base.claude ?? {}),
