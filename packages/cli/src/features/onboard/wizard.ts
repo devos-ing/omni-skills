@@ -4,6 +4,7 @@ import path from "node:path";
 import { runCommand } from "../../utils/shell";
 import {
 	renderCliHeading,
+	renderCliMutedText,
 	renderCliOutlineBox,
 } from "../../utils/terminal-format";
 import { getCliVersion } from "../../version";
@@ -109,8 +110,7 @@ async function runChecked(
 }
 
 function renderOnboardCustomizationIntro(): string {
-	return [
-		`${renderCliHeading("Customize this workspace")}`,
+	const descriptionLines = [
 		"devos onboard will configure:",
 		"  - Workspace name and execution path",
 		"  - Isolated worktrees",
@@ -118,6 +118,10 @@ function renderOnboardCustomizationIntro(): string {
 		"  - Database, logs, storage, secrets, and telemetry",
 		"  - Codex models, reasoning, plugins, skills, sandbox, and hooks",
 		"  - Doctor checks after files are written",
+	];
+	return [
+		`${renderCliHeading("Customize this workspace")}`,
+		...descriptionLines.map((line) => renderCliMutedText(line)),
 		"",
 	].join("\n");
 }

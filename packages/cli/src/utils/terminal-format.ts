@@ -17,6 +17,13 @@ export function colorizeBanner(banner: string): string {
 	return pc.cyan(banner);
 }
 
+export function renderCliMutedText(
+	text: string,
+	colorize: (text: string) => string = pc.gray,
+): string {
+	return colorize(text);
+}
+
 export function renderSummaryBox(
 	title: string,
 	rows: Array<{ count: number; label: string; tone: "danger" | "success" }>,

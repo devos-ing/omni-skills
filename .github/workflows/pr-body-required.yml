@@ -1,0 +1,55 @@
+name: PR Body Required
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  required-sections:
+    name: required-sections
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require PR body sections
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request?.body ?? "";
+            const requiredSections = ["What Changed", "Why", "How to Test"];
+
+            const normalize = (value) =>
+              value
+                .replace(/<!--[\s\S]*?-->/g, "")
+                .replace(/^\s*[-*]\s*(?:\[[ xX]\])?\s*$/gm, "")
+                .trim();
+
+            const escapeRegExp = (value) =>
+              value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+            const missing = requiredSections.filter((section, index) => {
+              const nextSection = requiredSections[index + 1];
+              const endPattern = nextSection
+                ? `(?=^##\\s+${escapeRegExp(nextSection)}\\s*$)`
+                : "(?![\\s\\S])";
+              const sectionPattern = new RegExp(
+                `^##\\s+${escapeRegExp(section)}\\s*$([\\s\\S]*?)${endPattern}`,
+                "im",
+              );
+              const match = body.match(sectionPattern);
+
+              return !match || normalize(match[1]).length === 0;
+            });
+
+            if (missing.length > 0) {
+              core.setFailed(
+                `PR body must include non-empty sections: ${missing.join(", ")}`,
+              );
+            }
