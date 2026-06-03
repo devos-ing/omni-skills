@@ -6,6 +6,7 @@ import {
 	select,
 	text,
 } from "@clack/prompts";
+import { renderCliMutedText } from "../../utils/terminal-format";
 import type {
 	ConfirmPromptOptions,
 	PasswordPromptOptions,
@@ -67,8 +68,7 @@ function withPromptDescription<
 	if (!description) return options;
 	return {
 		...options,
-		message: `${options.message}\n${description}`,
-		description: undefined,
+		description: renderCliMutedText(description),
 	};
 }
 

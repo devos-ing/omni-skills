@@ -7,18 +7,25 @@ import type {
 	PromptBackend,
 	SelectPromptOptions,
 } from "../src/features/prompts";
+import { renderCliMutedText } from "../src/utils/terminal-format";
 
 describe("prompt adapter", () => {
-	it("renders prompt descriptions after the question", async () => {
-		const messages: string[] = [];
+	it("passes prompt descriptions separately with the muted CLI style", async () => {
+		const prompts: Array<{ message: string; description?: string }> = [];
 		const adapter = createPromptAdapter(
 			backend({
 				text: async (options) => {
-					messages.push(options.message);
+					prompts.push({
+						message: options.message,
+						description: options.description,
+					});
 					return "answered";
 				},
 				confirm: async (options) => {
-					messages.push(options.message);
+					prompts.push({
+						message: options.message,
+						description: options.description,
+					});
 					return true;
 				},
 			}),
@@ -33,9 +40,17 @@ describe("prompt adapter", () => {
 			description: "Keeps agent changes out of the main checkout.",
 		});
 
-		expect(messages).toEqual([
-			"Workspace name\nNames this local devos workspace.",
-			"Use isolated worktrees?\nKeeps agent changes out of the main checkout.",
+		expect(prompts).toEqual([
+			{
+				message: "Workspace name",
+				description: renderCliMutedText("Names this local devos workspace."),
+			},
+			{
+				message: "Use isolated worktrees?",
+				description: renderCliMutedText(
+					"Keeps agent changes out of the main checkout.",
+				),
+			},
 		]);
 	});
 
