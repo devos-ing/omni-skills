@@ -1,11 +1,13 @@
 export function shouldShowChatRoomLoadingShell({
 	hasSelectedSession,
 	isMessagesLoading,
+	isRealtimeActive = false,
 }: {
 	hasSelectedSession: boolean;
 	isMessagesLoading: boolean;
+	isRealtimeActive?: boolean;
 }): boolean {
-	return hasSelectedSession && isMessagesLoading;
+	return hasSelectedSession && (isMessagesLoading || isRealtimeActive);
 }
 
 export function shouldShowMissionProgressSkeleton({

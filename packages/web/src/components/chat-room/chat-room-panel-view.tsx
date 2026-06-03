@@ -48,6 +48,7 @@ export function ChatRoomPanelView({
 	const showLoadingShell = shouldShowChatRoomLoadingShell({
 		hasSelectedSession: Boolean(selectedSession),
 		isMessagesLoading,
+		isRealtimeActive: Boolean(workingStartedAt) || isPlanning || isThinking,
 	});
 	// const showLoadingShell = true
 	const showMissionSkeleton = shouldShowMissionProgressSkeleton({
