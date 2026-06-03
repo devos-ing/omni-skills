@@ -3,8 +3,11 @@ import { useUiStore } from "./ui-store";
 
 const selectedWorkspaceId: UiStoreState["selectedWorkspaceId"] =
 	useUiStore.getState().selectedWorkspaceId;
+const chatRoomSidebarView: UiStoreState["chatRoomSidebarView"] =
+	useUiStore.getState().chatRoomSidebarView;
 
 useUiStore.getState().setSelectedWorkspaceId(selectedWorkspaceId);
+useUiStore.getState().setChatRoomSidebarView(chatRoomSidebarView);
 useUiStore.getState().updateViewFilters({
 	status: "running",
 	searchQuery: "query",

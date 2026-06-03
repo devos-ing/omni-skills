@@ -8,13 +8,10 @@ import type {
 	ProjectSessionListToggleMode,
 	VisibleProjectSessions,
 } from "./types/chat-room-sidebar.types";
-import type { ChatRoomSidebarView } from "./types/chat-room.types";
 
 const UNASSIGNED_GROUP_ID = "unassigned";
 const UNASSIGNED_GROUP_LABEL = "Unassigned";
 const DEFAULT_VISIBLE_PROJECT_SESSION_COUNT = 5;
-const DEFAULT_CHAT_ROOM_SIDEBAR_VIEW: ChatRoomSidebarView = "main";
-const CHAT_ROOM_SIDEBAR_VIEW_STORAGE_KEY = "devos.chatRoom.sidebarView";
 
 export function buildChatSessionSidebarContent({
 	activeSessionId,
@@ -98,49 +95,6 @@ export function buildProjectSessionListToggleMode(
 	return input.isExpanded ? "expanded" : "collapsed";
 }
 
-export function getBrowserChatRoomSidebarViewStorage():
-	| Pick<Storage, "getItem" | "setItem">
-	| undefined {
-	if (typeof window === "undefined") {
-		return undefined;
-	}
-	try {
-		return window.localStorage;
-	} catch {
-		return undefined;
-	}
-}
-
-export function readStoredChatRoomSidebarView(
-	storage: Pick<Storage, "getItem"> | undefined,
-): ChatRoomSidebarView {
-	if (!storage) {
-		return DEFAULT_CHAT_ROOM_SIDEBAR_VIEW;
-	}
-	try {
-		const storedValue = storage.getItem(CHAT_ROOM_SIDEBAR_VIEW_STORAGE_KEY);
-		return isChatRoomSidebarView(storedValue)
-			? storedValue
-			: DEFAULT_CHAT_ROOM_SIDEBAR_VIEW;
-	} catch {
-		return DEFAULT_CHAT_ROOM_SIDEBAR_VIEW;
-	}
-}
-
-export function writeStoredChatRoomSidebarView(
-	storage: Pick<Storage, "setItem"> | undefined,
-	view: ChatRoomSidebarView,
-): void {
-	if (!storage) {
-		return;
-	}
-	try {
-		storage.setItem(CHAT_ROOM_SIDEBAR_VIEW_STORAGE_KEY, view);
-	} catch {
-		return;
-	}
-}
-
 function createSessionProjectGroup(
 	id: string,
 	label: string,
@@ -151,10 +105,4 @@ function createSessionProjectGroup(
 		isActive: false,
 		sessions: [],
 	};
-}
-
-function isChatRoomSidebarView(
-	value: string | null,
-): value is ChatRoomSidebarView {
-	return value === "main" || value === "settings";
 }

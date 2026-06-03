@@ -13,7 +13,7 @@ import {
 } from "@/lib/api/queries";
 import type { SettingsGithubUpdateRequest } from "@/lib/api/types/client.types";
 
-export function SettingsGithubPanel(): ReactElement {
+export function GitInstructionsPanel(): ReactElement {
 	const [draft, setDraft] = useState<Partial<SettingsGithubUpdateRequest>>({});
 	const query = useGitHubSettingsQuery({ refetchIntervalMs: false });
 	const mutation = useUpdateGitHubSettingsMutation();
@@ -39,7 +39,7 @@ export function SettingsGithubPanel(): ReactElement {
 		return (
 			<section className="grid gap-4 text-zinc-100">
 				<Typography variant="description">
-					Loading GitHub settings...
+					Loading Git instructions...
 				</Typography>
 			</section>
 		);
@@ -49,7 +49,7 @@ export function SettingsGithubPanel(): ReactElement {
 		return (
 			<section className="grid gap-4 text-zinc-100">
 				<Typography className="text-red-200" variant="description">
-					GitHub settings are unavailable.
+					Git instructions are unavailable.
 				</Typography>
 			</section>
 		);
@@ -58,7 +58,7 @@ export function SettingsGithubPanel(): ReactElement {
 	return (
 		<section className="grid gap-4 text-zinc-100">
 			<div className="flex flex-wrap items-start justify-between gap-3">
-				<Typography variant="sectionTitle">GitHub Workflow</Typography>
+				<Typography variant="sectionTitle">Git Instructions</Typography>
 				<div className="flex gap-2">
 					<Button
 						disabled={mutation.isPending || !hasChanges}
@@ -83,9 +83,9 @@ export function SettingsGithubPanel(): ReactElement {
 			</div>
 			<div className="grid gap-3 rounded-md border border-border bg-surface-panel p-3">
 				<div className="grid gap-1.5">
-					<Label htmlFor="github-commit-instruction">Commit</Label>
+					<Label htmlFor="git-commit-instruction">Commit</Label>
 					<Textarea
-						id="github-commit-instruction"
+						id="git-commit-instruction"
 						onChange={(event) =>
 							setDraft((current) => ({
 								...current,
@@ -97,9 +97,9 @@ export function SettingsGithubPanel(): ReactElement {
 					/>
 				</div>
 				<div className="grid gap-1.5">
-					<Label htmlFor="github-pr-instruction">Pull request</Label>
+					<Label htmlFor="git-pr-instruction">Pull request</Label>
 					<Textarea
-						id="github-pr-instruction"
+						id="git-pr-instruction"
 						onChange={(event) =>
 							setDraft((current) => ({
 								...current,
@@ -113,7 +113,7 @@ export function SettingsGithubPanel(): ReactElement {
 			</div>
 			{mutation.isError ? (
 				<Typography className="text-red-200" variant="description">
-					Could not save GitHub settings.
+					Could not save Git instructions.
 				</Typography>
 			) : null}
 		</section>

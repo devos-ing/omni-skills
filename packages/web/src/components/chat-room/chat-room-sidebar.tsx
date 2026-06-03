@@ -10,12 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChatRoomSessionList } from "./chat-room-session-list";
 import { ChatRoomSettingsSidebar } from "./chat-room-settings-sidebar";
 import { ChatRoomSidebarHeader } from "./chat-room-sidebar-header";
-import {
-	buildChatSessionSidebarContent,
-	getBrowserChatRoomSidebarViewStorage,
-	readStoredChatRoomSidebarView,
-	writeStoredChatRoomSidebarView,
-} from "./chat-room-sidebar-utils";
+import { buildChatSessionSidebarContent } from "./chat-room-sidebar-utils";
 import type { ChatRoomSidebarProps } from "./types/chat-room-sidebar.types";
 import type { ChatRoomSidebarView } from "./types/chat-room.types";
 
@@ -36,11 +31,12 @@ export function ChatRoomSidebar({
 	onSelectSession,
 	onToggleCollapsed,
 }: ChatRoomSidebarProps): ReactElement {
-	const [sidebarView, setSidebarViewState] = useState<ChatRoomSidebarView>(() =>
-		readStoredChatRoomSidebarView(getBrowserChatRoomSidebarViewStorage()),
-	);
 	const [collapsedProjectIds, setCollapsedProjectIds] = useState<Set<string>>(
 		() => new Set(),
+	);
+	const sidebarView = useUiStore((state) => state.chatRoomSidebarView);
+	const setSidebarViewState = useUiStore(
+		(state) => state.setChatRoomSidebarView,
 	);
 	const pinnedSessionIds = useUiStore((state) => state.pinnedSessionIds);
 	const pinSession = useUiStore((state) => state.pinSession);
@@ -57,10 +53,6 @@ export function ChatRoomSidebar({
 		if (view !== sidebarView) {
 			setSidebarViewState(view);
 		}
-		writeStoredChatRoomSidebarView(
-			getBrowserChatRoomSidebarViewStorage(),
-			view,
-		);
 	}
 
 	function showMainSidebar(): void {
@@ -72,6 +64,7 @@ export function ChatRoomSidebar({
 	}
 
 	function handleSettingsClick(): void {
+		console.log("sidebarView", sidebarView)
 		if (isCollapsed) {
 			onToggleCollapsed();
 		}

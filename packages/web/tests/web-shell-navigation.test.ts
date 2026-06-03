@@ -5,16 +5,13 @@ import {
 	navItems,
 } from "../src/components/web-shell/web-shell.constants";
 
-describe("Git navigation", () => {
-	it("includes a top-level Git item that links to the Git page", () => {
+describe("web shell navigation", () => {
+	it("shows Git in workspace navigation and routes it to the Git instructions page", () => {
 		expect(navItems).toContainEqual({
-			href: "/git",
 			key: "git",
 			label: "Git",
+			href: "/git",
 		});
-	});
-
-	it("resolves the Git nav key to the Git page", () => {
 		expect(hrefForNavKey("git")).toBe("/git");
 	});
 });

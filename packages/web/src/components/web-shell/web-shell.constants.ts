@@ -5,18 +5,12 @@ import type {
 } from "@/components/web-shell/types/web-shell.types";
 
 export const navItems: SidebarNavItem[] = [
-	// { key: "chat", label: "Chat", href: "/chat" },
-	// { key: "inbox", label: "Inbox", href: "/inbox" },
-	// { key: "issues", label: "Issues", href: "/issues" },
-	// { key: "autopilot", label: "Autopilot", href: "/autopilot" },
 	{ key: "agents", label: "Agents", href: "/agents" },
 	{ key: "projects", label: "Projects", href: "/projects" },
 	{ key: "integrations", label: "Integrations", href: "/integrations" },
-	// { key: "squads", label: "Squads", href: "/squads" },
+	{ key: "git", label: "Git", href: "/git" },
 	{ key: "usage", label: "Usage", href: "/usage" },
 	{ key: "runtimes", label: "Runtimes", href: "/runtimes" },
-	// { key: "skills", label: "Skills", href: "/skills" },
-	// { key: "settings", label: "Settings", href: "/settings" },
 ];
 
 export const sectionContentByKey: Record<
@@ -38,6 +32,10 @@ export const sectionContentByKey: Record<
 	settings: {
 		heading: "Settings Job Board",
 		description: "Review operator-level defaults and preferences.",
+	},
+	git: {
+		heading: "Git Instructions",
+		description: "Customize commit and pull request instructions.",
 	},
 	issues: {
 		heading: "Issues Job Board",

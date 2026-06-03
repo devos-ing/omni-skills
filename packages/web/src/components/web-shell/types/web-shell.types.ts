@@ -12,7 +12,8 @@ export type SidebarNavKey =
 	| "inbox"
 	| "autopilot"
 	| "squads"
-	| "usage";
+	| "usage"
+	| "git";
 
 export interface SidebarNavItem {
 	key: SidebarNavKey;

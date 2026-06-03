@@ -20,6 +20,8 @@ export interface UiDraftState {
 	commandInputDraft: string;
 }
 
+export type UiChatRoomSidebarView = "main" | "settings";
+
 export interface UiPinnedIssue {
 	id: string;
 	taskKey: string;
@@ -41,6 +43,7 @@ export interface UiStoreState {
 	selectedWorkspaceId: WorkspaceId | null;
 	viewFilters: UiViewFilters;
 	drafts: UiDraftState;
+	chatRoomSidebarView: UiChatRoomSidebarView;
 	pinnedIssues: UiPinnedIssue[];
 	pinnedSessionIds: string[];
 	modal: UiModalState;
@@ -52,6 +55,7 @@ export interface UiStoreActions {
 	resetViewFilters(): void;
 	updateDrafts(partial: Partial<UiDraftState>): void;
 	clearDrafts(): void;
+	setChatRoomSidebarView(view: UiChatRoomSidebarView): void;
 	pinIssue(issue: UiPinnedIssue): void;
 	unpinIssue(issueId: string): void;
 	pinSession(sessionId: string): void;
