@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquarePlus, Search, Settings, X } from "lucide-react";
+import { MessageSquarePlus, Search, X } from "lucide-react";
 import { type ReactElement, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChatRoomSessionList } from "./chat-room-session-list";
 import { ChatRoomSettingsSidebar } from "./chat-room-settings-sidebar";
 import { ChatRoomSidebarHeader } from "./chat-room-sidebar-header";
+import { ChatRoomSidebarNav } from "./chat-room-sidebar-nav";
 import { buildChatSessionSidebarContent } from "./chat-room-sidebar-utils";
 import type { ChatRoomSidebarProps } from "./types/chat-room-sidebar.types";
 import type { ChatRoomSidebarView } from "./types/chat-room.types";
@@ -64,7 +65,6 @@ export function ChatRoomSidebar({
 	}
 
 	function handleSettingsClick(): void {
-		console.log("sidebarView", sidebarView)
 		if (isCollapsed) {
 			onToggleCollapsed();
 		}
@@ -199,30 +199,11 @@ export function ChatRoomSidebar({
 							onUnpinSession={unpinSession}
 						/>
 					</div>
-					<nav className="border-t border-border p-3">
-						<Button
-							aria-label="Settings"
-							className={cn(
-								"h-9 w-full justify-start gap-2 px-2 text-xs text-zinc-400 hover:bg-surface-hover hover:text-zinc-200",
-								isCollapsed && "md:justify-center md:px-0",
-							)}
-							onClick={handleSettingsClick}
-							size="sm"
-							type="button"
-							variant="ghost"
-						>
-							<Settings size={15} />
-							<Typography
-								as="span"
-								className={cn(
-									"min-w-0 flex-1 truncate text-left",
-									isCollapsed && "md:sr-only",
-								)}
-							>
-								Settings
-							</Typography>
-						</Button>
-					</nav>
+					<ChatRoomSidebarNav
+						isCollapsed={isCollapsed}
+						onCloseSidebar={onCloseSidebar}
+						onSettingsClick={handleSettingsClick}
+					/>
 				</div>
 				<ChatRoomSettingsSidebar
 					isActive={isSettingsView}

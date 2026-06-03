@@ -1,7 +1,10 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import type { SidebarNavItem } from "@/components/web-shell/types/web-shell.types";
 import { navItems } from "@/components/web-shell/web-shell.constants";
+import { cn } from "@/lib/utils";
 import {
 	ArrowLeft,
 	BookOpen,
@@ -23,9 +26,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactElement } from "react";
-import { Button } from "@/components/ui/button";
-import { Typography } from "@/components/ui/typography";
-import { cn } from "@/lib/utils";
 import type { ChatRoomSettingsSidebarProps } from "./types/chat-room.types";
 
 const iconByKey: Record<

@@ -4,7 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Typography } from "@/components/ui/typography";
 import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
 
-import { normalizeDueDate } from "./issues-board-utils";
+import { normalizeBoardStatus, normalizeDueDate } from "./issues-board-utils";
 import type { IssueDetailDraft } from "./types/issues-board.types";
 
 export function DetailField({
@@ -53,7 +53,7 @@ export function createDetailDraft(
 		title: task.title,
 		content: task.content,
 		priority: String(task.priority),
-		status: task.status,
+		status: normalizeBoardStatus(task.status),
 		creatorId: task.creatorId,
 		dueDate: toDateInputValue(task.dueDate),
 		linkedPr: task.linkedPr ?? "",

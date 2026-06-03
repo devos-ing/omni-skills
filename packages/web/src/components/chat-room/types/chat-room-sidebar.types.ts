@@ -23,6 +23,12 @@ export interface ChatRoomSidebarHeaderProps {
 	onToggleCollapsed: () => void;
 }
 
+export interface ChatRoomSidebarNavProps {
+	isCollapsed: boolean;
+	onCloseSidebar: () => void;
+	onSettingsClick: () => void;
+}
+
 export interface ChatRoomSessionListProps {
 	activeSessionId: string;
 	collapsedProjectIds: Set<string>;

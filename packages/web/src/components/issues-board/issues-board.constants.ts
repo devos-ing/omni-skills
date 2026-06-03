@@ -8,19 +8,18 @@ export const DEFAULT_CREATOR_ID = "member-1";
 
 export const STATUS_ORDER = [
 	"backlog",
-	"plan",
-	"in_progress",
+	"todo",
+	"running",
 	"in_review",
 	"done",
 	"canceled",
-	"failed",
 ] as const;
 
 export const STATUS_PRESENTATION: Record<string, StatusPresentation> = {
 	backlog: { label: "Backlog", tone: "border-slate-700/70 bg-surface-panel" },
-	plan: { label: "Plan", tone: "border-slate-700/70 bg-surface-panel" },
-	in_progress: {
-		label: "In Progress",
+	todo: { label: "To Do", tone: "border-slate-700/70 bg-surface-panel" },
+	running: {
+		label: "Running",
 		tone: "border-yellow-900/50 bg-yellow-950/35",
 	},
 	in_review: {
@@ -29,7 +28,6 @@ export const STATUS_PRESENTATION: Record<string, StatusPresentation> = {
 	},
 	done: { label: "Done", tone: "border-indigo-900/50 bg-indigo-950/35" },
 	canceled: { label: "Canceled", tone: "border-zinc-700/70 bg-zinc-950/35" },
-	failed: { label: "Failed", tone: "border-red-900/50 bg-red-950/35" },
 };
 
 export const PRIORITY_OPTIONS: readonly PriorityOption[] = [

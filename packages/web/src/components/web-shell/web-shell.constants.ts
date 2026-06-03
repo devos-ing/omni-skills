@@ -7,6 +7,7 @@ import type {
 export const navItems: SidebarNavItem[] = [
 	{ key: "agents", label: "Agents", href: "/agents" },
 	{ key: "projects", label: "Projects", href: "/projects" },
+	{ key: "issues", label: "Issues", href: "/issues" },
 	{ key: "integrations", label: "Integrations", href: "/integrations" },
 	{ key: "git", label: "Git", href: "/git" },
 	{ key: "usage", label: "Usage", href: "/usage" },

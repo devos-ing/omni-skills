@@ -11,9 +11,8 @@ import {
 import type { IssueDraft, IssueTab } from "./types/issues-board.types";
 
 const LEGACY_PR_CREATED_STATUS = "pr_created";
-const LEGACY_PLANNING_STATUS = "planning";
-const LEGACY_PLAN_STATUS = "todo";
-const LEGACY_IN_PROGRESS_STATUS = "implementing";
+const TODO_STATUSES = ["planning", "plan", "todo"] as const;
+const RUNNING_STATUSES = ["implementing", "in_progress", "running"] as const;
 const LEGACY_REVIEW_STATUSES = ["reviewing", "testing"] as const;
 
 export function getStatusLabel(status: string): string {
@@ -147,17 +146,17 @@ function normalizeIndex(index: number): number {
 }
 
 export function normalizeBoardStatus(status: string): string {
-	if (status === LEGACY_PLANNING_STATUS) {
-		return "plan";
+	if ((TODO_STATUSES as readonly string[]).includes(status)) {
+		return "todo";
 	}
-	if (status === LEGACY_PLAN_STATUS) {
-		return "plan";
+	if ((RUNNING_STATUSES as readonly string[]).includes(status)) {
+		return "running";
 	}
-	if (status === LEGACY_IN_PROGRESS_STATUS) {
-		return "in_progress";
-	}
-	return status === LEGACY_PR_CREATED_STATUS ||
+	if (
+		status === LEGACY_PR_CREATED_STATUS ||
 		(LEGACY_REVIEW_STATUSES as readonly string[]).includes(status)
-		? "in_review"
-		: status;
+	) {
+		return "in_review";
+	}
+	return status === "failed" ? "canceled" : status;
 }

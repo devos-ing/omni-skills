@@ -14,4 +14,13 @@ describe("web shell navigation", () => {
 		});
 		expect(hrefForNavKey("git")).toBe("/git");
 	});
+
+	it("shows Issues in workspace navigation and routes it to the task board", () => {
+		expect(navItems).toContainEqual({
+			key: "issues",
+			label: "Issues",
+			href: "/issues",
+		});
+		expect(hrefForNavKey("issues")).toBe("/issues");
+	});
 });
