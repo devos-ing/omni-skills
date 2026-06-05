@@ -1,4 +1,5 @@
 import type { ServerDatabase } from "devos-db";
+import { loadRunState } from "devos/features/workflow/state";
 import { createChatRepository, createChatService } from "../chat";
 import {
 	DEFAULT_CHAT_ISSUE_PRIORITY,
@@ -50,6 +51,8 @@ export function createChatRouteService(
 		},
 		resolveTaskRequirement: (input) =>
 			runTaskRequirementIntake(cliExecutor, input),
+		getWorkflowRunState: (projectId, taskKey) =>
+			loadRunState(workspacePath, projectId, taskKey),
 		updateIssue: async (issueId, input) => {
 			const result = await taskService.updateTask(issueId, input);
 			if (result.status !== "ok") {

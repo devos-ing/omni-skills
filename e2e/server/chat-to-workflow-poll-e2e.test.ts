@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { WebSocket } from "ws";
+import { loadRunState } from "../../packages/cli/src/features/workflow/state";
 import { runWorkflow } from "../../packages/cli/src/features/workflow/workflow";
 import { createServerTestApp } from "../../packages/server/tests/app-test-helpers";
 import {
@@ -104,12 +105,34 @@ describe("chat to workflow poll e2e", () => {
 			createWorkflowRuntime(),
 		);
 
-		const finalTask = await requestJson<{ status: string }>(
+		const finalTask = await requestJson<{ status: string; taskKey: string }>(
 			app,
 			"GET",
 			`/api/tasks/${created.taskId}`,
 		);
 		expect(finalTask.status).toBe("reviewing");
+		const runState = await loadRunState(
+			setup.workspacePath,
+			"default",
+			finalTask.taskKey,
+		);
+		expect(runState).toMatchObject({
+			brainstormSummary: "Smallest coherent scope.",
+			implementationSummary: "Implemented chat handoff.",
+			planSummary: expect.stringContaining("PLANNING_RESULT: READY"),
+			stage: "done",
+			testingSummary: "clean",
+		});
+		const sessionStatus = await requestJson<{
+			status: string;
+			taskStatus: string | null;
+			workflowState: string | null;
+		}>(app, "GET", `/api/chat/sessions/${created.id}/status`);
+		expect(sessionStatus).toMatchObject({
+			status: "idle",
+			taskStatus: finalTask.status,
+			workflowState: "done",
+		});
 		await expectTaskActivity(app, created.taskId);
 		await expectPollingStatus(app);
 		expect(setup.events.map((event) => event.type)).toContain("polling.event");

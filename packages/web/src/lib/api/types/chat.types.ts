@@ -11,6 +11,14 @@ export type ChatMessageKind =
 	| "task"
 	| "command"
 	| "error";
+export type ChatSessionWorkflowState =
+	| "brainstorm"
+	| "plan"
+	| "implement"
+	| "testing"
+	| "done"
+	| "failed"
+	| "canceled";
 
 export interface ChatSessionRecord {
 	id: string;
@@ -21,6 +29,7 @@ export interface ChatSessionRecord {
 	pendingRequest: string | null;
 	pendingQuestions: TaskClarificationQuestion[];
 	archived: boolean;
+	workflowState: ChatSessionWorkflowState | null;
 	createdAt: string;
 	updatedAt: string;
 }

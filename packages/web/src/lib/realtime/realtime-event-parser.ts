@@ -2,7 +2,7 @@ import type { WorkspaceProjectRecord } from "../api";
 import {
 	parseChatMessageRecord,
 	parseChatSessionRecord,
-} from "../api/chat-client";
+} from "../api/chat-response-parsers";
 import { parseInboxMessageRecord } from "../api/inbox-client";
 import { parseProjectBoardTaskRecord } from "../api/task-client";
 import type { RealtimeEvent } from "./types/realtime-events.types";

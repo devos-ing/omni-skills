@@ -47,7 +47,7 @@ describe("task lifecycle e2e", () => {
 			},
 		});
 
-		expect(created.taskKey).toBe("TASK(owner-1)-1");
+		expect(created.taskKey).toBe("OWN-1");
 		expect(created.projectId).toBe("project-1");
 		expect(created.status).toBe("plan");
 		expect(created.assigneeId).toBeNull();

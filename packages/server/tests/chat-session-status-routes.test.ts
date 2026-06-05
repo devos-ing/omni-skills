@@ -59,18 +59,40 @@ describe("chat session status route", () => {
 			sessionId: "session-idle",
 			taskId: "task-idle",
 			status: "idle",
+			taskStatus: "plan",
+			workflowState: "plan",
 		});
 		expect(runningResponse.status).toBe(200);
 		expect(await runningResponse.json()).toEqual({
 			sessionId: "session-running",
 			taskId: "task-running",
 			status: "running",
+			taskStatus: "in_progress",
+			workflowState: "implement",
 		});
 		expect(archivedResponse.status).toBe(200);
 		expect(await archivedResponse.json()).toEqual({
 			sessionId: "session-archived",
 			taskId: "task-archived",
 			status: "archived",
+			taskStatus: "failed",
+			workflowState: "failed",
+		});
+		const listResponse = await app(
+			new Request("http://localhost/api/chat/sessions?workspaceId=workspace-1"),
+		);
+		const sessions = (await listResponse.json()) as Array<{
+			id: string;
+			workflowState?: string | null;
+		}>;
+		expect(listResponse.status).toBe(200);
+		expect(
+			Object.fromEntries(
+				sessions.map((session) => [session.id, session.workflowState]),
+			),
+		).toEqual({
+			"session-idle": "plan",
+			"session-running": "implement",
 		});
 		expect(missingResponse.status).toBe(404);
 		expect(methodResponse.status).toBe(405);
@@ -87,6 +109,11 @@ async function seedTask(
 	testDatabase: DrizzleServerTestDatabase,
 	id: string,
 ): Promise<void> {
+	const statusById: Record<string, string> = {
+		"task-archived": "failed",
+		"task-idle": "plan",
+		"task-running": "in_progress",
+	};
 	await testDatabase.db.insert(boardTasksTable).values({
 		id,
 		taskKey: id.toUpperCase(),
@@ -94,7 +121,7 @@ async function seedTask(
 		title: id,
 		content: "Body",
 		priority: 1,
-		status: "open",
+		status: statusById[id] ?? "open",
 		dueDate: null,
 		creatorId: "owner-1",
 		linkedPr: null,

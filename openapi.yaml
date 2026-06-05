@@ -297,7 +297,7 @@ paths:
       tags: [Chat]
       responses:
         '200':
-          description: Current chat session runtime status.
+          description: Current chat session runtime and workflow status.
           content:
             application/json:
               schema:
@@ -1244,7 +1244,7 @@ components:
     ChatSessionStatusResponse:
       type: object
       additionalProperties: false
-      required: [sessionId, taskId, status]
+      required: [sessionId, taskId, status, taskStatus, workflowState]
       properties:
         sessionId: { type: string, minLength: 1 }
         taskId:
@@ -1254,6 +1254,14 @@ components:
         status:
           type: string
           enum: [running, idle, archived]
+        taskStatus:
+          type: string
+          minLength: 1
+          nullable: true
+        workflowState:
+          type: string
+          enum: [brainstorm, plan, implement, testing, done, failed, canceled]
+          nullable: true
     ChatMessageCreateRequest:
       type: object
       additionalProperties: false

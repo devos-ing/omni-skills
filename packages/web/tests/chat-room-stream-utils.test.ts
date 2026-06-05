@@ -51,6 +51,32 @@ describe("chat room stream utilities", () => {
 
 		expect([...sessionIds]).toEqual(["6591ae97-34a8-44d8-a2fc-17ef5afe9da0"]);
 	});
+
+	it("includes sessions with active workflow states", () => {
+		const sessionIds = activeChatStreamSessionIds(
+			{},
+			[
+				chatSessionWithWorkflowState("session-brainstorm", "brainstorm"),
+				chatSessionWithWorkflowState("session-plan", "plan"),
+				chatSessionWithWorkflowState("session-implement", "implement"),
+				chatSessionWithWorkflowState("session-testing", "testing"),
+				chatSessionWithWorkflowState("session-done", "done"),
+				chatSessionWithWorkflowState("session-done-planning", "done", {
+					taskId: "task-planning",
+				}),
+				chatSessionWithWorkflowState("session-failed", "failed"),
+				chatSessionWithWorkflowState("session-canceled", "canceled"),
+			],
+			[boardTask({ id: "task-planning", status: "planning" })],
+		);
+
+		expect([...sessionIds]).toEqual([
+			"session-brainstorm",
+			"session-plan",
+			"session-implement",
+			"session-testing",
+		]);
+	});
 });
 
 function chatStream(
@@ -82,10 +108,22 @@ function chatSession(
 		pendingRequest: null,
 		pendingQuestions: [],
 		archived: false,
+		workflowState: null,
 		createdAt: "2026-05-16T00:00:00.000Z",
 		updatedAt: "2026-05-16T00:00:00.000Z",
 		...overrides,
 	};
+}
+
+function chatSessionWithWorkflowState(
+	id: string,
+	workflowState: string,
+	overrides: Partial<ChatSessionRecord> = {},
+): ChatSessionRecord {
+	return {
+		...chatSession({ id, ...overrides }),
+		workflowState,
+	} as ChatSessionRecord;
 }
 
 function boardTask(

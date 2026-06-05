@@ -3,6 +3,13 @@ import type { RealtimeChatStreamBuffer } from "@/lib/realtime/types/realtime-sto
 import { shouldShowChatPlanningIndicator } from "./chat-thinking-state";
 import type { ChatStreamLine } from "./types/chat-room.types";
 
+const ACTIVE_WORKFLOW_STATES = new Set([
+	"brainstorm",
+	"plan",
+	"implement",
+	"testing",
+]);
+
 export function chatStreamLinesForSession(
 	streamsByRunId: Record<string, RealtimeChatStreamBuffer>,
 	sessionId: string,
@@ -45,6 +52,12 @@ export function activeChatStreamSessionIds(
 	}
 	const tasksById = new Map(tasks.map((task) => [task.id, task]));
 	for (const session of sessions) {
+		if (session.workflowState) {
+			if (ACTIVE_WORKFLOW_STATES.has(session.workflowState)) {
+				sessionIds.add(session.id);
+			}
+			continue;
+		}
 		const taskStatus = session.taskId
 			? (tasksById.get(session.taskId)?.status ?? null)
 			: null;

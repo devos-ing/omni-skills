@@ -9,11 +9,14 @@ import {
 	queueChatMessage,
 	sendChatMessage,
 } from "./chat-send-service";
+import { resolveChatSessionWorkflowState } from "./chat-session-status";
 import { appendChatMessage, updateChatSessionRow } from "./chat-writes";
 import type {
 	ChatRepository,
 	ChatService,
 	ChatServiceDeps,
+	ChatSessionRecord,
+	ChatSessionWorkflowState,
 } from "./types/chat.types";
 
 export function createChatService(
@@ -22,7 +25,12 @@ export function createChatService(
 ): ChatService {
 	return {
 		async listSessions(workspaceId) {
-			return (await repository.listSessions(workspaceId)).map(mapSession);
+			const sessions = (await repository.listSessions(workspaceId)).map(
+				mapSession,
+			);
+			return Promise.all(
+				sessions.map((session) => withWorkflowState(session, deps)),
+			);
 		},
 		async createSession(input) {
 			const projectId =
@@ -64,11 +72,15 @@ export function createChatService(
 			if (!session) {
 				return null;
 			}
+			const { taskStatus, workflowState } =
+				await resolveSessionWorkflowSnapshot(session, deps);
 			if (session.archived) {
 				return {
 					sessionId: session.id,
 					taskId: session.taskId,
 					status: "archived",
+					taskStatus,
+					workflowState,
 				};
 			}
 			const latestStatus =
@@ -79,6 +91,8 @@ export function createChatService(
 				sessionId: session.id,
 				taskId: session.taskId,
 				status: latestStatus === "running" ? "running" : "idle",
+				taskStatus,
+				workflowState,
 			};
 		},
 		async addMessage(sessionId, input) {
@@ -109,5 +123,35 @@ export function createChatService(
 		async queueMessage(sessionId, input, stream) {
 			return queueChatMessage(repository, deps, sessionId, input, stream);
 		},
+	};
+}
+
+async function withWorkflowState(
+	session: ChatSessionRecord,
+	deps: ChatServiceDeps,
+): Promise<ChatSessionRecord> {
+	const { workflowState } = await resolveSessionWorkflowSnapshot(session, deps);
+	return { ...session, workflowState };
+}
+
+async function resolveSessionWorkflowSnapshot(
+	session: { taskId: string | null },
+	deps: ChatServiceDeps,
+): Promise<{
+	taskStatus: string | null;
+	workflowState: ChatSessionWorkflowState | null;
+}> {
+	const issue = session.taskId ? await deps.getIssue(session.taskId) : null;
+	const runState =
+		issue?.projectId && deps.getWorkflowRunState
+			? await deps.getWorkflowRunState(issue.projectId, issue.taskKey)
+			: null;
+	const taskStatus = issue?.status ?? null;
+	return {
+		taskStatus,
+		workflowState: resolveChatSessionWorkflowState({
+			runStage: runState?.stage,
+			taskStatus,
+		}),
 	};
 }

@@ -5,6 +5,7 @@ import type {
 	NewChatMessageRow,
 	NewChatSessionRow,
 } from "devos-db";
+import type { RunState } from "devos/features/types";
 import type { BoardTaskApiRecord } from "../../tasks";
 
 export type ChatMessageRole = "user" | "assistant" | "system";
@@ -18,14 +19,25 @@ export type ChatMessageKind =
 export interface ChatSessionRecord
 	extends Omit<ChatSessionRow, "pendingQuestions"> {
 	pendingQuestions: ChatClarificationQuestion[];
+	workflowState?: ChatSessionWorkflowState | null;
 }
 
 export type ChatSessionRuntimeStatus = "running" | "idle" | "archived";
+export type ChatSessionWorkflowState =
+	| "brainstorm"
+	| "plan"
+	| "implement"
+	| "testing"
+	| "done"
+	| "failed"
+	| "canceled";
 
 export interface ChatSessionStatusRecord {
 	sessionId: string;
 	taskId: string | null;
 	status: ChatSessionRuntimeStatus;
+	taskStatus: string | null;
+	workflowState: ChatSessionWorkflowState | null;
 }
 
 export interface ChatClarificationOption {
@@ -169,6 +181,10 @@ export interface ChatServiceDeps {
 		projectId?: string;
 		request: string;
 	}): Promise<ChatRequirementResult>;
+	getWorkflowRunState?(
+		projectId: string,
+		taskKey: string,
+	): Promise<Pick<RunState, "stage"> | null>;
 	updateIssue(
 		issueId: string,
 		input: ChatSessionIssueUpdateInput,
