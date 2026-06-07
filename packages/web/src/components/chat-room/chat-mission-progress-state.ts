@@ -10,6 +10,7 @@ import { useBoardTaskQuery, useTokenUsageQuery } from "@/lib/api/queries";
 import { useTaskActivityQuery } from "@/lib/api/task-activity-query";
 
 import { summarizeTokenUsage } from "../issues-board/issue-task-detail-panel-utils";
+import { createMissionDeliveryItems } from "./chat-mission-delivery-items";
 import { resolveMissionStatusLabel } from "./chat-mission-phase-labels";
 import {
 	createEmptyPhaseLogLines,
@@ -130,6 +131,10 @@ export function createChatMissionProgressModel({
 		executions,
 		latestLogLines: createLatestLogLines(executions),
 		latestResult,
+		deliveryItems: createMissionDeliveryItems({
+			linkedPr: task.linkedPr,
+			phases,
+		}),
 		usageSummary:
 			usageRecords.length > 0 ? summarizeTokenUsage(usageRecords) : null,
 		phaseLogLines: createPhaseLogLines({ executions, phases }),
@@ -154,6 +159,7 @@ function createMissionState(
 		executions: [],
 		latestLogLines: [],
 		latestResult: null,
+		deliveryItems: [],
 		usageSummary: null,
 		phaseLogLines: createEmptyPhaseLogLines(),
 		phases: createMissionPhases({

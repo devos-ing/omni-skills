@@ -1,5 +1,6 @@
 "use client";
 
+import { ExternalLink, GitPullRequest } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { Typography } from "@/components/ui/typography";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { MissionStatusIcon } from "./chat-mission-progress-status-icon";
 import { MissionUsageSummary } from "./chat-mission-usage-summary";
 import type {
+	ChatMissionDeliveryItem,
 	ChatMissionPhase,
 	ChatMissionProgressViewModel,
 } from "./types/chat-mission-progress.types";
@@ -21,7 +23,63 @@ export function MissionBody({
 		<div className="grid gap-3">
 			<MissionHeader mission={mission} />
 			<MissionUsageSummary mission={mission} />
+			<MissionDeliverySummary items={mission.deliveryItems} />
 			<WorkflowPhases phases={mission.phases} />
+		</div>
+	);
+}
+
+function MissionDeliverySummary({
+	items,
+}: {
+	items: ChatMissionDeliveryItem[];
+}): ReactElement | null {
+	if (items.length === 0) return null;
+	return (
+		<div className="grid gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+			{items.map((item) => (
+				<DeliveryItem item={item} key={item.id} />
+			))}
+		</div>
+	);
+}
+
+function DeliveryItem({
+	item,
+}: {
+	item: ChatMissionDeliveryItem;
+}): ReactElement {
+	return (
+		<div className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-border bg-surface-panel px-3 py-2">
+			<div className="flex min-w-0 items-center gap-2">
+				{item.id === "pullRequest" ? (
+					<GitPullRequest
+						aria-hidden="true"
+						className="shrink-0 text-emerald-300"
+						size={16}
+					/>
+				) : (
+					<MissionStatusIcon status={item.tone} />
+				)}
+				<Typography className="truncate" variant="metadata">
+					{item.label}
+				</Typography>
+			</div>
+			{item.href ? (
+				<a
+					className="flex min-w-0 items-center gap-1 text-sm text-primary transition-colors hover:text-primary/80"
+					href={item.href}
+					rel="noreferrer"
+					target="_blank"
+				>
+					<span className="truncate">{item.value}</span>
+					<ExternalLink aria-hidden="true" className="shrink-0" size={14} />
+				</a>
+			) : (
+				<Typography className="shrink-0" variant="metadata">
+					{item.value}
+				</Typography>
+			)}
 		</div>
 	);
 }

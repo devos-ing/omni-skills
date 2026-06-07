@@ -48,6 +48,14 @@ export interface ChatMissionResult {
 	tone: "success" | "error" | "running" | "warning" | "neutral";
 }
 
+export interface ChatMissionDeliveryItem {
+	href?: string;
+	id: "testing" | "pullRequest";
+	label: string;
+	tone: ChatMissionPhaseStatus;
+	value: string;
+}
+
 export interface ChatMissionUsageSummary {
 	inputTokens: number;
 	outputTokens: number;
@@ -68,6 +76,7 @@ export interface ChatMissionProgressViewModel {
 	executions: ChatMissionExecution[];
 	latestLogLines: ChatMissionLogLine[];
 	latestResult: ChatMissionResult | null;
+	deliveryItems: ChatMissionDeliveryItem[];
 	usageSummary: ChatMissionUsageSummary | null;
 	phaseLogLines: Record<ChatMissionPhaseId, ChatMissionLogLine[]>;
 	phases: ChatMissionPhase[];

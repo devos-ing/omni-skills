@@ -215,4 +215,29 @@ describe("chat mission progress", () => {
 			"failed",
 		);
 	});
+
+	it("exposes testing and pull request delivery details for the session mission panel", () => {
+		const pullRequestUrl = "https://github.com/devos/app/pull/302";
+		const mission = missionModelWithSteps({
+			executionStatus: "succeeded",
+			linkedPr: pullRequestUrl,
+			taskStatus: "in_review",
+		});
+
+		expect(mission.deliveryItems).toEqual([
+			{
+				id: "testing",
+				label: "Testing",
+				tone: "success",
+				value: "Passed",
+			},
+			{
+				href: pullRequestUrl,
+				id: "pullRequest",
+				label: "Pull request",
+				tone: "success",
+				value: "PR #302",
+			},
+		]);
+	});
 });

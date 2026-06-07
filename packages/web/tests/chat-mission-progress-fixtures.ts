@@ -21,17 +21,19 @@ export function missionModel(
 
 export function missionModelWithSteps({
 	executionStatus = "succeeded",
+	linkedPr = null,
 	steps = defaultActivitySteps(),
 	taskStatus = "in_progress",
 	usageRecords = [],
 }: {
 	executionStatus?: string;
+	linkedPr?: string | null;
 	steps?: TaskActivityStepRecord[];
 	taskStatus?: string;
 	usageRecords?: TokenUsageRecord[];
 }): ChatMissionProgressViewModel {
 	return createChatMissionProgressModel({
-		task: boardTask(taskStatus),
+		task: boardTask(taskStatus, linkedPr),
 		activity: {
 			taskId: "task-42",
 			activities: [statusComment(), executionActivity(executionStatus, steps)],
@@ -136,7 +138,10 @@ function defaultActivitySteps(): TaskActivityStepRecord[] {
 	];
 }
 
-function boardTask(status = "in_progress"): ProjectBoardTaskRecord {
+function boardTask(
+	status = "in_progress",
+	linkedPr: string | null = null,
+): ProjectBoardTaskRecord {
 	return {
 		id: "task-42",
 		taskKey: "TASK-42",
@@ -148,7 +153,7 @@ function boardTask(status = "in_progress"): ProjectBoardTaskRecord {
 		dueDate: null,
 		creatorId: "owner-1",
 		assigneeId: null,
-		linkedPr: null,
+		linkedPr,
 		createdAt: "2026-05-20T00:00:00.000Z",
 		updatedAt: "2026-05-20T00:03:00.000Z",
 	};

@@ -116,6 +116,7 @@ function missionWithLogs(
 		executions: [],
 		latestLogLines: logs,
 		latestResult: null,
+		deliveryItems: [],
 		usageSummary: null,
 		phaseLogLines: { plan: [], implement: [], testing: [], qa: [] },
 		phases: [],
