@@ -104,10 +104,9 @@ export function buildProjectSessionListToggleMode(
 }
 
 export function shouldShowSessionSubchannels({
-	activeSessionId,
 	sessionId,
 }: ShouldShowSessionSubchannelsInput): boolean {
-	return Boolean(sessionId) && sessionId === activeSessionId;
+	return Boolean(sessionId);
 }
 
 export function buildChatSessionSubchannelRows({
@@ -121,7 +120,7 @@ export function buildChatSessionSubchannelRows({
 	return CHAT_SESSION_SUBCHANNELS.map((subchannel) => ({
 		href: buildChatSessionHref(sessionId, subchannel),
 		id: subchannel,
-		isActive: subchannel === activeSubchannel,
+		isActive: sessionId === activeSessionId && subchannel === activeSubchannel,
 		label: CHAT_SESSION_SUBCHANNEL_LABELS[subchannel],
 	}));
 }

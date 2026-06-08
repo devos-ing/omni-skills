@@ -228,7 +228,7 @@ describe("chat room sidebar utilities", () => {
 		).toBeNull();
 	});
 
-	it("shows subchannel rows only for the active session", () => {
+	it("shows subchannel rows for every real session id", () => {
 		expect(
 			shouldShowSessionSubchannels({
 				activeSessionId: "session-1",
@@ -239,6 +239,12 @@ describe("chat room sidebar utilities", () => {
 			shouldShowSessionSubchannels({
 				activeSessionId: "session-1",
 				sessionId: "session-2",
+			}),
+		).toBe(true);
+		expect(
+			shouldShowSessionSubchannels({
+				activeSessionId: "session-1",
+				sessionId: "",
 			}),
 		).toBe(false);
 	});
@@ -266,12 +272,35 @@ describe("chat room sidebar utilities", () => {
 		]);
 	});
 
-	it("returns no child rows for inactive sessions", () => {
+	it("keeps inactive session child rows selectable without marking them active", () => {
 		expect(
 			buildChatSessionSubchannelRows({
 				activeSessionId: "session-1",
 				activeSubchannel: "chat",
 				sessionId: "session-2",
+			}),
+		).toEqual([
+			{
+				href: "/session/session-2/chat",
+				id: "chat",
+				isActive: false,
+				label: "Chat",
+			},
+			{
+				href: "/session/session-2/task-info",
+				id: "task-info",
+				isActive: false,
+				label: "Task Info",
+			},
+		]);
+	});
+
+	it("returns no child rows without a session id", () => {
+		expect(
+			buildChatSessionSubchannelRows({
+				activeSessionId: "session-1",
+				activeSubchannel: "chat",
+				sessionId: "",
 			}),
 		).toEqual([]);
 	});
