@@ -1,6 +1,6 @@
 "use client";
 
-import { Columns3, Filter, Plus, SlidersHorizontal } from "lucide-react";
+import { Columns3, Filter, SlidersHorizontal } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -16,17 +16,9 @@ import { IssueColumn } from "./issue-board-column";
 import { IssuesBoardSkeleton } from "./issues-board-skeleton";
 import { getStatusLabel } from "./issues-board-utils";
 import { STATUS_ORDER } from "./issues-board.constants";
-import type { IssueDragState, IssueTab } from "./types/issues-board.types";
+import type { IssueDragState } from "./types/issues-board.types";
 
-export function BoardHeader({
-	activeTab,
-	onTabChange,
-	onCreateIssue,
-}: {
-	activeTab: IssueTab;
-	onTabChange: (tab: IssueTab) => void;
-	onCreateIssue: () => void;
-}): ReactElement {
+export function BoardHeader(): ReactElement {
 	return (
 		<header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-inset px-5 py-4">
 			<div>
@@ -34,27 +26,6 @@ export function BoardHeader({
 					Roy Lee&apos;s Workspace /
 				</Typography>
 				<Typography variant="pageTitle">Issues</Typography>
-			</div>
-			<div className="flex flex-wrap items-center gap-2">
-				{/* {(["all", "members", "agents"] as const).map((tab) => (
-					<button
-						className={cn(
-							"rounded-md border px-3 py-2 text-sm capitalize",
-							activeTab === tab
-								? "border-zinc-600 bg-surface-active text-white"
-								: "border-border text-zinc-400 hover:bg-surface-hover",
-						)}
-						key={tab}
-						onClick={() => onTabChange(tab)}
-						type="button"
-					>
-						{tab}
-					</button>
-				))} */}
-				<Button onClick={onCreateIssue} size="sm" type="button">
-					<Plus size={16} />
-					New Issue
-				</Button>
 			</div>
 		</header>
 	);
@@ -159,7 +130,6 @@ export function BoardContent({
 	dragState,
 	error,
 	isLoading,
-	onCreateIssue,
 	onDropStatusEnter,
 	onDropStatusLeave,
 	onTaskDragEnd,
@@ -175,7 +145,6 @@ export function BoardContent({
 	dragState: IssueDragState | null;
 	error: Error | null;
 	isLoading: boolean;
-	onCreateIssue: (status: string) => void;
 	onDropStatusEnter: (status: string) => void;
 	onDropStatusLeave: (status: string) => void;
 	onTaskDragEnd: () => void;
@@ -214,7 +183,6 @@ export function BoardContent({
 						dragOverStatus={dragOverStatus}
 						dragState={dragState}
 						key={column.status}
-						onCreateIssue={onCreateIssue}
 						onDropStatusEnter={onDropStatusEnter}
 						onDropStatusLeave={onDropStatusLeave}
 						onOpenIssue={onOpenIssue}

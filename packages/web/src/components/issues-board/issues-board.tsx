@@ -1,11 +1,10 @@
 "use client";
 
-import { type ReactElement, useEffect, useMemo, useState } from "react";
+import { type ReactElement, useMemo, useState } from "react";
 
-import type { ProjectBoardTaskRecord, TaskMutationRequest } from "@/lib/api";
+import type { ProjectBoardTaskRecord } from "@/lib/api";
 import {
 	useBoardTasksQuery,
-	useCreateBoardTaskMutation,
 	useUpdateBoardTaskMutation,
 } from "@/lib/api/queries";
 
@@ -27,27 +26,19 @@ import {
 import { STATUS_ORDER } from "./issues-board.constants";
 import type {
 	IssueContextMenuState,
-	IssueDialogState,
 	IssueDragState,
 	IssueTab,
 } from "./types/issues-board.types";
 import { useIssueBoardTaskActions } from "./use-issue-board-task-actions";
 import { useIssueWorkflowRun } from "./use-issue-workflow-run";
 
-interface IssuesBoardProps {
-	createIssueRequest: number;
-}
-
-export function IssuesBoard({
-	createIssueRequest,
-}: IssuesBoardProps): ReactElement {
+export function IssuesBoard(): ReactElement {
 	const [activeTab, setActiveTab] = useState<IssueTab>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortNewestFirst, setSortNewestFirst] = useState(true);
 	const [visibleStatuses, setVisibleStatuses] = useState<string[]>([
 		...STATUS_ORDER,
 	]);
-	const [dialog, setDialog] = useState<IssueDialogState>(null);
 	const [dragState, setDragState] = useState<IssueDragState | null>(null);
 	const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 	const [dragError, setDragError] = useState<string | null>(null);
@@ -57,21 +48,12 @@ export function IssuesBoard({
 	const [selectedDetailTaskId, setSelectedDetailTaskId] = useState<
 		string | null
 	>(null);
-	const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
-	const [mutationError, setMutationError] = useState<string | null>(null);
 
 	const tasksQuery = useBoardTasksQuery();
-	const createTask = useCreateBoardTaskMutation();
 	const updateTask = useUpdateBoardTaskMutation();
 	const workflowRun = useIssueWorkflowRun();
 	const { copyIssueLink, deleteIssue, pinIssueToSidebar, updateIssue } =
 		useIssueBoardTaskActions(setDragError);
-
-	useEffect(() => {
-		if (createIssueRequest > 0) {
-			setIsChatDialogOpen(true);
-		}
-	}, [createIssueRequest]);
 
 	const columns = useMemo(() => {
 		return sortColumns(buildStatusColumns(tasksQuery.data ?? []))
@@ -99,11 +81,6 @@ export function IssuesBoard({
 		(sum, column) => sum + column.tasks.length,
 		0,
 	);
-	const dialogStatus =
-		dialog?.mode === "create"
-			? dialog.status
-			: (dialog?.task.status ?? "backlog");
-
 	function openIssueMenu(
 		task: ProjectBoardTaskRecord,
 		position: { x: number; y: number },
@@ -167,27 +144,9 @@ export function IssuesBoard({
 		}
 	}
 
-	async function submitDialog(input: TaskMutationRequest): Promise<void> {
-		setMutationError(null);
-		try {
-			if (dialog?.mode === "edit") {
-				await updateTask.mutateAsync({ taskId: dialog.task.id, task: input });
-			} else {
-				await createTask.mutateAsync(input);
-			}
-			setDialog(null);
-		} catch (error) {
-			setMutationError(error instanceof Error ? error.message : "Save failed");
-		}
-	}
-
 	return (
 		<section className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-background text-zinc-100">
-			<BoardHeader
-				activeTab={activeTab}
-				onTabChange={setActiveTab}
-				onCreateIssue={() => setIsChatDialogOpen(true)}
-			/>
+			<BoardHeader />
 			<BoardToolbar
 				searchQuery={searchQuery}
 				sortNewestFirst={sortNewestFirst}
@@ -212,7 +171,6 @@ export function IssuesBoard({
 				isLoading={tasksQuery.isLoading}
 				onDropStatusEnter={enterDropStatus}
 				onDropStatusLeave={leaveDropStatus}
-				onCreateIssue={(status) => setDialog({ mode: "create", status })}
 				onOpenIssue={(task) => setSelectedDetailTaskId(task.id)}
 				onOpenIssueMenu={openIssueMenu}
 				onTaskDragEnd={endTaskDrag}
@@ -224,21 +182,13 @@ export function IssuesBoard({
 			/>
 			<IssueBoardOverlays
 				contextMenu={contextMenu}
-				dialog={dialog}
-				dialogStatus={dialogStatus}
-				errorMessage={mutationError}
-				isChatDialogOpen={isChatDialogOpen}
-				isSaving={createTask.isPending || updateTask.isPending}
 				selectedDetailTaskId={selectedDetailTaskId}
-				onCloseChatDialog={() => setIsChatDialogOpen(false)}
 				onCloseDetailPanel={() => setSelectedDetailTaskId(null)}
-				onCloseDialog={() => setDialog(null)}
 				onCloseMenu={() => setContextMenu(null)}
 				onCopyLink={copyIssueLink}
 				onDeleteIssue={(task) => void deleteIssue(task)}
 				onPinIssue={pinIssueToSidebar}
 				workflowRun={workflowRun}
-				onSubmitDialog={submitDialog}
 				onUpdateIssue={(task, update) => void updateIssue(task, update)}
 			/>
 		</section>

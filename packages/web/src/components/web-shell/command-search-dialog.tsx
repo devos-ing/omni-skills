@@ -1,13 +1,6 @@
 "use client";
 
-import {
-	Clipboard,
-	FileText,
-	Navigation,
-	Plus,
-	Terminal,
-	X,
-} from "lucide-react";
+import { Clipboard, FileText, Navigation, Terminal, X } from "lucide-react";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -43,7 +36,6 @@ export function CommandSearchDialog({
 	navItems,
 	onClose,
 	onNavigate,
-	onNewIssue,
 	onOpenIssue,
 	onSelectCommand,
 	tasks,
@@ -78,11 +70,6 @@ export function CommandSearchDialog({
 		}
 		if (result.kind === "navigation") {
 			onNavigate(result.navKey);
-			onClose();
-			return;
-		}
-		if (result.kind === "action") {
-			onNewIssue();
 			onClose();
 			return;
 		}
@@ -209,9 +196,6 @@ function resultIcon(result: CommandSearchResult): typeof Navigation {
 	}
 	if (result.kind === "history") {
 		return Clipboard;
-	}
-	if (result.kind === "action") {
-		return Plus;
 	}
 	return Navigation;
 }

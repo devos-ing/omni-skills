@@ -24,6 +24,7 @@ import { normalizeOptionalPath } from "./path-resolution";
 import { loadSqliteEnv } from "./sqlite-env";
 
 const DEFAULT_EMBEDDED_POSTGRES_PORT = 54329;
+const DEFAULT_CODEX_SANDBOX = "workspace-write";
 
 export type ResolvedEnv = Record<string, string | undefined>;
 
@@ -44,7 +45,8 @@ export function buildEnvBase(
 	instanceServerDatabase?: InstanceServerDatabaseConfig,
 ): ProjectRuntimeConfig {
 	const workspacePath = env.PIV_WORKSPACE_PATH ?? cwd;
-	const sandbox = normalizeSandboxValue(env.CODEX_SANDBOX);
+	const sandbox =
+		normalizeSandboxValue(env.CODEX_SANDBOX) ?? DEFAULT_CODEX_SANDBOX;
 	const codexHome = normalizeOptionalValue(env.CODEX_HOME);
 	const streamLogs =
 		env.PIV_DEV_MODE === "1" || env.PIV_PRINT_CODEX_LOGS === "1";

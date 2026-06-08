@@ -8,7 +8,7 @@ import {
 	STATUS_ORDER,
 	STATUS_PRESENTATION,
 } from "./issues-board.constants";
-import type { IssueDraft, IssueTab } from "./types/issues-board.types";
+import type { IssueTab } from "./types/issues-board.types";
 
 const LEGACY_PR_CREATED_STATUS = "pr_created";
 const TODO_STATUSES = ["planning", "plan", "todo"] as const;
@@ -77,30 +77,6 @@ export function toggleAllColumns(
 			? ["backlog"]
 			: [...STATUS_ORDER],
 	);
-}
-
-export function createEmptyDraft(status: string): IssueDraft {
-	return {
-		title: "",
-		content: "",
-		priority: "1",
-		status: normalizeBoardStatus(status),
-		dueDate: "",
-		linkedPr: "",
-		creatorId: "member-1",
-	};
-}
-
-export function createDraftFromTask(task: ProjectBoardTaskRecord): IssueDraft {
-	return {
-		title: task.title,
-		content: task.content,
-		priority: String(task.priority),
-		status: normalizeBoardStatus(task.status),
-		dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
-		linkedPr: task.linkedPr ?? "",
-		creatorId: task.creatorId,
-	};
 }
 
 export function normalizeDueDate(value: string): string | null {

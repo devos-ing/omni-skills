@@ -80,4 +80,22 @@ describe("command search groups", () => {
 	it("maps a selected slash command to a composer draft", () => {
 		expect(commandSearchDraftText("/status")).toBe("/status ");
 	});
+
+	it("does not expose manual issue creation from command search", () => {
+		const groups = buildCommandSearchGroups({
+			commandHistory,
+			navItems,
+			query: "issue",
+			tasks,
+		});
+		const results = groups.flatMap((group) => group.results);
+
+		expect(results).not.toContainEqual(
+			expect.objectContaining({
+				kind: "action",
+				action: "newIssue",
+			}),
+		);
+		expect(results.map((result) => result.label)).toContain("Issues");
+	});
 });

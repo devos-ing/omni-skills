@@ -34,6 +34,8 @@ export function buildCodexExecArgs(input: CodexArgsInput): string[] {
 export function buildCodexResumeArgs(input: CodexArgsInput): string[] {
 	const args = [
 		"exec",
+		"--add-dir",
+		input.config.executionPath,
 		"resume",
 		"--json",
 		"--skip-git-repo-check",
@@ -72,7 +74,7 @@ function appendCodexSandboxArgs(
 	if (!sandbox || args[0] !== "exec") {
 		return;
 	}
-	if (args[1] === "resume") {
+	if (args.includes("resume")) {
 		args.push("--config", `sandbox_mode="${sandbox}"`);
 		return;
 	}

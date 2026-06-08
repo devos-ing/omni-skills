@@ -48,7 +48,6 @@ export function WebOperatorShell({
 	const router = useRouter();
 	const [commandDraftRequest, setCommandDraftRequest] =
 		useState<CommandDraftRequest | null>(null);
-	const [createIssueRequest, setCreateIssueRequest] = useState(0);
 	const [isChatSidebarMobileOpen, setIsChatSidebarMobileOpen] = useState(false);
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const searchTasksQuery = useBoardTasksQuery({
@@ -62,11 +61,6 @@ export function WebOperatorShell({
 	const activeNavKey = getActiveNavKey(pathname);
 	const isChatSurface = isChatSurfacePathname(pathname);
 	const activeSessionId = activeChatSessionIdFromPathname(pathname);
-
-	const createIssue = useCallback(() => {
-		router.push("/issues");
-		setCreateIssueRequest((value) => value + 1);
-	}, [router]);
 
 	const openSearch = useCallback(() => {
 		setIsSearchOpen(true);
@@ -108,17 +102,13 @@ export function WebOperatorShell({
 	const issueActionsValue = useMemo<OperatorIssueActionsContextValue>(
 		() => ({
 			commandDraftRequest,
-			createIssueRequest,
 			requestOpenChatSidebar: openChatSidebar,
 			requestChatCommandDraft: selectChatCommandDraft,
-			requestNewIssue: createIssue,
 			requestOpenIssue: openIssue,
 			requestSearch: openSearch,
 		}),
 		[
 			commandDraftRequest,
-			createIssue,
-			createIssueRequest,
 			openChatSidebar,
 			openIssue,
 			openSearch,
@@ -154,7 +144,6 @@ export function WebOperatorShell({
 					navItems={navItems}
 					onClose={() => setIsSearchOpen(false)}
 					onNavigate={navigateToSection}
-					onNewIssue={createIssue}
 					onOpenIssue={openIssue}
 					onSelectCommand={selectChatCommandDraft}
 					tasks={searchTasksQuery.data}

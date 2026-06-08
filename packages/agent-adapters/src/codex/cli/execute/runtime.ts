@@ -100,6 +100,7 @@ function mapCodexHostPaths(
 	hostOutputFile: string,
 ): string[] {
 	const mapped = [...args];
+	mapRepeatedOptionValues(mapped, "--add-dir", (value) => path.resolve(value));
 	const cdIndex = mapped.indexOf("--cd");
 	if (cdIndex >= 0 && cdIndex + 1 < mapped.length) {
 		mapped[cdIndex + 1] = path.resolve(mapped[cdIndex + 1]);
@@ -143,7 +144,30 @@ function mapCodexPaths(
 			containerWorkspacePath,
 		);
 	}
+	mapRepeatedOptionValues(mapped, "--add-dir", (value) =>
+		mapHostPathToContainer(
+			value,
+			hostExecutionPath,
+			hostWorkspacePath,
+			containerExecutionPath,
+			containerWorkspacePath,
+		),
+	);
 	return mapped;
+}
+
+function mapRepeatedOptionValues(
+	args: string[],
+	option: string,
+	mapper: (value: string) => string,
+): void {
+	for (let index = 0; index < args.length - 1; index += 1) {
+		if (args[index] !== option) {
+			continue;
+		}
+		args[index + 1] = mapper(args[index + 1] ?? "");
+		index += 1;
+	}
 }
 
 function mapHostPathToContainer(

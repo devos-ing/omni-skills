@@ -20,13 +20,6 @@ export type CommandSearchResult =
 	  }
 	| {
 			id: string;
-			kind: "action";
-			label: string;
-			detail: string;
-			action: "newIssue";
-	  }
-	| {
-			id: string;
 			kind: "issue";
 			label: string;
 			detail: string;
@@ -57,7 +50,6 @@ export interface CommandSearchDialogProps {
 	navItems: SidebarNavItem[];
 	onClose: () => void;
 	onNavigate: (key: SidebarNavItem["key"]) => void;
-	onNewIssue: () => void;
 	onOpenIssue: (taskId: string) => void;
 	onSelectCommand: (draft: string) => void;
 	tasks: ProjectBoardTaskRecord[] | undefined;

@@ -2,28 +2,12 @@ import type { ProjectBoardTaskRecord } from "../../../lib/api";
 import type { BoardTaskMutationInput } from "../../../lib/api/types/queries.types";
 
 export type IssueTab = "all" | "members" | "agents";
-export type IssueDialogMode = "create" | "edit";
 export type IssuePriority = 0 | 1 | 2 | 3 | 4;
 
 export interface PriorityOption {
 	value: IssuePriority;
 	label: string;
 }
-
-export interface IssueDraft {
-	title: string;
-	content: string;
-	priority: string;
-	status: string;
-	dueDate: string;
-	linkedPr: string;
-	creatorId: string;
-}
-
-export type IssueDialogState =
-	| { mode: "create"; status: string }
-	| { mode: "edit"; task: ProjectBoardTaskRecord }
-	| null;
 
 export interface StatusPresentation {
 	label: string;

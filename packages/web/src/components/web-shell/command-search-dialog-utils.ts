@@ -41,7 +41,7 @@ export function buildCommandSearchGroups({
 			id: "workspace",
 			label: "Workspace",
 			results: filterResults(
-				[buildNewIssueAction(), ...navItems.map(buildNavigationResult)],
+				navItems.map(buildNavigationResult),
 				normalizedQuery,
 			),
 		},
@@ -78,16 +78,6 @@ function buildChatCommandResult(
 		detail: item.hint,
 		command: item.command,
 		hint: item.hint,
-	};
-}
-
-function buildNewIssueAction(): CommandSearchResult {
-	return {
-		id: "action:new-issue",
-		kind: "action",
-		label: "New Issue",
-		detail: "Create an issue",
-		action: "newIssue",
 	};
 }
 
@@ -153,7 +143,7 @@ function extraText(result: CommandSearchResult): string {
 	if (result.kind === "navigation") {
 		return result.navKey;
 	}
-	return result.action;
+	return "";
 }
 
 function normalizeSearchText(value: string): string {

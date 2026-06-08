@@ -1,6 +1,6 @@
 "use client";
 
-import { Circle, MoreHorizontal, Plus } from "lucide-react";
+import { Circle, MoreHorizontal } from "lucide-react";
 import type { DragEvent, ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,6 @@ interface IssueColumnProps {
 	column: ProjectBoardStatusColumn;
 	dragOverStatus: string | null;
 	dragState: IssueDragState | null;
-	onCreateIssue: (status: string) => void;
 	onDropStatusEnter: (status: string) => void;
 	onDropStatusLeave: (status: string) => void;
 	onOpenIssue: (task: ProjectBoardTaskRecord) => void;
@@ -38,7 +37,6 @@ export function IssueColumn({
 	column,
 	dragOverStatus,
 	dragState,
-	onCreateIssue,
 	onDropStatusEnter,
 	onDropStatusLeave,
 	onOpenIssue,
@@ -108,20 +106,9 @@ export function IssueColumn({
 					</Typography>
 					<Typography variant="description">{column.tasks.length}</Typography>
 				</div>
-				<div className="flex items-center gap-1">
-					<Button size="icon" type="button" variant="ghost">
-						<MoreHorizontal size={16} />
-					</Button>
-					<Button
-						aria-label={`Add ${getStatusLabel(column.status)} issue`}
-						onClick={() => onCreateIssue(column.status)}
-						size="icon"
-						type="button"
-						variant="ghost"
-					>
-						<Plus size={16} />
-					</Button>
-				</div>
+				<Button size="icon" type="button" variant="ghost">
+					<MoreHorizontal size={16} />
+				</Button>
 			</header>
 			<div className="grid content-start gap-3 overflow-y-auto pr-1">
 				{column.tasks.length === 0 ? (
