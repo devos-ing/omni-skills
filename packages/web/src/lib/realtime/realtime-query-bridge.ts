@@ -8,6 +8,7 @@ import type {
 	ProjectBoardTaskRecord,
 	WorkspaceProjectRecord,
 } from "../api";
+import { mergeChatSessions } from "../api/chat-session-cache";
 import { serverStateQueryKeys } from "../api/query-keys";
 import type {
 	RealtimeEvent,
@@ -142,10 +143,7 @@ function upsertChatSession(
 ): void {
 	queryClient.setQueryData<ChatSessionRecord[]>(
 		serverStateQueryKeys.chatSessions(session.workspaceId),
-		(current = []) =>
-			upsertById(current, session)
-				.filter((item) => !item.archived)
-				.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
+		(current = []) => mergeChatSessions(current, [session]),
 	);
 }
 

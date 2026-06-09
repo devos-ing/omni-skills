@@ -7,6 +7,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { mergeChatSessions } from "./chat-session-cache";
 import { serverStateQueryKeys } from "./query-keys";
 import type {
 	ChatMessageCreateRequest,
@@ -116,7 +117,7 @@ function upsertSession(
 ): void {
 	queryClient.setQueryData<ChatSessionRecord[]>(
 		serverStateQueryKeys.chatSessions(session.workspaceId),
-		(current = []) => mergeSessions(current, [session]),
+		(current = []) => mergeChatSessions(current, [session]),
 	);
 }
 
@@ -157,15 +158,6 @@ function invalidateIssueCollections(
 	void queryClient.invalidateQueries({
 		queryKey: serverStateQueryKeys.workspaceProjects(workspaceId),
 	});
-}
-
-function mergeSessions(
-	current: ChatSessionRecord[],
-	next: ChatSessionRecord[],
-): ChatSessionRecord[] {
-	return mergeById(current, next)
-		.filter((session) => !session.archived)
-		.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
 }
 
 function mergeMessages(
