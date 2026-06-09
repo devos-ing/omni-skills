@@ -24,6 +24,22 @@ describe("chat session cache", () => {
 		expect(isChatSessionUnread(preserved[0] ?? seenAtT1)).toBe(true);
 		expect(mergeChatSessions(preserved, [seenAtT2])).toEqual([seenAtT2]);
 	});
+
+	it("does not regress the read marker for equal session updates", () => {
+		const seenAtT2 = chatSession({
+			updatedAt: "2026-05-16T00:02:00.000Z",
+			lastSeenAt: "2026-05-16T00:02:00.000Z",
+		});
+		const delayedUnreadAtT2 = chatSession({
+			updatedAt: "2026-05-16T00:02:00.000Z",
+			lastSeenAt: "2026-05-16T00:01:00.000Z",
+		});
+
+		const preserved = mergeChatSessions([seenAtT2], [delayedUnreadAtT2]);
+
+		expect(preserved).toEqual([seenAtT2]);
+		expect(isChatSessionUnread(preserved[0] ?? delayedUnreadAtT2)).toBe(false);
+	});
 });
 
 function chatSession(
