@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { type ReactElement, useState } from "react";
 import { toast } from "sonner";
@@ -32,7 +31,7 @@ import { resolveChatRoomStreamState } from "./chat-room-stream-state";
 import { resolveChatSessionRerunState } from "./chat-session-rerun-state";
 import { useWorkingSectionState } from "./chat-working-section-state";
 import type * as CRT from "./types/chat-room.types";
-import { useChatTaskDetailPanelState } from "./use-chat-task-detail-panel-state";
+import { useChatRoomContentModeState } from "./use-chat-room-content-mode-state";
 
 const NO_REFETCH = { refetchIntervalMs: false } as const;
 const apiClient = createWebApiClient();
@@ -78,7 +77,7 @@ export function ChatRoomPanel({
 		missionProgress,
 		refetchActiveTask,
 	} = useChatRoomMission(selectedSession, messages);
-	const taskDetails = useChatTaskDetailPanelState({
+	const contentMode = useChatRoomContentModeState({
 		activeTaskId,
 		selectedSessionId,
 	});
@@ -126,7 +125,7 @@ export function ChatRoomPanel({
 		setActiveSessionId(session.id);
 		router.push(`/session/${encodeURIComponent(session.id)}`);
 		setDraft("");
-		taskDetails.close();
+		contentMode.openMessages();
 	}
 
 	async function handleSubmit(): Promise<void> {
@@ -211,6 +210,7 @@ export function ChatRoomPanel({
 
 	return (
 		<ChatRoomPanelView
+			activeContentMode={contentMode.contentMode}
 			activeTaskId={activeTaskId}
 			draft={draft}
 			isBusy={isBusy}
@@ -220,7 +220,6 @@ export function ChatRoomPanel({
 			isRerunVisible={rerunState.isVisible}
 			isSending={sendMessage.isPending}
 			isPlanning={isPlanning}
-			isTaskDetailPanelOpen={taskDetails.isOpen}
 			isThinking={isThinking}
 			missionProgress={missionProgress}
 			messages={messages}
@@ -233,11 +232,12 @@ export function ChatRoomPanel({
 			onAnswerChange={(index, value) =>
 				clarificationState.updateAnswerDraft(selectedSessionId, index, value)
 			}
-			onCloseTaskDetails={taskDetails.close}
 			onDraftChange={handleDraftChange}
+			onOpenAction={contentMode.openAction}
+			onOpenMessages={contentMode.openMessages}
 			onOpenSidebar={onOpenSidebar}
+			onOpenTaskDetails={contentMode.openTaskDetails}
 			onRerunWorkflow={() => void handleRerunWorkflow()}
-			onToggleTaskDetails={taskDetails.toggle}
 			onSelectCommand={setDraft}
 			onSelectOption={(index, value) =>
 				clarificationSubmitters.submitAnswerValue(index, value)

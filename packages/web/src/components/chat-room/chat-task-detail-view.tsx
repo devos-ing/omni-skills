@@ -1,15 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
-import { type ReactElement, useSyncExternalStore } from "react";
+import type { ReactElement } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-	Sheet,
-	SheetContent,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import type { ProjectBoardTaskRecord } from "@/lib/api";
 import { useBoardTaskQuery } from "@/lib/api/queries";
@@ -24,73 +16,26 @@ import {
 	getPriorityLabel,
 	getStatusLabel,
 } from "../issues-board/issues-board-utils";
-import type { ChatTaskDetailPanelProps } from "./types/chat-room.types";
+import type { ChatTaskDetailViewProps } from "./types/chat-room.types";
 
-const DESKTOP_QUERY = "(min-width: 768px)";
-
-export function ChatTaskDetailPanel({
-	isOpen,
+export function ChatTaskDetailView({
 	taskId,
-	onClose,
-}: ChatTaskDetailPanelProps): ReactElement | null {
-	const isDesktop = useSyncExternalStore(
-		subscribeDesktopQuery,
-		getDesktopSnapshot,
-		getDesktopServerSnapshot,
-	);
-	const shouldShow = isOpen && Boolean(taskId);
+}: ChatTaskDetailViewProps): ReactElement {
 	const taskQuery = useBoardTaskQuery(taskId ?? "", {
-		enabled: shouldShow,
+		enabled: Boolean(taskId),
 		refetchIntervalMs: false,
 	});
 
-	if (!shouldShow) {
-		return null;
-	}
-
-	if (isDesktop) {
-		return (
-			<aside
-				aria-label="Task details"
-				className="grid min-h-0 w-[26rem] min-w-0 shrink-0 grid-rows-[auto_minmax(0,1fr)] overflow-x-hidden border-l border-border bg-surface-inset text-zinc-100"
-			>
-				{/* <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-					<Typography variant="dialogTitle">Task details</Typography>
-					<Button
-						aria-label="Close task details"
-						onClick={onClose}
-						size="icon"
-						type="button"
-						variant="ghost"
-					>
-						<X size={16} />
-					</Button>
-				</div> */}
-				<div className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-5 py-5">
-					{renderDetailContent(taskQuery, taskId)}
-				</div>
-			</aside>
-		);
-	}
-
 	return (
-		<Sheet open={shouldShow} onOpenChange={handleOpenChange}>
-			<SheetContent aria-describedby={undefined}>
-				<SheetHeader className="border-b border-border px-5 py-4 pr-12">
-					<SheetTitle>Task details</SheetTitle>
-				</SheetHeader>
-				<div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-					{renderDetailContent(taskQuery, taskId)}
-				</div>
-			</SheetContent>
-		</Sheet>
+		<section
+			aria-label="Task details"
+			className="min-h-0 overflow-y-auto overflow-x-hidden px-4 py-5 md:px-6"
+		>
+			<div className="mx-auto grid w-full max-w-5xl min-w-0 gap-5">
+				{renderDetailContent(taskQuery, taskId)}
+			</div>
+		</section>
 	);
-
-	function handleOpenChange(open: boolean): void {
-		if (!open) {
-			onClose();
-		}
-	}
 }
 
 function renderDetailContent(
@@ -177,18 +122,4 @@ function DetailState({ label }: { label: string }): ReactElement {
 			<Typography variant="description">{label}</Typography>
 		</div>
 	);
-}
-
-function subscribeDesktopQuery(onStoreChange: () => void): () => void {
-	const query = window.matchMedia(DESKTOP_QUERY);
-	query.addEventListener("change", onStoreChange);
-	return () => query.removeEventListener("change", onStoreChange);
-}
-
-function getDesktopSnapshot(): boolean {
-	return window.matchMedia(DESKTOP_QUERY).matches;
-}
-
-function getDesktopServerSnapshot(): boolean {
-	return true;
 }

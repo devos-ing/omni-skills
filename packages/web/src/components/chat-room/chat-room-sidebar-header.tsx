@@ -1,20 +1,23 @@
 "use client";
 
-import { Asterisk, PanelLeft } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { resolveChatRoomSidebarWorkspaceName } from "./chat-room-sidebar-header-utils";
 import type { ChatRoomSidebarHeaderProps } from "./types/chat-room-sidebar.types";
 
 export function ChatRoomSidebarHeader({
 	isCollapsed,
+	workspaceName,
 	onToggleCollapsed,
 }: ChatRoomSidebarHeaderProps): ReactElement {
 	const collapseLabel = isCollapsed
 		? "Expand chat sidebar"
 		: "Collapse chat sidebar";
+	const displayName = resolveChatRoomSidebarWorkspaceName(workspaceName);
 
 	return (
 		<header
@@ -29,21 +32,16 @@ export function ChatRoomSidebarHeader({
 					isCollapsed && "md:w-full md:justify-center",
 				)}
 			>
-				<Asterisk
-					aria-hidden="true"
-					className="shrink-0 text-[hsl(var(--accent-warm))]"
-					size={22}
-					strokeWidth={2.4}
-				/>
 				<Typography
 					as="strong"
 					className={cn(
 						"min-w-0 truncate text-zinc-100",
 						isCollapsed && "md:sr-only",
 					)}
+					title={displayName}
 					variant="cardTitle"
 				>
-					devos.ing
+					{displayName}
 				</Typography>
 			</div>
 			<Button

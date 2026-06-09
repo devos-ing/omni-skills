@@ -10,6 +10,7 @@ export interface ChatRoomSidebarProps {
 	projects: WorkspaceProjectRecord[];
 	runningSessionIds: Set<string>;
 	sessions: ChatSessionRecord[];
+	workspaceName: string | null;
 	onNewSession: () => void;
 	onCloseSidebar: () => void;
 	onArchiveSession: (sessionId: string) => void;
@@ -20,6 +21,7 @@ export interface ChatRoomSidebarProps {
 
 export interface ChatRoomSidebarHeaderProps {
 	isCollapsed: boolean;
+	workspaceName: string | null;
 	onToggleCollapsed: () => void;
 }
 

@@ -22,6 +22,7 @@ export function ChatRoomSidebar({
 	projects,
 	runningSessionIds,
 	sessions,
+	workspaceName,
 	onNewSession,
 	onArchiveSession,
 	onCloseSidebar,
@@ -84,6 +85,7 @@ export function ChatRoomSidebar({
 			<div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden">
 				<ChatRoomSidebarHeader
 					isCollapsed={isCollapsed}
+					workspaceName={workspaceName}
 					onToggleCollapsed={onToggleCollapsed}
 				/>
 				<div className="grid gap-2 p-3">

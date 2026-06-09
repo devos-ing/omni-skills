@@ -35,6 +35,7 @@ function OperatorChatSidebarView({
 	const router = useRouter();
 	const currentWorkspaceQuery = useCurrentWorkspaceQuery(NO_REFETCH);
 	const workspaceId = currentWorkspaceQuery.data?.workspaceId ?? "";
+	const workspaceName = currentWorkspaceQuery.data?.name ?? null;
 	const sessionsQuery = useChatSessionsQuery(workspaceId, NO_REFETCH);
 	const tasksQuery = useBoardTasksQuery(NO_REFETCH);
 	const projectsQuery = useWorkspaceProjectsQuery(workspaceId, NO_REFETCH);
@@ -115,6 +116,7 @@ function OperatorChatSidebarView({
 				projects={projectsQuery.data ?? []}
 				runningSessionIds={runningSessionIds}
 				sessions={sessionsQuery.data ?? []}
+				workspaceName={workspaceName}
 				onArchiveSession={(sessionId) => void archiveSession(sessionId)}
 				onCloseSidebar={closeMobileSidebar}
 				onNewSession={() => void startNewSession()}

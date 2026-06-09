@@ -8,6 +8,8 @@ import type {
 	TaskCreateAnswer,
 } from "@/lib/api";
 import type { ChatMissionProgressViewModel } from "./chat-mission-progress.types";
+import type { ChatRoomHeaderTabKey } from "./chat-room-header-tabs.types";
+import type { ChatRoomMainContentMode } from "./chat-room-panel-layout.types";
 
 export interface ChatRoomPanelProps {
 	commandDraftRequest: CommandDraftRequest | null;
@@ -17,15 +19,16 @@ export interface ChatRoomPanelProps {
 
 export interface ChatRoomHeaderProps {
 	activeTaskId: string | null;
+	activeTab: ChatRoomHeaderTabKey;
 	isRerunDisabled: boolean;
 	isRerunning: boolean;
 	isRerunVisible: boolean;
-	isTaskDetailPanelOpen: boolean;
-	projectId: string;
 	title: string;
+	onOpenAction: () => void;
+	onOpenMessages: () => void;
 	onOpenSidebar: () => void;
+	onOpenTaskDetails: () => void;
 	onRerunWorkflow: () => void;
-	onToggleTaskDetails: () => void;
 }
 
 export interface ChatCommandContext {
@@ -64,13 +67,17 @@ export interface ChatTranscriptProps {
 	onDraftCommand: (draft: string) => void;
 }
 
-export interface ChatTaskDetailPanelProps {
-	isOpen: boolean;
+export interface ChatTaskDetailViewProps {
 	taskId: string | null;
-	onClose: () => void;
+}
+
+export interface ChatActionStatusViewProps {
+	missionProgress: ChatMissionProgressViewModel | null;
+	showMissionSkeleton: boolean;
 }
 
 export interface ChatRoomPanelViewProps {
+	activeContentMode: ChatRoomMainContentMode;
 	activeTaskId: string | null;
 	draft: string;
 	isBusy: boolean;
@@ -80,7 +87,6 @@ export interface ChatRoomPanelViewProps {
 	isRerunVisible: boolean;
 	isSending: boolean;
 	isPlanning: boolean;
-	isTaskDetailPanelOpen: boolean;
 	isThinking: boolean;
 	missionProgress: ChatMissionProgressViewModel | null;
 	messages: ChatMessageRecord[];
@@ -91,11 +97,12 @@ export interface ChatRoomPanelViewProps {
 	streamLines: ChatStreamLine[];
 	workingStartedAt: string | null;
 	onAnswerChange: (index: number, value: string) => void;
-	onCloseTaskDetails: () => void;
 	onDraftChange: (value: string) => void;
+	onOpenAction: () => void;
+	onOpenMessages: () => void;
 	onOpenSidebar: () => void;
+	onOpenTaskDetails: () => void;
 	onRerunWorkflow: () => void;
-	onToggleTaskDetails: () => void;
 	onSelectCommand: (value: string) => void;
 	onSelectOption: (index: number, value: string) => Promise<void> | void;
 	onSubmit: () => void;
