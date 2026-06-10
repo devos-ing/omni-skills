@@ -236,6 +236,7 @@ function defaultProject(): BoardProjectRow {
 		lead: null,
 		category: null,
 		priority: null,
+		isPinned: false,
 		preHookScript: null,
 		afterHookScript: null,
 		createdAt: "2026-05-16T00:00:00.000Z",

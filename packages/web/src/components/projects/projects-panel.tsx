@@ -118,6 +118,13 @@ export function ProjectsPanel(): ReactElement {
 		setEditingProjectId(null);
 	}
 
+	function toggleProjectPin(row: ProjectDisplayRow): void {
+		updateProject.mutate({
+			projectId: row.project.id,
+			project: { isPinned: !row.project.isPinned },
+		});
+	}
+
 	function retryGitHubData(): void {
 		void gitHubConnectionQuery.refetch().then((result) => {
 			if (result.data?.isConnected === true) void repositoriesQuery.refetch();
@@ -184,6 +191,7 @@ export function ProjectsPanel(): ReactElement {
 					searchQuery={searchQuery}
 					totalCount={projects.length}
 					onEditProject={openEditDialog}
+					onToggleProjectPin={toggleProjectPin}
 				/>
 			</div>
 			{dialogMode ? (

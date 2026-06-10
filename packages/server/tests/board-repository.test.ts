@@ -45,6 +45,44 @@ describe("board repository", () => {
 		expect(projects).toHaveLength(1);
 		expect(projects[0]?.id).toBe("project-1");
 		expect(projects[0]?.workspaceId).toBe("workspace-1");
+		expect(projects[0]?.isPinned).toBe(false);
+	});
+
+	it("lists pinned workspace projects before the normal project order", async () => {
+		testDatabase = await createDrizzleServerTestDatabase();
+		const { db } = testDatabase;
+		const repo = createBoardRepository(db);
+
+		await seedBoard(db, "board-1", "workspace-1");
+		await db.insert(boardProjectsTable).values([
+			buildProject({
+				id: "project-old",
+				boardId: "board-1",
+				workspaceId: "workspace-1",
+				createdAt: "2026-05-14 00:01:00",
+			}),
+			buildProject({
+				id: "project-pinned",
+				boardId: "board-1",
+				workspaceId: "workspace-1",
+				createdAt: "2026-05-14 00:02:00",
+				isPinned: true,
+			}),
+			buildProject({
+				id: "project-new",
+				boardId: "board-1",
+				workspaceId: "workspace-1",
+				createdAt: "2026-05-14 00:03:00",
+			}),
+		]);
+
+		const projects = await repo.listWorkspaceProjects("workspace-1");
+
+		expect(projects.map((project) => project.id)).toEqual([
+			"project-pinned",
+			"project-old",
+			"project-new",
+		]);
 	});
 
 	it("returns board grouped by required statuses with empty columns", async () => {
@@ -167,6 +205,41 @@ async function seedWorkspaceProject(input: {
 	};
 	await input.db.insert(projectBoardsTable).values(board);
 	await input.db.insert(boardProjectsTable).values(project);
+}
+
+async function seedBoard(
+	db: DrizzleServerTestDatabase["db"],
+	id: string,
+	workspaceId: string,
+): Promise<void> {
+	await db.insert(projectBoardsTable).values({
+		id,
+		name: `Board ${id}`,
+		description: null,
+		ownerId: workspaceId,
+		createdAt: "2026-05-14 00:00:00",
+		updatedAt: "2026-05-14 00:00:00",
+	});
+}
+
+function buildProject(input: {
+	id: string;
+	boardId: string;
+	workspaceId: string;
+	createdAt: string;
+	isPinned?: boolean;
+}): NewBoardProjectRow {
+	return {
+		id: input.id,
+		boardId: input.boardId,
+		externalProjectId: null,
+		name: `Project ${input.id}`,
+		description: null,
+		ownerId: input.workspaceId,
+		isPinned: input.isPinned ?? false,
+		createdAt: input.createdAt,
+		updatedAt: input.createdAt,
+	};
 }
 
 function buildTask(input: {

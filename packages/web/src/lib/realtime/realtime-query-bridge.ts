@@ -9,6 +9,7 @@ import type {
 	WorkspaceProjectRecord,
 } from "../api";
 import { mergeChatSessions } from "../api/chat-session-cache";
+import { sortWorkspaceProjects } from "../api/project-ordering";
 import { serverStateQueryKeys } from "../api/query-keys";
 import type {
 	RealtimeEvent,
@@ -117,7 +118,7 @@ function upsertProject(
 ): void {
 	queryClient.setQueryData<WorkspaceProjectRecord[]>(
 		serverStateQueryKeys.workspaceProjects(project.workspaceId),
-		(current = []) => upsertById(current, project),
+		(current = []) => sortWorkspaceProjects(upsertById(current, project)),
 	);
 }
 

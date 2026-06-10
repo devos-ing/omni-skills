@@ -49,6 +49,31 @@ describe("projects panel table helpers", () => {
 		});
 	});
 
+	it("orders pinned projects before unpinned projects", () => {
+		const projects = [
+			buildProject({
+				id: "older",
+				name: "Older",
+				createdAt: "2026-05-20T00:00:00.000Z",
+			}),
+			buildProject({
+				id: "pinned",
+				name: "Pinned",
+				createdAt: "2026-05-21T00:00:00.000Z",
+				isPinned: true,
+			}),
+			buildProject({
+				id: "newer",
+				name: "Newer",
+				createdAt: "2026-05-22T00:00:00.000Z",
+			}),
+		];
+
+		expect(
+			buildProjectDisplayRows(projects).map((row) => row.project.id),
+		).toEqual(["pinned", "older", "newer"]);
+	});
+
 	it("formats project created dates as compact relative labels", () => {
 		const now = new Date("2026-05-25T12:00:00.000Z");
 
@@ -83,6 +108,7 @@ function buildProject(
 		lead: null,
 		category: null,
 		priority: 2,
+		isPinned: false,
 		preHookScript: null,
 		afterHookScript: null,
 		createdAt: "2026-05-25T00:00:00.000Z",

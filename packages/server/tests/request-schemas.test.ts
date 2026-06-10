@@ -30,8 +30,13 @@ describe("request schemas", () => {
 				lead: "Roy",
 				category: "platform",
 				priority: 1,
+				isPinned: true,
 			}).ok,
 		).toBeTrue();
+		expect(parseUpdateProjectPayload({ isPinned: false })).toEqual({
+			ok: true,
+			value: { isPinned: false },
+		});
 		expect(
 			parseCreateTaskPayload({
 				projectId: "project-1",
@@ -68,6 +73,10 @@ describe("request schemas", () => {
 		expect(parseUpdateProjectPayload({ name: "" })).toEqual({
 			ok: false,
 			error: "name must be a non-empty string",
+		});
+		expect(parseUpdateProjectPayload({ isPinned: "yes" })).toEqual({
+			ok: false,
+			error: "isPinned must be a boolean",
 		});
 		expect(parseCreateTaskPayload({ priority: 1.5 })).toEqual({
 			ok: false,

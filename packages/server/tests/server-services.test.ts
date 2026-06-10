@@ -28,6 +28,7 @@ describe("server services", () => {
 					lead: input.lead ?? null,
 					category: input.category ?? null,
 					priority: input.priority ?? null,
+					isPinned: input.isPinned ?? false,
 					preHookScript: input.preHookScript ?? null,
 					afterHookScript: input.afterHookScript ?? null,
 				};
@@ -62,6 +63,7 @@ describe("server services", () => {
 			lead: null,
 			category: null,
 			priority: null,
+			isPinned: false,
 			name: "Project",
 			ownerId: "owner-1",
 		});

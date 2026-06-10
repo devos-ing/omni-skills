@@ -1,4 +1,5 @@
 import type { WorkspaceProjectRecord } from "@/lib/api";
+import { sortWorkspaceProjects } from "@/lib/api/project-ordering";
 import type { ProjectDisplayRow } from "./types/projects-panel.types";
 
 export {
@@ -33,7 +34,7 @@ export function buildProjectDisplayRows(
 	projects: WorkspaceProjectRecord[],
 	now = new Date(),
 ): ProjectDisplayRow[] {
-	return projects.map((project) => ({
+	return sortWorkspaceProjects(projects).map((project) => ({
 		project,
 		emojiLabel: formatOptionalLabel(project.emoji, "📁"),
 		priorityLabel: formatProjectPriority(project.priority),

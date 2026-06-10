@@ -6,6 +6,7 @@ import {
 	useMutation,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { sortWorkspaceProjects } from "./project-ordering";
 import { serverStateQueryKeys } from "./query-keys";
 import type { WorkspaceProjectRecord } from "./types/client.types";
 import type {
@@ -49,7 +50,8 @@ export async function refreshCreatedProjectCache(
 ): Promise<void> {
 	queryClient.setQueryData<WorkspaceProjectRecord[] | undefined>(
 		serverStateQueryKeys.workspaceProjects(project.workspaceId),
-		(current) => (current ? [...current, project] : [project]),
+		(current) =>
+			sortWorkspaceProjects(current ? [...current, project] : [project]),
 	);
 	await queryClient.invalidateQueries({
 		queryKey: serverStateQueryKeys.workspaceProjects(project.workspaceId),
@@ -63,9 +65,11 @@ export async function refreshUpdatedProjectCache(
 	queryClient.setQueryData<WorkspaceProjectRecord[] | undefined>(
 		serverStateQueryKeys.workspaceProjects(project.workspaceId),
 		(current) =>
-			current?.map((entry) => (entry.id === project.id ? project : entry)) ?? [
-				project,
-			],
+			sortWorkspaceProjects(
+				current?.map((entry) =>
+					entry.id === project.id ? project : entry,
+				) ?? [project],
+			),
 	);
 	await queryClient.invalidateQueries({
 		queryKey: serverStateQueryKeys.workspaceProjects(project.workspaceId),

@@ -156,6 +156,7 @@ function parseProject(value: unknown): WorkspaceProjectRecord {
 		lead: readNullableString(row, "lead"),
 		category: readNullableString(row, "category"),
 		priority: readNullableNumber(row, "priority"),
+		isPinned: readOptionalBoolean(row, "isPinned"),
 		preHookScript: readNullableString(row, "preHookScript"),
 		afterHookScript: readNullableString(row, "afterHookScript"),
 		createdAt: readString(row, "createdAt"),
@@ -229,6 +230,20 @@ function readNullableNumber(
 ): number | null {
 	const value = record[key];
 	if (value === null || typeof value === "number") {
+		return value;
+	}
+	throw new Error(`Invalid realtime event field '${key}'`);
+}
+
+function readOptionalBoolean(
+	record: Record<string, unknown>,
+	key: string,
+): boolean {
+	const value = record[key];
+	if (value === undefined) {
+		return false;
+	}
+	if (typeof value === "boolean") {
 		return value;
 	}
 	throw new Error(`Invalid realtime event field '${key}'`);

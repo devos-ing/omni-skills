@@ -1,4 +1,10 @@
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	integer,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 import { projectBoardsTable } from "./project-boards.schema";
 
 export const boardProjectsTable = pgTable("board_projects", {
@@ -17,6 +23,7 @@ export const boardProjectsTable = pgTable("board_projects", {
 	lead: text("lead"),
 	category: text("category"),
 	priority: integer("priority"),
+	isPinned: boolean("is_pinned").notNull().default(false),
 	preHookScript: text("pre_hook_script"),
 	afterHookScript: text("after_hook_script"),
 	ownerId: text("owner_id").notNull(),

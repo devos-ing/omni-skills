@@ -31,6 +31,7 @@ const createProjectSchema = z.object({
 	lead: optionalNullableString,
 	category: optionalNullableString,
 	priority: z.number().int().nullable().optional(),
+	isPinned: z.boolean().optional(),
 	preHookScript: optionalNullableString,
 	afterHookScript: optionalNullableString,
 });
@@ -91,6 +92,9 @@ function issueToError(issue: z.ZodIssue | undefined): string {
 	const field = String(issue?.path[0] ?? "payload");
 	if (field === "priority") {
 		return "priority must be an integer";
+	}
+	if (field === "isPinned") {
+		return "isPinned must be a boolean";
 	}
 	if (field === "dueDate") {
 		return "dueDate must be a valid timestamp string or null";

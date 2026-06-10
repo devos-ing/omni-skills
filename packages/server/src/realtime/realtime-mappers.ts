@@ -19,6 +19,7 @@ export function toRealtimeProjectRecord(
 		lead: project.lead,
 		category: project.category,
 		priority: project.priority,
+		isPinned: project.isPinned,
 		preHookScript: project.preHookScript,
 		afterHookScript: project.afterHookScript,
 		createdAt: project.createdAt,

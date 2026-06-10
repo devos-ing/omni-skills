@@ -2,6 +2,7 @@ import {
 	assertObjectRecord,
 	encodePathSegment,
 	parseListResponse,
+	readBoolean,
 	readNullableNumber,
 	readNullableString,
 	readString,
@@ -37,6 +38,7 @@ function parseWorkspaceProjectRecord(payload: unknown): WorkspaceProjectRecord {
 		lead: readNullableString(row, "lead", endpoint),
 		category: readNullableString(row, "category", endpoint),
 		priority: readNullableNumber(row, "priority", endpoint),
+		isPinned: readOptionalProjectPin(row, endpoint),
 		preHookScript: readNullableString(row, "preHookScript", endpoint),
 		afterHookScript: readNullableString(row, "afterHookScript", endpoint),
 		createdAt: readString(row, "createdAt", endpoint),
@@ -49,6 +51,13 @@ function readOptionalProjectEmoji(
 	endpoint: string,
 ): string | null {
 	return "emoji" in row ? readNullableString(row, "emoji", endpoint) : null;
+}
+
+function readOptionalProjectPin(
+	row: Record<string, unknown>,
+	endpoint: string,
+): boolean {
+	return "isPinned" in row ? readBoolean(row, "isPinned", endpoint) : false;
 }
 
 function readWorkspaceId(

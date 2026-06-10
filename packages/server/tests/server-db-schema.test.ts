@@ -210,6 +210,7 @@ describe("server drizzle schema", () => {
 			lead: "Roy",
 			category: "platform",
 			priority: 1,
+			isPinned: true,
 			preHookScript: "bun install --frozen-lockfile",
 			afterHookScript: "echo done",
 			ownerId: "user-1",
@@ -368,6 +369,7 @@ describe("server drizzle schema", () => {
 		expect(projectRow?.lead).toBe(project.lead ?? null);
 		expect(projectRow?.category).toBe(project.category ?? null);
 		expect(projectRow?.priority).toBe(project.priority ?? null);
+		expect(projectRow?.isPinned).toBe(true);
 		expect(projectRow?.preHookScript).toBe(project.preHookScript ?? null);
 		expect(projectRow?.afterHookScript).toBe(project.afterHookScript ?? null);
 		expect(taskRow?.id).toBe(task.id);
@@ -597,6 +599,12 @@ describe("server drizzle schema", () => {
 			await oldDatabase.close();
 
 			const migrated = await initializeServerDatabase(databasePath);
+			const [defaultProject] = await migrated.db
+				.select()
+				.from(boardProjectsTable)
+				.where(eq(boardProjectsTable.id, "project-old-1"));
+			expect(defaultProject?.isPinned).toBe(false);
+
 			await migrated.db
 				.update(boardProjectsTable)
 				.set({
@@ -607,6 +615,7 @@ describe("server drizzle schema", () => {
 					lead: "Roy",
 					category: "platform",
 					priority: 1,
+					isPinned: true,
 				})
 				.where(eq(boardProjectsTable.id, "project-old-1"));
 
@@ -622,6 +631,7 @@ describe("server drizzle schema", () => {
 			expect(project?.lead).toBe("Roy");
 			expect(project?.category).toBe("platform");
 			expect(project?.priority).toBe(1);
+			expect(project?.isPinned).toBe(true);
 
 			await migrated.close();
 		} finally {

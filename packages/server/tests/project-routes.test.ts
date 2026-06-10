@@ -64,6 +64,7 @@ describe("project routes", () => {
 			lead: string | null;
 			category: string | null;
 			priority: number | null;
+			isPinned: boolean;
 			preHookScript: string | null;
 			afterHookScript: string | null;
 		};
@@ -76,6 +77,7 @@ describe("project routes", () => {
 		expect(created.lead).toBe("Roy");
 		expect(created.category).toBe("platform");
 		expect(created.priority).toBe(1);
+		expect(created.isPinned).toBe(false);
 		expect(created.preHookScript).toBe("bun install --frozen-lockfile");
 		expect(created.afterHookScript).toBe("echo done");
 
@@ -120,13 +122,41 @@ describe("project routes", () => {
 		const updated = (await updateResponse.json()) as {
 			name: string;
 			priority: number | null;
+			isPinned: boolean;
 			preHookScript: string | null;
 			afterHookScript: string | null;
 		};
 		expect(updated.name).toBe("Core Updated");
 		expect(updated.priority).toBe(2);
+		expect(updated.isPinned).toBe(false);
 		expect(updated.preHookScript).toBeNull();
 		expect(updated.afterHookScript).toBe("echo post-run");
+
+		const pinResponse = await app(
+			new Request(`http://localhost/api/projects/${created.id}`, {
+				method: "PATCH",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ isPinned: true }),
+			}),
+		);
+		expect(pinResponse.status).toBe(200);
+		expect((await pinResponse.json()) as { isPinned: boolean }).toMatchObject({
+			isPinned: true,
+		});
+
+		const unpinResponse = await app(
+			new Request(`http://localhost/api/projects/${created.id}`, {
+				method: "PATCH",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ isPinned: false }),
+			}),
+		);
+		expect(unpinResponse.status).toBe(200);
+		expect((await unpinResponse.json()) as { isPinned: boolean }).toMatchObject(
+			{
+				isPinned: false,
+			},
+		);
 
 		const deleteResponse = await app(
 			new Request(`http://localhost/api/projects/${created.id}`, {
@@ -306,7 +336,7 @@ describe("project routes", () => {
 		]);
 		expect(events[0]).toMatchObject({
 			type: "project.created",
-			project: { id: created.id, workspaceId: "owner-1" },
+			project: { id: created.id, workspaceId: "owner-1", isPinned: false },
 		});
 	});
 });

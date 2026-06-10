@@ -38,6 +38,7 @@ export function createProjectService(
 					lead: input.lead ?? null,
 					category: input.category ?? null,
 					priority: input.priority ?? null,
+					isPinned: input.isPinned ?? false,
 					preHookScript: normalizeHookScript(input.preHookScript),
 					afterHookScript: normalizeHookScript(input.afterHookScript),
 					ownerId: input.ownerId,

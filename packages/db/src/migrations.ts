@@ -85,6 +85,10 @@ const MIGRATIONS: Migration[] = [
 		id: "0022_chat_session_last_seen",
 		fileName: "0022_chat_session_last_seen.sql",
 	},
+	{
+		id: "0023_project_pinning",
+		fileName: "0023_project_pinning.sql",
+	},
 ];
 
 async function ensureMigrationsTable(

@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { Pencil, Pin, PinOff } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ interface ProjectsTableProps {
 	searchQuery: string;
 	totalCount: number;
 	onEditProject: (row: ProjectDisplayRow) => void;
+	onToggleProjectPin: (row: ProjectDisplayRow) => void;
 }
 
 export function ProjectsTable({
@@ -27,6 +28,7 @@ export function ProjectsTable({
 	searchQuery,
 	totalCount,
 	onEditProject,
+	onToggleProjectPin,
 }: ProjectsTableProps): ReactElement {
 	const rowPadding = "px-4 py-4";
 	const stateLabel = resolveProjectTableState({
@@ -40,15 +42,15 @@ export function ProjectsTable({
 	return (
 		<section className="min-h-0 overflow-hidden bg-card">
 			<div className="h-full overflow-x-auto">
-				<table className="h-full w-full min-w-[58rem] table-fixed border-collapse">
+				<table className="h-full w-full min-w-[60rem] table-fixed border-collapse">
 					<colgroup>
-						<col className="w-[30%]" />
+						<col className="w-[27%]" />
 						<col className="w-[9%]" />
 						<col className="w-[13%]" />
 						<col className="w-[18%]" />
 						<col className="w-[11%]" />
 						<col className="w-[10%]" />
-						<col className="w-[9%]" />
+						<col className="w-[12%]" />
 					</colgroup>
 					<thead className="sticky top-0 z-10 bg-surface-panel text-left text-xs font-medium text-muted-foreground">
 						<tr className="border-b border-border">
@@ -78,6 +80,7 @@ export function ProjectsTable({
 								<ProjectTableRow
 									key={row.project.id}
 									onEditProject={onEditProject}
+									onToggleProjectPin={onToggleProjectPin}
 									row={row}
 									rowPadding={rowPadding}
 								/>
@@ -104,13 +107,20 @@ function TableHeaderCell({ label }: { label: string }): ReactElement {
 
 function ProjectTableRow({
 	onEditProject,
+	onToggleProjectPin,
 	row,
 	rowPadding,
 }: {
 	onEditProject: (row: ProjectDisplayRow) => void;
+	onToggleProjectPin: (row: ProjectDisplayRow) => void;
 	row: ProjectDisplayRow;
 	rowPadding: string;
 }): ReactElement {
+	const PinIcon = row.project.isPinned ? PinOff : Pin;
+	const pinLabel = row.project.isPinned
+		? `Unpin ${row.project.name}`
+		: `Pin ${row.project.name}`;
+
 	return (
 		<tr className="border-b border-border/80 last:border-b-0 hover:bg-surface-hover/60">
 			<td className={cn(rowPadding, "align-middle")}>
@@ -150,16 +160,28 @@ function ProjectTableRow({
 				</Typography>
 			</Typography>
 			<td className={cn(rowPadding, "align-middle")}>
-				<Button
-					aria-label={`Edit ${row.project.name}`}
-					onClick={() => onEditProject(row)}
-					size="sm"
-					type="button"
-					variant="ghost"
-				>
-					<Pencil size={15} />
-					Edit
-				</Button>
+				<div className="flex items-center justify-end gap-1">
+					<Button
+						aria-label={pinLabel}
+						onClick={() => onToggleProjectPin(row)}
+						size="icon"
+						title={pinLabel}
+						type="button"
+						variant="ghost"
+					>
+						<PinIcon size={15} />
+					</Button>
+					<Button
+						aria-label={`Edit ${row.project.name}`}
+						onClick={() => onEditProject(row)}
+						size="sm"
+						type="button"
+						variant="ghost"
+					>
+						<Pencil size={15} />
+						Edit
+					</Button>
+				</div>
 			</td>
 		</tr>
 	);

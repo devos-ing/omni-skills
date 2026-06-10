@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "devos-db";
+import { and, asc, desc, eq, inArray } from "devos-db";
 import {
 	type ServerDatabase,
 	boardProjectsTable,
@@ -50,6 +50,7 @@ export function createBoardRepository(
 					lead: boardProjectsTable.lead,
 					category: boardProjectsTable.category,
 					priority: boardProjectsTable.priority,
+					isPinned: boardProjectsTable.isPinned,
 					preHookScript: boardProjectsTable.preHookScript,
 					afterHookScript: boardProjectsTable.afterHookScript,
 					createdAt: boardProjectsTable.createdAt,
@@ -57,7 +58,11 @@ export function createBoardRepository(
 				})
 				.from(boardProjectsTable)
 				.where(eq(boardProjectsTable.ownerId, workspaceId))
-				.orderBy(asc(boardProjectsTable.createdAt), asc(boardProjectsTable.id));
+				.orderBy(
+					desc(boardProjectsTable.isPinned),
+					asc(boardProjectsTable.createdAt),
+					asc(boardProjectsTable.id),
+				);
 
 			return rows satisfies WorkspaceProjectSummary[];
 		},
@@ -78,6 +83,7 @@ export function createBoardRepository(
 					lead: boardProjectsTable.lead,
 					category: boardProjectsTable.category,
 					priority: boardProjectsTable.priority,
+					isPinned: boardProjectsTable.isPinned,
 					preHookScript: boardProjectsTable.preHookScript,
 					afterHookScript: boardProjectsTable.afterHookScript,
 					createdAt: boardProjectsTable.createdAt,

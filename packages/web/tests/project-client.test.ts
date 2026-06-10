@@ -64,6 +64,7 @@ describe("project API client", () => {
 			lead: "Roy",
 			category: "platform",
 			priority: 2,
+			isPinned: false,
 			createdAt: "2026-05-20T00:00:00.000Z",
 			updatedAt: "2026-05-20T00:00:00.000Z",
 		});
@@ -120,6 +121,7 @@ describe("project API client", () => {
 			baseBranch: "trunk",
 			lead: "Roy",
 			priority: 3,
+			isPinned: true,
 		};
 		const fetchFn = (async (input: URL | RequestInfo, init?: RequestInit) => {
 			expect(String(input)).toBe("/api/projects/project-1");
@@ -162,6 +164,7 @@ describe("project API client", () => {
 			lead: "Roy",
 			category: null,
 			priority: 3,
+			isPinned: true,
 			createdAt: "2026-05-20T00:00:00.000Z",
 			updatedAt: "2026-05-21T00:00:00.000Z",
 		});
@@ -188,6 +191,7 @@ describe("project API client", () => {
 						lead: null,
 						category: null,
 						priority: null,
+						isPinned: true,
 						createdAt: "2026-05-20T00:00:00.000Z",
 						updatedAt: "2026-05-20T00:00:00.000Z",
 					},
@@ -198,5 +202,40 @@ describe("project API client", () => {
 		const projects = await client.listWorkspaceProjects("owner-1");
 
 		expect(projects[0]?.emoji).toBeNull();
+		expect(projects[0]?.isPinned).toBe(true);
+	});
+
+	it("treats missing project pin values as false", async () => {
+		const fetchFn = (async () =>
+			okJsonResponse({
+				workspaceId: "owner-1",
+				projects: [
+					{
+						id: "project-1",
+						boardId: "board-1",
+						workspaceId: "owner-1",
+						externalProjectId: null,
+						name: "Legacy Project",
+						emoji: null,
+						description: null,
+						repoOwner: null,
+						repoName: null,
+						baseBranch: null,
+						localFolder: null,
+						preHookScript: null,
+						afterHookScript: null,
+						lead: null,
+						category: null,
+						priority: null,
+						createdAt: "2026-05-20T00:00:00.000Z",
+						updatedAt: "2026-05-20T00:00:00.000Z",
+					},
+				],
+			})) as typeof fetch;
+		const client = createApiClient({ fetchFn });
+
+		const projects = await client.listWorkspaceProjects("owner-1");
+
+		expect(projects[0]?.isPinned).toBe(false);
 	});
 });

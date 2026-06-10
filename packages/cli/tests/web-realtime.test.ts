@@ -214,6 +214,7 @@ function projectRecord(
 		lead: null,
 		category: null,
 		priority: null,
+		isPinned: false,
 		createdAt: "2026-05-16T00:00:00.000Z",
 		updatedAt: "2026-05-16T00:00:00.000Z",
 		...overrides,
