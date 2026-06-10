@@ -9,6 +9,7 @@ import { isApiRequestError } from "@/lib/api";
 import { useTaskActivityQuery } from "@/lib/api/task-activity-query";
 
 import { IssueActivityCardMenu } from "./issue-activity-card-menu";
+import { formatOperatorActivityText } from "./issue-activity-display-utils";
 import { ActivityRichText } from "./issue-activity-rich-text";
 import {
 	createActivityDisclosureState,
@@ -96,7 +97,8 @@ function ActivityItem({
 }: {
 	activity: TaskActivityRecord;
 }): ReactElement {
-	const hasCard = Boolean(activity.body.trim()) || activity.steps?.length;
+	const body = formatOperatorActivityText(activity.body);
+	const hasCard = Boolean(body) || activity.steps?.length;
 	if (hasCard) {
 		return <ActivityCard activity={activity} />;
 	}
@@ -121,6 +123,7 @@ function ActivityCard({
 }: {
 	activity: TaskActivityRecord;
 }): ReactElement {
+	const body = formatOperatorActivityText(activity.body);
 	return (
 		<article className="rounded-lg border border-border bg-card p-5">
 			<header className="mb-5 flex items-center justify-between gap-3">
@@ -140,7 +143,7 @@ function ActivityCard({
 				</div>
 				<IssueActivityCardMenu activity={activity} />
 			</header>
-			{activity.body.trim() ? <ActivityRichText body={activity.body} /> : null}
+			{body ? <ActivityRichText body={body} /> : null}
 			{activity.steps?.length ? <ActivitySteps activity={activity} /> : null}
 		</article>
 	);
@@ -164,13 +167,20 @@ function ActivitySteps({
 						</Typography>
 						<Typography variant="muted">{step.status}</Typography>
 					</div>
-					{step.detail ? (
-						<Typography variant="description">{step.detail}</Typography>
-					) : null}
+					{step.detail ? <ActivityStepDetail detail={step.detail} /> : null}
 				</div>
 			))}
 		</div>
 	);
+}
+
+function ActivityStepDetail({
+	detail,
+}: {
+	detail: string;
+}): ReactElement | null {
+	const text = formatOperatorActivityText(detail);
+	return text ? <Typography variant="description">{text}</Typography> : null;
 }
 
 function ActivityIcon({

@@ -21,6 +21,7 @@ import { Typography } from "@/components/ui/typography";
 import type { ProjectBoardTaskRecord, TokenUsageRecord } from "@/lib/api";
 import { useBoardTaskQuery, useTokenUsageQuery } from "@/lib/api/queries";
 
+import { formatOperatorActivityText } from "./issue-activity-display-utils";
 import { ExternalLinkValue, formatDateTime } from "./issue-detail-editor-utils";
 import {
 	MetricRow,
@@ -96,15 +97,16 @@ function renderPanelContent(
 }
 
 function PanelHeader({ task }: TaskPanelProps): ReactElement {
+	const content = formatOperatorActivityText(task.content);
 	return (
 		<SheetHeader className="pr-8">
 			<Typography variant="eyebrow">{task.taskKey}</Typography>
 			<SheetTitle className="break-words text-xl leading-7">
 				{task.title}
 			</SheetTitle>
-			{task.content.trim() ? (
+			{content ? (
 				<Typography className="whitespace-pre-wrap leading-6 text-zinc-400">
-					{task.content}
+					{content}
 				</Typography>
 			) : null}
 		</SheetHeader>

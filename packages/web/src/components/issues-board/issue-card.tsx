@@ -14,6 +14,7 @@ import { Typography } from "@/components/ui/typography";
 import type { ProjectBoardTaskRecord } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+import { formatOperatorActivityText } from "./issue-activity-display-utils";
 import { getPriorityLabel, isAgentTask } from "./issues-board-utils";
 
 interface IssueCardProps {
@@ -98,6 +99,8 @@ export function IssueCard({
 		onOpenContextMenu(task, { x: event.clientX, y: event.clientY });
 	}
 
+	const content = formatOperatorActivityText(task.content);
+
 	return (
 		<button
 			className={cn(
@@ -129,12 +132,12 @@ export function IssueCard({
 			<Typography className="line-clamp-2" variant="cardTitle">
 				{task.title}
 			</Typography>
-			{task.content.trim() ? (
+			{content ? (
 				<Typography
 					className="mb-2 mt-1.5 line-clamp-2 leading-5"
 					variant="muted"
 				>
-					{task.content}
+					{content}
 				</Typography>
 			) : null}
 			<div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
