@@ -8,23 +8,10 @@ export function createBuiltInWorkflowMetadata(
 	config: ResolvedProjectConfig,
 ): WorkflowMetadata {
 	return {
-		id: "devos.builtin.brainstorm-plan-implement-testing",
-		title: "Brainstorm, plan, implement, testing",
-		description: "Built-in stage-one workflow pipeline.",
+		id: "devos.builtin.plan-implement-testing",
+		title: "Plan, implement, testing",
+		description: "Built-in workflow pipeline after task intake clarification.",
 		phases: [
-			{
-				id: "brainstorm",
-				title: "Brainstorm",
-				stage: "brainstorm",
-				agentAssignments: [
-					agent(
-						"brainstormer",
-						"brainstorm",
-						"brainstorm",
-						config.skills.brainstorm,
-					),
-				],
-			},
 			{
 				id: "plan",
 				title: "Plan",

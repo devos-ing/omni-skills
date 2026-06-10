@@ -2,33 +2,37 @@
 
 Talk is cheap, show me your agent system.
 
-[Quickstart](#quickstart) | [Operator Guide](docs/NON_TECHNICAL_GUIDE.md) | [Architecture](ARCHITECTURE.md) | [CLI Reference](packages/cli/README.md) | [Security](docs/SECURITY.md)
+[Quickstart](#quickstart) | [Terms](docs/TERMS.md) | [Operator Guide](docs/NON_TECHNICAL_GUIDE.md) | [Architecture](ARCHITECTURE.md) | [CLI Reference](packages/cli/README.md) | [Security](docs/SECURITY.md)
 
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Bun](https://img.shields.io/badge/runtime-Bun-black.svg)](https://bun.sh)
 
-# devos.ing is the local control plane for agentic development.
+# devos.ing is the local control plane for loop engineering.
 
-Open-source orchestration for coding agents, workflow daemons, task intake, and
-operator review.
+Open-source orchestration for coding-agent loops, workflow daemons, task intake,
+and operator review.
 
-**If a coding agent is a worker, devos.ing is the workbench.**
+**If a coding agent is a worker, devos.ing is the loop bench.**
 
 devos.ing turns product and engineering requests into repeatable agent runs that
 can brainstorm, plan, implement, review, test, and report progress across one or
 more projects while keeping a human operator in control.
 
+Loop engineering is the practice of turning messy product or engineering intent
+into observable agent loops: route the work, run the phases, inspect evidence,
+feed failures back, and stop only when the outcome is done or explicitly blocked.
+
 It looks like a CLI and local web UI. Under the hood: project routing, workflow
 state, agent adapters, task intake, skills, run leases, review loops, secrets,
 and a daemon that keeps the system alive.
 
-**Manage agent work, not terminal chaos.**
+**Manage agent loops, not terminal chaos.**
 
 | Step | Example |
 | --- | --- |
 | **01** Define the request | "Add retry handling for flaky API calls." |
 | **02** Route the work | Pick the project, repo, branch, skills, and agent runtime. |
-| **03** Run the workflow | Brainstorm, plan, implement, test, and review with checkpoints. |
+| **03** Run the loop | Brainstorm, plan, implement, test, and review with checkpoints. |
 | **04** Inspect the outcome | Read logs, run state, PR context, blockers, and verification evidence. |
 
 Works with Codex, Claude Code, Cursor Agent, GitHub, Linear, local web apps,
@@ -40,14 +44,14 @@ structured adapter, devos.ing can coordinate it.
 - You coordinate coding agents across more than one repo or project.
 - You want agent runs to start from project context instead of fresh terminal
   improvisation.
-- You want a default workflow from brainstorm to plan, implementation, testing,
+- You want a default loop from brainstorm to plan, implementation, testing,
   and review.
 - You need run state, logs, leases, errors, and PR context to survive restarts.
 - You want browser-driven commands and chat workflows backed by the same worker
   path as CLI runs.
 - You want local-first secrets and config, with operator review points instead
   of unattended mystery changes.
-- You want scheduled or polling agent work without rebuilding orchestration in
+- You want scheduled or polling agent loops without rebuilding orchestration in
   each repository.
 
 ## Features
@@ -62,7 +66,7 @@ boundaries. Workflow logic stays separate from the agent that executes a phase.
 Projects bind workspace paths, repository details, task sources, skills, agent
 backends, and workflow defaults so commands do not need project-specific flags.
 
-### Workflow Pipeline
+### Loop Engineering Pipeline
 
 The default workflow moves work through `brainstorm`, `plan`, `implement`,
 `testing`, and `githubComment`, with retry and blocked states where they belong.
@@ -100,14 +104,14 @@ tooling without hard-coding one project's workflow into the platform.
 | You have several agent terminals open and lose track of who is doing what. | Runs are attached to issues, projects, phases, logs, and durable state. |
 | Every repo needs its own fragile scripts and handoff rules. | Workflow behavior stays project-agnostic while project config supplies routing. |
 | Agents restart without the context that made the work meaningful. | Run state, task context, skills, and phase history travel with the workflow. |
-| Planning, implementation, review, and testing happen as ad hoc prompts. | The default workflow gives each phase a clear purpose and checkpoint. |
+| Planning, implementation, review, and testing happen as ad hoc prompts. | Loop engineering gives each phase a clear purpose, checkpoint, and feedback path. |
 | Browser commands and CLI commands drift into separate systems. | The web UI, server, worker, daemon, and CLI share the same orchestration path. |
 | Secrets and local config leak into prompts or repo files. | Onboarding stores secrets and trusted instance config under `~/.devos/config`. |
 | Polling and scheduled work need custom glue. | The poller, cron runner, leases, and daemon provide a repeatable automation loop. |
 
 ## Why devos.ing is special
 
-devos.ing handles the hard orchestration details that are easy to underbuild.
+devos.ing handles the hard loop engineering details that are easy to underbuild.
 
 | System detail | Why it matters |
 | --- | --- |
@@ -349,6 +353,8 @@ bun test packages/cli/tests/smoke-flow.test.ts
 
 ## More Documentation
 
+- [docs/TERMS.md](docs/TERMS.md): product terminology for loop engineering,
+  workflow loops, and operator checkpoints.
 - [docs/NON_TECHNICAL_GUIDE.md](docs/NON_TECHNICAL_GUIDE.md): operator-friendly
   guide to the system and workflow.
 - [docs/workspace-cli-commands.md](docs/workspace-cli-commands.md): full CLI

@@ -92,6 +92,15 @@ const AGENT_UPDATE_FIELDS = [
 	"instructions",
 ] as const;
 
+const CHAT_SESSION_UPDATE_FIELDS = [
+	"archived",
+	"lastSeenAt",
+	"projectId",
+	"title",
+	"pendingRequest",
+	"pendingQuestions",
+] as const;
+
 function extractOpenApiRoutes(openApiDocument: string): Set<string> {
 	const pathsSection = openApiDocument.match(
 		/(^|\n)paths:\n([\s\S]*?)(\n[a-zA-Z0-9_-]+:|\n?$)/,
@@ -244,6 +253,17 @@ describe("openapi contract", () => {
 		for (const field of PROJECT_MUTATION_FIELDS) {
 			expect(projectCreateFields).toContain(`${field}:`);
 			expect(projectPatchFields).toContain(`${field}:`);
+		}
+	});
+
+	it("documents all chat session update fields", () => {
+		const chatSessionUpdateFields = extractSchemaBlock(
+			readOpenApiText(),
+			"ChatSessionUpdateRequest",
+		);
+
+		for (const field of CHAT_SESSION_UPDATE_FIELDS) {
+			expect(chatSessionUpdateFields).toContain(`${field}:`);
 		}
 	});
 });

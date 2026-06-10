@@ -1,12 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactElement, memo, useEffect, useRef, useState } from "react";
+import {
+	type ReactElement,
+	memo,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "sonner";
 
 import { ChatRoomSidebar } from "@/components/chat-room/chat-room-sidebar";
 import { activeChatStreamSessionIds } from "@/components/chat-room/chat-room-stream-utils";
-import { resolveChatSessionSeenUpdate } from "@/components/chat-room/chat-session-read-state";
+import { resolveSelectedChatSessionSeenUpdate } from "@/components/chat-room/chat-session-read-state";
 import {
 	useChatSessionsQuery,
 	useCreateChatSessionMutation,
@@ -58,28 +65,33 @@ function OperatorChatSidebarView({
 		sessionsQuery.data?.find((session) => session.id === activeSessionId) ??
 		null;
 
+	const markSessionRead = useCallback(
+		(sessionId: string): void => {
+			const seenUpdate = resolveSelectedChatSessionSeenUpdate(
+				sessionsQuery.data ?? [],
+				sessionId,
+			);
+			if (
+				!seenUpdate ||
+				readMarkerRequests.current.has(seenUpdate.requestKey)
+			) {
+				return;
+			}
+			readMarkerRequests.current.add(seenUpdate.requestKey);
+			updateSession.mutate({
+				sessionId: seenUpdate.sessionId,
+				session: seenUpdate.update,
+			});
+		},
+		[sessionsQuery.data, updateSession],
+	);
+
 	useEffect(() => {
 		if (!activeSession) {
 			return;
 		}
-		const update = resolveChatSessionSeenUpdate(activeSession);
-		if (!update) {
-			return;
-		}
-		const requestKey = `${activeSession.id}:${activeSession.updatedAt}`;
-		if (readMarkerRequests.current.has(requestKey)) {
-			return;
-		}
-		readMarkerRequests.current.add(requestKey);
-		updateSession.mutate(
-			{ sessionId: activeSession.id, session: update },
-			{
-				onError: () => {
-					readMarkerRequests.current.delete(requestKey);
-				},
-			},
-		);
-	}, [activeSession, updateSession]);
+		markSessionRead(activeSession.id);
+	}, [activeSession, markSessionRead]);
 
 	function closeMobileSidebar(): void {
 		onCloseMobileSidebar();
@@ -120,6 +132,7 @@ function OperatorChatSidebarView({
 	}
 
 	function selectSession(sessionId: string): void {
+		markSessionRead(sessionId);
 		router.push(`/session/${encodeURIComponent(sessionId)}`);
 		closeMobileSidebar();
 	}

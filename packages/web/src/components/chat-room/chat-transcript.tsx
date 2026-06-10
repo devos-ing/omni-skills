@@ -10,11 +10,8 @@ import {
 import { ChatMissionProgress } from "./chat-mission-progress";
 import { ChatMissionProgressSkeleton } from "./chat-mission-progress-skeleton";
 import { resolveMissionPlanMessageContent } from "./chat-plan-message-state";
-import { ChatSessionActivitySections } from "./chat-session-activity-bubbles";
-import { createChatSessionActivitySections } from "./chat-session-activity-state";
 import { ChatSessionAgentOutputBubbles } from "./chat-session-agent-output-bubbles";
 import { createChatSessionAgentOutputs } from "./chat-session-agent-output-state";
-import { ChatStandaloneStreamBlock } from "./chat-standalone-stream-block";
 import { formatWaitDurationLabel } from "./chat-wait-label";
 import type { ChatTranscriptProps } from "./types/chat-room.types";
 export function ChatTranscript({
@@ -39,10 +36,6 @@ export function ChatTranscript({
 	const missionIsPending =
 		Boolean(sessionTaskId) &&
 		(missionTaskId !== sessionTaskId || missionProgress?.state === "loading");
-	const activitySections = createChatSessionActivitySections({
-		missionProgress,
-		streamLines,
-	});
 	const planMessageContent = resolveMissionPlanMessageContent(
 		missionProgress,
 		messages,
@@ -60,39 +53,16 @@ export function ChatTranscript({
 		missionProgress?.executions.length ?? 0,
 		missionProgress?.latestLogLines.length ?? 0,
 		streamLines.length,
-		activitySections
-			.map(
-				(section) =>
-					`${section.id}:${section.details.map((detail) => detail.id).join("|")}`,
-			)
-			.join(","),
 		agentOutputs.map((output) => output.id).join(","),
 	].join(":");
-	const hasActivitySections = activitySections.length > 0;
 	const hasAgentOutputs = agentOutputs.length > 0;
 	const showThinking =
-		isThinking &&
-		streamLines.length === 0 &&
-		!hasActivitySections &&
-		!hasAgentOutputs;
+		isThinking && streamLines.length === 0 && !hasAgentOutputs;
 	const showPlanning =
-		isPlanning &&
-		!showThinking &&
-		streamLines.length === 0 &&
-		!hasActivitySections &&
-		!hasAgentOutputs;
+		isPlanning && !showThinking && streamLines.length === 0 && !hasAgentOutputs;
 	const showWorkingHeader =
 		Boolean(workingStartedAt) &&
-		(showThinking ||
-			showPlanning ||
-			streamLines.length > 0 ||
-			hasActivitySections ||
-			hasAgentOutputs);
-	const showStandaloneStream =
-		streamLines.length > 0 &&
-		!missionProgress &&
-		!hasActivitySections &&
-		!hasAgentOutputs;
+		(showThinking || showPlanning || streamLines.length > 0 || hasAgentOutputs);
 	useEffect(() => {
 		if (!sessionId) {
 			previousSessionIdRef.current = null;
@@ -145,12 +115,8 @@ export function ChatTranscript({
 						<WorkingSectionHeader startedAt={workingStartedAt ?? ""} />
 					) : null}
 					<ChatSessionAgentOutputBubbles outputs={agentOutputs} />
-					<ChatSessionActivitySections sections={activitySections} />
 					{showThinking ? <ThinkingLine /> : null}
 					{showPlanning ? <PlanningLine /> : null}
-					{showStandaloneStream ? (
-						<ChatStandaloneStreamBlock lines={streamLines} />
-					) : null}
 				</div>
 			</div>
 		</div>

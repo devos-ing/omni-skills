@@ -40,6 +40,26 @@ describe("chat room stream state", () => {
 		]);
 		expect(state.activityStartedAt).toBe("2026-05-16T00:00:00.000Z");
 	});
+
+	it("splits streamed chat processing content into message rows", () => {
+		const state = resolveChatRoomStreamState(
+			[],
+			{
+				"run-1": chatStream({
+					content: "Reading files...\nRunning focused tests...",
+					status: "streaming",
+					updatedAt: "2026-05-16T00:00:03.000Z",
+				}),
+			},
+			"session-1",
+			false,
+		);
+
+		expect(state.streamLines).toMatchObject([
+			{ id: "run-1:0", text: "Reading files..." },
+			{ id: "run-1:1", text: "Running focused tests..." },
+		]);
+	});
 });
 
 function chatStream(

@@ -41,7 +41,7 @@ export function createChatSessionAgentOutputs({
 		addAgentOutput(outputs, seen, suppressed, `mission:${line.id}`, line.text);
 	}
 	for (const line of streamLines) {
-		addAgentOutput(outputs, seen, suppressed, `stream:${line.id}`, line.text);
+		addStreamOutput(outputs, seen, suppressed, line);
 	}
 	return outputs.slice(-MAX_AGENT_OUTPUTS);
 }
@@ -71,6 +71,30 @@ function addAgentOutput(
 	if (!normalized || suppressed.has(normalized) || seen.has(normalized)) return;
 	seen.add(normalized);
 	outputs.push({ id, text });
+}
+
+function addStreamOutput(
+	outputs: ChatSessionAgentOutput[],
+	seen: Set<string>,
+	suppressed: Set<string>,
+	line: ChatStreamLine,
+): void {
+	const text = readStreamOutputText(line);
+	if (!text) return;
+	const normalized = normalizeOutputText(text);
+	if (!normalized || suppressed.has(normalized) || seen.has(normalized)) return;
+	seen.add(normalized);
+	outputs.push({ id: `stream:${line.id}`, text });
+}
+
+function readStreamOutputText(line: ChatStreamLine): string | null {
+	const structured = readStructuredAgentOutput(line.text);
+	if (structured) return structured;
+	if (parseJsonRecord(line.text)) return null;
+	if (line.stream === "system") {
+		return line.text.trim() || null;
+	}
+	return readAgentOutputText(line.text);
 }
 
 function readAgentOutputText(rawText: string): string | null {

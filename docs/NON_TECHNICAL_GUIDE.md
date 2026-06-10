@@ -4,7 +4,7 @@ This guide explains how to use devos.ing as an operator without needing to read 
 
 ## What devos.ing Does
 
-devos.ing takes work tracked in Linear and moves it through an automated engineering workflow:
+devos.ing takes work tracked in Linear and moves it through a loop engineering workflow:
 
 1. planning
 2. implementation

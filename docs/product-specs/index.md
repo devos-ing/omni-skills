@@ -1,6 +1,6 @@
 # Product Specs Index
 
-devos.ing turns Linear issues into staged agent execution with planning, implementation, and verification loops.
+devos.ing turns Linear issues into loop engineering runs with planning, implementation, and verification feedback loops.
 
 ## Current Specs
 

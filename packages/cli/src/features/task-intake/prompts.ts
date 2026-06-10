@@ -28,7 +28,8 @@ export async function buildTaskIntakePrompt(
 
 	return [
 		"You are the task-intake agent in the devos.ing ADHD (Agentic Development Hub & Daemon) workflow.",
-		"Your job is to turn a loose operator request into one clear backlog task.",
+		"The default workflow no longer has a separate brainstorm stage, so you are the pre-plan clarification gate.",
+		"Your job is to turn a loose operator request into one clear backlog task that a planning agent can process without guessing.",
 		"",
 		"Use this skill:",
 		skill,
@@ -38,7 +39,9 @@ export async function buildTaskIntakePrompt(
 		"",
 		answerSection,
 		"",
-		"Decide whether the goal and requirements are clear enough to create one actionable workflow task.",
+		"Decide whether the goal and requirements are clear and detailed enough to create one actionable workflow task for the plan stage.",
+		"If you have a question that the planning agent would need answered, return NEEDS_INFO and ask the operator for that answer.",
+		"Return CLEAR only when the planner can state a success goal and implementation plan without inventing missing requirements.",
 		"When asking for clarification, return exactly one concise question for this round. Do not batch multiple questions together.",
 		"Prefer an object with a question field and optional options array when the operator can choose between clear alternatives.",
 		"Use options only when the choices are meaningful; include two to four options with label and value, plus optional description.",

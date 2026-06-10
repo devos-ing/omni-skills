@@ -77,18 +77,16 @@ describe("workflow managers", () => {
 		expect(events).toEqual(["cycle", "stopped"]);
 	});
 
-	it("models built-in metadata as brainstorm, plan, implement, and testing phases", () => {
+	it("models built-in metadata as plan, implement, and testing phases", () => {
 		const metadata = createBuiltInWorkflowMetadata(fakeProject());
 
 		expect(metadata.phases.map((phase) => phase.id)).toEqual([
-			"brainstorm",
 			"plan",
 			"implement",
 			"testing",
 		]);
 		expect(metadata.phases.flatMap((phase) => phase.agentAssignments)).toEqual(
 			expect.arrayContaining([
-				expect.objectContaining({ name: "brainstormer", role: "brainstorm" }),
 				expect.objectContaining({ name: "planner", role: "planning" }),
 				expect.objectContaining({
 					name: "implementer",

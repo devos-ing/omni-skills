@@ -4,16 +4,16 @@ Talk is cheap, show me your agent system.
 
 [Product README](../../README.md) | [Operator Guide](../../docs/NON_TECHNICAL_GUIDE.md) | [Architecture](../../ARCHITECTURE.md) | [Security](../../docs/SECURITY.md)
 
-# The devos CLI runs agentic development workflows from your terminal.
+# The devos CLI runs loop engineering workflows from your terminal.
 
 `devos` is the command surface for onboarding, daemon startup, workflow runs,
 task intake, status inspection, skills, plugins, and release helpers. It is the
-local entrypoint for the same project-aware orchestration described in the root
+local entrypoint for the same loop engineering system described in the root
 README: brainstorm, plan, implement, test, review, and report progress while
 keeping the operator in control.
 
 Use this README as the command reference. For the product story, features,
-architecture overview, and problems solved, start with
+loop engineering terms, architecture overview, and problems solved, start with
 [../../README.md](../../README.md).
 
 ## Quick Start

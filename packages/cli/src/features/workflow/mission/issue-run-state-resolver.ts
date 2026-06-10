@@ -99,9 +99,7 @@ export class IssueRunStateResolver {
 		await this.refreshStoredIdentity(runState, identityRefresh);
 		Object.assign(runState, normalizeBlockedPlanningFailureForResume(runState));
 		await this.prepareFailedPlanningRetry(runState);
-		if (runState.stage === "brainstorm" && isAssignedState) {
-			runState.brainstormNeedsInfoQuestions = undefined;
-		}
+		await this.prepareLegacyBrainstormState(runState);
 		this.prepareReviewOnlyState(issue, runState);
 		return { runState, existing, isCanceledState };
 	}
@@ -137,7 +135,7 @@ export class IssueRunStateResolver {
 				},
 				stage: this.options.reviewOnly
 					? resolveReviewOnlyBootstrapStage(issue.state)
-					: "brainstorm",
+					: "plan",
 				reviewMode: this.options.reviewOnly ? "bot" : undefined,
 				pullRequest: issue.pullRequest,
 				bugs: [],
@@ -185,6 +183,22 @@ export class IssueRunStateResolver {
 		this.issueLogger.info(
 			{ retryStage: "plan" },
 			"Resuming failed issue from failed stage",
+		);
+		await saveRunState(this.config.workspacePath, runState);
+	}
+
+	private async prepareLegacyBrainstormState(
+		runState: RunState,
+	): Promise<void> {
+		if (runState.stage !== "brainstorm") {
+			return;
+		}
+		runState.stage = "plan";
+		runState.brainstormNeedsInfoQuestions = undefined;
+		runState.brainstormSummary = undefined;
+		this.issueLogger.info(
+			{ fromStage: "brainstorm", toStage: "plan" },
+			"Migrating legacy brainstorm run state to plan",
 		);
 		await saveRunState(this.config.workspacePath, runState);
 	}

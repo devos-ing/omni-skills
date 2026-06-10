@@ -1228,6 +1228,9 @@ components:
       additionalProperties: false
       properties:
         archived: { type: boolean }
+        lastSeenAt:
+          type: string
+          nullable: true
         projectId:
           type: string
           minLength: 1

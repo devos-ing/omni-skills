@@ -1,12 +1,18 @@
 # Product Sense
 
-devos.ing exists to convert issue-tracker intent into reliable engineering progress across one or many projects.
+devos.ing exists to convert issue-tracker intent into reliable loop engineering progress across one or many projects.
+
+## Core Term
+
+Loop engineering is the product concept for observable agent work: route intent
+into project context, run staged agent phases, inspect evidence, feed failures
+back into the loop, and close only when work is done or explicitly blocked.
 
 ## Primary User Value
 
 1. Pull eligible Linear work automatically.
 2. Route work to the right project context.
-3. Execute staged agent work: plan -> implement -> verify.
+3. Execute staged agent loops: plan -> implement -> verify.
 4. Keep status, labels, comments, and PR context synchronized.
 
 ## Product Principles

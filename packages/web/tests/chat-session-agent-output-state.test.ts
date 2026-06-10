@@ -50,6 +50,44 @@ describe("chat session agent output state", () => {
 		]);
 	});
 
+	it("renders live processing stream rows as assistant transcript rows", () => {
+		const outputs = createChatSessionAgentOutputs({
+			messages: [],
+			missionProgress: null,
+			planMessageContent: null,
+			streamLines: [
+				{ id: "line-1", stream: "system", text: "Reading files..." },
+				{ id: "line-2", stream: "system", text: "Running focused tests..." },
+			],
+		});
+
+		expect(outputs).toEqual([
+			{ id: "stream:line-1", text: "Reading files..." },
+			{ id: "stream:line-2", text: "Running focused tests..." },
+		]);
+	});
+
+	it("does not leak structured system stream rows without safe text", () => {
+		const outputs = createChatSessionAgentOutputs({
+			messages: [],
+			missionProgress: null,
+			planMessageContent: null,
+			streamLines: [
+				{
+					id: "line-1",
+					stream: "system",
+					text: JSON.stringify({
+						schema: "devos.workflow.stream.v1",
+						kind: "action",
+						command: "codex exec --prompt secret",
+					}),
+				},
+			],
+		});
+
+		expect(outputs).toEqual([]);
+	});
+
 	it("surfaces persisted mission agent output lines", () => {
 		const outputs = createChatSessionAgentOutputs({
 			messages: [],

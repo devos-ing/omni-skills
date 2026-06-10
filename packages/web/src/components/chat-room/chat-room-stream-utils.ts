@@ -10,17 +10,27 @@ export function chatStreamLinesForSession(
 	return Object.values(streamsByRunId)
 		.filter((stream) => stream.sessionId === sessionId)
 		.sort((left, right) => left.updatedAt.localeCompare(right.updatedAt))
-		.map(
-			(stream): ChatStreamLine => ({
-				id: stream.runId,
-				stream: stream.status === "error" ? "stderr" : "system",
-				text:
-					stream.status === "error"
-						? (stream.error ?? "Chat stream failed")
-						: stream.content,
-			}),
-		)
-		.filter((line) => line.text.trim().length > 0);
+		.flatMap(chatStreamLines);
+}
+
+function chatStreamLines(stream: RealtimeChatStreamBuffer): ChatStreamLine[] {
+	const text =
+		stream.status === "error"
+			? (stream.error ?? "Chat stream failed")
+			: stream.content;
+	const rows = messageRows(text);
+	return rows.map((row, index) => ({
+		id: rows.length === 1 ? stream.runId : `${stream.runId}:${index}`,
+		stream: stream.status === "error" ? "stderr" : "system",
+		text: row,
+	}));
+}
+
+function messageRows(text: string): string[] {
+	return text
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean);
 }
 
 export function hasLoadingChatStreamForSession(

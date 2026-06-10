@@ -1166,7 +1166,7 @@ describe("runWorkflow parallel issue regression", () => {
 		expect(output).toContain("previousIssueId=old-task-id");
 		expect(output).toContain("issueId=new-task-id");
 		expect(output).toContain("Taking issue job");
-		expect(output).toContain("stage=brainstorm");
+		expect(output).toContain("stage=plan");
 		expect(output).not.toContain("resumed=true");
 		expect(markStage).toHaveBeenCalledWith("new-task-id", "canceled");
 
@@ -1231,7 +1231,7 @@ describe("runWorkflow parallel issue regression", () => {
 			"WARN  Discarding stale local run state because server task is available again",
 		);
 		expect(output).toContain("issueKey=ENG-61");
-		expect(output).toContain("stage=brainstorm");
+		expect(output).toContain("stage=plan");
 		expect(output).not.toContain("resumed=true");
 
 		const saved = JSON.parse(
