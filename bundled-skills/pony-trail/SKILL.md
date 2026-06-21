@@ -3,7 +3,7 @@ name: pony-trail
 description: Use when an agent is about to create, edit, move, or delete files and must preserve decision snapshots, action rationale, file-change intent, rollback context, or a git-like audit trail for every file mutation.
 ---
 
-# Pony Trail
+# Ponytrail
 
 ## Overview
 
@@ -62,7 +62,7 @@ Session tree:
     tree.md
 ```
 
-Use `--session-id <id>` or set `PONYTRAIL_SESSION_ID`. `DEVCOURT_SESSION_ID` remains supported as a legacy fallback. If neither is set, the helper writes to `default`.
+Use `--session-id <id>` or set `PONYTRAIL_SESSION_ID`. The legacy `DEVCOURT_SESSION_ID` still works as a fallback. If neither is set, the helper writes to `default`.
 
 ## What To Capture
 

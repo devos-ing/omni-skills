@@ -68,6 +68,7 @@ Revert restores files from the snapshot's `pre` state. If a file did not exist b
 
 ```bash
 bun install
+bun run build
 bun test
 bun run check
 ```
