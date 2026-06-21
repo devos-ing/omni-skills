@@ -7,7 +7,7 @@ export const CODEX_GOAL_PREFIX = "Goal: ";
 export const codexCliConfig = {
   id: "codex-cli",
   displayName: "Codex CLI",
-  description: "Runs a non-interactive Codex CLI worker session with a locked Goal Court contract.",
+  description: "Runs a non-interactive Codex CLI worker session with a locked Ponytrail contract.",
   executable: CODEX_CLI_EXECUTABLE,
   baseArgs: [...CODEX_EXEC_BASE_ARGS],
   goalInput: {

@@ -6,7 +6,7 @@ export const CLAUDE_GOAL_COMMAND = "/goal";
 export const claudeCliConfig = {
   id: "claude-cli",
   displayName: "Claude CLI",
-  description: "Runs a Claude CLI worker session with a locked Goal Court contract.",
+  description: "Runs a Claude CLI worker session with a locked Ponytrail contract.",
   executable: CLAUDE_CLI_EXECUTABLE,
   goalInput: {
     mode: "stdin",

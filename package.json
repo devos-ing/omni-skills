@@ -1,9 +1,9 @@
 {
-  "name": "goal-court-runtime",
+  "name": "ponytrail",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "goal-court": "./src/cli.ts"
+    "ponytrail": "./src/cli.ts"
   },
   "files": [
     "src",

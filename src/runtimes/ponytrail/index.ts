@@ -3,4 +3,5 @@ export * from "./goal";
 export * from "./manifest";
 export * from "./onboarding";
 export * from "./requirement-court";
+export * from "./snapshots";
 export * from "./voting";

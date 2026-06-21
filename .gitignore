@@ -6,3 +6,5 @@ coverage/
 .agent-change-snapshots/
 work/
 .DS_Store
+docs/superpowers
+.codegraph

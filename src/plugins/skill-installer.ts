@@ -67,9 +67,7 @@ const agentSkillDirs: Record<SkillInstallAgent, string[]> = {
   codex: [".codex", "skills"],
 };
 
-// Keep the legacy hook filename so existing agent settings keep pointing at a script
-// that is refreshed to invoke the current skill name.
-const prehookScriptName = "devcourt-record-change-evidence-prehook.sh";
+const prehookScriptName = "ponytrail-record-change-evidence-prehook.sh";
 const prehookMatchers = ["Write", "Edit", "MultiEdit", "NotebookEdit", "Bash"];
 const agentPrehookPaths: Record<SkillInstallAgent, { hookDir: string[]; settingsPath: string[] }> =
   {

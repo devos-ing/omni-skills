@@ -1,4 +1,4 @@
-# Goal Court Runtime Architecture
+# Ponytrail Runtime Architecture
 
 The project is split into one thin CLI shell and three long-lived seams:
 
@@ -6,11 +6,12 @@ The project is split into one thin CLI shell and three long-lived seams:
 src/
   cli.ts
   runtimes/
-    goal-court/
+    ponytrail/
       manifest.ts
       onboarding.ts
       goal.ts
       requirement-court.ts
+      snapshots.ts
       voting.ts
   plugins/
     adapters/
@@ -25,13 +26,14 @@ src/
 
 ## Runtime
 
-`src/runtimes/goal-court` is the first runtime module. It owns the requirement-first court lifecycle:
+`src/runtimes/ponytrail` is the first runtime module. It owns the requirement-first court lifecycle:
 
 - load and validate the manifest
 - create project onboarding files
 - run the requirements brainstorm gate
 - draft a goal contract from a raw request
 - run the 4-bot / 3-approval requirement court plus a non-voting Judge
+- read Pony Trail snapshot history and plan file-level reverts
 - print visible role-bot discussion before worker execution is allowed
 
 The CLI should call this runtime through its exported interface instead of knowing the internals of goal drafting or vote tallying.
@@ -40,7 +42,7 @@ The CLI should call this runtime through its exported interface instead of knowi
 
 `manifest.models` declares named AI model configurations for the court. Each bot references one of those model IDs through `bot.model`, and manifest validation rejects any bot that points at a missing model.
 
-The runtime treats `provider` and `name` as configuration values. This keeps goal discussion model selection editable in `.goal-court/manifest.json` without coupling the core runtime to a specific vendor SDK or CLI flag shape.
+The runtime treats `provider` and `name` as configuration values. This keeps goal discussion model selection editable in `.ponytrail/manifest.json` without coupling the core runtime to a specific vendor SDK or CLI flag shape.
 
 ## Plugins
 
@@ -84,7 +86,7 @@ Skills should describe review behavior and instructions. Bots can compose skills
 Running onboarding creates a local runtime workspace:
 
 ```text
-.goal-court/
+.ponytrail/
   manifest.json
   README.md
   goals/
@@ -93,14 +95,14 @@ Running onboarding creates a local runtime workspace:
   skills/
 ```
 
-The `.goal-court` folder is for project-local policy, bot configuration, evidence, and extensions. Source code under `src/` defines the reusable runtime; `.goal-court/` defines how a specific project uses it.
+The `.ponytrail` folder is for project-local policy, bot configuration, evidence, and extensions. Source code under `src/` defines the reusable runtime; `.ponytrail/` defines how a specific project uses it.
 
 ## Flow
 
 ```text
 Human request
   -> CLI
-  -> goal-court runtime
+  -> ponytrail runtime
   -> requirements brainstorm
   -> ask human for details when unclear
   -> Product Manager, Project Manager, Engineer, and Testing bots discuss

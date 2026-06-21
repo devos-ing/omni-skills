@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { draftGoalContract } from "../src/runtimes/goal-court/goal";
-import { createDefaultManifest } from "../src/runtimes/goal-court/manifest";
+import { draftGoalContract } from "../src/runtimes/ponytrail/goal";
+import { createDefaultManifest } from "../src/runtimes/ponytrail/manifest";
 
 describe("goal contracts", () => {
   test("drafts a requirement-first goal contract from a raw request", () => {

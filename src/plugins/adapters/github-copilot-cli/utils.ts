@@ -7,7 +7,7 @@ export const GITHUB_COPILOT_GOAL_PREFIX = "Goal: ";
 export const githubCopilotCliConfig = {
   id: "github-copilot-cli",
   displayName: "GitHub Copilot CLI",
-  description: "Runs a GitHub Copilot CLI suggestion flow from a locked Goal Court contract.",
+  description: "Runs a GitHub Copilot CLI suggestion flow from a locked Ponytrail contract.",
   executable: GITHUB_COPILOT_CLI_EXECUTABLE,
   baseArgs: [...GITHUB_COPILOT_BASE_ARGS],
   goalInput: {

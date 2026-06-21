@@ -7,14 +7,14 @@ import {
   loadManifest,
   ManifestSchema,
   writeManifest,
-} from "../src/runtimes/goal-court/manifest";
+} from "../src/runtimes/ponytrail/manifest";
 
 describe("manifest", () => {
   test("creates a default 4-bot requirement court with a non-voting Judge", () => {
     const manifest = createDefaultManifest();
     const parsed = ManifestSchema.parse(manifest);
 
-    expect(parsed.kind).toBe("ai-work-runtime.goal-court");
+    expect(parsed.kind).toBe("ai-work-runtime.ponytrail");
     expect(parsed.deliberation.decisionRule.voters).toBe(4);
     expect(parsed.deliberation.decisionRule.requiredApprovals).toBe(3);
     expect(parsed.deliberation.decisionRule.voterIds).toEqual([
@@ -67,7 +67,7 @@ describe("manifest", () => {
   });
 
   test("writes and loads a manifest from disk", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "goal-court-manifest-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-manifest-"));
     const manifestPath = join(rootDir, "manifest.json");
 
     try {
@@ -84,7 +84,7 @@ describe("manifest", () => {
   });
 
   test("loads legacy manifests that do not have a model registry yet", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "goal-court-manifest-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-manifest-"));
     const manifestPath = join(rootDir, "manifest.json");
 
     try {

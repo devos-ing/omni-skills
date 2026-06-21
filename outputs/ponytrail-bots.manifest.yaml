@@ -1,8 +1,8 @@
 manifest_version: "0.1"
-kind: "ai-work-runtime.goal-court"
+kind: "ai-work-runtime.ponytrail"
 
 metadata:
-  name: "requirement-first-goal-court"
+  name: "requirement-first-ponytrail"
   description: "A configurable bot court that agrees on an AI work goal before Codex, Claude, or another agent begins execution."
   owner: "human_owner"
 

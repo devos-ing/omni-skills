@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   brainstormRequirements,
   prepareGoalDiscussion,
-} from "../src/runtimes/goal-court/brainstorm";
-import { createDefaultManifest } from "../src/runtimes/goal-court/manifest";
+} from "../src/runtimes/ponytrail/brainstorm";
+import { createDefaultManifest } from "../src/runtimes/ponytrail/manifest";
 
 describe("goal brainstorm stage", () => {
   test("asks for user details when requirements are too vague", () => {

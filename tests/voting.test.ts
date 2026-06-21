@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { createDefaultManifest } from "../src/runtimes/goal-court/manifest";
-import { tallyVotes } from "../src/runtimes/goal-court/voting";
+import { createDefaultManifest } from "../src/runtimes/ponytrail/manifest";
+import { tallyVotes } from "../src/runtimes/ponytrail/voting";
 
 describe("voting", () => {
   test("approves a requirement direction when at least 3 of 4 review bots approve", () => {

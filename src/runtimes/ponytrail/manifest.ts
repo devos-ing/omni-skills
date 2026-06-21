@@ -112,7 +112,7 @@ const DEFAULT_BOT_MODEL_IDS: Record<string, string> = {
 
 const ManifestBaseSchema = z.object({
   manifestVersion: z.string().min(1),
-  kind: z.literal("ai-work-runtime.goal-court"),
+  kind: z.union([z.literal("ai-work-runtime.ponytrail"), z.literal("ai-work-runtime.goal-court")]),
   metadata: z.object({
     name: z.string().min(1),
     description: z.string().min(1),
@@ -236,9 +236,9 @@ export function createDefaultManifest(options: DefaultManifestOptions = {}): Man
 
   return ManifestSchema.parse({
     manifestVersion: "0.1",
-    kind: "ai-work-runtime.goal-court",
+    kind: "ai-work-runtime.ponytrail",
     metadata: {
-      name: options.name ?? "Requirement First Goal Court",
+      name: options.name ?? "Requirement First Ponytrail",
       description:
         "A configurable bot court that agrees on a detailed requirement before Codex, Claude, or another agent begins execution.",
       owner: "human_owner",

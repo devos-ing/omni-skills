@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { draftGoalContract } from "../src/runtimes/goal-court/goal";
-import { createDefaultManifest } from "../src/runtimes/goal-court/manifest";
-import { runRequirementCourt } from "../src/runtimes/goal-court/requirement-court";
+import { draftGoalContract } from "../src/runtimes/ponytrail/goal";
+import { createDefaultManifest } from "../src/runtimes/ponytrail/manifest";
+import { runRequirementCourt } from "../src/runtimes/ponytrail/requirement-court";
 
 describe("requirement court", () => {
   test("creates visible role-bot discussion entries before the Judge summary", () => {

@@ -107,19 +107,19 @@ describe("skill installer", () => {
         homeDir,
         ".claude",
         "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
+        "ponytrail-record-change-evidence-prehook.sh",
       );
       const codexHookPath = join(
         homeDir,
         ".codex",
         "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
+        "ponytrail-record-change-evidence-prehook.sh",
       );
       const copilotHookPath = join(
         homeDir,
         ".agents",
         "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
+        "ponytrail-record-change-evidence-prehook.sh",
       );
 
       await expect(stat(claudeHookPath)).resolves.toBeTruthy();
@@ -185,7 +185,7 @@ describe("skill installer", () => {
         status: "would_install",
       });
       await expect(
-        stat(join(homeDir, ".codex", "hooks", "devcourt-record-change-evidence-prehook.sh")),
+        stat(join(homeDir, ".codex", "hooks", "ponytrail-record-change-evidence-prehook.sh")),
       ).rejects.toThrow();
     } finally {
       await rm(homeDir, { recursive: true, force: true });
