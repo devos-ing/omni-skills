@@ -261,7 +261,7 @@ ensure_session_tree() {
   mkdir -p "$session_dir"
   if [ ! -f "$session_tree_path" ]; then
     {
-      printf '# DevCourt Session Tree\n\n'
+      printf '# PonyTrail Session Tree\n\n'
       printf 'Session: `%s`\n\n' "$session_id"
       printf 'Each commit records agent intent, changed files, stored copies, checks, and rollback context.\n'
     } >"$session_tree_path"
@@ -333,7 +333,7 @@ append_session_tree_entry() {
 root="."
 store="$DEFAULT_STORE"
 copy_limit="$DEFAULT_COPY_LIMIT"
-session_id="${DEVCOURT_SESSION_ID:-default}"
+session_id="${PONYTRAIL_SESSION_ID:-${DEVCOURT_SESSION_ID:-default}}"
 phase=""
 snapshot_id=""
 files=""

@@ -1,49 +1,49 @@
-# DevCourt
+# PonyTrail
 
-DevCourt is a requirement-first command-line runtime for supervising AI workers. It helps a human owner turn a loose request into a visible court-style discussion, a locked requirement, and installable agent skills for Claude, Codex, and GitHub Copilot.
+PonyTrail is a requirement-first command-line runtime for supervising AI workers. It helps a human owner turn a loose request into a visible court-style discussion, a locked requirement, and installable agent skills for Claude, Codex, and GitHub Copilot.
 
-Purpose: make agent decisions easy to track like git. DevCourt records why an agent changed files, groups snapshots into session commit trees, and keeps enough evidence to understand or revert a change later.
+Purpose: make agent decisions easy to track like git. PonyTrail records why an agent changed files, groups snapshots into session commit trees, and keeps enough evidence to understand or revert a change later.
 
-The current npm package is `goal-court-runtime` and the current CLI binary is `goal-court`.
+The current npm package is `goal-court` and the current CLI binary is `goal-court`.
 
 ## Install
 
-Install the default DevCourt skill, `pony-trail`, into Claude, GitHub Copilot/shared agents, and Codex:
+Install the default PonyTrail skill, `pony-trail`, into Claude, GitHub Copilot/shared agents, and Codex:
 
 ```bash
-npx goal-court-runtime skills install pony-trail
+npx goal-court skills install pony-trail
 ```
 
 or with Bun:
 
 ```bash
-bunx goal-court-runtime skills install pony-trail
+bunx goal-court skills install pony-trail
 ```
 
 Install for one agent target:
 
 ```bash
-npx goal-court-runtime skills install pony-trail --agents claude
-npx goal-court-runtime skills install pony-trail --agents codex
-npx goal-court-runtime skills install pony-trail --agents copilot
+npx goal-court skills install pony-trail --agents claude
+npx goal-court skills install pony-trail --agents codex
+npx goal-court skills install pony-trail --agents copilot
 ```
 
 Preview destinations before writing files:
 
 ```bash
-npx goal-court-runtime skills install pony-trail --dry-run
+npx goal-court skills install pony-trail --dry-run
 ```
 
-Install the skill and add a DevCourt prehook reminder so file-editing tools automatically receive Pony Trail context:
+Install the skill and add a PonyTrail prehook reminder so file-editing tools automatically receive PonyTrail context:
 
 ```bash
-npx goal-court-runtime skills install pony-trail --prehook
+npx goal-court skills install pony-trail --prehook
 ```
 
 Overwrite an existing installed copy:
 
 ```bash
-npx goal-court-runtime skills install pony-trail --force
+npx goal-court skills install pony-trail --force
 ```
 
 Install destinations:
@@ -54,20 +54,12 @@ Install destinations:
 | Codex | `~/.codex/skills/pony-trail` |
 | GitHub Copilot/shared agents | `~/.agents/skills/pony-trail` |
 
-Legacy skill names still work as aliases:
-
-```bash
-npx goal-court-runtime skills install record-change-evidence
-npx goal-court-runtime skills install enter-into-evidence
-npx goal-court-runtime skills install snapshotting-file-changes
-```
-
 ## How It Works
 
-DevCourt separates requirement discussion from worker execution:
+PonyTrail separates requirement discussion from worker execution:
 
 1. A human gives a request.
-2. DevCourt checks whether the request is clear enough.
+2. PonyTrail checks whether the request is clear enough.
 3. Product, project, engineering, and testing bots discuss the requirement.
 4. The voting bots approve or request amendments.
 5. A non-voting Judge summarizes the direction.
@@ -119,6 +111,13 @@ bun run dev -- bots --manifest work/smoke-runtime/.goal-court/manifest.json
 bun run dev -- goal "Add CSV import to the admin dashboard"
 ```
 
+Build the package CLI:
+
+```bash
+bun run build
+bun dist/cli.js --help
+```
+
 Run checks:
 
 ```bash
@@ -146,15 +145,15 @@ Project layout:
 
 ## FAQs
 
-### Is the project called DevCourt or Goal Court?
+### Is the project called PonyTrail or Goal Court?
 
-The product name is DevCourt. The current package is `goal-court-runtime`, and the current binary is `goal-court`.
+The product name is PonyTrail. The current package is `goal-court`, and the current binary is `goal-court`.
 
 ### What does `skills install` install?
 
 By default, it installs `pony-trail`, a skill that records why files changed, what changed, how it was verified, and how to roll it back.
 
-### Does DevCourt support Claude, Codex, and GitHub Copilot?
+### Does PonyTrail support Claude, Codex, and GitHub Copilot?
 
 Yes. The installer can write skills to Claude (`~/.claude/skills`), Codex (`~/.codex/skills`), and GitHub Copilot/shared agent skills (`~/.agents/skills`). Worker adapter seams also exist under `src/plugins/adapters/`.
 
@@ -174,7 +173,7 @@ The folder must contain a `SKILL.md` with valid frontmatter.
 
 ### Do snapshots replace git?
 
-No. Snapshots explain the reason, purpose, verification, and rollback context for file changes. Git still handles version control and reversions when available. DevCourt adds a git-like decision tree so you can see the agent's commits of intent even when the workspace is not a git repo.
+No. Snapshots explain the reason, purpose, verification, and rollback context for file changes. Git still handles version control and reversions when available. PonyTrail adds a git-like decision tree so you can see the agent's commits of intent even when the workspace is not a git repo.
 
 ### Where is the session tree?
 
@@ -185,7 +184,7 @@ Each snapshot belongs to a session. The shell helper writes:
 .agent-change-snapshots/sessions/<session-id>/tree.md
 ```
 
-Set `DEVCOURT_SESSION_ID` or pass `--session-id <id>` to group related changes into the same tree.
+Set `PONYTRAIL_SESSION_ID` or pass `--session-id <id>` to group related changes into the same tree. `DEVCOURT_SESSION_ID` remains supported as a legacy fallback.
 
 ### Why does the snapshot helper use `sh`?
 
@@ -193,4 +192,4 @@ The current helper is `scripts/snapshot_change.sh`, so agents can record snapsho
 
 ### What does `--prehook` do?
 
-`--prehook` installs a small DevCourt hook script and merges a `PreToolUse` hook into the selected agent settings. The hook adds context before mutation-prone tools so the agent remembers to use `$pony-trail` before and after file changes. It preserves existing hooks.
+`--prehook` installs a small PonyTrail hook script and merges a `PreToolUse` hook into the selected agent settings. The hook adds context before mutation-prone tools so the agent remembers to use `$pony-trail` before and after file changes. It preserves existing hooks.

@@ -13,6 +13,15 @@
     }
   },
   "files": {
-    "includes": ["**", "!node_modules", "!bun.lock", "!.goal-court", "!work"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!bun.lock",
+      "!.goal-court",
+      "!.agent-change-snapshots",
+      "!coverage",
+      "!dist",
+      "!work"
+    ]
   }
 }

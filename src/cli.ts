@@ -357,7 +357,7 @@ function configureSkillInstallCommand(command: Command, rootDir: string): Comman
     )
     .option("--home <dir>", "home directory that contains agent config folders", homedir())
     .option("--dry-run", "show install destinations without writing files", false)
-    .option("--prehook", "also install a DevCourt prehook reminder for file mutations", false)
+    .option("--prehook", "also install a PonyTrail prehook reminder for file mutations", false)
     .option("-f, --force", "overwrite existing installed skill folders", false)
     .action(
       async (

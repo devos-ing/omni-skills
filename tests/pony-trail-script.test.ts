@@ -144,7 +144,7 @@ describe("pony-trail shell helper", () => {
         join(rootDir, ".agent-change-snapshots", "sessions", "session-alpha", "tree.md"),
         "utf8",
       );
-      expect(sessionTree).toContain("# DevCourt Session Tree");
+      expect(sessionTree).toContain("# PonyTrail Session Tree");
       expect(sessionTree).toContain("Session: `session-alpha`");
       expect(sessionTree).toContain("## commit shell-helper-test-001");
       expect(sessionTree).toContain("- phase: `pre`");
@@ -165,6 +165,6 @@ describe("pony-trail shell helper", () => {
     const output = JSON.parse(hook.stdout);
     expect(output.additionalContext).toContain("$pony-trail");
     expect(output.additionalContext).toContain("pre-change snapshot");
-    expect(output.systemMessage).toContain("DevCourt");
+    expect(output.systemMessage).toContain("PonyTrail");
   });
 });

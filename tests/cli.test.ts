@@ -328,7 +328,7 @@ describe("cli", () => {
 
       expect(logs).toContain("Prehook install plan");
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes(".claude/hooks/devcourt"))).toBe(true);
+      expect(logs.some((line) => line.includes(".claude/hooks/ponytrail"))).toBe(true);
       expect(logs.some((line) => line.includes("codex: would install"))).toBe(true);
       expect(logs.some((line) => line.includes("copilot: would install"))).toBe(true);
     } finally {

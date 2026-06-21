@@ -103,24 +103,9 @@ describe("skill installer", () => {
         "installed",
       ]);
 
-      const claudeHookPath = join(
-        homeDir,
-        ".claude",
-        "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
-      );
-      const codexHookPath = join(
-        homeDir,
-        ".codex",
-        "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
-      );
-      const copilotHookPath = join(
-        homeDir,
-        ".agents",
-        "hooks",
-        "devcourt-record-change-evidence-prehook.sh",
-      );
+      const claudeHookPath = join(homeDir, ".claude", "hooks", "ponytrail-prehook.sh");
+      const codexHookPath = join(homeDir, ".codex", "hooks", "ponytrail-prehook.sh");
+      const copilotHookPath = join(homeDir, ".agents", "hooks", "ponytrail-prehook.sh");
 
       await expect(stat(claudeHookPath)).resolves.toBeTruthy();
       await expect(stat(codexHookPath)).resolves.toBeTruthy();
@@ -185,7 +170,7 @@ describe("skill installer", () => {
         status: "would_install",
       });
       await expect(
-        stat(join(homeDir, ".codex", "hooks", "devcourt-record-change-evidence-prehook.sh")),
+        stat(join(homeDir, ".codex", "hooks", "ponytrail-prehook.sh")),
       ).rejects.toThrow();
     } finally {
       await rm(homeDir, { recursive: true, force: true });

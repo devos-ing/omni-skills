@@ -59,7 +59,10 @@ const bundledSkillAliases: Record<string, string> = {
   "snapshotting-file-changes": "pony-trail",
 };
 const moduleDir = dirname(fileURLToPath(import.meta.url));
-const bundledSkillsDir = resolve(moduleDir, "..", "..", "bundled-skills");
+const bundledSkillsDirCandidates = [
+  resolve(moduleDir, "..", "..", "bundled-skills"),
+  resolve(moduleDir, "..", "bundled-skills"),
+];
 
 const agentSkillDirs: Record<SkillInstallAgent, string[]> = {
   claude: [".claude", "skills"],
@@ -67,9 +70,7 @@ const agentSkillDirs: Record<SkillInstallAgent, string[]> = {
   codex: [".codex", "skills"],
 };
 
-// Keep the legacy hook filename so existing agent settings keep pointing at a script
-// that is refreshed to invoke the current skill name.
-const prehookScriptName = "devcourt-record-change-evidence-prehook.sh";
+const prehookScriptName = "ponytrail-prehook.sh";
 const prehookMatchers = ["Write", "Edit", "MultiEdit", "NotebookEdit", "Bash"];
 const agentPrehookPaths: Record<SkillInstallAgent, { hookDir: string[]; settingsPath: string[] }> =
   {
@@ -140,8 +141,8 @@ export async function resolveInstallSkillSource(
   }
 
   const bundledName = bundledSkillAliases[sourceOrName] ?? sourceOrName;
-  const bundledPath = join(bundledSkillsDir, bundledName);
-  if (await pathExists(bundledPath)) {
+  const bundledPath = await resolveBundledSkillPath(bundledName);
+  if (bundledPath) {
     const name = await readSkillName(bundledPath);
     return { kind: "bundled", name, path: bundledPath };
   }
@@ -151,6 +152,17 @@ export async function resolveInstallSkillSource(
   }
 
   throw new Error(`Skill source not found: ${sourceOrName}`);
+}
+
+async function resolveBundledSkillPath(skillName: string): Promise<string | null> {
+  for (const bundledSkillsDir of bundledSkillsDirCandidates) {
+    const bundledPath = join(bundledSkillsDir, skillName);
+    if (await pathExists(bundledPath)) {
+      return bundledPath;
+    }
+  }
+
+  return null;
 }
 
 export function parseSkillInstallAgents(rawAgents: string): SkillInstallAgent[] {

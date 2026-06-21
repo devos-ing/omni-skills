@@ -84,6 +84,7 @@ bun run dev -- --help       # Show CLI commands
 bun run dev -- onboard      # Create local .goal-court files
 bun run dev -- bots         # List manifest-defined bots
 bun run dev -- goal "..."   # Draft a goal contract
+bun run build               # Build the packaged CLI bundle
 bun run dev -- vote --votes '[...]'
 bun run dev -- stream-goal "..."                  # Stream through the first configured worker
 bun run dev -- stream-goal --worker claude "..."  # Stream through a named manifest worker
