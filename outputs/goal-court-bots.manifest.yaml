@@ -1,0 +1,305 @@
+manifest_version: "0.1"
+kind: "ai-work-runtime.goal-court"
+
+metadata:
+  name: "requirement-first-goal-court"
+  description: "A configurable bot court that agrees on an AI work goal before Codex, Claude, or another agent begins execution."
+  owner: "human_owner"
+
+runtime:
+  mode: "requirement_first"
+  default_language: "en"
+  worker_agents:
+    - id: "codex"
+      adapter: "cli"
+      command: "codex"
+      goal_command: "exec"
+      notes: "Runtime should pass the locked goal contract into a non-interactive Codex exec session."
+    - id: "claude"
+      adapter: "cli"
+      command: "claude"
+      goal_command: "/goal"
+      notes: "Runtime should pass the locked goal contract into the Claude session before implementation."
+
+models:
+  - id: "requirements_model"
+    provider: "configurable"
+    name: "requirements-model"
+    purpose: "Clarify vague human requests before the goal discussion begins."
+    temperature: 0.2
+  - id: "draft_model"
+    provider: "configurable"
+    name: "goal-draft-model"
+    purpose: "Draft structured goal contracts from clarified user requirements."
+    temperature: 0.2
+  - id: "product_model"
+    provider: "configurable"
+    name: "product-review-model"
+    purpose: "Review goal direction for user intent, value, and scope control."
+    temperature: 0.1
+  - id: "engineering_model"
+    provider: "configurable"
+    name: "engineering-review-model"
+    purpose: "Review technical feasibility, execution boundaries, and implementation risk."
+    temperature: 0.1
+  - id: "verification_model"
+    provider: "configurable"
+    name: "verification-review-model"
+    purpose: "Review acceptance criteria, evidence requirements, and failure conditions."
+    temperature: 0.1
+
+goal_contract:
+  required_fields:
+    - "title"
+    - "intent"
+    - "scope.include"
+    - "scope.exclude"
+    - "acceptance_criteria"
+    - "evidence_required"
+    - "risks"
+    - "approval_rule"
+  locked_after:
+    - "goal_direction_panel.approved"
+    - "human_owner.approved"
+  amendment_command: "/amend-goal"
+  amendment_policy:
+    agent_may_request: true
+    agent_may_apply_without_vote: false
+    requires_panel_revote: true
+    requires_human_approval: true
+
+deliberation:
+  panel_id: "goal_direction_panel"
+  purpose: "Decide whether the proposed goal direction is clear, valuable, feasible, and verifiable."
+  max_rounds: 2
+  stages:
+    - id: "brainstorm"
+      actor: "requirements_brainstorm_bot"
+      output: "clarifying_questions"
+    - id: "draft"
+      actor: "goal_draft_bot"
+      output: "goal_contract_draft"
+    - id: "critique"
+      actor: "goal_direction_panel"
+      output: "role_critiques"
+    - id: "revise"
+      actor: "goal_draft_bot"
+      output: "revised_goal_contract"
+    - id: "vote"
+      actor: "goal_direction_panel"
+      output: "votes"
+  decision_rule:
+    voters: 3
+    required_approvals: 2
+    allow_abstain: false
+    tie_breaker: "human_owner"
+    human_final_approval: true
+
+skills:
+  intent_alignment:
+    description: "Compare the draft goal against the user's raw request and preserve the user's real intent."
+  scope_control:
+    description: "Identify what belongs inside the task, what should be excluded, and where the agent might drift."
+  feasibility_review:
+    description: "Check whether the goal can be implemented by the chosen worker agent with the available repo, tools, and time."
+  verification_design:
+    description: "Turn success into concrete acceptance criteria and evidence requirements."
+  risk_review:
+    description: "Identify security, data loss, privacy, external side effect, cost, and permission risks."
+  goal_rewrite:
+    description: "Rewrite a raw request or bot feedback into a concise structured goal contract."
+
+bots:
+  - id: "requirements_brainstorm_bot"
+    display_name: "Requirements Brainstorm Bot"
+    type: "brainstorm_bot"
+    model: "requirements_model"
+    temperature: 0.2
+    skills:
+      - "intent_alignment"
+      - "scope_control"
+      - "verification_design"
+    instruction: |
+      Clarify the user's raw request before discussion.
+      If the requirement is vague, ask the human owner for the missing outcome, scope, and evidence details before drafting a goal.
+      Do not allow the discussion panel to vote on a goal until the requirement is clear enough to verify.
+    outputs:
+      - "clarifying_questions"
+      - "brainstorm_summary"
+
+  - id: "goal_draft_bot"
+    display_name: "Goal Draft Bot"
+    type: "drafting_bot"
+    model: "draft_model"
+    temperature: 0.2
+    skills:
+      - "goal_rewrite"
+      - "intent_alignment"
+      - "scope_control"
+      - "verification_design"
+    instruction: |
+      Convert the human's raw request into a structured goal contract.
+      Preserve the user's intent, make scope explicit, and write acceptance criteria that can be judged later.
+      Do not expand the goal beyond what the user asked for.
+      If important information is missing, mark it as an open question instead of inventing it.
+    outputs:
+      - "goal_contract_draft"
+      - "open_questions"
+
+  - id: "product_bot"
+    display_name: "Product Bot"
+    type: "review_bot"
+    model: "product_model"
+    temperature: 0.1
+    panel: "goal_direction_panel"
+    skills:
+      - "intent_alignment"
+      - "scope_control"
+    instruction: |
+      Judge whether the draft goal matches the human's intent and creates the expected product value.
+      Focus on user outcome, missing context, overreach, and whether the goal is stated in human-understandable language.
+      Approve only when the direction is useful and faithful to the user's request.
+    approval_conditions:
+      - "The goal preserves the user's stated intent."
+      - "The expected user or business outcome is clear."
+      - "The draft does not add unnecessary product scope."
+    reject_or_amend_conditions:
+      - "The goal optimizes for a different outcome than the user asked for."
+      - "The goal is too broad for a single agent task."
+      - "The goal hides an important product decision inside implementation details."
+
+  - id: "engineering_bot"
+    display_name: "Engineering Bot"
+    type: "review_bot"
+    model: "engineering_model"
+    temperature: 0.1
+    panel: "goal_direction_panel"
+    skills:
+      - "feasibility_review"
+      - "scope_control"
+      - "risk_review"
+    instruction: |
+      Judge whether the goal is technically feasible and scoped for execution by a worker agent.
+      Focus on repo boundaries, dependencies, likely implementation surfaces, risky side effects, and whether the task can be completed without hidden architectural decisions.
+      Approve only when the goal gives an engineer enough direction to start safely.
+    approval_conditions:
+      - "The technical boundary is clear enough to begin."
+      - "Major dependencies and constraints are named or intentionally deferred."
+      - "Known risky operations are called out before execution."
+    reject_or_amend_conditions:
+      - "The goal requires unknown systems or credentials without saying so."
+      - "The goal combines multiple independent projects."
+      - "The goal would force the worker agent to make large unstated architecture choices."
+
+  - id: "verification_bot"
+    display_name: "Verification Bot"
+    type: "review_bot"
+    model: "verification_model"
+    temperature: 0.1
+    panel: "goal_direction_panel"
+    skills:
+      - "verification_design"
+      - "risk_review"
+    instruction: |
+      Judge whether success can be objectively verified.
+      Focus on acceptance criteria, evidence, testability, screenshots, command output, logs, and what would count as failure.
+      Approve only when the final reviewer can determine pass or fail without reading the worker agent's entire conversation.
+    approval_conditions:
+      - "Acceptance criteria are observable."
+      - "Required evidence is listed."
+      - "Failure conditions are clear enough for a reviewer to object."
+    reject_or_amend_conditions:
+      - "The goal uses vague success language such as better, clean, robust, or improved without evidence."
+      - "There is no verification path."
+      - "The evidence can pass while the user's actual request remains unsatisfied."
+
+human_roles:
+  - id: "human_owner"
+    display_name: "Human Owner"
+    permissions:
+      - "approve_locked_goal"
+      - "reject_goal"
+      - "edit_goal"
+      - "override_bot_vote"
+      - "veto_execution"
+    responsibilities:
+      - "Confirm the final goal contract matches the real intention."
+      - "Decide unresolved product or business trade-offs."
+      - "Approve the locked contract before any worker agent begins execution."
+
+vote_schema:
+  required_format: "json"
+  fields:
+    vote:
+      type: "enum"
+      values:
+        - "approve"
+        - "amend"
+        - "reject"
+    confidence:
+      type: "number"
+      minimum: 0
+      maximum: 1
+    reason:
+      type: "string"
+      max_words: 80
+    required_changes:
+      type: "array"
+      item_type: "string"
+      required_when:
+        - "vote == amend"
+        - "vote == reject"
+  example:
+    vote: "amend"
+    confidence: 0.74
+    reason: "The direction is right, but success cannot be verified yet."
+    required_changes:
+      - "Add at least one acceptance criterion with command, UI, or file evidence."
+
+worker_execution_gate:
+  may_start_when:
+    - "goal_direction_panel.approvals >= 2"
+    - "human_owner.approved == true"
+    - "goal_contract.status == locked"
+  must_stop_when:
+    - "worker_agent.requests_goal_amendment == true"
+    - "human_owner.veto_execution == true"
+    - "evidence_ledger.detects_out_of_scope_action == true"
+
+evidence_ledger:
+  record:
+    - "raw_human_request"
+    - "requirements_brainstorm"
+    - "clarifying_questions"
+    - "goal_contract_drafts"
+    - "bot_critiques"
+    - "bot_votes"
+    - "human_decisions"
+    - "locked_goal_contract"
+    - "worker_agent_actions"
+    - "commands_run"
+    - "files_changed"
+    - "tests_or_checks"
+    - "screenshots_or_artifacts"
+    - "amendment_requests"
+  retention_policy: "append_only"
+
+default_goal_template:
+  title: ""
+  intent: ""
+  scope:
+    include: []
+    exclude: []
+  acceptance_criteria: []
+  evidence_required: []
+  risks: []
+  open_questions: []
+  approval_rule:
+    goal_direction_panel:
+      required_approvals: 2
+      voters:
+        - "product_bot"
+        - "engineering_bot"
+        - "verification_bot"
+    human_final_approval: true
+  status: "draft"

@@ -1,0 +1,8 @@
+node_modules/
+bun.lock
+.goal-court/
+dist/
+coverage/
+.agent-change-snapshots/
+work/
+.DS_Store
