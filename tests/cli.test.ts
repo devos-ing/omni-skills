@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildProgram, type GoalClarificationPrompter } from "../src/cli";
@@ -98,10 +98,11 @@ describe("cli", () => {
     }
   });
 
-  test("onboard installs the bundled pony trail skill by default", async () => {
+  test("onboard prompts for the workspace name and installs the bundled skill", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
+    const promptedDefaults: string[] = [];
     const originalLog = console.log;
 
     console.log = (...values: unknown[]) => {
@@ -109,10 +110,13 @@ describe("cli", () => {
     };
 
     try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--yes", "--home", homeDir],
-        { from: "user" },
-      );
+      await buildProgram({
+        cwd: rootDir,
+        projectNamePrompter: async (defaultName: string) => {
+          promptedDefaults.push(defaultName);
+          return "Prompted Workspace";
+        },
+      }).parseAsync(["onboard", "--home", homeDir], { from: "user" });
 
       await expect(
         stat(join(homeDir, ".claude", "skills", "pony-trail", "SKILL.md")),
@@ -123,7 +127,13 @@ describe("cli", () => {
       await expect(
         stat(join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md")),
       ).resolves.toBeTruthy();
+      const manifest = JSON.parse(
+        await readFile(join(rootDir, ".ponytrail", "manifest.json"), "utf8"),
+      );
+      expect(manifest.metadata.name).toBe("Prompted Workspace");
+      expect(promptedDefaults).toEqual([rootDir.slice(rootDir.lastIndexOf("/") + 1)]);
       expect(logs.some((line) => line.includes("Skill install result"))).toBe(true);
+      expect(logs.some((line) => line.includes("Ponytrail onboarding complete"))).toBe(true);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -372,7 +382,7 @@ describe("cli", () => {
     }
   });
 
-  test("history prints snapshot commits and supports JSON output", async () => {
+  test("history supports simple, details, and JSON output", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const logs: string[] = [];
     const originalLog = console.log;
@@ -385,13 +395,22 @@ describe("cli", () => {
       await writeSampleSnapshotLog(rootDir);
 
       await buildProgram({ cwd: rootDir }).parseAsync(["history"], { from: "user" });
+      const simpleLogs = logs.splice(0);
+      await buildProgram({ cwd: rootDir }).parseAsync(["history", "--mode", "details"], {
+        from: "user",
+      });
+      const detailsLogs = logs.splice(0);
       await buildProgram({ cwd: rootDir }).parseAsync(["history", "--json"], { from: "user" });
+      const jsonLogs = logs.splice(0);
 
-      expect(logs).toContain("Snapshot history");
-      expect(logs.some((line) => line.includes("session-alpha"))).toBe(true);
-      expect(logs.some((line) => line.includes("snapshot-001"))).toBe(true);
-      expect(logs.some((line) => line.includes("Updated note"))).toBe(true);
-      expect(logs.some((line) => line.includes('"sessionId": "session-alpha"'))).toBe(true);
+      expect(simpleLogs.map(stripAnsi)).toEqual(["snapshot-001"]);
+      expect(simpleLogs.some((line) => line.includes("snapshot-001"))).toBe(true);
+      expect(simpleLogs.some((line) => line.includes("Updated note"))).toBe(false);
+      expect(detailsLogs).toContain("Snapshot history");
+      expect(detailsLogs.some((line) => line.includes("session-alpha"))).toBe(true);
+      expect(detailsLogs.some((line) => line.includes("snapshot-001"))).toBe(true);
+      expect(detailsLogs.some((line) => line.includes("Updated note"))).toBe(true);
+      expect(jsonLogs.some((line) => line.includes('"sessionId": "session-alpha"'))).toBe(true);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -480,4 +499,8 @@ async function writeSampleSnapshotLog(rootDir: string): Promise<void> {
       }),
     ].join("\n")}\n`,
   );
+}
+
+function stripAnsi(value: string): string {
+  return value.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
 }

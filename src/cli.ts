@@ -47,17 +47,23 @@ export type GoalClarificationPrompter = (
   input: GoalClarificationPromptInput,
 ) => Promise<GoalClarificationPromptResult>;
 
+export type ProjectNamePrompter = (defaultName: string) => Promise<string>;
+
+type SnapshotHistoryMode = "simple" | "details";
+
 const defaultManifestPath = ".ponytrail/manifest.json";
 
 export interface BuildProgramOptions {
   cwd?: string;
   streamRunner?: CliStreamRunner;
   clarificationPrompter?: GoalClarificationPrompter;
+  projectNamePrompter?: ProjectNamePrompter;
 }
 
 export function buildProgram(options: BuildProgramOptions = {}): Command {
   const rootDir = options.cwd ?? process.cwd();
   const clarificationPrompter = options.clarificationPrompter ?? promptForGoalClarifications;
+  const projectNamePrompter = options.projectNamePrompter ?? promptForProjectName;
   const program = new Command();
 
   program
@@ -90,7 +96,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           commandOptions.name ??
           (commandOptions.yes
             ? basename(targetDir)
-            : await promptForProjectName(basename(targetDir)));
+            : await projectNamePrompter(basename(targetDir)));
 
         const result = await createOnboardingFiles({
           rootDir: targetDir,
@@ -194,8 +200,9 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     .command("history")
     .description("Show Pony Trail snapshot history.")
     .option("-s, --session <id>", "only show one snapshot session")
+    .option("--mode <mode>", "history output mode: simple,details", "simple")
     .option("--json", "print JSON output", false)
-    .action(async (commandOptions: { session?: string; json: boolean }) => {
+    .action(async (commandOptions: { session?: string; mode: string; json: boolean }) => {
       const history = await readSnapshotHistory({
         rootDir,
         sessionId: commandOptions.session,
@@ -206,7 +213,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
         return;
       }
 
-      printSnapshotHistory(history.sessions);
+      printSnapshotHistory(history.sessions, parseSnapshotHistoryMode(commandOptions.mode));
     });
 
   program
@@ -354,12 +361,34 @@ function printList(label: string, values: string[]): void {
 
 function printSnapshotHistory(
   sessions: Array<{ sessionId: string; commits: SnapshotCommit[] }>,
+  mode: SnapshotHistoryMode,
 ): void {
   if (sessions.length === 0) {
     console.log(pc.dim("No snapshot history found."));
     return;
   }
 
+  if (mode === "simple") {
+    printSimpleSnapshotHistory(sessions);
+    return;
+  }
+
+  printDetailedSnapshotHistory(sessions);
+}
+
+function printSimpleSnapshotHistory(
+  sessions: Array<{ sessionId: string; commits: SnapshotCommit[] }>,
+): void {
+  for (const session of sessions) {
+    for (const commit of session.commits) {
+      console.log(pc.yellow(commit.snapshotId));
+    }
+  }
+}
+
+function printDetailedSnapshotHistory(
+  sessions: Array<{ sessionId: string; commits: SnapshotCommit[] }>,
+): void {
   console.log(pc.cyan("Snapshot history"));
   for (const session of sessions) {
     console.log(`${pc.dim("Session:")} ${session.sessionId}`);
@@ -385,6 +414,14 @@ function printSnapshotHistory(
       }
     }
   }
+}
+
+function parseSnapshotHistoryMode(mode: string): SnapshotHistoryMode {
+  if (mode === "simple" || mode === "details") {
+    return mode;
+  }
+
+  throw new Error(`Unknown history mode: ${mode}. Use simple or details.`);
 }
 
 function formatSnapshotStatus(commit: SnapshotCommit): string {

@@ -4,40 +4,30 @@ Ponytrail records agent file-change snapshots, shows the snapshot history tree, 
 
 ## Onboard
 
-Create the local `.ponytrail` workspace and install the bundled `pony-trail` skill for Claude, GitHub Copilot, and Codex:
+Run guided setup. The CLI asks for your workspace name, creates local `.ponytrail` files, and installs the bundled `pony-trail` skill for Claude, GitHub Copilot, and Codex:
 
 ```bash
-npx ponytrail onboard --dir . --yes
+npx ponytrail onboard
 ```
 
 With Bun:
 
 ```bash
-bunx ponytrail onboard --dir . --yes
-```
-
-Useful options:
-
-```bash
-ponytrail onboard --name "My Project"
-ponytrail onboard --home ~/.config-test
-ponytrail onboard --agents claude,codex
-```
-
-Use the standalone skill installer only when you want to preview, reinstall, force overwrite, or add the prehook later:
-
-```bash
-ponytrail skills install pony-trail --dry-run
-ponytrail skills install pony-trail --prehook
-ponytrail skills install pony-trail --force
+bunx ponytrail onboard
 ```
 
 ## View History
 
-Show the snapshot tree:
+Show the simple history view. This prints only snapshot ids:
 
 ```bash
 ponytrail history
+```
+
+Show the detailed history tree:
+
+```bash
+ponytrail history --mode details
 ```
 
 Filter to one session or print machine-readable output:
