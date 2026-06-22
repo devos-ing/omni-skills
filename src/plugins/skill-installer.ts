@@ -15,6 +15,7 @@ export type SkillInstallStatus =
   | "updated"
   | "would_update"
   | "already_present";
+export type SkillInstallOperation = "install" | "update";
 
 export interface ResolvedInstallSkillSource {
   kind: "bundled" | "path";
@@ -50,6 +51,7 @@ export interface InstallAgentSkillInput {
   agents: SkillInstallAgent[];
   dryRun?: boolean;
   force?: boolean;
+  operation?: SkillInstallOperation;
   installPrehook?: boolean;
 }
 
@@ -95,6 +97,7 @@ export async function installAgentSkill(
   );
   const targets: SkillInstallTargetResult[] = [];
   const prehooks: SkillInstallPrehookResult[] = [];
+  const operation = input.operation ?? "install";
 
   for (const agent of input.agents) {
     const destination = getSkillDestination(input.homeDir, agent, source.name);
@@ -103,6 +106,7 @@ export async function installAgentSkill(
       exists,
       dryRun: input.dryRun ?? false,
       force: input.force ?? false,
+      operation,
     });
 
     if (!input.dryRun && status !== "skipped_exists") {
@@ -368,7 +372,21 @@ function getInstallStatus(input: {
   exists: boolean;
   dryRun: boolean;
   force: boolean;
+  operation: SkillInstallOperation;
 }): SkillInstallStatus {
+  if (input.operation === "update") {
+    if (input.dryRun && input.exists) {
+      return "would_update";
+    }
+    if (input.dryRun) {
+      return "would_install";
+    }
+    if (input.exists) {
+      return "updated";
+    }
+    return "installed";
+  }
+
   if (input.dryRun && input.exists) {
     return "would_overwrite";
   }

@@ -61,6 +61,7 @@ export interface RevertApprovalPromptInput {
 export type RevertApprovalPrompter = (input: RevertApprovalPromptInput) => Promise<boolean>;
 
 type SnapshotHistoryMode = "tree" | "details";
+type SkillChangeOperation = "install" | "update";
 
 const defaultManifestPath = ".ponytrail/manifest.json";
 const skillInstallHistorySessionId = "ponytrail-skills";
@@ -111,6 +112,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
         const skillResult = await installSkillWithLocalHistory({
           rootDir: targetDir,
+          operation: "install",
           source: "pony-trail",
           homeDir: resolveHomePath(commandOptions.home),
           agents: parseSkillInstallAgents(commandOptions.agents),
@@ -119,7 +121,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           installPrehook: false,
         });
 
-        printSkillInstallResult(skillResult.skillInstall, skillResult.history);
+        printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install");
       },
     );
 
@@ -274,6 +276,13 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
       .command("install")
       .description("Install a bundled or local skill for Claude, GitHub Copilot, and Codex."),
     rootDir,
+  );
+  configureSkillChangeCommand(
+    skillsCommand
+      .command("update")
+      .description("Update a bundled or local skill for configured agent targets."),
+    rootDir,
+    "update",
   );
 
   return program;
@@ -601,6 +610,18 @@ function resolvePath(rootDir: string, path: string): string {
 }
 
 function configureSkillInstallCommand(command: Command, rootDir: string): Command {
+  return configureSkillChangeCommand(command, rootDir, "install").option(
+    "-f, --force",
+    "overwrite existing installed skill folders",
+    false,
+  );
+}
+
+function configureSkillChangeCommand(
+  command: Command,
+  rootDir: string,
+  operation: SkillChangeOperation,
+): Command {
   return command
     .argument("[source-or-name]", "bundled skill name or local skill directory", "pony-trail")
     .option(
@@ -609,9 +630,8 @@ function configureSkillInstallCommand(command: Command, rootDir: string): Comman
       "claude,copilot,codex,cursor",
     )
     .option("--home <dir>", "home directory that contains agent config folders", homedir())
-    .option("--dry-run", "show install destinations without writing files", false)
+    .option("--dry-run", `show ${operation} destinations without writing files`, false)
     .option("--prehook", "also install a Ponytrail prehook reminder for file mutations", false)
-    .option("-f, --force", "overwrite existing installed skill folders", false)
     .action(
       async (
         sourceOrName: string,
@@ -620,26 +640,28 @@ function configureSkillInstallCommand(command: Command, rootDir: string): Comman
           home: string;
           dryRun: boolean;
           prehook: boolean;
-          force: boolean;
+          force?: boolean;
         },
       ) => {
         const result = await installSkillWithLocalHistory({
           rootDir,
+          operation,
           source: sourceOrName,
           homeDir: resolveHomePath(commandOptions.home),
           agents: parseSkillInstallAgents(commandOptions.agents),
           dryRun: commandOptions.dryRun,
-          force: commandOptions.force,
+          force: operation === "install" ? commandOptions.force === true : false,
           installPrehook: commandOptions.prehook,
         });
 
-        printSkillInstallResult(result.skillInstall, result.history);
+        printSkillInstallResult(result.skillInstall, result.history, operation);
       },
     );
 }
 
 interface InstallSkillWithLocalHistoryInput {
   rootDir: string;
+  operation: SkillChangeOperation;
   source: string;
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
@@ -663,11 +685,13 @@ async function installSkillWithLocalHistory(
     history = await recordSnapshotPre({
       rootDir: input.rootDir,
       sessionId: skillInstallHistorySessionId,
-      idPrefix: "skill-install",
-      action: "install skill",
-      purpose: `Install ${input.source} skill for ${formatAgentList(input.agents)}`,
+      idPrefix: `skill-${input.operation}`,
+      action: `${input.operation} skill`,
+      purpose: `${formatSkillChangeVerb(input.operation)} ${input.source} skill for ${formatAgentList(
+        input.agents,
+      )}`,
       reason: "Keep project-local history before changing agent skill files.",
-      expected: "The skill install result is captured in local Ponytrail history.",
+      expected: `The skill ${input.operation} result is captured in local Ponytrail history.`,
       verify: "ponytrail history --details",
       rollback:
         "Remove or reinstall the affected agent skill folders, then record another snapshot.",
@@ -682,6 +706,7 @@ async function installSkillWithLocalHistory(
       agents: input.agents,
       dryRun: input.dryRun,
       force: input.force,
+      operation: input.operation,
       installPrehook: input.installPrehook,
     });
 
@@ -690,7 +715,7 @@ async function installSkillWithLocalHistory(
         rootDir: input.rootDir,
         sessionId: history.sessionId,
         snapshotId: history.snapshotId,
-        summary: formatSkillInstallSummary(skillInstall),
+        summary: formatSkillInstallSummary(skillInstall, input.operation),
         checks: commandText,
         result: formatSkillInstallHistoryResult(skillInstall),
       });
@@ -703,7 +728,9 @@ async function installSkillWithLocalHistory(
         rootDir: input.rootDir,
         sessionId: history.sessionId,
         snapshotId: history.snapshotId,
-        summary: `Failed to install ${input.source} skill for ${formatAgentList(input.agents)}`,
+        summary: `Failed to ${input.operation} ${input.source} skill for ${formatAgentList(
+          input.agents,
+        )}`,
         checks: commandText,
         result: `fail: ${formatErrorMessage(error)}`,
       });
@@ -725,8 +752,9 @@ function resolveHomePath(path: string): string {
 function printSkillInstallResult(
   result: SkillInstallResult,
   history?: RecordedSnapshotCommit | undefined,
+  operation: SkillChangeOperation = "install",
 ): void {
-  console.log(pc.cyan(result.dryRun ? "Skill install plan" : "Skill install result"));
+  console.log(pc.cyan(result.dryRun ? `Skill ${operation} plan` : `Skill ${operation} result`));
   console.log(`Skill: ${result.skillName}`);
   console.log(`${pc.dim("Source:")} ${result.source.path}`);
 
@@ -738,7 +766,9 @@ function printSkillInstallResult(
 
   if (result.prehooks.length > 0) {
     console.log("");
-    console.log(pc.cyan(result.dryRun ? "Prehook install plan" : "Prehook install result"));
+    console.log(
+      pc.cyan(result.dryRun ? `Prehook ${operation} plan` : `Prehook ${operation} result`),
+    );
     for (const prehook of result.prehooks) {
       console.log(
         `${prehook.agent}: ${formatSkillInstallStatus(prehook.status)} ${pc.dim(
@@ -783,13 +813,20 @@ function formatSkillInstallCommand(input: InstallSkillWithLocalHistoryInput): st
     input.force ? "--force" : "",
     input.installPrehook ? "--prehook" : "",
   ].filter(Boolean);
-  return ["ponytrail skills install", input.source, ...flags].join(" ");
+  return ["ponytrail skills", input.operation, input.source, ...flags].join(" ");
 }
 
-function formatSkillInstallSummary(result: SkillInstallResult): string {
-  return `Installed ${result.skillName} skill for ${formatAgentList(
+function formatSkillInstallSummary(
+  result: SkillInstallResult,
+  operation: SkillChangeOperation,
+): string {
+  return `${formatSkillChangeVerb(operation)} ${result.skillName} skill for ${formatAgentList(
     result.targets.map((target) => target.agent),
   )}`;
+}
+
+function formatSkillChangeVerb(operation: SkillChangeOperation): "Installed" | "Updated" {
+  return operation === "install" ? "Installed" : "Updated";
 }
 
 function formatSkillInstallHistoryResult(result: SkillInstallResult): string {

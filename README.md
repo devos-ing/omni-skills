@@ -28,6 +28,12 @@ bunx ponytrail skills install pony-trail
 The installer records a local skill-install snapshot before writing agent skill
 files, so the install can be found later in `ponytrail history --details`.
 
+Refresh an installed bundled skill later:
+
+```bash
+npx ponytrail skills update pony-trail
+```
+
 ## View History
 
 Show the snapshot tree:

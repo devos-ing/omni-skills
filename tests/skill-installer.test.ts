@@ -68,6 +68,49 @@ describe("skill installer", () => {
     }
   });
 
+  test("updates existing bundled skill targets when requested", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const installedSkillPath = join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md");
+
+    try {
+      await installAgentSkill({
+        source: "pony-trail",
+        homeDir,
+        agents: ["codex"],
+      });
+      await writeFile(installedSkillPath, "stale skill");
+
+      const dryRun = await installAgentSkill({
+        source: "pony-trail",
+        homeDir,
+        agents: ["codex"],
+        dryRun: true,
+        operation: "update",
+      });
+
+      expect(dryRun.targets[0]).toMatchObject({
+        agent: "codex",
+        status: "would_update",
+      });
+      expect(await readFile(installedSkillPath, "utf8")).toBe("stale skill");
+
+      const result = await installAgentSkill({
+        source: "pony-trail",
+        homeDir,
+        agents: ["codex"],
+        operation: "update",
+      });
+
+      expect(result.targets[0]).toMatchObject({
+        agent: "codex",
+        status: "updated",
+      });
+      expect(await readFile(installedSkillPath, "utf8")).toContain("name: pony-trail");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("dry-runs Cursor rule installation", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
