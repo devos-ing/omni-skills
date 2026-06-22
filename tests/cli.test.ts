@@ -206,14 +206,14 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      expect(logs).toContain("Requirement discussion");
+      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
       expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
-      expect(logs).toContain("Judge summary");
+      expect(stripAnsiLines(logs)).toContain("Judge summary");
       expect(logs.some((line) => line.includes("Approvals: 4/4"))).toBe(true);
-      expect(logs).toContain("Detailed requirement");
+      expect(stripAnsiLines(logs)).toContain("Detailed requirement");
       expect(logs.some((line) => line.includes("Title: Add CSV import to admin dashboard"))).toBe(
         true,
       );
@@ -264,7 +264,7 @@ describe("cli", () => {
       );
 
       expect(logs.some((line) => line.includes("Needs clarification"))).toBe(true);
-      expect(logs).toContain("Requirement discussion");
+      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
       expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("Create an admin dashboard CSV importer"))).toBe(
         true,
@@ -302,7 +302,7 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      expect(logs).toContain("Requirement discussion");
+      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
       expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
       expect(invocations).toEqual([]);
     } finally {
@@ -326,7 +326,7 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      expect(logs).toContain("Skill install plan");
+      expect(stripAnsiLines(logs)).toContain("Skill install plan");
       expect(logs.some((line) => line.includes("pony-trail"))).toBe(true);
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
       expect(logs.some((line) => line.includes("copilot: would install"))).toBe(true);
@@ -360,7 +360,7 @@ describe("cli", () => {
         );
       }
 
-      expect(logs).toContain("Skill install plan");
+      expect(stripAnsiLines(logs)).toContain("Skill install plan");
       expect(logs.some((line) => line.includes("pony-trail"))).toBe(true);
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
     } finally {
@@ -384,7 +384,7 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      expect(logs).toContain("Prehook install plan");
+      expect(stripAnsiLines(logs)).toContain("Prehook install plan");
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
       expect(logs.some((line) => line.includes(".claude/hooks/ponytrail"))).toBe(true);
       expect(logs.some((line) => line.includes("codex: would install"))).toBe(true);
@@ -465,7 +465,7 @@ describe("cli", () => {
       await buildProgram({ cwd: rootDir }).parseAsync(["history"], { from: "user" });
       const treeLogs = logs.splice(0).map(stripAnsi);
       await buildProgram({ cwd: rootDir }).parseAsync(["history", "--details"], { from: "user" });
-      const detailsLogs = logs.splice(0);
+      const detailsLogs = logs.splice(0).map(stripAnsi);
       await buildProgram({ cwd: rootDir }).parseAsync(["history", "--json"], { from: "user" });
       const jsonLogs = logs.splice(0);
 
@@ -502,7 +502,7 @@ describe("cli", () => {
         from: "user",
       });
 
-      expect(logs).toContain("Snapshot revert plan");
+      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
       expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
       expect(logs.some((line) => line.includes("Would delete created.txt"))).toBe(true);
     } finally {
@@ -536,7 +536,7 @@ describe("cli", () => {
       }).parseAsync(["revert", "snapshot-001"], { from: "user" });
 
       expect(approvalRequests).toEqual([{ snapshotId: "snapshot-001", actions: 2 }]);
-      expect(logs).toContain("Snapshot revert plan");
+      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
       expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
       expect(logs.some((line) => line.includes("Would delete created.txt"))).toBe(true);
       expect(logs.some((line) => line.includes("Reverted snapshot snapshot-001"))).toBe(true);
@@ -568,7 +568,7 @@ describe("cli", () => {
         revertApprovalPrompter: async () => false,
       }).parseAsync(["revert", "snapshot-001"], { from: "user" });
 
-      expect(logs).toContain("Snapshot revert plan");
+      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
       expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
       expect(logs.some((line) => line.includes("Revert cancelled."))).toBe(true);
       expect(await readFile(join(rootDir, "notes.txt"), "utf8")).toBe("after\n");
@@ -598,7 +598,7 @@ describe("cli", () => {
         from: "user",
       });
 
-      expect(logs).toContain("Snapshot revert plan");
+      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
       expect(
         logs.some((line) =>
           line.includes("Run from an interactive terminal to approve the revert."),
@@ -674,4 +674,8 @@ async function writeSampleSnapshotLog(rootDir: string): Promise<void> {
 
 function stripAnsi(value: string): string {
   return value.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
+}
+
+function stripAnsiLines(values: string[]): string[] {
+  return values.map(stripAnsi);
 }
