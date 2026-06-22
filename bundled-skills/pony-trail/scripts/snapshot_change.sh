@@ -6,7 +6,7 @@ DEFAULT_COPY_LIMIT=1048576
 
 usage() {
   cat <<'EOF'
-usage: snapshot_change.sh [--root DIR] [--store DIR] [--copy-limit BYTES] [--session-id ID] {pre,post} ...
+usage: snapshot_change.sh [--root DIR] [--store DIR] [--copy-limit BYTES] [--session-id ID] [--instruction-context] {pre,post} ...
 
 Record file-change rationale snapshots.
 
@@ -109,6 +109,16 @@ sha256_file() {
     shasum -a 256 "$1" | awk '{print $1}'
   elif command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$1" | awk '{print $1}'
+  else
+    fail "Neither shasum nor sha256sum is available."
+  fi
+}
+
+hash_string() {
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s' "$1" | shasum -a 256 | awk '{print "sha256:" $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    printf '%s' "$1" | sha256sum | awk '{print "sha256:" $1}'
   else
     fail "Neither shasum nor sha256sum is available."
   fi
@@ -223,6 +233,118 @@ git_json() {
   printf '}'
 }
 
+instruction_git_json() {
+  if ! command -v git >/dev/null 2>&1; then
+    printf '{"branch":null,"commit":null,"dirty":null}'
+    return
+  fi
+
+  git_root=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || true)
+  if [ -z "$git_root" ]; then
+    printf '{"branch":null,"commit":null,"dirty":null}'
+    return
+  fi
+
+  git_branch=$(git -C "$root" branch --show-current 2>/dev/null || true)
+  git_head=$(git -C "$root" rev-parse --short HEAD 2>/dev/null || true)
+  git_dirty=$(git -C "$root" status --porcelain 2>/dev/null || true)
+  printf '{"branch":'
+  json_optional_string "$git_branch"
+  printf ',"commit":'
+  json_optional_string "$git_head"
+  printf ',"dirty":'
+  if [ -n "$git_dirty" ]; then
+    printf 'true'
+  else
+    printf 'false'
+  fi
+  printf '}'
+}
+
+instruction_file_json() {
+  rel=$1
+  path=$root/$rel
+
+  printf '{"path":'
+  json_string "$rel"
+
+  if [ ! -e "$path" ]; then
+    printf ',"status":"missing"}'
+    return
+  fi
+
+  if [ ! -f "$path" ] || [ ! -r "$path" ]; then
+    printf ',"status":"unreadable"}'
+    return
+  fi
+
+  size=$(stat_size "$path")
+  digest=$(sha256_file "$path")
+  printf ',"status":"captured","sha256":'
+  json_string "sha256:$digest"
+  printf ',"bytes":%s}' "$size"
+}
+
+instruction_skill_json() {
+  skill_file=$skill_dir/SKILL.md
+
+  printf '{"name":'
+  json_string "$skill_name"
+
+  if [ ! -e "$skill_file" ]; then
+    printf ',"status":"missing"}'
+    return
+  fi
+
+  if [ ! -f "$skill_file" ] || [ ! -r "$skill_file" ]; then
+    printf ',"status":"unreadable"}'
+    return
+  fi
+
+  digest=$(sha256_file "$skill_file")
+  printf ',"status":"captured","version_or_sha256":'
+  json_string "sha256:$digest"
+  printf '}'
+}
+
+append_instruction_file_json() {
+  file_json=$(instruction_file_json "$1")
+  if [ -n "$instruction_files_json" ]; then
+    instruction_files_json="$instruction_files_json,$file_json"
+  else
+    instruction_files_json="$file_json"
+  fi
+}
+
+collect_instruction_context() {
+  instruction_files_json=""
+
+  if [ -d "$root/.cursor/rules" ]; then
+    cursor_paths_file=$store_path/.instruction-context-files.$$
+    find "$root/.cursor/rules" -type f | LC_ALL=C sort >"$cursor_paths_file"
+    while IFS= read -r path; do
+      [ -n "$path" ] || continue
+      rel=${path#"$root"/}
+      append_instruction_file_json "$rel"
+    done <"$cursor_paths_file"
+    rm -f "$cursor_paths_file"
+  fi
+
+  append_instruction_file_json ".github/copilot-instructions.md"
+  append_instruction_file_json "AGENTS.md"
+  append_instruction_file_json "CLAUDE.md"
+
+  session_hash=$(hash_string "$session_id")
+  skill_json=$(instruction_skill_json)
+  printf '{"mode":"opt_in","captured_at":'
+  json_string "$timestamp_utc"
+  printf ',"session_id_hash":'
+  json_string "$session_hash"
+  printf ',"git":'
+  instruction_git_json
+  printf ',"files":[%s],"skills":[%s],"warnings":[]}' "$instruction_files_json" "$skill_json"
+}
+
 entry_json() {
   printf '{"snapshot_id":'
   json_string "$snapshot_id"
@@ -254,7 +376,11 @@ entry_json() {
   json_optional_string "$checks"
   printf ',"result":'
   json_optional_string "$result"
-  printf ',"files":[%s]}' "$files_json"
+  printf ',"files":[%s]' "$files_json"
+  if [ -n "$instruction_context_json" ]; then
+    printf ',"instruction_context":%s' "$instruction_context_json"
+  fi
+  printf '}'
 }
 
 ensure_session_tree() {
@@ -346,6 +472,11 @@ rollback=""
 summary=""
 checks=""
 result=""
+instruction_context="${PONYTRAIL_INSTRUCTION_CONTEXT:-}"
+instruction_context_json=""
+script_dir=$(cd "$(dirname_of "$0")" 2>/dev/null && pwd -P || true)
+skill_dir=$(dirname_of "$script_dir")
+skill_name=$(basename_of "$skill_dir")
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -368,6 +499,10 @@ while [ "$#" -gt 0 ]; do
       [ "$#" -ge 2 ] || fail "--session-id requires a value."
       session_id=$2
       shift 2
+      ;;
+    --instruction-context)
+      instruction_context=1
+      shift
       ;;
     pre|post)
       phase=$1
@@ -497,6 +632,11 @@ IFS=$old_ifs
 
 log_path=$store_path/snapshots.jsonl
 timestamp_utc=$(utc_iso)
+if [ "$instruction_context" = "1" ] ||
+  [ "$instruction_context" = "true" ] ||
+  [ "$instruction_context" = "yes" ]; then
+  instruction_context_json=$(collect_instruction_context)
+fi
 entry=$(entry_json)
 printf '%s\n' "$entry" >>"$log_path"
 ensure_session_tree

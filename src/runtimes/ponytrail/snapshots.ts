@@ -2,6 +2,14 @@ import { randomBytes } from "node:crypto";
 import { constants } from "node:fs";
 import { access, appendFile, cp, mkdir, readFile, rm } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
+import {
+  captureInstructionContext,
+  type InstructionContext,
+  type InstructionContextFile,
+  type InstructionContextGit,
+  type InstructionContextSkill,
+  shouldCaptureInstructionContext,
+} from "./instruction-context";
 
 const snapshotStoreDir = ".pony-trail";
 const snapshotLogFile = "snapshots.jsonl";
@@ -34,6 +42,7 @@ export interface SnapshotLogEntry {
   checks?: string | null | undefined;
   result?: string | null | undefined;
   files: SnapshotFileState[];
+  instruction_context?: InstructionContext | undefined;
 }
 
 export interface SnapshotHistory {
@@ -58,6 +67,10 @@ export interface SnapshotCommit {
   result?: string | undefined;
   rollback?: string | undefined;
   files: SnapshotFileState[];
+  instructionContexts: {
+    pre?: InstructionContext | undefined;
+    post?: InstructionContext | undefined;
+  };
 }
 
 export type SnapshotRevertAction =
@@ -97,6 +110,7 @@ export interface RecordSnapshotPreInput {
   verify: string;
   rollback: string;
   files?: SnapshotFileState[] | undefined;
+  instructionContext?: boolean | undefined;
 }
 
 export interface RecordSnapshotPostInput {
@@ -108,6 +122,7 @@ export interface RecordSnapshotPostInput {
   checks: string;
   result: string;
   files?: SnapshotFileState[] | undefined;
+  instructionContext?: boolean | undefined;
 }
 
 interface SnapshotPair {
@@ -123,7 +138,7 @@ export async function recordSnapshotPre(
   const snapshotId =
     input.snapshotId ?? createSnapshotId(input.idPrefix ?? "snapshot", timestampUtc);
 
-  return appendSnapshotEntry(rootDir, {
+  const entry: SnapshotLogEntry = {
     snapshot_id: snapshotId,
     session_id: input.sessionId,
     phase: "pre",
@@ -135,24 +150,55 @@ export async function recordSnapshotPre(
     verify: input.verify,
     rollback: input.rollback,
     files: input.files ?? [],
-  });
+  };
+
+  if (
+    shouldCaptureInstructionContext({
+      instructionContext: input.instructionContext,
+      env: process.env,
+    })
+  ) {
+    entry.instruction_context = await captureInstructionContext({
+      rootDir,
+      sessionId: input.sessionId,
+      timestampUtc,
+    });
+  }
+
+  return appendSnapshotEntry(rootDir, entry);
 }
 
 export async function recordSnapshotPost(
   input: RecordSnapshotPostInput,
 ): Promise<RecordedSnapshotCommit> {
   const rootDir = resolve(input.rootDir);
+  const timestampUtc = input.timestampUtc ?? new Date().toISOString();
 
-  return appendSnapshotEntry(rootDir, {
+  const entry: SnapshotLogEntry = {
     snapshot_id: input.snapshotId,
     session_id: input.sessionId,
     phase: "post",
-    timestamp_utc: input.timestampUtc ?? new Date().toISOString(),
+    timestamp_utc: timestampUtc,
     summary: input.summary,
     checks: input.checks,
     result: input.result,
     files: input.files ?? [],
-  });
+  };
+
+  if (
+    shouldCaptureInstructionContext({
+      instructionContext: input.instructionContext,
+      env: process.env,
+    })
+  ) {
+    entry.instruction_context = await captureInstructionContext({
+      rootDir,
+      sessionId: input.sessionId,
+      timestampUtc,
+    });
+  }
+
+  return appendSnapshotEntry(rootDir, entry);
 }
 
 export async function readSnapshotHistory(input: SnapshotHistoryInput): Promise<SnapshotHistory> {
@@ -311,6 +357,11 @@ function formatSessionTreeEntry(entry: SnapshotLogEntry): string {
     }
   }
 
+  if (entry.instruction_context) {
+    lines.push("- instruction_context:");
+    lines.push(formatInstructionContextTreeLine(entry.instruction_context));
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -333,6 +384,24 @@ function formatSessionTreeFile(file: SnapshotFileState): string {
     parts.push(`stored: \`${file.stored_copy}\``);
   }
   return parts.join(" ");
+}
+
+function formatInstructionContextTreeLine(context: InstructionContext): string {
+  const capturedFiles = context.files.filter((file) => file.status === "captured").length;
+  const capturedSkills = context.skills.filter((skill) => skill.status === "captured").length;
+  const warningText =
+    context.warnings.length === 0 ? "0 warnings" : `${context.warnings.length} warning(s)`;
+  const gitText = [
+    context.git.branch ? `branch=${context.git.branch}` : "",
+    context.git.commit ? `commit=${context.git.commit}` : "",
+    context.git.dirty === undefined ? "" : `dirty=${String(context.git.dirty)}`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return `  - mode=${context.mode} files=${capturedFiles} skills=${capturedSkills} ${warningText}${
+    gitText ? ` ${gitText}` : ""
+  }`;
 }
 
 function createSnapshotId(prefix: string, timestampUtc: string): string {
@@ -403,6 +472,7 @@ function parseSnapshotEntry(value: unknown, lineNumber: number): SnapshotLogEntr
     checks: readOptionalString(value.checks),
     result: readOptionalString(value.result),
     files: files.map((file, index) => parseSnapshotFile(file, lineNumber, index)),
+    instruction_context: parseInstructionContext(value.instruction_context, lineNumber),
   };
 }
 
@@ -427,6 +497,118 @@ function parseSnapshotFile(value: unknown, lineNumber: number, index: number): S
     stored_copy: readOptionalString(value.stored_copy),
     sha256: readOptionalString(value.sha256),
   };
+}
+
+function parseInstructionContext(
+  value: unknown,
+  lineNumber: number,
+): InstructionContext | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context must be an object`,
+    );
+  }
+
+  const mode = readRequiredString(value, "mode", lineNumber);
+  if (mode !== "opt_in") {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context mode is invalid`,
+    );
+  }
+
+  const files = value.files;
+  const skills = value.skills;
+  const warnings = value.warnings;
+  if (!Array.isArray(files) || !Array.isArray(skills) || !Array.isArray(warnings)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context arrays are required`,
+    );
+  }
+
+  return {
+    mode,
+    captured_at: readRequiredString(value, "captured_at", lineNumber),
+    session_id_hash: readRequiredString(value, "session_id_hash", lineNumber),
+    git: parseInstructionContextGit(value.git, lineNumber),
+    files: files.map((file, index) => parseInstructionContextFile(file, lineNumber, index)),
+    skills: skills.map((skill, index) => parseInstructionContextSkill(skill, lineNumber, index)),
+    warnings: warnings.map((warning, index) =>
+      readRequiredArrayString(warning, "instruction_context.warnings", lineNumber, index),
+    ),
+  };
+}
+
+function parseInstructionContextGit(value: unknown, lineNumber: number): InstructionContextGit {
+  if (!isRecord(value)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context.git must be an object`,
+    );
+  }
+
+  return {
+    branch: readOptionalString(value.branch),
+    commit: readOptionalString(value.commit),
+    dirty: typeof value.dirty === "boolean" ? value.dirty : undefined,
+  };
+}
+
+function parseInstructionContextFile(
+  value: unknown,
+  lineNumber: number,
+  index: number,
+): InstructionContextFile {
+  if (!isRecord(value)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context.files ${index} must be an object`,
+    );
+  }
+
+  const status = readRequiredString(value, "status", lineNumber);
+  if (!isInstructionContextStatus(status)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context.files ${index} has invalid status`,
+    );
+  }
+
+  return {
+    path: readRequiredString(value, "path", lineNumber),
+    status,
+    sha256: readOptionalString(value.sha256),
+    bytes: typeof value.bytes === "number" ? value.bytes : undefined,
+  };
+}
+
+function parseInstructionContextSkill(
+  value: unknown,
+  lineNumber: number,
+  index: number,
+): InstructionContextSkill {
+  if (!isRecord(value)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context.skills ${index} must be an object`,
+    );
+  }
+
+  const status = readRequiredString(value, "status", lineNumber);
+  if (!isInstructionContextStatus(status)) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: instruction_context.skills ${index} has invalid status`,
+    );
+  }
+
+  return {
+    name: readRequiredString(value, "name", lineNumber),
+    status,
+    path: readOptionalString(value.path),
+    version_or_sha256: readOptionalString(value.version_or_sha256),
+  };
+}
+
+function isInstructionContextStatus(status: string): status is InstructionContextFile["status"] {
+  return status === "captured" || status === "missing" || status === "unreadable";
 }
 
 function toSnapshotCommit(
@@ -456,6 +638,10 @@ function toSnapshotCommit(
     result: post?.result ?? undefined,
     rollback: pre?.rollback ?? undefined,
     files: Array.from(filesByPath.values()),
+    instructionContexts: {
+      pre: pre?.instruction_context,
+      post: post?.instruction_context,
+    },
   };
 }
 
@@ -473,6 +659,20 @@ function readRequiredString(
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value ? value : undefined;
+}
+
+function readRequiredArrayString(
+  value: unknown,
+  field: string,
+  lineNumber: number,
+  index: number,
+): string {
+  if (typeof value !== "string" || !value) {
+    throw new Error(
+      `Malformed snapshot log entry on line ${lineNumber}: ${field} ${index} is required`,
+    );
+  }
+  return value;
 }
 
 function assertSafeRelativePath(rootDir: string, path: string): void {

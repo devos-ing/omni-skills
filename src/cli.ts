@@ -14,6 +14,7 @@ import {
 import {
   applySnapshotRevert,
   createOnboardingFiles,
+  type InstructionContext,
   loadManifest,
   planSnapshotRevert,
   prepareGoalDiscussion,
@@ -433,6 +434,8 @@ function printSnapshotCommitDetails(commit: SnapshotCommit): void {
   for (const file of commit.files) {
     console.log(`    ${formatSnapshotFile(file)}`);
   }
+  printInstructionContextDetails("pre", commit.instructionContexts.pre);
+  printInstructionContextDetails("post", commit.instructionContexts.post);
 }
 
 function parseSnapshotHistoryMode(mode: string): SnapshotHistoryMode {
@@ -458,6 +461,42 @@ function formatSnapshotStatus(commit: SnapshotCommit): string {
 
 function formatSnapshotFile(file: SnapshotFileState): string {
   return file.exists ? `file: ${file.path}` : `missing before: ${file.path}`;
+}
+
+function printInstructionContextDetails(
+  phase: "pre" | "post",
+  context: InstructionContext | undefined,
+): void {
+  if (!context) {
+    return;
+  }
+
+  console.log(`    instruction_context: ${phase}`);
+  const git = [
+    context.git.branch,
+    context.git.commit,
+    context.git.dirty === undefined ? undefined : context.git.dirty ? "dirty" : "clean",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  if (git) {
+    console.log(`      git: ${git}`);
+  }
+
+  for (const file of context.files) {
+    const hash = file.sha256 ? ` ${file.sha256.slice(0, 15)}` : "";
+    const bytes = file.bytes === undefined ? "" : ` ${file.bytes} bytes`;
+    console.log(`      ${file.path} ${file.status}${hash}${bytes}`);
+  }
+
+  for (const skill of context.skills) {
+    const version = skill.version_or_sha256 ? ` ${skill.version_or_sha256.slice(0, 15)}` : "";
+    console.log(`      skill ${skill.name} ${skill.status}${version}`);
+  }
+
+  for (const warning of context.warnings) {
+    console.log(`      warning: ${warning}`);
+  }
 }
 
 function printSnapshotRevertPlan(actions: SnapshotRevertAction[], dryRun: boolean): void {

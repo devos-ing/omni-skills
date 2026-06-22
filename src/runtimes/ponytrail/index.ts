@@ -1,5 +1,6 @@
 export * from "./brainstorm";
 export * from "./goal";
+export * from "./instruction-context";
 export * from "./manifest";
 export * from "./onboarding";
 export * from "./requirement-court";

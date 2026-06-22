@@ -24,11 +24,14 @@ Core principle: no file edit without a pre-change decision snapshot and a post-c
 
 Use `scripts/snapshot_change.sh` from this skill directory. It writes JSONL under `.pony-trail/`, stores file hashes plus small before/after copies, and appends a per-session git-like tree under `.pony-trail/sessions/<session-id>/tree.md` without requiring Python. `scripts/snapshot_change.py` remains available for older environments that already call it.
 
+Add `--instruction-context` or set `PONYTRAIL_INSTRUCTION_CONTEXT=1` to store a compact local-only `instruction_context` block on the snapshot entry. The block hashes allowlisted instruction files and skill metadata, records branch/commit/dirty state, and stores warnings for missing or unreadable context. It never stores prompt text, transcript text, or instruction file contents.
+
 Pre-change:
 
 ```bash
-sh /path/to/pony-trail/scripts/snapshot_change.sh pre \
+sh /path/to/pony-trail/scripts/snapshot_change.sh \
   --session-id "${PONYTRAIL_SESSION_ID:-${Ponytrail_SESSION_ID:-default}}" \
+  pre \
   --files src/example.ts \
   --action "edit validation" \
   --purpose "Reject empty names before saving" \
@@ -41,8 +44,9 @@ sh /path/to/pony-trail/scripts/snapshot_change.sh pre \
 Post-change:
 
 ```bash
-sh /path/to/pony-trail/scripts/snapshot_change.sh post \
+sh /path/to/pony-trail/scripts/snapshot_change.sh \
   --session-id "${PONYTRAIL_SESSION_ID:-${Ponytrail_SESSION_ID:-default}}" \
+  post \
   --snapshot-id 20260621T120000Z-abc12345 \
   --files src/example.ts \
   --summary "Added empty-name guard and test coverage" \

@@ -36,6 +36,8 @@ src/
 - read Pony Trail snapshot history and plan file-level reverts
 - print visible role-bot discussion before worker execution is allowed
 
+Snapshot entries may also include opt-in `instruction_context` metadata. This metadata belongs to the snapshot system, not a separate audit log: it stores hashes and statuses for allowlisted instruction files plus compact git/session context so history can explain rule changes without recording prompts or file contents.
+
 The CLI should call this runtime through its exported interface instead of knowing the internals of goal drafting or vote tallying.
 
 ## Models

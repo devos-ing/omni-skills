@@ -6,6 +6,8 @@ import {
   applySnapshotRevert,
   planSnapshotRevert,
   readSnapshotHistory,
+  recordSnapshotPost,
+  recordSnapshotPre,
 } from "../src/runtimes/ponytrail/snapshots";
 
 describe("snapshot history", () => {
@@ -45,6 +47,63 @@ describe("snapshot history", () => {
       const history = await readSnapshotHistory({ rootDir });
 
       expect(history.sessions).toEqual([]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("records and reads instruction context for pre and post phases", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-snapshots-"));
+
+    try {
+      await writeFile(join(rootDir, "AGENTS.md"), "agent rules\n");
+      const pre = await recordSnapshotPre({
+        rootDir,
+        sessionId: "session-alpha",
+        snapshotId: "snapshot-context-001",
+        timestampUtc: "2026-06-22T17:04:23Z",
+        action: "edit note",
+        purpose: "Exercise instruction context",
+        reason: "Snapshots should explain active rules without storing content",
+        expected: "Instruction context hashes are present",
+        verify: "bun test tests/snapshots.test.ts",
+        rollback: "Restore pre snapshot",
+        instructionContext: true,
+      });
+
+      await writeFile(join(rootDir, "AGENTS.md"), "agent rules changed\n");
+      await recordSnapshotPost({
+        rootDir,
+        sessionId: pre.sessionId,
+        snapshotId: pre.snapshotId,
+        timestampUtc: "2026-06-22T17:05:23Z",
+        summary: "Updated note",
+        checks: "bun test",
+        result: "pass",
+        instructionContext: true,
+      });
+
+      const history = await readSnapshotHistory({ rootDir });
+      const commit = history.sessions[0]?.commits[0];
+
+      expect(
+        commit?.instructionContexts.pre?.files.find((file) => file.path === "AGENTS.md"),
+      ).toMatchObject({ status: "captured", bytes: 12 });
+      expect(
+        commit?.instructionContexts.post?.files.find((file) => file.path === "AGENTS.md"),
+      ).toMatchObject({ status: "captured", bytes: 20 });
+      expect(
+        commit?.instructionContexts.pre?.files.find((file) => file.path === "AGENTS.md")?.sha256,
+      ).not.toBe(
+        commit?.instructionContexts.post?.files.find((file) => file.path === "AGENTS.md")?.sha256,
+      );
+
+      const rawEntries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(rawEntries[0].instruction_context.mode).toBe("opt_in");
+      expect(JSON.stringify(rawEntries[0].instruction_context)).not.toContain("agent rules");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }

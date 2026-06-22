@@ -475,11 +475,18 @@ describe("cli", () => {
         "  * snapshot-001 (pre/post)",
       ]);
       expect(treeLogs.some((line) => line.includes("Updated note"))).toBe(false);
+      expect(treeLogs.some((line) => line.includes("instruction_context"))).toBe(false);
       expect(detailsLogs).toContain("Snapshot history");
       expect(detailsLogs.some((line) => line.includes("session-alpha"))).toBe(true);
       expect(detailsLogs.some((line) => line.includes("snapshot-001"))).toBe(true);
       expect(detailsLogs.some((line) => line.includes("Updated note"))).toBe(true);
+      expect(detailsLogs.some((line) => line.includes("instruction_context: pre"))).toBe(true);
+      expect(detailsLogs.some((line) => line.includes("AGENTS.md captured sha256:aaaaaaaa"))).toBe(
+        true,
+      );
+      expect(detailsLogs.some((line) => line.includes("git: main abc123 dirty"))).toBe(true);
       expect(jsonLogs.some((line) => line.includes('"sessionId": "session-alpha"'))).toBe(true);
+      expect(jsonLogs.some((line) => line.includes('"instructionContexts"'))).toBe(true);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -633,6 +640,31 @@ async function writeSampleSnapshotLog(rootDir: string): Promise<void> {
         expected: "A note changes",
         verify: "Run tests",
         rollback: "Restore pre snapshot",
+        instruction_context: {
+          mode: "opt_in",
+          captured_at: "2026-06-22T17:04:23Z",
+          session_id_hash: "sha256:session",
+          git: { branch: "main", commit: "abc123", dirty: true },
+          files: [
+            {
+              path: "AGENTS.md",
+              status: "captured",
+              sha256: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              bytes: 12,
+            },
+            { path: "CLAUDE.md", status: "missing" },
+          ],
+          skills: [
+            {
+              name: "pony-trail",
+              path: "bundled-skills/pony-trail/SKILL.md",
+              status: "captured",
+              version_or_sha256:
+                "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            },
+          ],
+          warnings: [],
+        },
         files: [
           {
             path: "notes.txt",
