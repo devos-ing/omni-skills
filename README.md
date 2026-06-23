@@ -19,10 +19,23 @@ Install the bundled `pony-trail` skill into your local agent tools:
 npx ponytrail skills install pony-trail
 ```
 
+Install the bundled `ponyrace` skill to trigger requirement discussion from
+agent chat:
+
+```bash
+npx ponytrail skills install ponyrace
+```
+
 With Bun:
 
 ```bash
 bunx ponytrail skills install pony-trail
+```
+
+Install `ponyrace` with Bun:
+
+```bash
+bunx ponytrail skills install ponyrace
 ```
 
 The installer records a local skill-install snapshot before writing agent skill
