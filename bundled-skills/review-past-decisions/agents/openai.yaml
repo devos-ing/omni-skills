@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Past Decisions"
+  short_description: "Carry prior decisions into new plans"
+  default_prompt: "Use $review-past-decisions before drafting a new plan so accepted constraints and rejected approaches carry forward."

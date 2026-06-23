@@ -19,6 +19,45 @@ describe("skill installer", () => {
     expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain("name: pony-trail");
   });
 
+  test("resolves the bundled review past decisions skill by name", async () => {
+    const source = await resolveInstallSkillSource("review-past-decisions");
+
+    expect(source.name).toBe("review-past-decisions");
+    expect(source.kind).toBe("bundled");
+    expect(source.path.endsWith(join("bundled-skills", "review-past-decisions"))).toBe(true);
+    expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain(
+      "name: review-past-decisions",
+    );
+  });
+
+  test("installs the bundled review past decisions skill into directory and Cursor targets", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      const result = await installAgentSkill({
+        source: "review-past-decisions",
+        homeDir,
+        agents: ["codex", "cursor"],
+      });
+
+      expect(result.skillName).toBe("review-past-decisions");
+      expect(result.targets.map((target) => target.status)).toEqual(["installed", "installed"]);
+
+      await expect(
+        stat(join(homeDir, ".agents", "skills", "review-past-decisions", "SKILL.md")),
+      ).resolves.toBeTruthy();
+      await expect(
+        stat(join(homeDir, ".codex", "skills", "review-past-decisions", "SKILL.md")),
+      ).resolves.toBeTruthy();
+
+      const cursorRulePath = join(homeDir, ".cursor", "rules", "review-past-decisions.mdc");
+      await expect(stat(cursorRulePath)).resolves.toBeTruthy();
+      expect(await readFile(cursorRulePath, "utf8")).toContain("name: review-past-decisions");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("keeps previous bundled skill names as aliases", async () => {
     for (const alias of [
       "record-change-evidence",
