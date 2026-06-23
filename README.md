@@ -11,6 +11,21 @@ previous snapshot.
 It keeps the trail in `.pony-trail/` inside your project. Treat that folder as
 local runtime state; it should stay out of git.
 
+## Set Up Ponytrail
+
+Configure the local bot team, write `.ponytrail/manifest.json`, and install the
+bundled skills for Codex, Claude, and Cursor:
+
+```bash
+npx ponytrail setup
+```
+
+Then start a requirement discussion:
+
+```bash
+npx ponytrail ponyrace "add CSV import"
+```
+
 ## Install The Skill
 
 Install the bundled `pony-trail` skill into your local agent tools:
