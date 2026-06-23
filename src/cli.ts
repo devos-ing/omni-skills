@@ -162,6 +162,28 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     );
 
   program
+    .command("ponyrace")
+    .description("Run a pony race requirement discussion before implementation.")
+    .argument("<request...>", "raw goal request")
+    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
+    .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
+    .option("--json", "print JSON output", false)
+    .action(
+      async (
+        requestParts: string[],
+        commandOptions: { manifest: string; worker?: string; json: boolean },
+      ) => {
+        await runGoalFlow(requestParts, {
+          rootDir,
+          clarificationPrompter,
+          manifestPath: commandOptions.manifest,
+          printJson: commandOptions.json,
+          discussionHeading: "Pony race",
+        });
+      },
+    );
+
+  program
     .command("vote")
     .description("Apply the manifest decision rule to a JSON array of bot votes.")
     .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
@@ -310,6 +332,7 @@ interface RunGoalFlowInput {
   clarificationPrompter: GoalClarificationPrompter;
   manifestPath: string;
   printJson: boolean;
+  discussionHeading?: string;
 }
 
 async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Promise<void> {
@@ -349,7 +372,9 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
       return;
     }
 
-    printRequirementCourtResult(runRequirementCourt(clarifiedDiscussion.contract, { manifest }));
+    printRequirementCourtResult(runRequirementCourt(clarifiedDiscussion.contract, { manifest }), {
+      discussionHeading: input.discussionHeading,
+    });
     return;
   }
 
@@ -358,11 +383,20 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
     return;
   }
 
-  printRequirementCourtResult(runRequirementCourt(preparedDiscussion.contract, { manifest }));
+  printRequirementCourtResult(runRequirementCourt(preparedDiscussion.contract, { manifest }), {
+    discussionHeading: input.discussionHeading,
+  });
 }
 
-function printRequirementCourtResult(result: RequirementCourtResult): void {
-  console.log(pc.cyan("Requirement discussion"));
+interface RequirementCourtOutputOptions {
+  discussionHeading?: string | undefined;
+}
+
+function printRequirementCourtResult(
+  result: RequirementCourtResult,
+  options: RequirementCourtOutputOptions = {},
+): void {
+  console.log(pc.cyan(options.discussionHeading ?? "Requirement discussion"));
   for (const entry of result.discussion) {
     console.log(entry.line);
   }

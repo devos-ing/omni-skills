@@ -14,6 +14,7 @@ describe("cli", () => {
       "onboard",
       "bots",
       "goal",
+      "ponyrace",
       "vote",
       "stream-goal",
       "history",
@@ -22,6 +23,7 @@ describe("cli", () => {
     ]);
 
     const onboardCommand = program.commands.find((command) => command.name() === "onboard");
+    const ponyraceCommand = program.commands.find((command) => command.name() === "ponyrace");
     const revertCommand = program.commands.find((command) => command.name() === "revert");
     const skillsCommand = program.commands.find((command) => command.name() === "skills");
 
@@ -30,6 +32,11 @@ describe("cli", () => {
       "--name",
       "--agents",
       "--home",
+    ]);
+    expect(ponyraceCommand?.options.map((option) => option.long)).toEqual([
+      "--manifest",
+      "--worker",
+      "--json",
     ]);
     expect(revertCommand?.options.map((option) => option.long)).toEqual(["--dry-run"]);
     expect(skillsCommand?.commands.map((command) => command.name())).toEqual(["install", "update"]);
@@ -240,6 +247,51 @@ describe("cli", () => {
       );
 
       expect(stripAnsiLines(logs)).toContain("Requirement discussion");
+      expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
+      expect(stripAnsiLines(logs)).toContain("Judge summary");
+      expect(logs.some((line) => line.includes("Approvals: 4/4"))).toBe(true);
+      expect(stripAnsiLines(logs)).toContain("Detailed requirement");
+      expect(logs.some((line) => line.includes("Title: Add CSV import to admin dashboard"))).toBe(
+        true,
+      );
+      expect(invocations).toEqual([]);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("ponyrace prints pony race discussion and does not stream by default", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const logs: string[] = [];
+    const invocations: CliInvocation[] = [];
+    const originalLog = console.log;
+    const streamRunner: CliStreamRunner = async function* (invocation) {
+      invocations.push(invocation);
+      yield { type: "start", invocation };
+      yield { type: "stdout", chunk: "model started" };
+      yield { type: "exit", exitCode: 0 };
+    };
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir, streamRunner }).parseAsync(
+        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        { from: "user" },
+      );
+
+      await buildProgram({ cwd: rootDir, streamRunner }).parseAsync(
+        ["ponyrace", "Add", "CSV", "import", "to", "admin", "dashboard"],
+        { from: "user" },
+      );
+
+      expect(stripAnsiLines(logs)).toContain("Pony race");
       expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
       expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
