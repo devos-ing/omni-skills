@@ -241,7 +241,7 @@ describe("manifest", () => {
             kind: "ai-work-runtime.ponytrail.setup",
             metadata: {
               name: "Compact Setup",
-              description: "A compact Ponytrail setup manifest.",
+              description: "A compact Ponyrace setup manifest.",
               owner: "human_owner",
             },
             ponies: [

@@ -27,8 +27,8 @@ describe("onboarding", () => {
 
       const readme = await readFile(join(rootDir, ".ponytrail", "README.md"), "utf8");
       expect(readme).toContain("Runtime Court");
-      expect(readme).toContain('ponytrail ponyrace "<request>"');
-      expect(readme).toContain("configured review bots");
+      expect(readme).toContain('ponyrace ponyrace "<request>"');
+      expect(readme).toContain("configured review ponies");
       expect(readme).toContain("manifest approval rule");
       expect(readme).toContain("/amend-goal");
       expect(readme).toContain(".ponytrail/goals");

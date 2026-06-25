@@ -294,7 +294,7 @@ export function createDefaultManifest(options: DefaultManifestOptions = {}): Man
     manifestVersion: "0.1",
     kind: "ai-work-runtime.ponytrail",
     metadata: {
-      name: options.name ?? "Requirement First Ponytrail",
+      name: options.name ?? "Requirement First Ponyrace",
       description:
         "A configurable bot court that agrees on a detailed requirement before Codex, Claude, or another agent begins execution.",
       owner: "human_owner",
@@ -648,7 +648,7 @@ export function createCompactSetupManifest(
     metadata: {
       ...defaultManifest.metadata,
       description:
-        "A compact Ponytrail setup manifest. Define ponies here; Ponytrail expands the runtime details when commands run.",
+        "A compact Ponyrace setup manifest. Define ponies here; Ponyrace expands the runtime details when commands run.",
     },
     ponies: setupReviewBots,
     approvalRule: {

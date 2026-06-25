@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
+import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { confirm, intro, isCancel, outro, select, text } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
@@ -23,6 +24,7 @@ import {
   readSnapshotHistory,
   recordSnapshotPost,
   recordSnapshotPre,
+  renderRequirementCourtMarkdown,
   runRequirementCourt,
   type SetupReviewBotInput,
   type SnapshotCommit,
@@ -94,7 +96,7 @@ type SnapshotHistoryMode = "tree" | "details";
 type SkillChangeOperation = "install" | "update";
 
 const defaultManifestPath = ".ponytrail/manifest.json";
-const skillInstallHistorySessionId = "ponytrail-skills";
+const skillInstallHistorySessionId = "ponyrace-skills";
 const clackSetupPromptIo: SetupPromptIo = {
   get isTty() {
     return process.stdin.isTTY === true;
@@ -135,8 +137,8 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
   const program = new Command();
 
   program
-    .name("ponytrail")
-    .description("Requirement-first runtime for supervising Codex, Claude, and other AI workers.")
+    .name("ponyrace")
+    .description("Requirement-first pony race for supervising Codex, Claude, and other AI workers.")
     .version(CLI_VERSION)
     .option("-v", "output the version number");
 
@@ -147,7 +149,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
   program
     .command("setup")
     .description(
-      "Create local .ponytrail files, configure review bots, and install Ponytrail skills.",
+      "Create local .ponytrail files, configure review ponies, and install Ponyrace skills.",
     )
     .option("--dir <dir>", "target directory", rootDir)
     .option("--name <name>", "project name")
@@ -199,14 +201,14 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install");
         }
 
-        console.log(pc.green("Ponytrail setup complete"));
-        console.log(`Next: ponytrail ponyrace "your requirement"`);
+        console.log(pc.green("Ponyrace setup complete"));
+        console.log(`Next: restart Codex or Claude, then run /ponyrace your requirement`);
       },
     );
 
   program
     .command("onboard")
-    .description("Create local .ponytrail files and install the default Pony Trail skills.")
+    .description("Create local .ponytrail files and install the default /ponyrace skills.")
     .option("-d, --dir <dir>", "target directory", rootDir)
     .option("-n, --name <name>", "project name")
     .option(
@@ -225,7 +227,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           projectName,
         });
 
-        console.log(pc.green("Ponytrail onboarding complete"));
+        console.log(pc.green("Ponyrace onboarding complete"));
         console.log(pc.dim(`Manifest: ${result.manifestPath}`));
 
         const installAgents = parseSkillInstallAgents(commandOptions.agents);
@@ -245,6 +247,8 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
           printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install");
         }
+
+        console.log(`Next: restart Codex or Claude, then run /ponyrace your requirement`);
       },
     );
 
@@ -291,10 +295,18 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
     .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
     .option("--json", "print JSON output", false)
+    .option("--markdown <path>", "write Markdown report to a path")
+    .option("--skip-markdown", "skip writing the default Markdown report", false)
     .action(
       async (
         requestParts: string[],
-        commandOptions: { manifest: string; worker?: string; json: boolean },
+        commandOptions: {
+          manifest: string;
+          worker?: string;
+          json: boolean;
+          markdown?: string;
+          skipMarkdown: boolean;
+        },
       ) => {
         await runGoalFlow(requestParts, {
           rootDir,
@@ -304,6 +316,10 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           jsonOutput: commandOptions.json ? "court" : false,
           discussionHeading: "Pony race",
           printVisibleThinking: true,
+          markdownReport:
+            commandOptions.json || commandOptions.skipMarkdown
+              ? undefined
+              : { path: commandOptions.markdown },
         });
       },
     );
@@ -355,7 +371,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
   program
     .command("history")
-    .description("Show Pony Trail snapshot history.")
+    .description("Show Ponyrace snapshot history.")
     .option("-s, --session <id>", "only show one snapshot session")
     .option("--mode <mode>", "history output mode: tree,details", "tree")
     .option("--details", "include detailed snapshot metadata", false)
@@ -386,7 +402,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
   program
     .command("revert")
-    .description("Restore files from a Pony Trail snapshot pre-state.")
+    .description("Restore files from a Ponyrace snapshot pre-state.")
     .argument("<snapshot-id>", "snapshot id to restore")
     .option("--dry-run", "show planned file actions without writing files", false)
     .action(
@@ -452,7 +468,7 @@ export async function promptForSetup(
     return defaults;
   }
 
-  promptIo.intro(pc.cyan("Ponytrail setup"));
+  promptIo.intro(pc.cyan("Ponyrace setup"));
 
   const projectName = await readSetupText(promptIo, "Workspace name", defaults.projectName);
   const defaultBotCount = defaults.bots.length;
@@ -546,7 +562,7 @@ export async function promptForSetup(
 }
 
 async function promptForProjectName(defaultName: string): Promise<string> {
-  intro(pc.cyan("Ponytrail onboarding"));
+  intro(pc.cyan("Ponyrace onboarding"));
   const answer = await text({
     message: "Project name",
     placeholder: defaultName,
@@ -636,6 +652,11 @@ interface RunGoalFlowInput {
   jsonOutput: "contract" | "court" | false;
   discussionHeading?: string;
   printVisibleThinking?: boolean;
+  markdownReport?: MarkdownReportOptions | undefined;
+}
+
+interface MarkdownReportOptions {
+  path?: string | undefined;
 }
 
 async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Promise<void> {
@@ -680,10 +701,7 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
       createRunRequirementCourtInput(manifest, input.ponyRunner),
     );
 
-    printRequirementCourtResult(result, {
-      discussionHeading: input.discussionHeading,
-      printVisibleThinking: input.printVisibleThinking,
-    });
+    await printRequirementCourtResultAndArtifacts(result, input);
     return;
   }
 
@@ -702,10 +720,67 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
     return;
   }
 
+  await printRequirementCourtResultAndArtifacts(result, input);
+}
+
+async function printRequirementCourtResultAndArtifacts(
+  result: RequirementCourtResult,
+  input: RunGoalFlowInput,
+): Promise<void> {
   printRequirementCourtResult(result, {
     discussionHeading: input.discussionHeading,
     printVisibleThinking: input.printVisibleThinking,
   });
+  await writeMarkdownReport(result, input);
+}
+
+async function writeMarkdownReport(
+  result: RequirementCourtResult,
+  input: RunGoalFlowInput,
+): Promise<void> {
+  if (!input.markdownReport) {
+    return;
+  }
+
+  const reportPath = input.markdownReport.path
+    ? resolvePath(input.rootDir, input.markdownReport.path)
+    : createDefaultMarkdownReportPath(input.rootDir, result);
+
+  await mkdir(dirname(reportPath), { recursive: true });
+  await writeFile(reportPath, renderRequirementCourtMarkdown(result));
+  console.log(`Markdown report: ${formatReportPathForOutput(input.rootDir, reportPath)}`);
+}
+
+function createDefaultMarkdownReportPath(rootDir: string, result: RequirementCourtResult): string {
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/\.\d{3}Z$/u, "Z")
+    .replace(/[:]/gu, "-");
+  return join(
+    rootDir,
+    "outputs",
+    "ponyrace",
+    `${timestamp}-${slugifyReportTitle(result.detailedRequirement.title)}.md`,
+  );
+}
+
+function slugifyReportTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 80);
+
+  return slug || "requirement-discussion";
+}
+
+function formatReportPathForOutput(rootDir: string, reportPath: string): string {
+  const relativePath = relative(rootDir, reportPath);
+  if (relativePath && !relativePath.startsWith("..") && !isAbsolute(relativePath)) {
+    return relativePath;
+  }
+
+  return reportPath;
 }
 
 function createRunRequirementCourtInput(
@@ -1103,8 +1178,8 @@ async function installSkillWithLocalHistory(
         input.agents,
       )}`,
       reason: "Keep project-local history before changing agent skill files.",
-      expected: `The skill ${input.operation} result is captured in local Ponytrail history.`,
-      verify: "ponytrail history --details",
+      expected: `The skill ${input.operation} result is captured in local Ponyrace history.`,
+      verify: "ponyrace history --details",
       rollback:
         "Remove or reinstall the affected agent skill folders, then record another snapshot.",
     });
@@ -1228,7 +1303,7 @@ function formatSkillInstallCommand(input: InstallSkillWithLocalHistoryInput): st
     input.force ? "--force" : "",
     input.installPrehook ? "--prehook" : "",
   ].filter(Boolean);
-  return ["ponytrail skills", input.operation, input.source, ...flags].join(" ");
+  return ["ponyrace skills", input.operation, input.source, ...flags].join(" ");
 }
 
 function formatSkillInstallSummary(
@@ -1260,8 +1335,8 @@ function printPostSkillChangeWelcome(result: SkillInstallResult): void {
   }
 
   console.log("");
-  console.log(pc.green("Welcome to Ponytrail."));
-  console.log("Restart your agent IDE so it loads the latest Pony Trail skill.");
+  console.log(pc.green("Welcome to Ponyrace."));
+  console.log("Restart your agent IDE so it loads the latest Ponyrace skills.");
 }
 
 function formatAgentList(agents: string[]): string {

@@ -1,9 +1,9 @@
 {
-  "name": "ponytrail",
+  "name": "ponyrace",
   "version": "0.2.0",
   "type": "module",
   "bin": {
-    "ponytrail": "./dist/cli.js"
+    "ponyrace": "./dist/cli.js"
   },
   "files": [
     "dist",

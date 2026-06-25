@@ -66,7 +66,7 @@ describe("skill installer", () => {
     expect(source.path.endsWith(join("bundled-skills", "ponyrace"))).toBe(true);
     const skill = await readFile(join(source.path, "SKILL.md"), "utf8");
     expect(skill).toContain("name: ponyrace");
-    expect(skill).toContain('ponytrail ponyrace "<request>"');
+    expect(skill).toContain('ponyrace ponyrace "<request>"');
     expect(skill).not.toContain("rtk bun run dev");
   });
 

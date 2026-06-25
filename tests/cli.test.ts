@@ -16,7 +16,7 @@ describe("cli", () => {
   test("registers setup, onboarding, bot listing, goal drafting, and vote commands", () => {
     const program = buildProgram();
 
-    expect(program.name()).toBe("ponytrail");
+    expect(program.name()).toBe("ponyrace");
     expect(program.commands.map((command) => command.name())).toEqual([
       "setup",
       "onboard",
@@ -53,6 +53,8 @@ describe("cli", () => {
       "--manifest",
       "--worker",
       "--json",
+      "--markdown",
+      "--skip-markdown",
     ]);
     expect(streamGoalCommand?.options.map((option) => option.long)).toEqual([
       "--manifest",
@@ -146,7 +148,7 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      expect(logs.some((line) => line.includes("Ponytrail onboarding complete"))).toBe(true);
+      expect(logs.some((line) => line.includes("Ponyrace onboarding complete"))).toBe(true);
       expect(logs.some((line) => line.includes("product_manager_bot"))).toBe(true);
       expect(logs.some((line) => line.includes("product_manager_model"))).toBe(true);
       expect(
@@ -198,8 +200,8 @@ describe("cli", () => {
       expect(logs.some((line) => line.includes("Skill install result"))).toBe(true);
       expect(logs.some((line) => line.includes("Skill: pony-trail"))).toBe(true);
       expect(logs.some((line) => line.includes("Skill: ponyrace"))).toBe(true);
-      expect(logs.some((line) => line.includes("Ponytrail onboarding complete"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
+      expect(logs.some((line) => line.includes("Ponyrace onboarding complete"))).toBe(true);
+      expect(stripAnsiLines(logs)).toContain("Welcome to Ponyrace.");
       expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
     } finally {
       console.log = originalLog;
@@ -208,7 +210,7 @@ describe("cli", () => {
     }
   });
 
-  test("setup creates a manifest and installs ponytrail skills for default agent targets", async () => {
+  test("setup creates a manifest and installs ponyrace skills for default agent targets", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
@@ -274,8 +276,8 @@ describe("cli", () => {
         agents: "codex,claude,cursor",
         botCount: 4,
       });
-      expect(logs.some((line) => line.includes("Ponytrail setup complete"))).toBe(true);
-      expect(logs.some((line) => line.includes("Next: ponytrail ponyrace"))).toBe(true);
+      expect(logs.some((line) => line.includes("Ponyrace setup complete"))).toBe(true);
+      expect(logs.some((line) => line.includes("Next: restart Codex or Claude"))).toBe(true);
       expect(logs.some((line) => line.includes("Pony race"))).toBe(false);
       expect(logs.some((line) => line.includes("Requirement discussion"))).toBe(false);
       expect(logs.some((line) => line.includes("Detailed requirement"))).toBe(false);
@@ -311,7 +313,7 @@ describe("cli", () => {
       ).rejects.toThrow();
 
       await expect(stat(join(rootDir, ".ponytrail", "manifest.json"))).resolves.toBeTruthy();
-      expect(logs.some((line) => line.includes("Ponytrail setup complete"))).toBe(false);
+      expect(logs.some((line) => line.includes("Ponyrace setup complete"))).toBe(false);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -806,6 +808,56 @@ describe("cli", () => {
     }
   });
 
+  test("ponyrace writes a markdown discussion report with pony thinking and change summary", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const reportPath = join("outputs", "ponyrace-report.md");
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        { from: "user" },
+      );
+      logs.splice(0);
+
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["ponyrace", "--markdown", reportPath, "Add", "CSV", "import", "to", "admin", "dashboard"],
+        { from: "user" },
+      );
+
+      const report = await readFile(join(rootDir, reportPath), "utf8");
+
+      expect(stripAnsiLines(logs)).toContain(`Markdown report: ${reportPath}`);
+      expect(report).toContain("# Pony race: Add CSV import to admin dashboard");
+      expect(report).toContain("## Discussion");
+      expect(report).toContain("product_manager_bot: I think");
+      expect(report).toContain("## Visible Thinking Transcript");
+      expect(report).toContain("### Product Manager Bot (product_manager_bot)");
+      expect(report).toContain("Focus:");
+      expect(report).toContain("Concern:");
+      expect(report).toContain("Recommendation:");
+      expect(report).toContain("Vote: approve");
+      expect(report).toContain("## Judge Summary");
+      expect(report).toContain("Approvals: 4/4");
+      expect(report).toContain("## Approval Tally");
+      expect(report).toContain("- product_manager_bot: approve (0.8)");
+      expect(report).toContain("## Detailed Requirement");
+      expect(report).toContain("Title: Add CSV import to admin dashboard");
+      expect(report).toContain("## Change Summary");
+      expect(report).toContain("### What Will Change");
+      expect(report).toContain("- Add CSV import to admin dashboard");
+      expect(report).toContain("Human confirmation: pending");
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("stream-goal remains a compatibility alias for requirement discussion", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const logs: string[] = [];
@@ -900,7 +952,7 @@ describe("cli", () => {
       expect(logs.some((line) => line.includes("codex: would install"))).toBe(true);
       expect(logs.some((line) => line.includes("cursor: would install"))).toBe(true);
       expect(logs.some((line) => line.includes(".cursor/rules/pony-trail.mdc"))).toBe(true);
-      expect(stripAnsiLines(logs)).not.toContain("Welcome to Ponytrail.");
+      expect(stripAnsiLines(logs)).not.toContain("Welcome to Ponyrace.");
     } finally {
       console.log = originalLog;
       await rm(homeDir, { recursive: true, force: true });
@@ -983,14 +1035,14 @@ describe("cli", () => {
       await expect(
         stat(join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md")),
       ).resolves.toBeTruthy();
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
+      expect(stripAnsiLines(logs)).toContain("Welcome to Ponyrace.");
       expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
       expect(logs.some((line) => line.includes("Local history:"))).toBe(true);
 
       await buildProgram({ cwd: rootDir }).parseAsync(["history", "--details"], { from: "user" });
       const historyLogs = logs.splice(0).map(stripAnsi);
 
-      expect(historyLogs.some((line) => line.includes("ponytrail-skills"))).toBe(true);
+      expect(historyLogs.some((line) => line.includes("ponyrace-skills"))).toBe(true);
       expect(historyLogs.some((line) => line.includes("action: install skill"))).toBe(true);
       expect(
         historyLogs.some((line) => line.includes("summary: Installed pony-trail skill for codex")),
@@ -1002,16 +1054,16 @@ describe("cli", () => {
         .map((line) => JSON.parse(line));
       expect(entries.map((entry) => entry.phase)).toEqual(["pre", "post"]);
       expect(entries.map((entry) => entry.session_id)).toEqual([
-        "ponytrail-skills",
-        "ponytrail-skills",
+        "ponyrace-skills",
+        "ponyrace-skills",
       ]);
       expect(entries[0].snapshot_id).toStartWith("skill-install-");
 
       const sessionTree = await readFile(
-        join(rootDir, ".pony-trail", "sessions", "ponytrail-skills", "tree.md"),
+        join(rootDir, ".pony-trail", "sessions", "ponyrace-skills", "tree.md"),
         "utf8",
       );
-      expect(sessionTree).toContain("Session: `ponytrail-skills`");
+      expect(sessionTree).toContain("Session: `ponyrace-skills`");
       expect(sessionTree).toContain("## commit skill-install-");
     } finally {
       console.log = originalLog;
@@ -1046,7 +1098,7 @@ describe("cli", () => {
 
       expect(stripAnsiLines(logs)).toContain("Skill update result");
       expect(logs.some((line) => line.includes("codex: updated"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
+      expect(stripAnsiLines(logs)).toContain("Welcome to Ponyrace.");
       expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
       expect(logs.some((line) => line.includes("Local history:"))).toBe(true);
       expect(await readFile(installedSkillPath, "utf8")).toContain("name: pony-trail");

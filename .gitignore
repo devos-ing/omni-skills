@@ -3,6 +3,7 @@ bun.lock
 dist/
 coverage/
 .pony-trail/
+.ponyrace/
 work/
 .DS_Store
 docs/superpowers/

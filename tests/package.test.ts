@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 interface PackageMetadata {
+  name?: string;
   version?: string;
   bin?: Record<string, string>;
   files?: string[];
@@ -17,12 +18,13 @@ describe("package metadata", () => {
   test("builds and publishes a bundled CLI binary", async () => {
     const packageMetadata = await readPackageMetadata();
 
+    expect(packageMetadata.name).toBe("ponyrace");
     expect(packageMetadata.version).toBe("0.2.0");
     expect(packageMetadata.scripts?.build).toBe(
       "bun build --target=bun --outfile=dist/cli.js src/cli.ts",
     );
     expect(packageMetadata.scripts?.prepack).toBe("bun run build");
-    expect(packageMetadata.bin?.ponytrail).toBe("./dist/cli.js");
+    expect(packageMetadata.bin?.ponyrace).toBe("./dist/cli.js");
     expect(packageMetadata.files).toContain("dist");
     expect(packageMetadata.files).toContain("bundled-skills");
   });
