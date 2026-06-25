@@ -16,6 +16,7 @@ import {
   createOnboardingFiles,
   type InstructionContext,
   loadManifest,
+  type PonySubagentRunner,
   planSnapshotRevert,
   prepareGoalDiscussion,
   type RecordedSnapshotCommit,
@@ -69,6 +70,7 @@ const skillInstallHistorySessionId = "ponytrail-skills";
 export interface BuildProgramOptions {
   cwd?: string;
   streamRunner?: CliStreamRunner;
+  ponySubagentRunner?: PonySubagentRunner | undefined;
   clarificationPrompter?: GoalClarificationPrompter;
   projectNamePrompter?: ProjectNamePrompter;
   revertApprovalPrompter?: RevertApprovalPrompter;
@@ -77,6 +79,7 @@ export interface BuildProgramOptions {
 export function buildProgram(options: BuildProgramOptions = {}): Command {
   const rootDir = options.cwd ?? process.cwd();
   const clarificationPrompter = options.clarificationPrompter ?? promptForGoalClarifications;
+  const ponySubagentRunner = options.ponySubagentRunner;
   const projectNamePrompter = options.projectNamePrompter ?? promptForProjectName;
   const revertApprovalPrompter = options.revertApprovalPrompter ?? promptForRevertApproval;
   const program = new Command();
@@ -156,10 +159,27 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           rootDir,
           clarificationPrompter,
           manifestPath: commandOptions.manifest,
-          printJson: commandOptions.json,
+          ponySubagentRunner,
+          jsonOutput: commandOptions.json ? "contract" : false,
         });
       },
     );
+
+  program
+    .command("ponyrace")
+    .description("Run the requirement pony subagents and summarize their direction.")
+    .argument("<request...>", "raw requirement request")
+    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
+    .option("--json", "print JSON output", false)
+    .action(async (requestParts: string[], commandOptions: { manifest: string; json: boolean }) => {
+      await runGoalFlow(requestParts, {
+        rootDir,
+        clarificationPrompter,
+        manifestPath: commandOptions.manifest,
+        ponySubagentRunner,
+        jsonOutput: commandOptions.json ? "court" : false,
+      });
+    });
 
   program
     .command("vote")
@@ -200,7 +220,8 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
           rootDir,
           clarificationPrompter,
           manifestPath: commandOptions.manifest,
-          printJson: false,
+          ponySubagentRunner,
+          jsonOutput: false,
         });
       },
     );
@@ -309,7 +330,8 @@ interface RunGoalFlowInput {
   rootDir: string;
   clarificationPrompter: GoalClarificationPrompter;
   manifestPath: string;
-  printJson: boolean;
+  ponySubagentRunner?: PonySubagentRunner | undefined;
+  jsonOutput: "contract" | "court" | false;
 }
 
 async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Promise<void> {
@@ -318,7 +340,7 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
   const preparedDiscussion = prepareGoalDiscussion(request, { manifest });
 
   if (preparedDiscussion.status === "needs_clarification") {
-    if (input.printJson) {
+    if (input.jsonOutput) {
       console.log(JSON.stringify(preparedDiscussion, null, 2));
       return;
     }
@@ -349,22 +371,67 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
       return;
     }
 
-    printRequirementCourtResult(runRequirementCourt(clarifiedDiscussion.contract, { manifest }));
+    printRequirementCourtResult(
+      await runRequirementCourt(clarifiedDiscussion.contract, {
+        manifest,
+        ponySubagentRunner: input.ponySubagentRunner,
+      }),
+    );
     return;
   }
 
-  if (input.printJson) {
+  if (input.jsonOutput === "contract") {
     console.log(JSON.stringify(preparedDiscussion.contract, null, 2));
     return;
   }
 
-  printRequirementCourtResult(runRequirementCourt(preparedDiscussion.contract, { manifest }));
+  const result = await runRequirementCourt(preparedDiscussion.contract, {
+    manifest,
+    ponySubagentRunner: input.ponySubagentRunner,
+  });
+
+  if (input.jsonOutput === "court") {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  printRequirementCourtResult(result);
 }
 
 function printRequirementCourtResult(result: RequirementCourtResult): void {
   console.log(pc.cyan("Requirement discussion"));
-  for (const entry of result.discussion) {
-    console.log(entry.line);
+  for (const round of result.rounds) {
+    console.log("");
+    console.log(pc.cyan(`Round ${round.round}`));
+    for (const entry of round.discussion) {
+      console.log(entry.line);
+    }
+  }
+
+  const transcriptRounds = result.rounds
+    .map((round) => ({
+      round: round.round,
+      lines: round.discussion.flatMap((entry) =>
+        entry.transcript.map((line) => `${entry.botId}: ${line}`),
+      ),
+    }))
+    .filter((round) => round.lines.length > 0);
+
+  if (transcriptRounds.length > 0) {
+    console.log("");
+    console.log(pc.cyan("Pony transcripts"));
+    for (const round of transcriptRounds) {
+      console.log(pc.cyan(`Round ${round.round}`));
+      for (const line of round.lines) {
+        console.log(line);
+      }
+    }
+  }
+
+  console.log("");
+  console.log(pc.cyan("Final votes"));
+  for (const vote of result.votes) {
+    console.log(`${vote.botId}: ${vote.vote} (${vote.confidence})`);
   }
 
   console.log("");
@@ -391,7 +458,6 @@ function printList(label: string, values: string[]): void {
     console.log(`- ${value}`);
   }
 }
-
 function printSnapshotHistory(
   sessions: Array<{ sessionId: string; commits: SnapshotCommit[] }>,
   mode: SnapshotHistoryMode,

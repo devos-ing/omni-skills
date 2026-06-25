@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildProgram, type GoalClarificationPrompter } from "../src/cli";
 import type { CliInvocation, CliStreamRunner } from "../src/plugins/adapters";
+import type { PonySubagentRunner } from "../src/runtimes/ponytrail";
 
 describe("cli", () => {
   test("registers onboarding, bot listing, goal drafting, and vote commands", () => {
@@ -14,6 +15,7 @@ describe("cli", () => {
       "onboard",
       "bots",
       "goal",
+      "ponyrace",
       "vote",
       "stream-goal",
       "history",
@@ -338,6 +340,117 @@ describe("cli", () => {
       expect(stripAnsiLines(logs)).toContain("Requirement discussion");
       expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
       expect(invocations).toEqual([]);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("ponyrace runs each pony through the configured subagent runner", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const logs: string[] = [];
+    const ponyCalls: string[] = [];
+    const originalLog = console.log;
+    const ponySubagentRunner: PonySubagentRunner = async ({ botId, contract }) => {
+      ponyCalls.push(botId);
+
+      return {
+        message: `${botId} subagent accepted ${contract.title}`,
+        vote: "approve",
+        confidence: 0.91,
+        requiredChanges: [],
+        transcript: [`${botId} inspected requirement direction`],
+      };
+    };
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir, ponySubagentRunner }).parseAsync(
+        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        { from: "user" },
+      );
+
+      await buildProgram({ cwd: rootDir, ponySubagentRunner }).parseAsync(
+        ["ponyrace", "Add", "CSV", "import", "to", "admin", "dashboard"],
+        { from: "user" },
+      );
+
+      expect(ponyCalls).toEqual([
+        "product_manager_bot",
+        "project_manager_bot",
+        "engineer_bot",
+        "testing_bot",
+        "product_manager_bot",
+        "project_manager_bot",
+        "engineer_bot",
+        "testing_bot",
+      ]);
+      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
+      expect(stripAnsiLines(logs)).toContain("Round 1");
+      expect(stripAnsiLines(logs)).toContain("Round 2");
+      expect(
+        logs.some((line) =>
+          line.includes("product_manager_bot: product_manager_bot subagent accepted"),
+        ),
+      ).toBe(true);
+      expect(stripAnsiLines(logs)).toContain("Pony transcripts");
+      expect(logs.some((line) => line.includes("inspected requirement direction"))).toBe(true);
+      expect(logs.some((line) => line.includes("Human confirmation: pending"))).toBe(true);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("ponyrace JSON output includes subagent discussion results", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const logs: string[] = [];
+    const ponyCalls: string[] = [];
+    const originalLog = console.log;
+    const ponySubagentRunner: PonySubagentRunner = async ({ botId }) => {
+      ponyCalls.push(botId);
+
+      return {
+        message: `${botId} json review`,
+        vote: "approve",
+        confidence: 0.88,
+        requiredChanges: [],
+        transcript: [`${botId} json transcript`],
+      };
+    };
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir, ponySubagentRunner }).parseAsync(
+        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        { from: "user" },
+      );
+
+      await buildProgram({ cwd: rootDir, ponySubagentRunner }).parseAsync(
+        ["ponyrace", "--json", "Add", "CSV", "import", "to", "admin", "dashboard"],
+        { from: "user" },
+      );
+
+      const output = JSON.parse(logs.at(-1) ?? "{}");
+      expect(ponyCalls).toEqual([
+        "product_manager_bot",
+        "project_manager_bot",
+        "engineer_bot",
+        "testing_bot",
+        "product_manager_bot",
+        "project_manager_bot",
+        "engineer_bot",
+        "testing_bot",
+      ]);
+      expect(output.rounds.map((round: { round: number }) => round.round)).toEqual([1, 2]);
+      expect(output.discussion[0].message).toBe("product_manager_bot json review");
+      expect(output.humanConfirmation).toBe("pending");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

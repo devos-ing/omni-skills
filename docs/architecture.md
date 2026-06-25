@@ -32,7 +32,8 @@ src/
 - create project onboarding files
 - run the requirements brainstorm gate
 - draft a goal contract from a raw request
-- run the 4-bot / 3-approval requirement court plus a non-voting Judge
+- run each requirement-court pony through a `PonySubagentRunner`
+- tally the 4-bot / 3-approval requirement court plus a non-voting Judge
 - read Pony Trail snapshot history and plan file-level reverts
 - print visible role-bot discussion before worker execution is allowed
 
@@ -45,6 +46,8 @@ The CLI should call this runtime through its exported interface instead of knowi
 `manifest.models` declares named AI model configurations for the court. Each bot references one of those model IDs through `bot.model`, and manifest validation rejects any bot that points at a missing model.
 
 The runtime treats `provider` and `name` as configuration values. This keeps goal discussion model selection editable in `.ponytrail/manifest.json` without coupling the core runtime to a specific vendor SDK or CLI flag shape.
+
+`requirement-court.ts` exposes a `PonySubagentRunner` seam. The default runner is deterministic so the CLI works offline, while tests and future plugins can inject process-backed or model-backed subagents. The court invokes the runner once per configured voter in each manifest-defined round, stores the visible round discussion, and tallies final-round votes through the manifest decision rule.
 
 ## Plugins
 
@@ -107,8 +110,8 @@ Human request
   -> ponytrail runtime
   -> requirements brainstorm
   -> ask human for details when unclear
-  -> Product Manager, Project Manager, Engineer, and Testing bots discuss
-  -> visible role-bot discussion is printed
+  -> Product Manager, Project Manager, Engineer, and Testing pony subagents discuss by round
+  -> visible round discussion is printed
   -> 3 of 4 voting bots approve the direction
   -> Requirement Judge summarizes and merges one detailed requirement
   -> human confirms the direction
