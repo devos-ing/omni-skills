@@ -9,7 +9,7 @@ description: Use when the user invokes /ponyrace, asks to run a pony race, wants
 
 Run Ponyrace's CLI requirement discussion before implementation. The skill makes `/ponyrace ...` a chat trigger for the existing `ponyrace ponyrace` command; the CLI remains the source of truth for clarification, role-pony discussion, vote tallying, Judge summary, and human confirmation.
 
-Core principle: discuss and approve the requirement direction before implementation starts. Use the deterministic CLI discussion for a quick offline gate; use researched mode when the human asks why ponies are shallow, asks for deeper review, or the requirement needs repo/tool-backed evidence.
+Core principle: discuss and approve the requirement direction before implementation starts. Use the CLI's local pony runner for a quick requirement gate; use researched mode when the human asks why ponies are shallow, asks for deeper review, or the requirement needs repo/tool-backed evidence.
 
 ## Flow
 

@@ -11,6 +11,10 @@ import {
   ManifestSchema,
   writeManifest,
 } from "../src/runtimes/ponytrail/manifest";
+import {
+  DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS,
+  loadDefaultRequirementCourtSkills,
+} from "../src/skills";
 
 describe("manifest", () => {
   test("creates a default 4-bot requirement court with a non-voting Judge", () => {
@@ -55,6 +59,48 @@ describe("manifest", () => {
       ["requirement_judge_bot", "judge_model"],
     ]);
     expect(parsed.bots.find((bot) => bot.id === "requirement_judge_bot")?.type).toBe("judge_bot");
+  });
+
+  test("builds default skills from editable runtime skill files", async () => {
+    const manifest = createDefaultManifest();
+    const manifestSkillIds = Object.keys(manifest.skills).sort();
+    const sourceSkills = loadDefaultRequirementCourtSkills();
+    const sourceSkillIds = sourceSkills.map((skill) => skill.id).sort();
+    const feasibilitySkillFile = await readFile(
+      join(
+        import.meta.dir,
+        "..",
+        "src",
+        "skills",
+        "requirement-court",
+        "feasibility-review",
+        "SKILL.md",
+      ),
+      "utf8",
+    );
+
+    expect(manifestSkillIds).toEqual(sourceSkillIds);
+    for (const skill of sourceSkills) {
+      expect(manifest.skills[skill.id]).toEqual({
+        displayName: skill.displayName,
+        description: skill.description,
+        instruction: skill.instruction,
+      });
+    }
+    expect(feasibilitySkillFile).toContain("Check repo, tool, permission, and time constraints");
+    expect(manifest.skills.feasibility_review?.instruction).toContain(
+      "Check repo, tool, permission, and time constraints",
+    );
+
+    const setupManifest = createSetupManifest();
+    const setupReviewBots = setupManifest.bots.filter((bot) => bot.type === "review_bot");
+
+    expect(setupReviewBots.map((bot) => [bot.id, bot.skills])).toEqual([
+      ["product_manager_bot", [...DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS]],
+      ["project_manager_bot", [...DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS]],
+      ["senior_engineer_bot", [...DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS]],
+      ["testing_bot", [...DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS]],
+    ]);
   });
 
   test("rejects bots that reference a missing model", () => {

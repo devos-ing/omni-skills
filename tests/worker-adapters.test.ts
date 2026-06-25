@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createCliRequirementPonyRunner } from "../src/plugins";
+import { createCliRequirementPonyRunner, createLocalRequirementPonyRunner } from "../src/plugins";
 import {
   cliWorkerAdapters,
   getCliWorkerAdapter,
@@ -262,12 +262,49 @@ describe("worker CLI adapters", () => {
     expect(invocations[0]?.args.join(" ")).toContain(
       "Check whether the goal can be implemented by the chosen worker agent",
     );
+    expect(invocations[0]?.args.join(" ")).toContain("Feasibility Review");
+    expect(invocations[0]?.args.join(" ")).toContain(
+      "Check repo, tool, permission, and time constraints before approval.",
+    );
     expect(invocations[0]?.args.join(" ")).toContain(
       "Do not approve without at least one concrete evidence item.",
     );
     expect(invocations[0]?.args.join(" ")).toContain("visibleThinking");
     expect(invocations[0]?.args.join(" ")).toContain('"evidence": string[]');
     expect(invocations[0]?.args.join(" ")).toContain("Return only JSON");
+  });
+
+  test("local pony runner builds its response from manifest skill instructions", async () => {
+    const manifest = createDefaultManifest();
+    const bot = manifest.bots.find((candidate) => candidate.id === "engineer_bot");
+    const model = manifest.models.find((candidate) => candidate.id === bot?.model);
+    const contract = draftGoalContract("Add CSV import to admin dashboard", { manifest });
+
+    if (!bot || !model) {
+      throw new Error("Default manifest is missing the engineer bot or model.");
+    }
+
+    manifest.skills.feasibility_review = {
+      ...manifest.skills.feasibility_review,
+      displayName: "Custom Feasibility Lens",
+      description: "Custom feasibility description.",
+      instruction: "Custom skill says inspect cache invalidation before approval.",
+    };
+    const ponyRunner = createLocalRequirementPonyRunner();
+    const response = await ponyRunner({
+      manifest,
+      bot,
+      model,
+      contract,
+      round: 1,
+      priorDiscussion: [],
+    });
+
+    expect(response.message).toContain("Custom Feasibility Lens");
+    expect(response.message).toContain("Custom skill says inspect cache invalidation");
+    expect(response.evidence).toContain(
+      "feasibility_review: Custom skill says inspect cache invalidation before approval.",
+    );
   });
 
   test("streams CLI-backed pony stdout and stderr chunks while collecting the JSON vote", async () => {

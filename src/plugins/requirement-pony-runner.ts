@@ -27,6 +27,10 @@ const CliRequirementPonyResponseSchema = z.object({
   requiredChanges: z.array(z.string().min(1)),
 });
 
+export function createLocalRequirementPonyRunner(): RequirementPonyRunner {
+  return (input) => createLocalPonyResponse(input);
+}
+
 export function createCliRequirementPonyRunner(
   options: CliRequirementPonyRunnerOptions,
 ): RequirementPonyRunner {
@@ -45,6 +49,111 @@ export function createCliRequirementPonyRunner(
 
     return parseRequirementPonyResponse(result.stdout);
   };
+}
+
+function createLocalPonyResponse(input: RequirementPonyRunInput): RequirementPonyResponse {
+  const skillGuidance = resolveBotSkillGuidance(input);
+  const message =
+    createCodebaseReviewDiscussionMessage(input, skillGuidance) ??
+    createGenericDiscussionMessage(input, skillGuidance);
+
+  return {
+    message,
+    evidence: skillGuidance.map((skill) => `${skill.id}: ${skill.instruction}`),
+    vote: "approve",
+    confidence: 0.8,
+    requiredChanges: [],
+  };
+}
+
+interface ResolvedPonySkill {
+  id: string;
+  displayName: string;
+  description: string;
+  instruction: string;
+}
+
+function resolveBotSkillGuidance(input: RequirementPonyRunInput): ResolvedPonySkill[] {
+  return input.bot.skills.map((skillId) => {
+    const skill = input.manifest.skills[skillId];
+    const description = skill?.description ?? "No manifest description configured.";
+    const instruction = skill?.instruction ?? description;
+
+    return {
+      id: skillId,
+      displayName: skill?.displayName ?? skillId,
+      description,
+      instruction,
+    };
+  });
+}
+
+function createCodebaseReviewDiscussionMessage(
+  input: RequirementPonyRunInput,
+  skills: ResolvedPonySkill[],
+): string | undefined {
+  if (!isBroadCodebaseReviewRequest(input)) {
+    return undefined;
+  }
+
+  const suffix = createSkillUseSummary(skills);
+
+  switch (input.bot.id) {
+    case "product_manager_bot":
+      return `I think this requirement should define the maintainability outcome before implementation: prioritize areas where the CLI workflow, user value, or scope boundary is hard to understand, then name what should change. ${suffix}`;
+    case "project_manager_bot":
+      return `I think the worker should sequence the review into architecture map, maintenance pain points, and small follow-up changes; keep dependencies and completion evidence visible while naming what should change. ${suffix}`;
+    case "engineer_bot":
+      return `I think the review should inspect module boundaries, adapter seams, validation schemas, and duplicated runtime rules, then identify what should change to make the code easier to manage. ${suffix}`;
+    case "senior_engineer_bot":
+      return `I think the review should inspect module boundaries, data contracts, extension seams, and hidden coupling, then identify what should change without bundling unrelated rewrites. ${suffix}`;
+    case "testing_bot":
+      return `I think this needs coverage for the review conclusions: focused tests for changed runtime behavior, CLI smoke checks, and edge cases that prove what should change is observable. ${suffix}`;
+    default:
+      return `I think ${input.bot.displayName} should identify what should change from the ${createRoleLabel(
+        input,
+      )} perspective, with one concrete risk and verification need before approving. ${suffix}`;
+  }
+}
+
+function isBroadCodebaseReviewRequest(input: RequirementPonyRunInput): boolean {
+  const text =
+    `${input.contract.title} ${input.contract.intent} ${input.contract.rawRequest}`.toLowerCase();
+
+  return (
+    /\breview\b/u.test(text) &&
+    (/\bcodebase\b/u.test(text) ||
+      /\bmaintain(?:able|ability)?\b/u.test(text) ||
+      /\bmanage(?:able|ment)?\b/u.test(text))
+  );
+}
+
+function createGenericDiscussionMessage(
+  input: RequirementPonyRunInput,
+  skills: ResolvedPonySkill[],
+): string {
+  const approvalCondition = input.bot.approvalConditions?.[0] ?? input.bot.instruction;
+
+  return `I think this requirement can proceed from the ${input.bot.displayName} perspective if the worker keeps the scope tied to: ${input.contract.title}. ${approvalCondition} ${createSkillUseSummary(
+    skills,
+  )}`;
+}
+
+function createRoleLabel(input: RequirementPonyRunInput): string {
+  return input.bot.displayName.replace(/\s+Bot$/u, "").toLowerCase();
+}
+
+function createSkillUseSummary(skills: ResolvedPonySkill[]): string {
+  if (skills.length === 0) {
+    return "No pony skills were configured for this bot.";
+  }
+
+  const names = skills.map((skill) => skill.displayName).join(", ");
+  const instructions = skills
+    .map((skill) => `${skill.displayName}: ${skill.instruction}`)
+    .join(" ");
+
+  return `Skills used: ${names}. ${instructions}`;
 }
 
 interface StreamingPonyResult {
@@ -155,7 +264,10 @@ function formatSkillDescriptions(input: RequirementPonyRunInput): string {
     .map((skillId) => {
       const skill = input.manifest.skills[skillId];
       const description = skill?.description ?? "No manifest description configured.";
-      return `- ${skillId}: ${description}`;
+      const displayName = skill?.displayName ? ` (${skill.displayName})` : "";
+      const instruction = skill?.instruction ? `\n  Instruction: ${skill.instruction}` : "";
+
+      return `- ${skillId}${displayName}: ${description}${instruction}`;
     })
     .join("\n");
 }

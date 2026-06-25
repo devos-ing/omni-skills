@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-DEFAULT_STORE=".pony-trail"
+DEFAULT_STORE=".ponyrace"
 DEFAULT_COPY_LIMIT=1048576
 
 usage() {

@@ -117,9 +117,9 @@ npx ponyrace ponyrace --research --worker codex "add CSV import to the admin das
 By default, `ponyrace ponyrace` writes a Markdown report under
 `outputs/ponyrace/`. Use `--markdown <path>` to choose a report path,
 `--skip-markdown` to skip the report, or `--json` for machine-readable output.
-The default race stays offline-friendly and deterministic; `--research` uses the
-selected worker adapter, requires each pony to return evidence, and prints that
-evidence in the visible thinking transcript and Markdown report.
+The default race uses Ponyrace's explicit local pony runner; `--research` uses
+the selected worker adapter, requires each pony to return evidence, and prints
+that evidence in the visible thinking transcript and Markdown report.
 
 ## Quality Metrics
 
@@ -147,8 +147,6 @@ Ponyrace keeps local runtime and evidence files out of your source tree:
 .ponyrace/
   manifest.json
   goals/
-
-.pony-trail/
   snapshots.jsonl
   sessions/<session-id>/tree.md
 ```

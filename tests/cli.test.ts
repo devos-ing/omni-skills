@@ -1151,7 +1151,7 @@ describe("cli", () => {
         historyLogs.some((line) => line.includes("summary: Installed pony-trail skill for codex")),
       ).toBe(true);
 
-      const entries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
+      const entries = (await readFile(join(rootDir, ".ponyrace", "snapshots.jsonl"), "utf8"))
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line));
@@ -1163,7 +1163,7 @@ describe("cli", () => {
       expect(entries[0].snapshot_id).toStartWith("skill-install-");
 
       const sessionTree = await readFile(
-        join(rootDir, ".pony-trail", "sessions", "ponyrace-skills", "tree.md"),
+        join(rootDir, ".ponyrace", "sessions", "ponyrace-skills", "tree.md"),
         "utf8",
       );
       expect(sessionTree).toContain("Session: `ponyrace-skills`");
@@ -1214,7 +1214,7 @@ describe("cli", () => {
         historyLogs.some((line) => line.includes("summary: Updated pony-trail skill for codex")),
       ).toBe(true);
 
-      const entries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
+      const entries = (await readFile(join(rootDir, ".ponyrace", "snapshots.jsonl"), "utf8"))
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line));
@@ -1400,7 +1400,7 @@ describe("cli", () => {
 
 async function writeSampleSnapshotLog(rootDir: string): Promise<void> {
   const { mkdir, writeFile } = await import("node:fs/promises");
-  const snapshotDir = join(rootDir, ".pony-trail");
+  const snapshotDir = join(rootDir, ".ponyrace");
   await mkdir(join(snapshotDir, "files", "snapshot-001", "pre"), { recursive: true });
   await writeFile(join(snapshotDir, "files", "snapshot-001", "pre", "notes.txt"), "before\n");
   await writeFile(

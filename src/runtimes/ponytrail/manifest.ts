@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { z } from "zod";
+import { createDefaultSkillRegistry, DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS } from "../../skills";
 
 export const VoteValueSchema = z.enum(["approve", "amend", "reject"]);
 
@@ -141,14 +142,6 @@ const DEFAULT_BOT_MODEL_IDS: Record<string, string> = {
 
 const BUILT_IN_SETUP_MODEL_IDS = new Set(["requirements_model", "draft_model", "judge_model"]);
 
-const DEFAULT_SETUP_REVIEW_BOT_SKILLS = [
-  "intent_alignment",
-  "scope_control",
-  "feasibility_review",
-  "verification_design",
-  "risk_review",
-];
-
 const RESERVED_SETUP_BOT_IDS = new Set([
   "requirements_brainstorm_bot",
   "goal_draft_bot",
@@ -192,7 +185,9 @@ const ManifestBaseSchema = z.object({
   skills: z.record(
     z.string(),
     z.object({
+      displayName: z.string().min(1).optional(),
       description: z.string().min(1),
+      instruction: z.string().min(1).optional(),
     }),
   ),
   bots: z.array(BotSchema).min(1),
@@ -360,31 +355,7 @@ export function createDefaultManifest(options: DefaultManifestOptions = {}): Man
         humanFinalApproval: true,
       },
     },
-    skills: {
-      intent_alignment: {
-        description:
-          "Compare the draft goal against the user's raw request and preserve the user's real intent.",
-      },
-      scope_control: {
-        description:
-          "Identify what belongs inside the task, what should be excluded, and where the agent might drift.",
-      },
-      feasibility_review: {
-        description:
-          "Check whether the goal can be implemented by the chosen worker agent with the available repo, tools, and time.",
-      },
-      verification_design: {
-        description: "Turn success into concrete acceptance criteria and evidence requirements.",
-      },
-      risk_review: {
-        description:
-          "Identify security, data loss, privacy, external side effect, cost, and permission risks.",
-      },
-      goal_rewrite: {
-        description:
-          "Rewrite a raw request or bot feedback into a concise structured goal contract.",
-      },
-    },
+    skills: createDefaultSkillRegistry(),
     bots: [
       {
         id: "requirements_brainstorm_bot",
@@ -886,7 +857,7 @@ function createSetupReviewManifestBot(bot: SetupReviewBotInput): Manifest["bots"
     model: bot.modelId,
     temperature: 0.1,
     panel: bot.panel ?? "requirement_court",
-    skills: bot.skills ?? DEFAULT_SETUP_REVIEW_BOT_SKILLS,
+    skills: bot.skills ?? [...DEFAULT_REQUIREMENT_REVIEW_SKILL_IDS],
     instruction:
       bot.instruction ??
       `Review the requirement direction from the ${bot.role} perspective before voting.`,

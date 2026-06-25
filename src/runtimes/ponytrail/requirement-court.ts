@@ -55,7 +55,7 @@ export interface RequirementCourtResult {
 
 export interface RunRequirementCourtInput {
   manifest: Manifest;
-  ponyRunner?: RequirementPonyRunner;
+  ponyRunner: RequirementPonyRunner;
 }
 
 export interface RequirementPonyRunInput {
@@ -86,21 +86,6 @@ export type RequirementPonyRunner = (
   input: RequirementPonyRunInput,
 ) => RequirementPonyResponse | Promise<RequirementPonyResponse>;
 
-type DiscussionMessageFactory = (contract: GoalContract, bot: Manifest["bots"][number]) => string;
-
-const ROLE_MESSAGES: Record<string, DiscussionMessageFactory> = {
-  product_manager_bot: (contract) =>
-    `I think this requirement preserves the user's product intent: ${contract.intent}. Keep the outcome explicit and avoid expanding beyond the requested workflow.`,
-  project_manager_bot: (contract) =>
-    `I think this can become a manageable unit of work if the delivery boundary stays tied to: ${contract.title}. Dependencies and completion evidence should stay visible.`,
-  engineer_bot: (contract) =>
-    `I think the requirement is feasible if the worker keeps the technical boundary aligned to: ${contract.title}. Large architecture choices should be raised before execution.`,
-  senior_engineer_bot: (contract) =>
-    `I think the requirement is feasible if the worker keeps the technical boundary aligned to: ${contract.title}. Large architecture choices and risky dependencies should be raised before execution.`,
-  testing_bot: (contract) =>
-    `I think this needs observable acceptance criteria and evidence for: ${contract.title}. Edge cases and smoke verification should be named before work starts.`,
-};
-
 const ROLE_LABELS: Record<string, string> = {
   product_manager_bot: "product",
   project_manager_bot: "project",
@@ -109,14 +94,15 @@ const ROLE_LABELS: Record<string, string> = {
   testing_bot: "testing",
 };
 
-export const deterministicRequirementPonyRunner: RequirementPonyRunner = ({ bot, contract }) =>
-  createDeterministicPonyResponse(bot, contract);
-
 export async function runRequirementCourt(
   contract: GoalContract,
   input: RunRequirementCourtInput,
 ): Promise<RequirementCourtResult> {
-  const ponyRunner = input.ponyRunner ?? deterministicRequirementPonyRunner;
+  const ponyRunner = input.ponyRunner;
+  if (!ponyRunner) {
+    throw new Error("Requirement court requires an explicit pony runner.");
+  }
+
   const discussion: RequirementDiscussionEntry[] = [];
   const rounds: RequirementCourtRound[] = [];
 
@@ -215,66 +201,6 @@ function createDiscussionEntry(
     evidence: response.evidence ?? [],
     requiredChanges: response.requiredChanges,
   };
-}
-
-function createDeterministicPonyResponse(
-  bot: Manifest["bots"][number],
-  contract: GoalContract,
-): RequirementPonyResponse {
-  const messageFactory = ROLE_MESSAGES[bot.id] ?? createGenericDiscussionMessage;
-  const message =
-    createCodebaseReviewDiscussionMessage(bot, contract) ?? messageFactory(contract, bot);
-
-  return {
-    message,
-    vote: "approve",
-    confidence: 0.8,
-    requiredChanges: [],
-  };
-}
-
-function createCodebaseReviewDiscussionMessage(
-  bot: Manifest["bots"][number],
-  contract: GoalContract,
-): string | undefined {
-  if (!isBroadCodebaseReviewRequest(contract)) {
-    return undefined;
-  }
-
-  switch (bot.id) {
-    case "product_manager_bot":
-      return "I think this requirement should define the maintainability outcome before implementation: prioritize areas where the CLI workflow, user value, or scope boundary is hard to understand, then name what should change.";
-    case "project_manager_bot":
-      return "I think the worker should sequence the review into architecture map, maintenance pain points, and small follow-up changes; keep dependencies and completion evidence visible while naming what should change.";
-    case "engineer_bot":
-      return "I think the review should inspect module boundaries, adapter seams, validation schemas, and duplicated runtime rules, then identify what should change to make the code easier to manage.";
-    case "senior_engineer_bot":
-      return "I think the review should inspect module boundaries, data contracts, extension seams, and hidden coupling, then identify what should change without bundling unrelated rewrites.";
-    case "testing_bot":
-      return "I think this needs coverage for the review conclusions: focused tests for changed runtime behavior, CLI smoke checks, and edge cases that prove what should change is observable.";
-    default:
-      return `I think ${bot.displayName} should identify what should change from the ${createRoleLabel(
-        bot,
-      )} perspective, with one concrete risk and verification need before approving.`;
-  }
-}
-
-function isBroadCodebaseReviewRequest(contract: GoalContract): boolean {
-  const text = `${contract.title} ${contract.intent} ${contract.rawRequest}`.toLowerCase();
-
-  return (
-    /\breview\b/u.test(text) &&
-    (/\bcodebase\b/u.test(text) ||
-      /\bmaintain(?:able|ability)?\b/u.test(text) ||
-      /\bmanage(?:able|ment)?\b/u.test(text))
-  );
-}
-
-function createGenericDiscussionMessage(
-  contract: GoalContract,
-  bot: Manifest["bots"][number],
-): string {
-  return `I think this requirement can proceed from the ${bot.displayName} perspective if the worker keeps the scope tied to: ${contract.title}. Any role-specific risk should be raised before execution.`;
 }
 
 function createDefaultVisibleThinking(

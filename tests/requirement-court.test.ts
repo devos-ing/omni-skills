@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { createLocalRequirementPonyRunner } from "../src/plugins";
 import { draftGoalContract } from "../src/runtimes/ponytrail/goal";
 import {
   createDefaultManifest,
   createDefaultSetupReviewBots,
   createSetupManifest,
+  type Manifest,
 } from "../src/runtimes/ponytrail/manifest";
 import {
   type RequirementPonyRunner,
@@ -11,11 +13,20 @@ import {
 } from "../src/runtimes/ponytrail/requirement-court";
 
 describe("requirement court", () => {
+  test("requires callers to provide a pony runner", async () => {
+    const manifest = createDefaultManifest();
+    const contract = draftGoalContract("Add CSV import to admin dashboard", { manifest });
+
+    await expect(runRequirementCourt(contract, { manifest } as never)).rejects.toThrow(
+      "Requirement court requires an explicit pony runner.",
+    );
+  });
+
   test("creates visible role-bot discussion entries before the Judge summary", async () => {
     const manifest = createDefaultManifest();
     const contract = draftGoalContract("Add CSV import to admin dashboard", { manifest });
 
-    const result = await runRequirementCourt(contract, { manifest });
+    const result = await runRequirementCourt(contract, createLocalCourtInput(manifest));
 
     expect(result.discussion.map((entry) => entry.botId)).toEqual([
       "product_manager_bot",
@@ -32,7 +43,7 @@ describe("requirement court", () => {
     expect(result.discussion[0]?.visibleThinking).toEqual({
       focus: expect.stringContaining("product"),
       concern: expect.stringContaining("product"),
-      recommendation: expect.stringContaining("preserves the user's product intent"),
+      recommendation: expect.stringContaining("Skills used: Intent Alignment, Scope Control"),
     });
     expect(result.verdict.approved).toBe(true);
     expect(result.judge.botId).toBe("requirement_judge_bot");
@@ -44,7 +55,7 @@ describe("requirement court", () => {
     const manifest = createDefaultManifest();
     const contract = draftGoalContract("Add CSV import to admin dashboard", { manifest });
 
-    const result = await runRequirementCourt(contract, { manifest });
+    const result = await runRequirementCourt(contract, createLocalCourtInput(manifest));
 
     expect(result.votes.map((vote) => vote.botId)).toEqual([
       "product_manager_bot",
@@ -62,7 +73,7 @@ describe("requirement court", () => {
       { manifest },
     );
 
-    const result = await runRequirementCourt(contract, { manifest });
+    const result = await runRequirementCourt(contract, createLocalCourtInput(manifest));
     const messages = new Map(result.discussion.map((entry) => [entry.botId, entry.message]));
 
     expect(messages.get("product_manager_bot")).toContain("maintainability outcome");
@@ -92,7 +103,7 @@ describe("requirement court", () => {
     });
     const contract = draftGoalContract("Add CSV import to admin dashboard", { manifest });
 
-    const result = await runRequirementCourt(contract, { manifest });
+    const result = await runRequirementCourt(contract, createLocalCourtInput(manifest));
 
     expect(result.discussion.map((entry) => entry.botId)).toEqual(
       manifest.deliberation.decisionRule.voterIds,
@@ -212,3 +223,10 @@ describe("requirement court", () => {
     expect(result.judge.summary).toContain("Approvals: 4/4");
   });
 });
+
+function createLocalCourtInput(manifest: Manifest) {
+  return {
+    manifest,
+    ponyRunner: createLocalRequirementPonyRunner(),
+  };
+}

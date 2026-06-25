@@ -9,6 +9,7 @@ import pc from "picocolors";
 import {
   type CliStreamRunner,
   createCliRequirementPonyRunner,
+  createLocalRequirementPonyRunner,
   getCliWorkerAdapterForCommand,
   installAgentSkill,
   parseSkillInstallAgents,
@@ -806,23 +807,17 @@ function formatReportPathForOutput(rootDir: string, reportPath: string): string 
 
 function createRunRequirementCourtInput(
   manifest: RunRequirementCourtInput["manifest"],
-  ponyRunner: RequirementPonyRunner | undefined,
+  ponyRunner: RequirementPonyRunner,
 ): RunRequirementCourtInput {
-  const input: RunRequirementCourtInput = { manifest };
-
-  if (ponyRunner) {
-    input.ponyRunner = ponyRunner;
-  }
-
-  return input;
+  return { manifest, ponyRunner };
 }
 
 function createActivePonyRunner(
   manifest: RunRequirementCourtInput["manifest"],
   input: RunGoalFlowInput,
-): RequirementPonyRunner | undefined {
+): RequirementPonyRunner {
   if (!input.research) {
-    return input.ponyRunner;
+    return input.ponyRunner ?? createLocalRequirementPonyRunner();
   }
 
   const worker = resolveResearchWorker(manifest, input.worker);

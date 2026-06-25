@@ -47,7 +47,7 @@ The CLI should call this runtime through its exported interface instead of knowi
 
 The runtime treats `provider` and `name` as configuration values. This keeps goal discussion model selection editable in `.ponyrace/manifest.json` without coupling the core runtime to a specific vendor SDK or CLI flag shape.
 
-`requirement-court.ts` exposes a `RequirementPonyRunner` seam. The deterministic default keeps the CLI offline-friendly, while `ponyrace --research` and tests can inject process-backed or model-backed ponies. The researched CLI path expands each pony's manifest skills into the prompt and requires visible evidence before approval. The court invokes the runner for each configured voter in each round until the manifest decision rule approves the direction or the maximum round count is reached.
+`requirement-court.ts` exposes a required `RequirementPonyRunner` seam. The core runtime does not choose a fallback runner; the CLI explicitly uses `createLocalRequirementPonyRunner()` for local requirement discussion, while `ponyrace --research` and tests can inject process-backed or model-backed ponies. The researched CLI path expands each pony's manifest skills into the prompt and requires visible evidence before approval. The court invokes the runner for each configured voter in each round until the manifest decision rule approves the direction or the maximum round count is reached.
 
 ## Plugins
 
@@ -72,11 +72,14 @@ Each worker adapter folder uses the same shape:
 - `utils.ts` stores adapter-local constants and config.
 - `index.ts` exports the public adapter surface.
 
-The adapter modules build invocation descriptions, run them through injected process runners, and stream them through injected stream runners. Worker execution remains behind this seam and is gated by requirement-court approval plus human confirmation. `goal` and default `ponyrace` focus on deterministic requirement discussion instead of launching a worker. `ponyrace --research` uses the selected worker adapter only to review and vote as each pony; it still does not start implementation. The default Bun-backed stream runner is `src/plugins/adapters/stream-runner.ts`; process spawning must stay behind this seam, not inside `src/cli.ts`.
+The adapter modules build invocation descriptions, run them through injected process runners, and stream them through injected stream runners. Worker execution remains behind this seam and is gated by requirement-court approval plus human confirmation. `goal` and default `ponyrace` use the explicit local pony runner for requirement discussion instead of launching a worker. `ponyrace --research` uses the selected worker adapter only to review and vote as each pony; it still does not start implementation. The default Bun-backed stream runner is `src/plugins/adapters/stream-runner.ts`; process spawning must stay behind this seam, not inside `src/cli.ts`.
 
 ## Skills
 
-`src/skills` is the seam for reusable judge and drafting capabilities:
+`src/skills` is the seam for reusable judge and drafting capabilities. Default
+requirement-court skill definitions live in `src/skills/requirement-court/`
+so role-bot review lenses can be edited in one place and then projected into
+manifests and researched pony prompts:
 
 - intent alignment
 - scope control

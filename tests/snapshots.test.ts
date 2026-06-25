@@ -98,7 +98,7 @@ describe("snapshot history", () => {
         commit?.instructionContexts.post?.files.find((file) => file.path === "AGENTS.md")?.sha256,
       );
 
-      const rawEntries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
+      const rawEntries = (await readFile(join(rootDir, ".ponyrace", "snapshots.jsonl"), "utf8"))
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line));
@@ -123,7 +123,7 @@ describe("snapshot history", () => {
         {
           type: "restore",
           path: "notes.txt",
-          source: join(rootDir, ".pony-trail", "files", "snapshot-001", "pre", "notes.txt"),
+          source: join(rootDir, ".ponyrace", "files", "snapshot-001", "pre", "notes.txt"),
         },
         {
           type: "delete",
@@ -150,7 +150,7 @@ describe("snapshot history", () => {
         "Unknown snapshot: missing",
       );
 
-      await rm(join(rootDir, ".pony-trail", "files"), {
+      await rm(join(rootDir, ".ponyrace", "files"), {
         recursive: true,
         force: true,
       });
@@ -165,7 +165,7 @@ describe("snapshot history", () => {
 });
 
 async function writeSampleSnapshot(rootDir: string): Promise<void> {
-  const snapshotDir = join(rootDir, ".pony-trail");
+  const snapshotDir = join(rootDir, ".ponyrace");
   await mkdir(join(snapshotDir, "files", "snapshot-001", "pre"), { recursive: true });
   await writeFile(join(snapshotDir, "files", "snapshot-001", "pre", "notes.txt"), "before\n");
   await writeFile(
