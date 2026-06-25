@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { createCourtAnimator, printHorseRaceHeader, printRaceTrack } from "../src/court-animation";
 import type { Manifest } from "../src/runtimes/ponytrail/manifest";
 import type { RequirementCourtRound } from "../src/runtimes/ponytrail/requirement-court";
@@ -93,7 +93,7 @@ describe("court animation", () => {
     };
 
     try {
-      printHorseRaceHeader();
+      printHorseRaceHeader(makeManifest());
       expect(written.length).toBeGreaterThan(0);
     } finally {
       process.stdout.write = origWrite;

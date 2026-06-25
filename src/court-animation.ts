@@ -5,50 +5,80 @@ import type {
   RequirementDiscussionEntry,
 } from "./runtimes/ponytrail/requirement-court";
 
-// ─── Header ────────────────────────────────────────────────────────────────
+// ─── Per-role colors ───────────────────────────────────────────────────────
 
-// Side-profile pony facing left, styled after the ponytrail logo.
-const HEADER_ART = [
-  "        ,---.",
-  "      _/  o  \\~",
-  "     /   ---  |",
-  "    (    ___) /",
-  "     '-------'",
-  "     /|     |\\",
-  "    ( |     | )",
-  "     \\|_____|/",
-  "      |     |",
-  "     / \\   / \\",
+const BOT_COLORS: Record<string, (s: string) => string> = {
+  product_manager_bot: pc.magenta,
+  project_manager_bot: pc.blue,
+  engineer_bot: pc.cyan,
+  senior_engineer_bot: pc.green,
+  testing_bot: pc.yellow,
+};
+
+function botColor(botId: string): (s: string) => string {
+  return BOT_COLORS[botId] ?? pc.white;
+}
+
+// ─── Small running pony (3 gallop frames, 5 lines each) ───────────────────
+
+const COL_W = 10; // column width per pony in the lineup
+
+// Shared head/body lines (same for all frames).
+const PONY_HEAD = ["    ^     ", "   (o )~  ", "   (   )  "];
+
+// Three leg positions for the gallop cycle.
+const PONY_LEGS = [
+  ["   /\\  /\\ ", "  /    \\/ "], // stride: legs spread
+  ["    ||  || ", "    ||  || "], // trot: legs together
+  ["   /\\  /\\ ", "  \\/    / "], // stride: reverse
 ];
 
-export function printHorseRaceHeader(): void {
+// Total lines per animation frame (head + legs + label).
+const FRAME_H = PONY_HEAD.length + 2 + 1; // 3 + 2 + 1 = 6
+
+// ─── Header: starting lineup ───────────────────────────────────────────────
+
+// Print all voter bots as a side-by-side row of colored ponies.
+export function printHorseRaceHeader(manifest: Manifest): void {
+  const voterIds = manifest.deliberation.decisionRule.voterIds;
+  const bots = voterIds
+    .map((id) => manifest.bots.find((b) => b.id === id))
+    .filter((b): b is NonNullable<typeof b> => b !== undefined);
+
   console.log("");
-  for (const line of HEADER_ART) {
-    process.stdout.write(`  ${pc.yellow(line)}\n`);
+  console.log(pc.bold(pc.cyan("  🏁  PONY COURT IS IN SESSION  🏁")));
+  console.log(pc.dim("  ══════════════════════════════════"));
+  console.log("");
+
+  // Render head lines side-by-side.
+  for (const headLine of PONY_HEAD) {
+    const row = bots.map((b) => botColor(b.id)(headLine.padEnd(COL_W))).join("  ");
+    process.stdout.write(`  ${row}\n`);
   }
+
+  // Render a static "legs spread" frame for the lineup.
+  const staticLegs = PONY_LEGS[0] ?? [];
+  for (const legLine of staticLegs) {
+    const row = bots.map((b) => botColor(b.id)(legLine.padEnd(COL_W))).join("  ");
+    process.stdout.write(`  ${row}\n`);
+  }
+
+  // Names row below each pony.
+  const names = bots
+    .map((b) => {
+      const name = (b.displayName ?? b.id).slice(0, COL_W - 1).padEnd(COL_W);
+      return botColor(b.id)(name);
+    })
+    .join("  ");
+  process.stdout.write(`  ${names}\n`);
+
   console.log("");
-  console.log(pc.bold(`  ${pc.cyan("🐴  PONY COURT IS IN SESSION  🐴")}`));
-  console.log(pc.dim("  ════════════════════════════════════"));
   console.log(pc.dim("  All ponies must vote before implementation begins."));
   console.log("");
 }
 
-// ─── Gallop frames ─────────────────────────────────────────────────────────
+// ─── Funny per-role thoughts ───────────────────────────────────────────────
 
-// 5-line body common to all frames.
-const BODY = ["     ,---. ", "   _/  o  \\~", "  /   ---  |", "  \\-------'"];
-
-// Three leg positions for the gallop cycle.
-const LEG_FRAMES = [
-  ["  /\\    /\\ ", " /  \\  /  \\"],
-  ["   |    |  ", "   |    |  "],
-  ["  /\\  /\\  ", " /    \\/   "],
-];
-
-// Total lines drawn per animation frame (body + legs + label).
-const FRAME_H = BODY.length + 2 + 1;
-
-// Funny per-role thoughts shown while the pony deliberates.
 const THOUGHTS: Record<string, string[]> = {
   product_manager_bot: [
     "is rewriting the roadmap on a hay bale...",
@@ -93,23 +123,23 @@ const UP = (n: number) => `\x1b[${n}A`;
 const CLEAR = "\x1b[2K";
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function drawFrame(frameIdx: number, label: string): void {
-  const legs = LEG_FRAMES[frameIdx % LEG_FRAMES.length] ?? LEG_FRAMES[0] ?? [];
-  const lines = [...BODY, ...legs, label];
+function drawFrame(frameIdx: number, colorFn: (s: string) => string, label: string): void {
+  const legs = PONY_LEGS[frameIdx % PONY_LEGS.length] ?? PONY_LEGS[0] ?? [];
+  const lines = [...PONY_HEAD, ...legs];
   for (const line of lines) {
-    process.stdout.write(`${CLEAR}  ${pc.yellow(line)}\n`);
+    process.stdout.write(`${CLEAR}  ${colorFn(line)}\n`);
   }
-  // Move cursor back to top of animation area so next frame overwrites cleanly.
+  process.stdout.write(`${CLEAR}${label}\n`);
   process.stdout.write(UP(FRAME_H));
 }
 
 function clearAnimArea(resultLine: string): void {
-  // Cursor is at the TOP of the animation area after the last drawFrame call.
+  // Cursor is at TOP of animation area after last drawFrame.
   process.stdout.write(`${CLEAR}  ${resultLine}\n`);
   for (let i = 1; i < FRAME_H; i++) {
     process.stdout.write(`${CLEAR}\n`);
   }
-  // Sit right after the result line (not inside the now-blank area).
+  // Sit right after the result line.
   process.stdout.write(UP(FRAME_H - 1));
 }
 
@@ -117,13 +147,13 @@ function clearAnimArea(resultLine: string): void {
 
 const VOTE_BARS: Record<string, string> = {
   approve: pc.green("████████"),
-  needs_changes: pc.yellow("████░░░░"),
+  amend: pc.yellow("████░░░░"),
   reject: pc.red("██░░░░░░"),
 };
 
 const VOTE_LABELS: Record<string, string> = {
   approve: pc.green("✓ approve"),
-  needs_changes: pc.yellow("~ needs changes"),
+  amend: pc.yellow("~ amend"),
   reject: pc.red("✗ reject"),
 };
 
@@ -136,9 +166,11 @@ export function printRaceTrack(rounds: RequirementCourtRound[], manifest: Manife
   for (const botId of manifest.deliberation.decisionRule.voterIds) {
     const entry = latest.discussion.find((d) => d.botId === botId);
     if (!entry) continue;
+    const color = botColor(botId);
     const bar = VOTE_BARS[entry.vote] ?? pc.dim("░░░░░░░░");
     const label = VOTE_LABELS[entry.vote] ?? entry.vote;
-    console.log(`  🐴 ${(entry.displayName ?? botId).padEnd(26)}${bar}  ${label}`);
+    const name = color((entry.displayName ?? botId).padEnd(24));
+    console.log(`  ${name} ${bar}  ${label}`);
   }
   const verdict = latest.verdict.approved
     ? pc.green("  Verdict: approved ✓")
@@ -176,6 +208,7 @@ export function createCourtAnimator(
   let frameIndex = 0;
   let currentBotId = "";
   let currentDisplayName = "";
+  let currentColorFn: (s: string) => string = pc.white;
 
   function clearGallop(): void {
     if (gallopInterval !== undefined) {
@@ -194,35 +227,39 @@ export function createCourtAnimator(
     async onPonyStart(botId: string, displayName: string): Promise<void> {
       currentBotId = botId;
       currentDisplayName = displayName;
+      currentColorFn = botColor(botId);
       ponyStartTime = Date.now();
       frameIndex = 0;
 
-      // Reserve animation space then return cursor to the top of it.
       process.stdout.write("\n".repeat(FRAME_H));
       process.stdout.write(UP(FRAME_H));
 
       const thoughts = thoughtsFor(botId);
-      const label = `  🐴 ${displayName} ${thoughts[0]}`;
-      drawFrame(0, label);
+      const label = `  ${currentColorFn("🐴")} ${displayName} ${thoughts[0] ?? ""}`;
+      drawFrame(0, currentColorFn, label);
 
       gallopInterval = setInterval(() => {
         frameIndex++;
         const thought = thoughts[frameIndex % thoughts.length] ?? thoughts[0] ?? "";
-        drawFrame(frameIndex, `  🐴 ${currentDisplayName} ${thought}`);
+        drawFrame(
+          frameIndex,
+          currentColorFn,
+          `  ${currentColorFn("🐴")} ${currentDisplayName} ${thought}`,
+        );
       }, frameMs);
     },
 
     async onPonyComplete(entry: RequirementDiscussionEntry): Promise<void> {
-      // Always show animation for at least minPonyMs so it's visible.
       const elapsed = Date.now() - ponyStartTime;
       if (elapsed < minPonyMs) await sleep(minPonyMs - elapsed);
 
       clearGallop();
 
+      const color = botColor(currentBotId);
       const bar = VOTE_BARS[entry.vote] ?? pc.dim("░░░░░░░░");
       const voteLabel = VOTE_LABELS[entry.vote] ?? entry.vote;
-      const name = pc.bold((entry.displayName ?? currentBotId).padEnd(26));
-      clearAnimArea(`${name}${bar}  ${voteLabel}`);
+      const name = pc.bold(color((entry.displayName ?? currentBotId).padEnd(24)));
+      clearAnimArea(`${name} ${bar}  ${voteLabel}`);
     },
 
     async onRoundComplete(round: RequirementCourtRound): Promise<void> {

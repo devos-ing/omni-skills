@@ -680,7 +680,7 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
       return;
     }
 
-    if (animator) printHorseRaceHeader();
+    if (animator) printHorseRaceHeader(manifest);
     const clarifiedResult = await runRequirementCourt(
       clarifiedDiscussion.contract,
       createRunRequirementCourtInput(manifest, input.ponyRunner, animator),
@@ -699,7 +699,7 @@ async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Pro
     return;
   }
 
-  if (animator) printHorseRaceHeader();
+  if (animator) printHorseRaceHeader(manifest);
   const result = await runRequirementCourt(
     preparedDiscussion.contract,
     createRunRequirementCourtInput(manifest, input.ponyRunner, animator),
