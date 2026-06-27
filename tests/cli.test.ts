@@ -833,6 +833,60 @@ describe("cli", () => {
     }
   });
 
+  test("ponyrace uses local discussion by default without worker CLI runs", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const logs: string[] = [];
+    const invocations: CliInvocation[] = [];
+    const originalLog = console.log;
+    const streamRunner: CliStreamRunner = async function* (invocation) {
+      invocations.push(invocation);
+      yield { type: "start", invocation };
+      yield {
+        type: "stdout",
+        chunk: JSON.stringify({
+          message: "Worker-backed research should require explicit opt-in.",
+          visibleThinking: {
+            focus: "Use role skills before voting.",
+            concern: "Approval must be backed by concrete evidence.",
+            recommendation: "Approve after checking the skill-guided evidence.",
+          },
+          evidence: ["Skill-guided evidence from the researched pony prompt."],
+          vote: "approve",
+          confidence: 0.93,
+          requiredChanges: [],
+        }),
+      };
+      yield { type: "exit", exitCode: 0 };
+    };
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir, streamRunner }).parseAsync(
+        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        { from: "user" },
+      );
+      logs.splice(0);
+
+      await buildProgram({ cwd: rootDir, streamRunner }).parseAsync(
+        ["ponyrace", "Add", "CSV", "import", "to", "admin", "dashboard"],
+        { from: "user" },
+      );
+
+      expect(invocations).toHaveLength(0);
+      expect(stripAnsiLines(logs)).toContain("Pony race");
+      expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
+      expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("ponyrace runs the configured pony runner and prints round output", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const logs: string[] = [];
@@ -888,7 +942,7 @@ describe("cli", () => {
     }
   });
 
-  test("ponyrace runs each pony through the selected worker adapter by default and prints evidence", async () => {
+  test("ponyrace runs each pony through the selected worker adapter when research is explicit", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const logs: string[] = [];
     const invocations: CliInvocation[] = [];
@@ -926,7 +980,7 @@ describe("cli", () => {
       logs.splice(0);
 
       await buildProgram({ cwd: rootDir, streamRunner }).parseAsync(
-        ["ponyrace", "--worker", "codex", "Add", "CSV", "import", "to", "admin"],
+        ["ponyrace", "--research", "--worker", "codex", "Add", "CSV", "import", "to", "admin"],
         { from: "user" },
       );
 

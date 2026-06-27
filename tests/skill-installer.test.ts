@@ -464,6 +464,7 @@ describe("skill installer", () => {
   test("installs prehook scripts and merges hook settings when requested", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
     const claudeSettingsPath = join(homeDir, ".claude", "settings.json");
+    const codexHooksPath = join(homeDir, ".codex", "hooks.json");
 
     try {
       await mkdir(join(homeDir, ".claude"), { recursive: true });
@@ -477,6 +478,30 @@ describe("skill installer", () => {
                 {
                   matcher: "Bash",
                   hooks: [{ type: "command", command: "existing-hook" }],
+                },
+              ],
+            },
+          },
+          null,
+          2,
+        ),
+      );
+      await mkdir(join(homeDir, ".codex"), { recursive: true });
+      await writeFile(
+        codexHooksPath,
+        JSON.stringify(
+          {
+            hooks: {
+              PreToolUse: [
+                {
+                  matcher: "Edit",
+                  hooks: [
+                    {
+                      type: "command",
+                      command:
+                        "sh '/Users/roy/.codex/hooks/devcourt-record-change-evidence-prehook.sh'",
+                    },
+                  ],
                 },
               ],
             },
@@ -526,7 +551,7 @@ describe("skill installer", () => {
         ),
       ).toBe(true);
 
-      const codexHooks = JSON.parse(await readFile(join(homeDir, ".codex", "hooks.json"), "utf8"));
+      const codexHooks = JSON.parse(await readFile(codexHooksPath, "utf8"));
       expect(
         codexHooks.hooks.PreToolUse.some(
           (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
@@ -534,6 +559,9 @@ describe("skill installer", () => {
             entry.hooks?.some((hook) => hook.command?.includes(codexHookPath)),
         ),
       ).toBe(true);
+      expect(JSON.stringify(codexHooks.hooks.PreToolUse)).not.toContain(
+        "devcourt-record-change-evidence-prehook.sh",
+      );
 
       const copilotHooks = JSON.parse(
         await readFile(join(homeDir, ".agents", "hooks.json"), "utf8"),

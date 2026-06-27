@@ -66,15 +66,15 @@ Examples:
 /ponyrace add CSV import to the admin dashboard. Scope: upload, parse, validation, and result UI. Evidence: parser tests, validation tests, and one smoke import.
 ```
 
-Ponyrace uses worker-backed pony review by default. Pick a worker when you want
-a specific CLI to host those pony runs:
+Ponyrace uses local deterministic pony review by default. To run external
+worker-backed research, opt in with `--research` and pick the worker CLI that
+may receive the requirement plus private repo, tool, and dirty-worktree context:
 
 ```bash
-npx ponyrace ponyrace --worker codex "review the refund webhook plan. Scope: tests only, no live refunds. Evidence: refund fixture and dry-run smoke output."
+npx ponyrace ponyrace --research --worker codex "review the refund webhook plan. Scope: tests only, no live refunds. Evidence: refund fixture and dry-run smoke output."
 ```
 
-For a fast deterministic local discussion without worker runs, add
-`--no-research`.
+Use `--no-research` when you want to make the local-only choice explicit.
 
 ## What Ponyrace Prints
 

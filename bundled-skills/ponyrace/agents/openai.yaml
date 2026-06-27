@@ -1,4 +1,4 @@
 interface:
   display_name: "Ponyrace"
   short_description: "Run requirement discussion from chat"
-  default_prompt: "Use $ponyrace to run a worker-backed Ponyrace requirement discussion before implementation; add --no-research only when the user explicitly wants local deterministic pony review."
+  default_prompt: "Use $ponyrace to run a local Ponyrace requirement discussion before implementation; add --research only after the user explicitly approves sharing private repo and dirty-worktree context through the selected external CLI/model."

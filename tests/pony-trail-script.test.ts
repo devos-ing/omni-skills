@@ -377,9 +377,13 @@ describe("pony-trail shell helper", () => {
     const hook = await execFileAsync("sh", [preFileChangeHookPath]);
 
     const output = JSON.parse(hook.stdout);
-    expect(output.additionalContext).toContain("$pony-trail");
-    expect(output.additionalContext).toContain("pre-change snapshot");
     expect(output.systemMessage).toContain("Ponytrail");
+    expect(output).not.toHaveProperty("additionalContext");
+    expect(output.hookSpecificOutput).toMatchObject({
+      hookEventName: "PreToolUse",
+    });
+    expect(output.hookSpecificOutput.additionalContext).toContain("$pony-trail");
+    expect(output.hookSpecificOutput.additionalContext).toContain("pre-change snapshot");
   });
 });
 

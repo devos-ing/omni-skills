@@ -48,10 +48,12 @@ reinstall.
    `ponyrace ponyrace "<approved refined requirement>"`.
 6. If the user gives a manifest path, pass it with `--manifest <path>` instead
    of appending it to the requirement text.
-7. Ponyrace runs each review pony through the selected worker CLI by default.
-   If the user names a worker, pass it with `--worker <id>`; otherwise use the
-   manifest default worker. If the user explicitly asks for a fast/local
-   deterministic discussion without worker runs, pass `--no-research`.
+7. Ponyrace uses local deterministic review by default. Do not pass
+   `--research` unless the user explicitly approves worker-backed research,
+   because it can send the requirement plus private repo, tool, and
+   dirty-worktree context through the selected worker CLI/model. If the user
+   approves that path and names a worker, pass `--research --worker <id>`;
+   otherwise pass `--research` and use the manifest default worker.
 8. Preserve the important CLI output when reporting back:
    - pony discussion lines
    - visible thinking transcript
@@ -94,8 +96,8 @@ reinstall.
 - Do not edit installed skill copies as part of changing the bundled source.
   Installed skill copies are refreshed through `ponyrace skills update` or
   reinstall.
-- Do not call worker-backed pony review a guarantee of correctness; it means
-  each pony must run through the selected worker CLI and return visible
-  evidence before approval.
+- Do not call worker-backed pony review a guarantee of correctness; it is an
+  explicit research opt-in where each pony runs through the selected worker CLI
+  and must return visible evidence before approval.
 - If `ponyrace` is unavailable and this is not the local Ponyrace repo, say the
   CLI is unavailable and ask the user how they want to run it.

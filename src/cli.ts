@@ -369,7 +369,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     .argument("<request...>", "raw goal request")
     .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
     .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
-    .option("--research", "run each review pony through the selected worker CLI", true)
+    .option("--research", "explicitly run each review pony through the selected worker CLI", false)
     .option("--no-research", "use the local deterministic pony runner instead of worker CLI runs")
     .option("--json", "print JSON output", false)
     .option("--markdown <path>", "write Markdown report to a path")

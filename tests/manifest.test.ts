@@ -118,6 +118,21 @@ describe("manifest", () => {
       "Check repo, tool, permission, and time constraints",
     );
     expect(manifest.skills.product_management_review?.instruction).toContain("product intent");
+    expect(manifest.skills.product_management_review?.instruction).toContain("Strategy & Vision");
+    expect(manifest.skills.product_management_review?.instruction).toContain(
+      "Stakeholder Alignment",
+    );
+    expect(manifest.skills.product_management_review?.instruction).toContain(
+      "Execution & Delivery",
+    );
+    expect(manifest.skills.product_management_review?.instruction).toContain("Data Analysis");
+    expect(manifest.skills.product_management_review?.instruction).toContain("Problem Statement");
+    expect(manifest.skills.product_management_review?.instruction).toContain(
+      "In Scope vs. Out of Scope",
+    );
+    expect(manifest.skills.product_management_review?.instruction).toContain(
+      "As a [type of user], I want to [action], so that I can [benefit].",
+    );
     expect(manifest.skills.project_management_review?.instruction).toContain("delivery sequence");
     expect(manifest.skills.senior_engineering_review?.instruction).toContain("architecture fit");
     expect(manifest.skills.testing_review?.instruction).toContain("falsifiable evidence");

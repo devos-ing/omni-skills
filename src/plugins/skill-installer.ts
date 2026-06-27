@@ -115,6 +115,7 @@ const agentSkillTargets: Record<
 };
 
 const prehookScriptName = "ponytrail-prehook.sh";
+const legacyPrehookScriptNames = ["devcourt-record-change-evidence-prehook.sh"];
 const prehookMatchers = ["Write", "Edit", "MultiEdit", "NotebookEdit", "Bash"];
 const agentPrehookPaths: Record<
   HookCapableSkillInstallAgent,
@@ -551,7 +552,9 @@ function mergePrehookSettings(
     merged.hooks && typeof merged.hooks === "object" && !Array.isArray(merged.hooks)
       ? { ...(merged.hooks as Record<string, unknown>) }
       : {};
-  const preToolUse = Array.isArray(hooks.PreToolUse) ? [...hooks.PreToolUse] : [];
+  const preToolUse = Array.isArray(hooks.PreToolUse)
+    ? removeLegacyPrehookEntries(hooks.PreToolUse)
+    : [];
 
   for (const matcher of prehookMatchers) {
     if (!hasHookEntry(preToolUse, matcher, command)) {
@@ -565,6 +568,40 @@ function mergePrehookSettings(
   hooks.PreToolUse = preToolUse;
   merged.hooks = hooks;
   return merged;
+}
+
+function removeLegacyPrehookEntries(entries: unknown[]): unknown[] {
+  return entries.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return [entry];
+    }
+
+    const hookEntry = entry as Record<string, unknown>;
+    if (!Array.isArray(hookEntry.hooks)) {
+      return [entry];
+    }
+
+    const hooks = hookEntry.hooks.filter((hook) => !isLegacyPrehookCommand(hook));
+    if (hooks.length === 0) {
+      return [];
+    }
+    if (hooks.length === hookEntry.hooks.length) {
+      return [entry];
+    }
+    return [{ ...hookEntry, hooks }];
+  });
+}
+
+function isLegacyPrehookCommand(hook: unknown): boolean {
+  if (!hook || typeof hook !== "object" || Array.isArray(hook)) {
+    return false;
+  }
+
+  const command = (hook as { command?: unknown }).command;
+  return (
+    typeof command === "string" &&
+    legacyPrehookScriptNames.some((scriptName) => command.includes(scriptName))
+  );
 }
 
 function hasPrehookEntries(settings: Record<string, unknown>, command: string): boolean {
