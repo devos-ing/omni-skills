@@ -12,17 +12,35 @@ Vocabulary:
 
 Command note:
 
-- In a cloned Ponyrace repo, use `bun run dev -- <command>`.
-- In another project, use `npx ponyrace <command>`.
+- In a cloned GetSuperpower repo, use `bun run dev -- <command>`.
+- In another project, use `npx getsuperpower <command>`.
 
-Optional authoring helper:
+## Recommended: Call The Authoring Skill
+
+Start here when you want an agent to help create the workflow and skills set.
+Install the bundled authoring skill:
 
 ```bash
-npx ponyrace skills install creating-bundle-skills
+npx getsuperpower skills install creating-bundle-skills
 ```
 
-Then ask your agent to use `$creating-bundle-skills` when designing a new
-bundle skill.
+Restart your agent app so it reloads the skill, then call it directly:
+
+```text
+$creating-bundle-skills create a GetSuperpower named support-triage that classifies support issues, plans the fix, and records evidence
+```
+
+The authoring skill should help you produce or review:
+
+- `workflow.json`: the installable workflow manifest
+- `README.md`: when to use the GetSuperpower and how to install it
+- `skills/<workflow-name>/SKILL.md`: the entry skill users call
+- `skills/<local-skill>/SKILL.md`: any local skills used by the workflow
+- validation commands: `getsuperpower validate`, `getsuperpower deps`, and a
+  local `install` or `clone` smoke test
+
+Use the rest of this guide as the checklist for what that skill should create.
+If you are editing by hand, follow the same steps yourself.
 
 ## 1. Pick One Job
 
@@ -63,7 +81,8 @@ examples/workflows/support-triage/
 ```
 
 `skills/support-triage/SKILL.md` is the entry skill: the one users call to run
-the whole skill tree.
+the whole skill tree. If you used `$creating-bundle-skills`, ask it to keep this
+entry skill aligned with the manifest before you validate.
 
 ## 3. Edit `workflow.json`
 
@@ -86,8 +105,7 @@ Example:
     { "source": "./skills/support-triage" },
     { "source": "superpowers:brainstorming" },
     { "source": "./skills/support-review" },
-    { "source": "superpowers:writing-plans" },
-    { "source": "pony-trail" }
+    { "source": "superpowers:writing-plans" }
   ],
   "steps": [
     {
@@ -106,11 +124,6 @@ Example:
       "id": "plan",
       "title": "Write the fix plan",
       "skill": "superpowers:writing-plans"
-    },
-    {
-      "id": "evidence",
-      "title": "Record fix evidence and rollback context",
-      "skill": "pony-trail"
     }
   ]
 }
@@ -135,6 +148,15 @@ what lets a user call one skill and have the agent follow the N-skill workflow.
 
 The generated entry skill should say what happens when a dependency is missing:
 stop, name the missing skill, and tell the user which install command to run.
+
+Use this checklist when reviewing the entry skill:
+
+- It says it is the entry skill for this GetSuperpower.
+- It lists every required sub-skill in step order.
+- It tells the agent to stop if a required sub-skill is missing.
+- It keeps human approval gates explicit when a workflow phase needs approval.
+- It does not claim deterministic tool execution; it orchestrates required
+  instructions and skills.
 
 ## 5. Add Local Skill Guidance
 
@@ -228,10 +250,10 @@ $support-triage fix this support issue
 
 ## 8. Share It On GitHub
 
-Ponyrace lives at:
+GetSuperpower lives at:
 
 ```text
-git@github.com:0xroylee/ponytrails.git
+git@github.com:0xroylee/getsuperpower.git
 ```
 
 If you have write access:
@@ -244,7 +266,7 @@ git push origin codex/add-support-triage-workflow
 ```
 
 If you do not have write access, fork the repo on GitHub, push the branch to
-your fork, then open a pull request into `0xroylee/ponytrails`.
+your fork, then open a pull request into `0xroylee/getsuperpower`.
 
 Before opening the pull request, run:
 
@@ -294,7 +316,7 @@ It uses:
 
 When installing that workflow, GetSuperpower automatically uses the Skills CLI
 to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap fails,
-run the same package install through Ponyrace and retry:
+run the same package install through GetSuperpower and retry:
 
 ```bash
 bun run dev -- skills install mattpocock/skills

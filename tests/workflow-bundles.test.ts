@@ -17,12 +17,10 @@ describe("workflow bundles", () => {
     expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
       "superpowers:brainstorming",
       "superpowers:writing-plans",
-      "pony-trail",
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["shape", "superpowers:brainstorming"],
       ["plan", "superpowers:writing-plans"],
-      ["evidence", "pony-trail"],
     ]);
   });
 
@@ -164,7 +162,7 @@ describe("workflow bundles", () => {
     ).resolves.toContain("This is the entry skill for the openspec-superpowers GetSuperpower.");
   });
 
-  test("installs and lists workflow bundles under .ponyrace", async () => {
+  test("installs and lists workflow bundles under .getsuperpower", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-install-"));
     const bundle = await loadWorkflowBundle("product-dev");
 
@@ -173,10 +171,10 @@ describe("workflow bundles", () => {
       bundle,
     });
 
-    expect(installed.path).toBe(join(rootDir, ".ponyrace", "workflows", "product-dev.json"));
+    expect(installed.path).toBe(join(rootDir, ".getsuperpower", "workflows", "product-dev.json"));
     const installedFile = JSON.parse(await readFile(installed.path, "utf8"));
     expect(installedFile.name).toBe("product-dev");
-    expect(installedFile.steps).toHaveLength(3);
+    expect(installedFile.steps).toHaveLength(2);
 
     const workflows = await listInstalledWorkflowBundles({ rootDir });
     expect(workflows.map((workflow) => workflow.name)).toEqual(["product-dev"]);

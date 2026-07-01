@@ -18,7 +18,7 @@ surface.
 
 - **WHEN** a user runs `getsuperpower install <source>`
 - **THEN** the CLI installs the bundle's required skills
-- **AND** the CLI records the installed workflow under `.ponyrace/workflows`
+- **AND** the CLI records the installed workflow under `.getsuperpower/workflows`
 - **AND** missing external skill packages can be bootstrapped through the CLI
 
 ### Requirement: Bundle Authors Can Create And Validate Workflows

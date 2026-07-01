@@ -18,13 +18,14 @@ describe("package metadata", () => {
   test("builds and publishes a bundled CLI binary", async () => {
     const packageMetadata = await readPackageMetadata();
 
-    expect(packageMetadata.name).toBe("ponyrace");
-    expect(packageMetadata.version).toBe("0.2.0");
+    expect(packageMetadata.name).toBe("getsuperpower");
+    expect(packageMetadata.version).toBe("0.3.0");
     expect(packageMetadata.scripts?.build).toBe(
       "bun build --target=bun --outfile=dist/cli.js src/cli.ts",
     );
     expect(packageMetadata.scripts?.prepack).toBe("bun run build");
-    expect(packageMetadata.bin?.ponyrace).toBe("./dist/cli.js");
+    expect(Object.keys(packageMetadata.bin ?? {})).toEqual(["getsuperpower"]);
+    expect(packageMetadata.bin?.getsuperpower).toBe("./dist/cli.js");
     expect(packageMetadata.files).toContain("dist");
     expect(packageMetadata.files).toContain("bundled-skills");
     expect(packageMetadata.files).toContain("bundled-workflows");

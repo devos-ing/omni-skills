@@ -6,8 +6,8 @@ plan, and preserve evidence for release-related changes.
 Install it from the repo root:
 
 ```bash
-ponyrace getsuperpower install examples/workflows/release-review
-ponyrace getsuperpower clone examples/workflows/release-review
+getsuperpower install examples/workflows/release-review
+getsuperpower clone examples/workflows/release-review
 ```
 
 `getsuperpower clone <source>` is equivalent to `getsuperpower install <source>`.
@@ -15,7 +15,7 @@ ponyrace getsuperpower clone examples/workflows/release-review
 Validate it while authoring:
 
 ```bash
-ponyrace getsuperpower validate examples/workflows/release-review
+getsuperpower validate examples/workflows/release-review
 ```
 
 The local `release-risk-review` skill is included to demonstrate how

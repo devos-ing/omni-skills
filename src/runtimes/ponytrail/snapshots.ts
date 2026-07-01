@@ -11,7 +11,7 @@ import {
   shouldCaptureInstructionContext,
 } from "./instruction-context";
 
-const snapshotStoreDir = ".ponyrace";
+const snapshotStoreDir = ".getsuperpower";
 const snapshotLogFile = "snapshots.jsonl";
 
 export interface SnapshotHistoryInput {

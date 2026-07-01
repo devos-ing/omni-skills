@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { z } from "zod";
 
 const workflowFileName = "workflow.json";
-const workflowStoreDir = ".ponyrace/workflows";
+const workflowStoreDir = ".getsuperpower/workflows";
 
 const WorkflowSkillSchema = z.object({
   source: z.string().min(1),
@@ -203,7 +203,6 @@ function createScaffoldManifest(name: string): WorkflowBundleManifest {
       { source: "superpowers:brainstorming" },
       { source: "./skills/custom-review" },
       { source: "superpowers:writing-plans" },
-      { source: "pony-trail" },
     ],
     steps: [
       {
@@ -222,11 +221,6 @@ function createScaffoldManifest(name: string): WorkflowBundleManifest {
         id: "plan",
         title: "Write the implementation plan",
         skill: "superpowers:writing-plans",
-      },
-      {
-        id: "evidence",
-        title: "Record evidence and rollback context",
-        skill: "pony-trail",
       },
     ],
   });

@@ -2,16 +2,13 @@
   "schemaVersion": "0.1",
   "name": "product-dev",
   "version": "0.1.0",
-  "description": "Shape, plan, and preserve evidence for product development changes.",
+  "description": "Shape and plan product development changes.",
   "skills": [
     {
       "source": "superpowers:brainstorming"
     },
     {
       "source": "superpowers:writing-plans"
-    },
-    {
-      "source": "pony-trail"
     }
   ],
   "steps": [
@@ -25,11 +22,6 @@
       "id": "plan",
       "title": "Write the implementation plan",
       "skill": "superpowers:writing-plans"
-    },
-    {
-      "id": "evidence",
-      "title": "Record evidence and rollback context",
-      "skill": "pony-trail"
     }
   ]
 }

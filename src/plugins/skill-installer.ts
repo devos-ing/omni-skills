@@ -74,13 +74,13 @@ export class MissingMattPocockSkillError extends Error {
   constructor(input: { skillName: string; homeDir?: string | undefined }) {
     const location = input.homeDir ? ` under ${input.homeDir}` : "";
     super(
-      `Matt Pocock ${input.skillName} skill not found${location}. Install or refresh Matt Pocock skills with: ponyrace skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install ${input.skillName}.`,
+      `Matt Pocock ${input.skillName} skill not found${location}. Install or refresh Matt Pocock skills with: getsuperpower skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install ${input.skillName}.`,
     );
     this.name = "MissingMattPocockSkillError";
   }
 }
 
-const DEFAULT_BUNDLED_SKILL = "pony-trail";
+const DEFAULT_BUNDLED_SKILL = "creating-bundle-skills";
 
 interface SupportedSuperpowersSkill {
   source: string;
@@ -799,7 +799,7 @@ function looksLikePath(value: string): boolean {
 }
 
 function formatSuperpowersInstallCommand(source: string): string {
-  return `ponyrace skills install ${source} --agents codex,claude,cursor --home ~`;
+  return `getsuperpower skills install ${source} --agents codex,claude,cursor --home ~`;
 }
 
 function shellQuote(value: string): string {

@@ -12,7 +12,7 @@ deploying a GetSuperpower bundle skills set.
 - **WHEN** a user runs `getsuperpower clone product-dev`
 - **THEN** the CLI installs the same required skills as
   `getsuperpower install product-dev`
-- **AND** the CLI records the installed workflow under `.ponyrace/workflows`
+- **AND** the CLI records the installed workflow under `.getsuperpower/workflows`
 - **AND** the command succeeds without requiring the legacy `workflow` alias
 
 #### Scenario: user clones a local author-created workflow

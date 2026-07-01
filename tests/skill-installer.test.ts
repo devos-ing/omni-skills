@@ -61,6 +61,26 @@ describe("skill installer", () => {
     );
   });
 
+  test("defaults to the creating bundle skills authoring skill", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      const result = await installAgentSkill({
+        homeDir,
+        agents: ["codex"],
+        dryRun: true,
+      });
+
+      expect(result.skillName).toBe("creating-bundle-skills");
+      expect(result.targets[0]).toMatchObject({
+        agent: "codex",
+        status: "would_install",
+      });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("installs the bundled review past decisions skill into directory and Cursor targets", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
@@ -160,7 +180,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:brainstorming", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: ponyrace skills install superpowers:brainstorming --agents codex,claude,cursor --home ~",
+        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:brainstorming --agents codex,claude,cursor --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -174,7 +194,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:writing-plans", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: ponyrace skills install superpowers:writing-plans --agents codex,claude,cursor --home ~",
+        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:writing-plans --agents codex,claude,cursor --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -240,7 +260,7 @@ describe("skill installer", () => {
 
     try {
       await expect(resolveInstallSkillSource("mattpocock:tdd", { homeDir })).rejects.toThrow(
-        `Matt Pocock tdd skill not found under ${homeDir}. Install or refresh Matt Pocock skills with: ponyrace skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install tdd.`,
+        `Matt Pocock tdd skill not found under ${homeDir}. Install or refresh Matt Pocock skills with: getsuperpower skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install tdd.`,
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });

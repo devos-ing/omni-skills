@@ -20,9 +20,8 @@ src/
 ## CLI
 
 `src/cli.ts` is a thin Commander shell. It owns command registration, option
-parsing, output formatting, and local snapshot prompts. It delegates bundle
-behavior to `getsuperpower-command/`, skill installation to
-`src/plugins/skill-installer.ts`, and install evidence to the snapshot runtime.
+parsing, and output formatting. It delegates bundle behavior to
+`src/getsuperpower.ts` and skill installation to `src/plugins/skill-installer.ts`.
 
 Primary commands:
 
@@ -33,8 +32,6 @@ Primary commands:
 - `getsuperpower list`
 - `skills install [source]`
 - `skills update [source]`
-- `history`
-- `revert <snapshot-id>`
 
 Compatibility aliases:
 
@@ -52,7 +49,7 @@ Compatibility aliases:
 - scaffold a local bundle with an entry skill
 - resolve bundled and local bundle sources
 - list skill dependency sources
-- install normalized project-local records under `.ponyrace/workflows/`
+- install normalized project-local records under `.getsuperpower/workflows/`
 - list installed GetSuperpowers
 
 The internal folder name remains `ponytrail` for compatibility with existing
@@ -70,16 +67,18 @@ agent homes:
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed
-through the Skills CLI by `getsuperpower-command/`.
+through the Skills CLI by `src/getsuperpower.ts`.
 
-## Snapshot Evidence
+## Paused Pony Trail Runtime
 
-`src/runtimes/ponytrail/snapshots.ts` keeps the local history used by skill and
-bundle install commands. Snapshot entries live under `.ponyrace/` and may include
-opt-in `instruction_context` metadata from `instruction-context.ts`.
+`src/runtimes/ponytrail/snapshots.ts` and
+`src/runtimes/ponytrail/instruction-context.ts` remain in the source tree for
+future or legacy use, but the public GetSuperpower CLI does not expose history,
+revert, or prehook commands while Pony Trail is paused.
 
-Snapshots complement git. They record why a local skill or bundle install
-changed files, what changed, and how to roll it back.
+Skill install and workflow install commands do not write snapshot history during
+this pause. Active project-local state is limited to installed workflow records
+under `.getsuperpower/workflows/`.
 
 ## Bundle Layout
 

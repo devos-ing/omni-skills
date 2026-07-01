@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
@@ -7,23 +7,8 @@ import {
   configureGetSuperpowerCommand,
   type GetSuperpowerExternalSkillCommand,
   installExternalSkillDependencyWithSkillsCli,
-} from "../getsuperpower-command";
+} from "../src/getsuperpower";
 import { MissingMattPocockSkillError, type SkillInstallResult } from "../src/plugins";
-
-interface GetSuperpowerCommandPackageMetadata {
-  name?: string;
-  version?: string;
-  private?: boolean;
-  type?: string;
-  main?: string;
-  exports?: Record<string, string>;
-}
-
-async function readGetSuperpowerCommandPackage(): Promise<GetSuperpowerCommandPackageMetadata> {
-  return JSON.parse(
-    await readFile(join(import.meta.dir, "..", "getsuperpower-command", "package.json"), "utf8"),
-  );
-}
 
 function fakeSkillInstallResult(input: {
   source: string;
@@ -50,31 +35,36 @@ function fakeSkillInstallResult(input: {
 }
 
 describe("getsuperpower command module", () => {
-  test("has package metadata for the command folder entrypoint", async () => {
-    const packageMetadata = await readGetSuperpowerCommandPackage();
-
-    expect(packageMetadata.name).toBe("@ponyrace/getsuperpower-command");
-    expect(packageMetadata.private).toBe(true);
-    expect(packageMetadata.type).toBe("module");
-    expect(packageMetadata.main).toBe("./index.ts");
-    expect(packageMetadata.exports?.["."]).toBe("./index.ts");
-  });
-
   test("registers GetSuperpower commands and dependency aliases", () => {
     const program = new Command();
 
     configureGetSuperpowerCommand(program, {
       rootDir: process.cwd(),
-      installSkillWithLocalHistory: async () => {
+      installSkill: async () => {
         throw new Error("install is not exercised by this registration test");
       },
       printSkillInstallResult: () => {},
     });
 
+    expect(program.commands.map((command) => command.name())).toEqual([
+      "init",
+      "validate",
+      "install",
+      "clone",
+      "list",
+      "deps",
+      "getsuperpower",
+      "bundle",
+      "workflow",
+    ]);
+    expect(program.commands.find((command) => command.name() === "deps")?.aliases()).toEqual([
+      "dependencies",
+      "dependence",
+    ]);
+
     const getsuperpowerCommand = program.commands.find(
       (command) => command.name() === "getsuperpower",
     );
-
     expect(getsuperpowerCommand?.commands.map((command) => command.name())).toEqual([
       "init",
       "validate",
@@ -90,7 +80,7 @@ describe("getsuperpower command module", () => {
   });
 
   test("clone installs a GetSuperpower through the same install path", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-command-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "clone-bundle");
     const localSkillDir = join(bundleDir, "skills", "clone-entry");
@@ -135,7 +125,7 @@ describe("getsuperpower command module", () => {
 
       configureGetSuperpowerCommand(program, {
         rootDir,
-        installSkillWithLocalHistory: async (input) => {
+        installSkill: async (input) => {
           skillInstalls.push(input.source);
           return {
             skillInstall: fakeSkillInstallResult({
@@ -151,17 +141,7 @@ describe("getsuperpower command module", () => {
       });
 
       await program.parseAsync(
-        [
-          "getsuperpower",
-          "clone",
-          bundleDir,
-          "--dir",
-          rootDir,
-          "--home",
-          homeDir,
-          "--agents",
-          "codex",
-        ],
+        ["clone", bundleDir, "--dir", rootDir, "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
 
@@ -169,7 +149,7 @@ describe("getsuperpower command module", () => {
       expect(printedSkills).toEqual(["clone-entry"]);
       expect(logs).toContain("GetSuperpower installed: clone-bundle");
       await expect(
-        stat(join(rootDir, ".ponyrace", "workflows", "clone-bundle.json")),
+        stat(join(rootDir, ".getsuperpower", "workflows", "clone-bundle.json")),
       ).resolves.toBeTruthy();
     } finally {
       console.log = originalLog;
@@ -179,7 +159,7 @@ describe("getsuperpower command module", () => {
   });
 
   test("uses the skills CLI by default before retrying missing external skill installs", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-command-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "matt-bundle");
     const externalInstalls: Array<{ source: string; homeDir: string }> = [];
@@ -206,7 +186,7 @@ describe("getsuperpower command module", () => {
 
     configureGetSuperpowerCommand(program, {
       rootDir,
-      installSkillWithLocalHistory: async (input) => {
+      installSkill: async (input) => {
         skillInstalls.push(input.source);
         if (input.source === "mattpocock:tdd" && skillInstalls.length === 1) {
           throw new MissingMattPocockSkillError({ skillName: "tdd" });
@@ -229,17 +209,7 @@ describe("getsuperpower command module", () => {
     });
 
     await program.parseAsync(
-      [
-        "getsuperpower",
-        "install",
-        bundleDir,
-        "--dir",
-        rootDir,
-        "--home",
-        homeDir,
-        "--agents",
-        "codex",
-      ],
+      ["install", bundleDir, "--dir", rootDir, "--home", homeDir, "--agents", "codex"],
       { from: "user" },
     );
 
@@ -247,12 +217,12 @@ describe("getsuperpower command module", () => {
     expect(externalInstalls).toEqual([{ source: "mattpocock:tdd", homeDir }]);
     expect(printedSkills).toEqual(["tdd"]);
     await expect(
-      stat(join(rootDir, ".ponyrace", "workflows", "matt-bundle.json")),
+      stat(join(rootDir, ".getsuperpower", "workflows", "matt-bundle.json")),
     ).resolves.toBeTruthy();
   });
 
   test("explains when the skills CLI ran but the dependency is still missing", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-command-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "matt-bundle");
     const externalInstalls: Array<{ source: string; homeDir: string }> = [];
@@ -277,7 +247,7 @@ describe("getsuperpower command module", () => {
 
     configureGetSuperpowerCommand(program, {
       rootDir,
-      installSkillWithLocalHistory: async () => {
+      installSkill: async () => {
         throw new MissingMattPocockSkillError({ skillName: "tdd", homeDir });
       },
       printSkillInstallResult: () => {},

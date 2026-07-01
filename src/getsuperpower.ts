@@ -6,15 +6,14 @@ import {
   MissingMattPocockSkillError,
   parseSkillInstallAgents,
   type SkillInstallResult,
-} from "../src/plugins";
+} from "./plugins";
 import {
   createWorkflowBundleScaffold,
   getWorkflowSkillInstallSources,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
-  type RecordedSnapshotCommit,
-} from "../src/runtimes/ponytrail";
+} from "./runtimes/ponytrail";
 
 export interface GetSuperpowerInstallSkillInput {
   rootDir: string;
@@ -30,10 +29,9 @@ export interface GetSuperpowerInstallSkillInput {
 
 export interface GetSuperpowerInstallSkillResult {
   skillInstall: SkillInstallResult;
-  history?: RecordedSnapshotCommit | undefined;
 }
 
-export type GetSuperpowerInstallSkillWithLocalHistory = (
+export type GetSuperpowerSkillInstaller = (
   input: GetSuperpowerInstallSkillInput,
 ) => Promise<GetSuperpowerInstallSkillResult>;
 
@@ -43,7 +41,6 @@ export interface GetSuperpowerSkillInstallPrintOptions {
 
 export type GetSuperpowerSkillInstallPrinter = (
   result: SkillInstallResult,
-  history: RecordedSnapshotCommit | undefined,
   operation: "install",
   options: GetSuperpowerSkillInstallPrintOptions,
 ) => void;
@@ -77,7 +74,7 @@ export type GetSuperpowerExternalSkillCommandRunner = (
 
 export interface ConfigureGetSuperpowerCommandOptions {
   rootDir: string;
-  installSkillWithLocalHistory: GetSuperpowerInstallSkillWithLocalHistory;
+  installSkill: GetSuperpowerSkillInstaller;
   printSkillInstallResult: GetSuperpowerSkillInstallPrinter;
   installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller;
 }
@@ -94,14 +91,12 @@ export function configureGetSuperpowerCommand(
   program: Command,
   options: ConfigureGetSuperpowerCommandOptions,
 ): Command {
+  configureGetSuperpowerCommands(program, options);
+
   const getsuperpowerCommand = program
     .command("getsuperpower")
-    .description("Create, install, and inspect GetSuperpower skill trees.");
-
-  configureAuthorCommands(getsuperpowerCommand, options.rootDir);
-  configureInstallCommand(getsuperpowerCommand, options);
-  configureListCommand(getsuperpowerCommand, options.rootDir);
-  configureDependencyCommand(getsuperpowerCommand, options.rootDir);
+    .description("Compatibility alias for root GetSuperpower commands.");
+  configureGetSuperpowerCommands(getsuperpowerCommand, options);
 
   const bundleCommand = program
     .command("bundle")
@@ -115,6 +110,16 @@ export function configureGetSuperpowerCommand(
   configureListCommand(workflowCommand, options.rootDir);
 
   return program;
+}
+
+function configureGetSuperpowerCommands(
+  command: Command,
+  options: ConfigureGetSuperpowerCommandOptions,
+): void {
+  configureAuthorCommands(command, options.rootDir);
+  configureInstallCommand(command, options);
+  configureListCommand(command, options.rootDir);
+  configureDependencyCommand(command, options.rootDir);
 }
 
 function configureAuthorCommands(command: Command, rootDir: string): void {
@@ -167,7 +172,11 @@ function configureInstallLikeCommand(
     .command(verb)
     .description("Install a GetSuperpower and its skills.")
     .argument("<source>", "GetSuperpower name, local path, or workflow source")
-    .option("--dir <dir>", "project directory that receives .ponyrace/workflows", options.rootDir)
+    .option(
+      "--dir <dir>",
+      "project directory that receives .getsuperpower/workflows",
+      options.rootDir,
+    )
     .option(
       "--agents <agents>",
       "comma-separated skill install targets: codex,claude,cursor",
@@ -196,13 +205,13 @@ async function runGetSuperpowerInstall(
       source: skillSource,
       homeDir,
       agents: installAgents,
-      installSkillWithLocalHistory: options.installSkillWithLocalHistory,
+      installSkill: options.installSkill,
       installExternalSkillDependency:
         options.installExternalSkillDependency ?? installExternalSkillDependencyWithSkillsCli,
       installedExternalPackages,
     });
 
-    options.printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install", {
+    options.printSkillInstallResult(skillResult.skillInstall, "install", {
       showPostSkillChangeWelcome: false,
     });
   }
@@ -218,7 +227,7 @@ async function installGetSuperpowerSkillDependency(input: {
   source: string;
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
-  installSkillWithLocalHistory: GetSuperpowerInstallSkillWithLocalHistory;
+  installSkill: GetSuperpowerSkillInstaller;
   installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller;
   installedExternalPackages: Set<string>;
 }): Promise<GetSuperpowerInstallSkillResult> {
@@ -257,9 +266,9 @@ function installWorkflowSkillDependency(input: {
   source: string;
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
-  installSkillWithLocalHistory: GetSuperpowerInstallSkillWithLocalHistory;
+  installSkill: GetSuperpowerSkillInstaller;
 }): Promise<GetSuperpowerInstallSkillResult> {
-  return input.installSkillWithLocalHistory({
+  return input.installSkill({
     rootDir: input.rootDir,
     operation: "install",
     source: input.source,
@@ -357,7 +366,7 @@ function configureListCommand(command: Command, rootDir: string): void {
   command
     .command("list")
     .description("List installed GetSuperpowers.")
-    .option("--dir <dir>", "project directory with .ponyrace/workflows", rootDir)
+    .option("--dir <dir>", "project directory with .getsuperpower/workflows", rootDir)
     .action(async (commandOptions: { dir: string }) => {
       const workflows = await listInstalledWorkflowBundles({
         rootDir: resolvePath(rootDir, commandOptions.dir),
