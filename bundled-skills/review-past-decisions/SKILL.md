@@ -16,7 +16,7 @@ Core principle: plans should carry forward known decisions instead of rediscover
 1. Name the current planning question in one sentence.
 2. Inspect relevant local evidence before planning:
    - `ponytrail history --details`
-   - `.pony-trail/sessions/<session-id>/tree.md`
+   - `.getsuperpower/sessions/<session-id>/tree.md`
    - accepted specs, prior plans, docs, issue notes, or review comments in the workspace
 3. Extract only decisions that can affect the new plan.
 4. Mark stale, missing, or conflicting evidence instead of guessing.

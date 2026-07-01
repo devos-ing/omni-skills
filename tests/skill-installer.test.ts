@@ -10,6 +10,26 @@ import {
 
 const allAgents: SkillInstallAgent[] = ["claude", "copilot", "codex", "cursor"];
 
+async function writeSuperpowersSkill(
+  path: string,
+  input: { name: string; description: string },
+): Promise<void> {
+  await mkdir(path, { recursive: true });
+  await writeFile(
+    join(path, "SKILL.md"),
+    [
+      "---",
+      `name: ${input.name}`,
+      `description: "${input.description}"`,
+      "---",
+      "",
+      `# ${input.name}`,
+      "",
+      `Fake ${input.name} skill for installer tests.`,
+    ].join("\n"),
+  );
+}
+
 describe("skill installer", () => {
   test("resolves the bundled pony trail skill by name", async () => {
     const source = await resolveInstallSkillSource("pony-trail");
@@ -28,6 +48,37 @@ describe("skill installer", () => {
     expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain(
       "name: review-past-decisions",
     );
+  });
+
+  test("resolves the bundled creating bundle skills authoring skill by name", async () => {
+    const source = await resolveInstallSkillSource("creating-bundle-skills");
+
+    expect(source.name).toBe("creating-bundle-skills");
+    expect(source.kind).toBe("bundled");
+    expect(source.path.endsWith(join("bundled-skills", "creating-bundle-skills"))).toBe(true);
+    expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain(
+      "Use this skill to create a GetSuperpower bundle skill",
+    );
+  });
+
+  test("defaults to the creating bundle skills authoring skill", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      const result = await installAgentSkill({
+        homeDir,
+        agents: ["codex"],
+        dryRun: true,
+      });
+
+      expect(result.skillName).toBe("creating-bundle-skills");
+      expect(result.targets[0]).toMatchObject({
+        agent: "codex",
+        status: "would_install",
+      });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
   });
 
   test("installs the bundled review past decisions skill into directory and Cursor targets", async () => {
@@ -58,41 +109,247 @@ describe("skill installer", () => {
     }
   });
 
-  test("resolves the bundled ponyrace skill by name", async () => {
-    const source = await resolveInstallSkillSource("ponyrace");
+  test("resolves superpowers brainstorming from the local plugin cache", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(
+      homeDir,
+      ".codex",
+      "plugins",
+      "cache",
+      "openai-curated",
+      "superpowers",
+      "fake-plugin",
+      "skills",
+      "brainstorming",
+    );
 
-    expect(source.name).toBe("ponyrace");
-    expect(source.kind).toBe("bundled");
-    expect(source.path.endsWith(join("bundled-skills", "ponyrace"))).toBe(true);
-    const skill = await readFile(join(source.path, "SKILL.md"), "utf8");
-    expect(skill).toContain("name: ponyrace");
-    expect(skill).toContain('ponytrail ponyrace "<request>"');
-    expect(skill).not.toContain("rtk bun run dev");
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "brainstorming",
+        description: "You MUST use this before any creative work.",
+      });
+
+      const source = await resolveInstallSkillSource("superpowers:brainstorming", { homeDir });
+
+      expect(source).toEqual({
+        kind: "path",
+        name: "superpowers-brainstorming",
+        path: sourceDir,
+      });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
   });
 
-  test("installs the bundled ponyrace skill into directory and Cursor targets", async () => {
+  test("resolves superpowers writing-plans from the local plugin cache", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(
+      homeDir,
+      ".codex",
+      "plugins",
+      "cache",
+      "openai-curated",
+      "superpowers",
+      "fake-plugin",
+      "skills",
+      "writing-plans",
+    );
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "writing-plans",
+        description: "Use when you have a spec or requirements for a multi-step task.",
+      });
+
+      const source = await resolveInstallSkillSource("superpowers:writing-plans", { homeDir });
+
+      expect(source).toEqual({
+        kind: "path",
+        name: "superpowers-writing-plans",
+        path: sourceDir,
+      });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("explains how to install superpowers brainstorming when the plugin cache is missing", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
     try {
+      await expect(
+        resolveInstallSkillSource("superpowers:brainstorming", { homeDir }),
+      ).rejects.toThrow(
+        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:brainstorming --agents codex,claude,cursor --home ~",
+      );
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("explains how to install superpowers writing-plans when the plugin cache is missing", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      await expect(
+        resolveInstallSkillSource("superpowers:writing-plans", { homeDir }),
+      ).rejects.toThrow(
+        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:writing-plans --agents codex,claude,cursor --home ~",
+      );
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves mattpocock skills from installed local skill folders", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(homeDir, ".agents", "skills", "tdd");
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "tdd",
+        description: "Test-driven development.",
+      });
+
+      const aliasSource = await resolveInstallSkillSource("mattpocock:tdd", { homeDir });
+      const githubSource = await resolveInstallSkillSource("github:mattpocock/skills/skills/tdd", {
+        homeDir,
+      });
+
+      expect(aliasSource).toEqual({
+        kind: "path",
+        name: "tdd",
+        path: sourceDir,
+      });
+      expect(githubSource).toEqual(aliasSource);
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("refreshes a skill that is already installed at the target path without deleting it", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(homeDir, ".agents", "skills", "tdd");
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "tdd",
+        description: "Test-driven development.",
+      });
+
       const result = await installAgentSkill({
-        source: "ponyrace",
+        source: "mattpocock:tdd",
+        homeDir,
+        agents: ["codex"],
+        refreshExisting: true,
+      });
+
+      expect(result.skillName).toBe("tdd");
+      expect(result.targets).toMatchObject([{ agent: "codex", status: "updated" }]);
+      await expect(stat(join(sourceDir, "SKILL.md"))).resolves.toBeTruthy();
+      await expect(
+        stat(join(homeDir, ".codex", "skills", "tdd", "SKILL.md")),
+      ).resolves.toBeTruthy();
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("explains how to install mattpocock skills when they are missing", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      await expect(resolveInstallSkillSource("mattpocock:tdd", { homeDir })).rejects.toThrow(
+        `Matt Pocock tdd skill not found under ${homeDir}. Install or refresh Matt Pocock skills with: getsuperpower skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install tdd.`,
+      );
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("installs superpowers brainstorming into directory and Cursor targets", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(
+      homeDir,
+      ".codex",
+      "plugins",
+      "cache",
+      "openai-curated",
+      "superpowers",
+      "fake-plugin",
+      "skills",
+      "brainstorming",
+    );
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "brainstorming",
+        description: "You MUST use this before any creative work.",
+      });
+
+      const result = await installAgentSkill({
+        source: "superpowers:brainstorming",
         homeDir,
         agents: ["codex", "cursor"],
       });
 
-      expect(result.skillName).toBe("ponyrace");
+      expect(result.skillName).toBe("superpowers-brainstorming");
       expect(result.targets.map((target) => target.status)).toEqual(["installed", "installed"]);
 
       await expect(
-        stat(join(homeDir, ".agents", "skills", "ponyrace", "SKILL.md")),
+        stat(join(homeDir, ".agents", "skills", "superpowers-brainstorming", "SKILL.md")),
       ).resolves.toBeTruthy();
       await expect(
-        stat(join(homeDir, ".codex", "skills", "ponyrace", "SKILL.md")),
+        stat(join(homeDir, ".codex", "skills", "superpowers-brainstorming", "SKILL.md")),
       ).resolves.toBeTruthy();
 
-      const cursorRulePath = join(homeDir, ".cursor", "rules", "ponyrace.mdc");
+      const cursorRulePath = join(homeDir, ".cursor", "rules", "superpowers-brainstorming.mdc");
       await expect(stat(cursorRulePath)).resolves.toBeTruthy();
-      expect(await readFile(cursorRulePath, "utf8")).toContain("name: ponyrace");
+      expect(await readFile(cursorRulePath, "utf8")).toContain("name: brainstorming");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("installs superpowers writing-plans into directory and Cursor targets", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(
+      homeDir,
+      ".codex",
+      "plugins",
+      "cache",
+      "openai-curated",
+      "superpowers",
+      "fake-plugin",
+      "skills",
+      "writing-plans",
+    );
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "writing-plans",
+        description: "Use when you have a spec or requirements for a multi-step task.",
+      });
+
+      const result = await installAgentSkill({
+        source: "superpowers:writing-plans",
+        homeDir,
+        agents: ["codex", "cursor"],
+      });
+
+      expect(result.skillName).toBe("superpowers-writing-plans");
+      expect(result.targets.map((target) => target.status)).toEqual(["installed", "installed"]);
+
+      await expect(
+        stat(join(homeDir, ".agents", "skills", "superpowers-writing-plans", "SKILL.md")),
+      ).resolves.toBeTruthy();
+      await expect(
+        stat(join(homeDir, ".codex", "skills", "superpowers-writing-plans", "SKILL.md")),
+      ).resolves.toBeTruthy();
+
+      const cursorRulePath = join(homeDir, ".cursor", "rules", "superpowers-writing-plans.mdc");
+      await expect(stat(cursorRulePath)).resolves.toBeTruthy();
+      expect(await readFile(cursorRulePath, "utf8")).toContain("name: writing-plans");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -244,6 +501,7 @@ describe("skill installer", () => {
   test("installs prehook scripts and merges hook settings when requested", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
     const claudeSettingsPath = join(homeDir, ".claude", "settings.json");
+    const codexHooksPath = join(homeDir, ".codex", "hooks.json");
 
     try {
       await mkdir(join(homeDir, ".claude"), { recursive: true });
@@ -257,6 +515,30 @@ describe("skill installer", () => {
                 {
                   matcher: "Bash",
                   hooks: [{ type: "command", command: "existing-hook" }],
+                },
+              ],
+            },
+          },
+          null,
+          2,
+        ),
+      );
+      await mkdir(join(homeDir, ".codex"), { recursive: true });
+      await writeFile(
+        codexHooksPath,
+        JSON.stringify(
+          {
+            hooks: {
+              PreToolUse: [
+                {
+                  matcher: "Edit",
+                  hooks: [
+                    {
+                      type: "command",
+                      command:
+                        "sh '/Users/roy/.codex/hooks/devcourt-record-change-evidence-prehook.sh'",
+                    },
+                  ],
                 },
               ],
             },
@@ -306,7 +588,7 @@ describe("skill installer", () => {
         ),
       ).toBe(true);
 
-      const codexHooks = JSON.parse(await readFile(join(homeDir, ".codex", "hooks.json"), "utf8"));
+      const codexHooks = JSON.parse(await readFile(codexHooksPath, "utf8"));
       expect(
         codexHooks.hooks.PreToolUse.some(
           (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
@@ -314,6 +596,9 @@ describe("skill installer", () => {
             entry.hooks?.some((hook) => hook.command?.includes(codexHookPath)),
         ),
       ).toBe(true);
+      expect(JSON.stringify(codexHooks.hooks.PreToolUse)).not.toContain(
+        "devcourt-record-change-evidence-prehook.sh",
+      );
 
       const copilotHooks = JSON.parse(
         await readFile(join(homeDir, ".agents", "hooks.json"), "utf8"),

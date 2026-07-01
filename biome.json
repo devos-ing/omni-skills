@@ -18,6 +18,8 @@
       "!bun.lock",
       "!.bun-cache",
       "!.devos",
+      "!.getsuperpower",
+      "!.ponyrace",
       "!.ponytrail",
       "!coverage",
       "!dist",

@@ -2,22 +2,65 @@ import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  buildProgram,
-  type GoalClarificationPrompter,
-  promptForSetup,
-  type SetupPrompter,
-  type SetupPromptIo,
-} from "../src/cli";
-import type { RequirementPonyRunner } from "../src/runtimes/ponytrail";
-import { createDefaultSetupReviewBots } from "../src/runtimes/ponytrail/manifest";
+import { buildProgram } from "../src/cli";
+
+async function writeSuperpowersSkill(
+  path: string,
+  input: { name: string; description: string },
+): Promise<void> {
+  await mkdir(path, { recursive: true });
+  await writeFile(
+    join(path, "SKILL.md"),
+    [
+      "---",
+      `name: ${input.name}`,
+      `description: "${input.description}"`,
+      "---",
+      "",
+      `# ${input.name}`,
+    ].join("\n"),
+  );
+}
+
+async function writeSuperpowersProcessSkills(homeDir: string): Promise<void> {
+  const baseDir = join(
+    homeDir,
+    ".codex",
+    "plugins",
+    "cache",
+    "openai-curated",
+    "superpowers",
+    "fake-plugin",
+    "skills",
+  );
+
+  await writeSuperpowersSkill(join(baseDir, "brainstorming"), {
+    name: "brainstorming",
+    description: "You MUST use this before any creative work.",
+  });
+  await writeSuperpowersSkill(join(baseDir, "writing-plans"), {
+    name: "writing-plans",
+    description: "Use when you have a spec or requirements for a multi-step task.",
+  });
+}
 
 describe("cli", () => {
-  test("registers setup, onboarding, bot listing, goal drafting, and vote commands", () => {
+  test("registers GetSuperpower and skill commands only", () => {
     const program = buildProgram();
 
-    expect(program.name()).toBe("ponytrail");
+    expect(program.name()).toBe("getsuperpower");
     expect(program.commands.map((command) => command.name())).toEqual([
+      "init",
+      "validate",
+      "install",
+      "clone",
+      "list",
+      "deps",
+      "bundle",
+      "workflow",
+      "skills",
+    ]);
+    for (const removedCommand of [
       "setup",
       "onboard",
       "bots",
@@ -27,44 +70,29 @@ describe("cli", () => {
       "stream-goal",
       "history",
       "revert",
-      "skills",
-    ]);
+    ]) {
+      expect(program.commands.some((command) => command.name() === removedCommand)).toBe(false);
+    }
 
-    const setupCommand = program.commands.find((command) => command.name() === "setup");
-    const onboardCommand = program.commands.find((command) => command.name() === "onboard");
-    const ponyraceCommand = program.commands.find((command) => command.name() === "ponyrace");
-    const streamGoalCommand = program.commands.find((command) => command.name() === "stream-goal");
-    const revertCommand = program.commands.find((command) => command.name() === "revert");
+    const rootDepsCommand = program.commands.find((command) => command.name() === "deps");
+    const bundleCommand = program.commands.find((command) => command.name() === "bundle");
+    const workflowCommand = program.commands.find((command) => command.name() === "workflow");
     const skillsCommand = program.commands.find((command) => command.name() === "skills");
 
-    expect(setupCommand?.options.map((option) => option.long)).toEqual([
-      "--dir",
-      "--name",
-      "--agents",
-      "--home",
-    ]);
-    expect(onboardCommand?.options.map((option) => option.long)).toEqual([
-      "--dir",
-      "--name",
-      "--agents",
-      "--home",
-    ]);
-    expect(ponyraceCommand?.options.map((option) => option.long)).toEqual([
-      "--manifest",
-      "--worker",
-      "--json",
-    ]);
-    expect(streamGoalCommand?.options.map((option) => option.long)).toEqual([
-      "--manifest",
-      "--worker",
-    ]);
-    expect(revertCommand?.options.map((option) => option.long)).toEqual(["--dry-run"]);
+    expect(rootDepsCommand?.aliases()).toEqual(["dependencies", "dependence"]);
+    expect(bundleCommand?.commands.map((command) => command.name())).toEqual(["init", "validate"]);
+    expect(workflowCommand?.commands.map((command) => command.name())).toEqual(["install", "list"]);
     expect(skillsCommand?.commands.map((command) => command.name())).toEqual(["install", "update"]);
+    expect(
+      skillsCommand?.commands
+        .find((command) => command.name() === "install")
+        ?.options.map((option) => option.long),
+    ).not.toContain("--prehook");
   });
 
   test("prints the CLI version with -v", async () => {
     const program = buildProgram();
-    const expectedVersion = "0.2.0";
+    const expectedVersion = "0.3.0";
     const output: string[] = [];
 
     expect(program.version()).toBe(expectedVersion);
@@ -83,8 +111,8 @@ describe("cli", () => {
     expect(output.join("")).toBe(`${expectedVersion}\n`);
   });
 
-  test("runs onboarding and manifest-backed commands", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+  test("bundle init creates an authorable GetSuperpower and validate accepts it", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-bundle-cli-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -94,425 +122,62 @@ describe("cli", () => {
 
     try {
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+        ["bundle", "init", "release-review", "--dir", "bundles"],
         { from: "user" },
       );
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["bots"], { from: "user" });
-
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["goal", "Add", "CSV", "import", "to", "admin", "dashboard", "--json"],
-        {
-          from: "user",
-        },
-      );
-
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        [
-          "vote",
-          "--json",
-          "--votes",
-          JSON.stringify([
-            {
-              botId: "product_manager_bot",
-              vote: "approve",
-              confidence: 0.9,
-              reason: "Matches intent.",
-              requiredChanges: [],
-            },
-            {
-              botId: "project_manager_bot",
-              vote: "approve",
-              confidence: 0.8,
-              reason: "Can be planned.",
-              requiredChanges: [],
-            },
-            {
-              botId: "engineer_bot",
-              vote: "approve",
-              confidence: 0.7,
-              reason: "Feasible.",
-              requiredChanges: [],
-            },
-            {
-              botId: "testing_bot",
-              vote: "amend",
-              confidence: 0.6,
-              reason: "Needs evidence.",
-              requiredChanges: ["Add test output."],
-            },
-          ]),
-        ],
+        ["bundle", "validate", "bundles/release-review"],
         { from: "user" },
       );
-
-      expect(logs.some((line) => line.includes("Ponytrail onboarding complete"))).toBe(true);
-      expect(logs.some((line) => line.includes("product_manager_bot"))).toBe(true);
-      expect(logs.some((line) => line.includes("product_manager_model"))).toBe(true);
-      expect(
-        logs.some((line) => line.includes('"title": "Add CSV import to admin dashboard"')),
-      ).toBe(true);
-      expect(logs.some((line) => line.includes('"approved": true'))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("onboard prompts for the workspace name and installs the bundled skills", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const logs: string[] = [];
-    const promptedDefaults: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({
-        cwd: rootDir,
-        projectNamePrompter: async (defaultName: string) => {
-          promptedDefaults.push(defaultName);
-          return "Prompted Workspace";
-        },
-      }).parseAsync(["onboard", "--home", homeDir], { from: "user" });
-
-      for (const skill of ["pony-trail", "ponyrace"]) {
-        await expect(
-          stat(join(homeDir, ".claude", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-        await expect(
-          stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-        await expect(
-          stat(join(homeDir, ".codex", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-      }
-      const manifest = JSON.parse(
-        await readFile(join(rootDir, ".ponytrail", "manifest.json"), "utf8"),
-      );
-      expect(manifest.metadata.name).toBe("Prompted Workspace");
-      expect(promptedDefaults).toEqual([rootDir.slice(rootDir.lastIndexOf("/") + 1)]);
-      expect(logs.some((line) => line.includes("Skill install result"))).toBe(true);
-      expect(logs.some((line) => line.includes("Skill: pony-trail"))).toBe(true);
-      expect(logs.some((line) => line.includes("Skill: ponyrace"))).toBe(true);
-      expect(logs.some((line) => line.includes("Ponytrail onboarding complete"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
-      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("setup creates a manifest and installs ponytrail skills for default agent targets", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const logs: string[] = [];
-    const promptedDefaults: Array<{
-      projectName: string;
-      agents: string;
-      botCount: number;
-    }> = [];
-    const originalLog = console.log;
-    const clarificationPrompter: GoalClarificationPrompter = async () => {
-      throw new Error("setup must not ask goal clarification");
-    };
-    const setupPrompter: SetupPrompter = async (defaults) => {
-      promptedDefaults.push({
-        projectName: defaults.projectName,
-        agents: defaults.agents,
-        botCount: defaults.bots.length,
-      });
-
-      return { ...defaults, projectName: "Setup Court" };
-    };
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir, setupPrompter, clarificationPrompter }).parseAsync(
-        ["setup", "--home", homeDir],
-        { from: "user" },
-      );
-
-      for (const skill of ["pony-trail", "ponyrace"]) {
-        await expect(
-          stat(join(homeDir, ".claude", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-        await expect(
-          stat(join(homeDir, ".codex", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-        await expect(
-          stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-        await expect(stat(join(homeDir, ".cursor", "rules", `${skill}.mdc`))).resolves.toBeTruthy();
-      }
-
-      const manifest = JSON.parse(
-        await readFile(join(rootDir, ".ponytrail", "manifest.json"), "utf8"),
-      );
-      expect(manifest.metadata.name).toBe("Setup Court");
-      expect(manifest.kind).toBe("ai-work-runtime.ponytrail.setup");
-      expect(manifest).not.toHaveProperty("bots");
-      expect(manifest).not.toHaveProperty("models");
-      expect(manifest).not.toHaveProperty("deliberation");
-      expect(manifest.ponies.map((pony: { id: string }) => pony.id)).toEqual([
-        "product_manager_bot",
-        "project_manager_bot",
-        "senior_engineer_bot",
-        "testing_bot",
-      ]);
-      expect(manifest.approvalRule.requiredApprovals).toBe(3);
-      expect(promptedDefaults).toContainEqual({
-        projectName: rootDir.slice(rootDir.lastIndexOf("/") + 1),
-        agents: "codex,claude,cursor",
-        botCount: 4,
-      });
-      expect(logs.some((line) => line.includes("Ponytrail setup complete"))).toBe(true);
-      expect(logs.some((line) => line.includes("Next: ponytrail ponyrace"))).toBe(true);
-      expect(logs.some((line) => line.includes("Pony race"))).toBe(false);
-      expect(logs.some((line) => line.includes("Requirement discussion"))).toBe(false);
-      expect(logs.some((line) => line.includes("Detailed requirement"))).toBe(false);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("setup does not print completion when skill install fails after manifest creation", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const invalidHomePath = join(rootDir, "home-file");
-    const logs: string[] = [];
-    const originalLog = console.log;
-    const setupPrompter: SetupPrompter = async (defaults) => ({
-      ...defaults,
-      projectName: "Install Failure Setup",
-    });
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeFile(invalidHomePath, "not a directory");
 
       await expect(
-        buildProgram({ cwd: rootDir, setupPrompter }).parseAsync(
-          ["setup", "--home", invalidHomePath],
-          { from: "user" },
-        ),
-      ).rejects.toThrow();
-
-      await expect(stat(join(rootDir, ".ponytrail", "manifest.json"))).resolves.toBeTruthy();
-      expect(logs.some((line) => line.includes("Ponytrail setup complete"))).toBe(false);
+        stat(join(rootDir, "bundles", "release-review", "workflow.json")),
+      ).resolves.toBeTruthy();
+      await expect(
+        stat(join(rootDir, "bundles", "release-review", "skills", "release-review", "SKILL.md")),
+      ).resolves.toBeTruthy();
+      await expect(
+        stat(join(rootDir, "bundles", "release-review", "skills", "custom-review", "SKILL.md")),
+      ).resolves.toBeTruthy();
+      expect(stripAnsiLines(logs)).toContain(
+        `GetSuperpower created: ${join(rootDir, "bundles", "release-review")}`,
+      );
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower valid: release-review@0.1.0");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
     }
   });
 
-  test("setup prompt recalculates custom approval default from selected bot count", async () => {
-    const textDefaults: Array<{ message: string; defaultValue: string }> = [];
-    const promptIo: SetupPromptIo = {
-      isTty: true,
-      intro: () => {},
-      outro: () => {},
-      text: async ({ message, defaultValue }) => {
-        textDefaults.push({ message, defaultValue });
-        if (message === "Workspace name") {
-          return "Prompted Setup";
-        }
-        if (message === "Review bot count") {
-          return "5";
-        }
-        if (message === "Skill install targets") {
-          return "codex";
-        }
-        return defaultValue;
-      },
-      select: async () => "custom",
-      confirm: async () => true,
-      isCancel: () => false,
-    };
-
-    const result = await promptForSetup(
-      {
-        projectName: "Default Setup",
-        bots: createDefaultSetupReviewBots(),
-        requiredApprovals: 3,
-        agents: "codex,claude,cursor",
-      },
-      promptIo,
-    );
-
-    expect(result.projectName).toBe("Prompted Setup");
-    expect(result.bots.length).toBe(5);
-    expect(result.bots.at(-1)?.id).toBe("review_bot_5");
-    expect(result.requiredApprovals).toBe(4);
-    expect(result.agents).toBe("codex");
-    expect(textDefaults).toContainEqual({ message: "Required approvals", defaultValue: "4" });
-  });
-
-  test("setup prompt captures panel, instruction, and non-voting bot choices", async () => {
-    const promptIo: SetupPromptIo = {
-      isTty: true,
-      intro: () => {},
-      outro: () => {},
-      text: async ({ message, defaultValue }) => {
-        if (message === "Review bot count") {
-          return "2";
-        }
-        if (message === "Bot 2 display name") {
-          return "Observer Bot";
-        }
-        if (message === "Observer Bot role") {
-          return "Observer";
-        }
-        if (message === "Observer Bot id") {
-          return "observer_bot";
-        }
-        if (message === "Observer Bot panel") {
-          return "advisory_panel";
-        }
-        if (message === "Observer Bot instruction") {
-          return "Observe the discussion without voting.";
-        }
-        if (message === "Observer Bot model id") {
-          return "observer_model";
-        }
-        if (message === "Observer Bot model name") {
-          return "observer-review-model";
-        }
-        return defaultValue;
-      },
-      select: async () => "default",
-      confirm: async ({ message }) => message !== "Observer Bot votes",
-      isCancel: () => false,
-    };
-
-    const result = await promptForSetup(
-      {
-        projectName: "Default Setup",
-        bots: createDefaultSetupReviewBots(),
-        requiredApprovals: 3,
-        agents: "codex,claude,cursor",
-      },
-      promptIo,
-    );
-
-    expect(result.bots).toHaveLength(2);
-    expect(result.bots[1]).toMatchObject({
-      id: "observer_bot",
-      displayName: "Observer Bot",
-      role: "Observer",
-      panel: "advisory_panel",
-      instruction: "Observe the discussion without voting.",
-      modelId: "observer_model",
-      modelName: "observer-review-model",
-      votes: false,
-    });
-    expect(result.requiredApprovals).toBe(1);
-  });
-
-  test("setup accepts a custom bot roster and approval count", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+  test("workflow install installs product-dev skills and lists the installed GetSuperpower", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
-    const clarificationPrompter: GoalClarificationPrompter = async () => {
-      throw new Error("setup must not ask goal clarification");
-    };
-    const setupPrompter: SetupPrompter = async (defaults) => ({
-      ...defaults,
-      projectName: "Custom Setup",
-      agents: "codex",
-      requiredApprovals: 2,
-      bots: [
-        {
-          id: "product_bot",
-          displayName: "Product Bot",
-          role: "Product",
-          modelId: "product_model",
-          modelName: "product-review-model",
-          votes: true,
-        },
-        {
-          id: "engineering_bot",
-          displayName: "Engineering Bot",
-          role: "Engineering",
-          modelId: "engineering_model",
-          modelName: "engineering-review-model",
-          votes: true,
-        },
-        {
-          id: "observer_bot",
-          displayName: "Observer Bot",
-          role: "Observer",
-          modelId: "observer_model",
-          modelName: "observer-review-model",
-          votes: false,
-        },
-      ],
-    });
 
     console.log = (...values: unknown[]) => {
       logs.push(values.join(" "));
     };
 
     try {
-      await buildProgram({ cwd: rootDir, setupPrompter, clarificationPrompter }).parseAsync(
-        ["setup", "--name", "Ignored By Prompter", "--home", homeDir],
+      await writeSuperpowersProcessSkills(homeDir);
+
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["workflow", "install", "product-dev", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
+      await buildProgram({ cwd: rootDir }).parseAsync(["workflow", "list"], { from: "user" });
 
-      for (const skill of ["pony-trail", "ponyrace"]) {
-        await expect(
-          stat(join(homeDir, ".codex", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
+      await expect(
+        stat(join(rootDir, ".getsuperpower", "workflows", "product-dev.json")),
+      ).resolves.toBeTruthy();
+      for (const skill of ["superpowers-brainstorming", "superpowers-writing-plans"]) {
         await expect(
           stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
         ).resolves.toBeTruthy();
-        await expect(stat(join(homeDir, ".claude", "skills", skill, "SKILL.md"))).rejects.toThrow();
-        await expect(stat(join(homeDir, ".cursor", "rules", `${skill}.mdc`))).rejects.toThrow();
       }
-
-      const manifest = JSON.parse(
-        await readFile(join(rootDir, ".ponytrail", "manifest.json"), "utf8"),
-      );
-      expect(manifest.metadata.name).toBe("Custom Setup");
-      expect(manifest.kind).toBe("ai-work-runtime.ponytrail.setup");
-      expect(manifest).not.toHaveProperty("bots");
-      expect(manifest).not.toHaveProperty("models");
-      expect(manifest).not.toHaveProperty("deliberation");
-      expect(
-        manifest.ponies
-          .filter((pony: { votes?: boolean }) => pony.votes !== false)
-          .map((pony: { id: string }) => pony.id),
-      ).toEqual(["product_bot", "engineering_bot"]);
-      expect(manifest.approvalRule.requiredApprovals).toBe(2);
-      expect(manifest.ponies.some((pony: { id: string }) => pony.id === "observer_bot")).toBe(true);
-      expect(
-        manifest.ponies.find((pony: { id: string; modelId?: string }) => pony.id === "observer_bot")
-          ?.modelId,
-      ).toBe("observer_model");
-      expect(
-        manifest.ponies.some(
-          (pony: { modelId: string; modelName: string }) =>
-            pony.modelId === "observer_model" && pony.modelName === "observer-review-model",
-        ),
-      ).toBe(true);
-      expect(logs.some((line) => line.includes("Skill: pony-trail"))).toBe(true);
-      expect(logs.some((line) => line.includes("Skill: ponyrace"))).toBe(true);
-      expect(logs.some((line) => line.includes("Pony race"))).toBe(false);
-      expect(logs.some((line) => line.includes("Requirement discussion"))).toBe(false);
-      expect(logs.some((line) => line.includes("Detailed requirement"))).toBe(false);
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: product-dev");
+      expect(stripAnsiLines(logs)).toContain("product-dev 0.1.0");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -520,10 +185,9 @@ describe("cli", () => {
     }
   });
 
-  test("onboard refreshes an older installed bundled skill", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const installedSkillPath = join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md");
+  test("clone installs product-dev skills and records the workflow from the root command", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-clone-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-clone-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -532,16 +196,22 @@ describe("cli", () => {
     };
 
     try {
-      await mkdir(join(homeDir, ".agents", "skills", "pony-trail"), { recursive: true });
-      await writeFile(installedSkillPath, "stale pony trail skill");
+      await writeSuperpowersProcessSkills(homeDir);
 
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--name", "Refresh Workspace", "--home", homeDir, "--agents", "codex"],
+        ["clone", "product-dev", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
 
-      expect(await readFile(installedSkillPath, "utf8")).toContain("name: pony-trail");
-      expect(logs.some((line) => line.includes("codex: updated"))).toBe(true);
+      await expect(
+        stat(join(rootDir, ".getsuperpower", "workflows", "product-dev.json")),
+      ).resolves.toBeTruthy();
+      for (const skill of ["superpowers-brainstorming", "superpowers-writing-plans"]) {
+        await expect(
+          stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
+        ).resolves.toBeTruthy();
+      }
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: product-dev");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -549,8 +219,7 @@ describe("cli", () => {
     }
   });
 
-  test("prints clarification questions for unclear goal requests in non-interactive mode", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+  test("getsuperpower deps prints the skill dependencies for a GetSuperpower", async () => {
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -559,25 +228,22 @@ describe("cli", () => {
     };
 
     try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["goal", "make", "it", "better"], {
+      await buildProgram().parseAsync(["deps", "examples/workflows/real-engineering"], {
         from: "user",
       });
 
-      expect(logs.some((line) => line.includes("Needs clarification"))).toBe(true);
-      expect(logs.some((line) => line.includes("What specific outcome"))).toBe(true);
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower dependencies: real-engineering");
+      expect(stripAnsiLines(logs)).toContain("- ./skills/rtk-command-discipline");
+      expect(stripAnsiLines(logs)).toContain("- pony-trail");
+      expect(stripAnsiLines(logs)).toContain("- superpowers:brainstorming");
+      expect(stripAnsiLines(logs)).toContain("- mattpocock:tdd");
     } finally {
       console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
     }
   });
 
-  test("goal prints requirement court discussion and does not stream by default", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+  test("skills install defaults to the bundle authoring helper", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -586,255 +252,21 @@ describe("cli", () => {
     };
 
     try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
+      await buildProgram({ cwd: homeDir }).parseAsync(
+        ["skills", "install", "--home", homeDir, "--dry-run"],
         { from: "user" },
       );
 
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["goal", "Add", "CSV", "import", "to", "admin", "dashboard"],
-        { from: "user" },
-      );
-
-      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
-      expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Judge summary");
-      expect(logs.some((line) => line.includes("Approvals: 4/4"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Detailed requirement");
-      expect(logs.some((line) => line.includes("Title: Add CSV import to admin dashboard"))).toBe(
-        true,
-      );
+      expect(stripAnsiLines(logs)).toContain("Skill install plan");
+      expect(logs.some((line) => line.includes("creating-bundle-skills"))).toBe(true);
+      expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
     } finally {
       console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
     }
   });
 
-  test("ponyrace prints pony race discussion and does not stream by default", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["ponyrace", "Add", "CSV", "import", "to", "admin", "dashboard"],
-        { from: "user" },
-      );
-
-      expect(stripAnsiLines(logs)).toContain("Pony race");
-      expect(logs.some((line) => line.includes("product_manager_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("project_manager_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Visible thinking transcript");
-      expect(stripAnsiLines(logs)).toContain("Round 1");
-      expect(logs.some((line) => line.includes("Product Manager Bot (product_manager_bot)"))).toBe(
-        true,
-      );
-      expect(logs.some((line) => line.includes("Focus:"))).toBe(true);
-      expect(logs.some((line) => line.includes("Concern:"))).toBe(true);
-      expect(logs.some((line) => line.includes("Recommendation:"))).toBe(true);
-      expect(logs.some((line) => line.includes("Vote: approve"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Judge summary");
-      expect(logs.some((line) => line.includes("Approvals: 4/4"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Detailed requirement");
-      expect(logs.some((line) => line.includes("Title: Add CSV import to admin dashboard"))).toBe(
-        true,
-      );
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("ponyrace runs the configured pony runner and prints round output", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const ponyCalls: string[] = [];
-    const originalLog = console.log;
-    const ponyRunner: RequirementPonyRunner = async ({ bot, contract }) => {
-      ponyCalls.push(bot.id);
-
-      return {
-        message: `${bot.id} accepted ${contract.title}`,
-        visibleThinking: {
-          focus: `Evaluate as ${bot.displayName}.`,
-          concern: "Keep role-specific risks visible.",
-          recommendation: "Approve the direction.",
-        },
-        vote: "approve",
-        confidence: 0.91,
-        requiredChanges: [],
-      };
-    };
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir, ponyRunner }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir, ponyRunner }).parseAsync(
-        ["ponyrace", "Add", "CSV", "import", "to", "admin", "dashboard"],
-        { from: "user" },
-      );
-
-      expect(ponyCalls).toEqual([
-        "product_manager_bot",
-        "project_manager_bot",
-        "engineer_bot",
-        "testing_bot",
-      ]);
-      expect(stripAnsiLines(logs)).toContain("Pony race");
-      expect(stripAnsiLines(logs)).toContain("Round 1");
-      expect(logs.some((line) => line.includes("product_manager_bot accepted"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Visible thinking transcript");
-      expect(stripAnsiLines(logs)).toContain("Final votes");
-      expect(logs.some((line) => line.includes("product_manager_bot: approve (0.91)"))).toBe(true);
-      expect(logs.some((line) => line.includes("Human confirmation: pending"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("ponyrace JSON output includes court discussion results", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const ponyCalls: string[] = [];
-    const originalLog = console.log;
-    const ponyRunner: RequirementPonyRunner = async ({ bot }) => {
-      ponyCalls.push(bot.id);
-
-      return {
-        message: `${bot.id} json review`,
-        vote: "approve",
-        confidence: 0.88,
-        requiredChanges: [],
-      };
-    };
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir, ponyRunner }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir, ponyRunner }).parseAsync(
-        ["ponyrace", "--json", "Add", "CSV", "import", "to", "admin", "dashboard"],
-        { from: "user" },
-      );
-
-      const output = JSON.parse(logs.at(-1) ?? "{}");
-      expect(ponyCalls).toEqual([
-        "product_manager_bot",
-        "project_manager_bot",
-        "engineer_bot",
-        "testing_bot",
-      ]);
-      expect(output.rounds.map((round: { round: number }) => round.round)).toEqual([1]);
-      expect(output.discussion[0].message).toBe("product_manager_bot json review");
-      expect(output.votes[0].confidence).toBe(0.88);
-      expect(output.humanConfirmation).toBe("pending");
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("stream-goal remains a compatibility alias for requirement discussion", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["stream-goal", "--worker", "claude", "Review", "checkout", "test", "plan", "evidence"],
-        { from: "user" },
-      );
-
-      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
-      expect(logs.some((line) => line.includes("testing_bot: I think"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("goal asks for custom clarification answers before requirement court discussion", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-    const clarificationPrompter: GoalClarificationPrompter = async ({ questions }) => ({
-      answers: questions.map((question, index) => ({
-        question,
-        mode: "custom",
-        answer:
-          [
-            "Create an admin dashboard CSV importer.",
-            "Limit scope to the admin dashboard import workflow.",
-            "Show passing tests and a successful import smoke result.",
-          ][index] ?? "Clarified detail.",
-      })),
-    });
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir, clarificationPrompter }).parseAsync(
-        ["onboard", "--dir", ".", "--name", "CLI Court", "--home", rootDir],
-        { from: "user" },
-      );
-
-      await buildProgram({ cwd: rootDir, clarificationPrompter }).parseAsync(
-        ["goal", "make", "it", "better"],
-        { from: "user" },
-      );
-
-      expect(logs.some((line) => line.includes("Needs clarification"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Requirement discussion");
-      expect(logs.some((line) => line.includes("engineer_bot: I think"))).toBe(true);
-      expect(logs.some((line) => line.includes("Create an admin dashboard CSV importer"))).toBe(
-        true,
-      );
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("skills install dry-runs bundled pony trail skill installation for npx and bunx usage", async () => {
+  test("skills install can still install pony-trail when requested explicitly", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
@@ -852,78 +284,17 @@ describe("cli", () => {
       expect(stripAnsiLines(logs)).toContain("Skill install plan");
       expect(logs.some((line) => line.includes("pony-trail"))).toBe(true);
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes("copilot: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes("codex: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes("cursor: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes(".cursor/rules/pony-trail.mdc"))).toBe(true);
-      expect(stripAnsiLines(logs)).not.toContain("Welcome to Ponytrail.");
     } finally {
       console.log = originalLog;
       await rm(homeDir, { recursive: true, force: true });
     }
   });
 
-  test("skills install accepts previous bundled skill names as aliases", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      for (const alias of [
-        "record-change-evidence",
-        "enter-into-evidence",
-        "snapshotting-file-changes",
-      ]) {
-        await buildProgram({ cwd: homeDir }).parseAsync(
-          ["skills", "install", alias, "--home", homeDir, "--dry-run"],
-          { from: "user" },
-        );
-      }
-
-      expect(stripAnsiLines(logs)).toContain("Skill install plan");
-      expect(logs.some((line) => line.includes("pony-trail"))).toBe(true);
-      expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("skills install can dry-run prehook installation", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: homeDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--prehook", "--dry-run"],
-        { from: "user" },
-      );
-
-      expect(stripAnsiLines(logs)).toContain("Prehook install plan");
-      expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes(".claude/hooks/ponytrail"))).toBe(true);
-      expect(logs.some((line) => line.includes("codex: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes("copilot: would install"))).toBe(true);
-      expect(logs.some((line) => line.includes("cursor: would install"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("skills install records a local project history commit", async () => {
+  test("skills install can delegate external skills packages to the Skills CLI", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
+    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
     const originalLog = console.log;
 
     console.log = (...values: unknown[]) => {
@@ -931,44 +302,25 @@ describe("cli", () => {
     };
 
     try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
-        { from: "user" },
-      );
+      await buildProgram({
+        cwd: rootDir,
+        installExternalSkillDependency: async (input) => {
+          externalInstalls.push({ source: input.source, homeDir: input.homeDir });
+        },
+      }).parseAsync(["skills", "install", "mattpocock/skills", "--home", homeDir], {
+        from: "user",
+      });
 
-      await expect(
-        stat(join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md")),
-      ).resolves.toBeTruthy();
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
-      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
-      expect(logs.some((line) => line.includes("Local history:"))).toBe(true);
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["history", "--details"], { from: "user" });
-      const historyLogs = logs.splice(0).map(stripAnsi);
-
-      expect(historyLogs.some((line) => line.includes("ponytrail-skills"))).toBe(true);
-      expect(historyLogs.some((line) => line.includes("action: install skill"))).toBe(true);
+      expect(externalInstalls).toEqual([{ source: "mattpocock/skills", homeDir }]);
+      expect(stripAnsiLines(logs)).toContain("Skills package install result");
+      expect(logs.some((line) => line.includes("Package: mattpocock/skills"))).toBe(true);
       expect(
-        historyLogs.some((line) => line.includes("summary: Installed pony-trail skill for codex")),
+        logs.some((line) =>
+          line.includes("Internal command: npx --yes skills@latest add mattpocock/skills"),
+        ),
       ).toBe(true);
-
-      const entries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
-        .trim()
-        .split("\n")
-        .map((line) => JSON.parse(line));
-      expect(entries.map((entry) => entry.phase)).toEqual(["pre", "post"]);
-      expect(entries.map((entry) => entry.session_id)).toEqual([
-        "ponytrail-skills",
-        "ponytrail-skills",
-      ]);
-      expect(entries[0].snapshot_id).toStartWith("skill-install-");
-
-      const sessionTree = await readFile(
-        join(rootDir, ".pony-trail", "sessions", "ponytrail-skills", "tree.md"),
-        "utf8",
-      );
-      expect(sessionTree).toContain("Session: `ponytrail-skills`");
-      expect(sessionTree).toContain("## commit skill-install-");
+      expect(logs.some((line) => line.includes(homeDir))).toBe(true);
+      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -976,10 +328,91 @@ describe("cli", () => {
     }
   });
 
-  test("skills update refreshes installed skill files and records a local project history commit", async () => {
+  test("skills install dry-runs external skills packages without invoking the Skills CLI", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const installedSkillPath = join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md");
+    const logs: string[] = [];
+    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({
+        cwd: rootDir,
+        installExternalSkillDependency: async (input) => {
+          externalInstalls.push({ source: input.source, homeDir: input.homeDir });
+        },
+      }).parseAsync(["skills", "install", "mattpocock/skills", "--home", homeDir, "--dry-run"], {
+        from: "user",
+      });
+
+      expect(externalInstalls).toEqual([]);
+      expect(stripAnsiLines(logs)).toContain("Skills package install plan");
+      expect(logs.some((line) => line.includes("Package: mattpocock/skills"))).toBe(true);
+      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(false);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skills install does not record failed external package installs", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const originalLog = console.log;
+
+    console.log = () => {};
+
+    try {
+      await expect(
+        buildProgram({
+          cwd: rootDir,
+          installExternalSkillDependency: async () => {
+            throw new Error("skills cli unavailable");
+          },
+        }).parseAsync(["skills", "install", "mattpocock/skills", "--home", homeDir], {
+          from: "user",
+        }),
+      ).rejects.toThrow("skills cli unavailable");
+
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skills install does not record failed local skill installs", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const originalLog = console.log;
+
+    console.log = () => {};
+
+    try {
+      await expect(
+        buildProgram({ cwd: rootDir }).parseAsync(
+          ["skills", "install", "mattpocock:tdd", "--home", homeDir, "--agents", "codex"],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("Matt Pocock tdd skill not found");
+
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skills install and update report existing target states", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -992,300 +425,156 @@ describe("cli", () => {
         ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
-      await writeFile(installedSkillPath, "stale skill");
-      logs.splice(0);
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex", "--dry-run"],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        [
+          "skills",
+          "install",
+          "pony-trail",
+          "--home",
+          homeDir,
+          "--agents",
+          "codex",
+          "--dry-run",
+          "--force",
+        ],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex", "--force"],
+        { from: "user" },
+      );
+      await writeFile(
+        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        "stale installed copy",
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex", "--dry-run"],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+
+      expect(logs.some((line) => line.includes("codex: skipped existing"))).toBe(true);
+      expect(logs.some((line) => line.includes("codex: would overwrite"))).toBe(true);
+      expect(logs.some((line) => line.includes("codex: overwritten"))).toBe(true);
+      expect(logs.some((line) => line.includes("codex: would update"))).toBe(true);
+      expect(logs.some((line) => line.includes("codex: already present"))).toBe(true);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skills install supports home path shorthands in dry-run mode", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram().parseAsync(
+        ["skills", "install", "pony-trail", "--home", "~", "--dry-run"],
+        {
+          from: "user",
+        },
+      );
+      await buildProgram().parseAsync(
+        ["skills", "install", "pony-trail", "--home", "~/getsuperpower-test", "--dry-run"],
+        { from: "user" },
+      );
+
+      expect(stripAnsiLines(logs).filter((line) => line === "Skill install plan")).toHaveLength(2);
+    } finally {
+      console.log = originalLog;
+    }
+  });
+
+  test("skills install does not create local snapshot history", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
+      expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skills update refreshes installed skill files without local snapshot history", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+      await writeFile(
+        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        "stale installed copy",
+      );
 
       await buildProgram({ cwd: rootDir }).parseAsync(
         ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
 
-      expect(stripAnsiLines(logs)).toContain("Skill update result");
-      expect(logs.some((line) => line.includes("codex: updated"))).toBe(true);
-      expect(stripAnsiLines(logs)).toContain("Welcome to Ponytrail.");
-      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
-      expect(logs.some((line) => line.includes("Local history:"))).toBe(true);
-      expect(await readFile(installedSkillPath, "utf8")).toContain("name: pony-trail");
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["history", "--details"], { from: "user" });
-      const historyLogs = logs.splice(0).map(stripAnsi);
-
-      expect(historyLogs.some((line) => line.includes("action: update skill"))).toBe(true);
       expect(
-        historyLogs.some((line) => line.includes("summary: Updated pony-trail skill for codex")),
-      ).toBe(true);
-
-      const entries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
-        .trim()
-        .split("\n")
-        .map((line) => JSON.parse(line));
-      expect(entries.at(-2)?.snapshot_id).toStartWith("skill-update-");
-      expect(entries.at(-1)?.snapshot_id).toStartWith("skill-update-");
+        await readFile(join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"), "utf8"),
+      ).toContain("name: pony-trail");
+      expect(logs.some((line) => line.includes("Skill update result"))).toBe(true);
+      expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });
     }
   });
-
-  test("history supports tree, details, and JSON output", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSampleSnapshotLog(rootDir);
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["history"], { from: "user" });
-      const treeLogs = logs.splice(0).map(stripAnsi);
-      await buildProgram({ cwd: rootDir }).parseAsync(["history", "--details"], { from: "user" });
-      const detailsLogs = logs.splice(0).map(stripAnsi);
-      await buildProgram({ cwd: rootDir }).parseAsync(["history", "--json"], { from: "user" });
-      const jsonLogs = logs.splice(0);
-
-      expect(treeLogs).toEqual([
-        "Snapshot history",
-        "* session-alpha",
-        "  * snapshot-001 (pre/post)",
-      ]);
-      expect(treeLogs.some((line) => line.includes("Updated note"))).toBe(false);
-      expect(treeLogs.some((line) => line.includes("instruction_context"))).toBe(false);
-      expect(detailsLogs).toContain("Snapshot history");
-      expect(detailsLogs.some((line) => line.includes("session-alpha"))).toBe(true);
-      expect(detailsLogs.some((line) => line.includes("snapshot-001"))).toBe(true);
-      expect(detailsLogs.some((line) => line.includes("Updated note"))).toBe(true);
-      expect(detailsLogs.some((line) => line.includes("instruction_context: pre"))).toBe(true);
-      expect(detailsLogs.some((line) => line.includes("AGENTS.md captured sha256:aaaaaaaa"))).toBe(
-        true,
-      );
-      expect(detailsLogs.some((line) => line.includes("git: main abc123 dirty"))).toBe(true);
-      expect(jsonLogs.some((line) => line.includes('"sessionId": "session-alpha"'))).toBe(true);
-      expect(jsonLogs.some((line) => line.includes('"instructionContexts"'))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("revert dry-run prints planned snapshot actions without mutating files", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSampleSnapshotLog(rootDir);
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["revert", "snapshot-001", "--dry-run"], {
-        from: "user",
-      });
-
-      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
-      expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
-      expect(logs.some((line) => line.includes("Would delete created.txt"))).toBe(true);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("revert asks for approval before applying", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const approvalRequests: Array<{ snapshotId: string; actions: number }> = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSampleSnapshotLog(rootDir);
-      const { writeFile } = await import("node:fs/promises");
-      await writeFile(join(rootDir, "notes.txt"), "after\n");
-      await writeFile(join(rootDir, "created.txt"), "created\n");
-
-      await buildProgram({
-        cwd: rootDir,
-        revertApprovalPrompter: async ({ snapshotId, actions }) => {
-          approvalRequests.push({ snapshotId, actions: actions.length });
-          return true;
-        },
-      }).parseAsync(["revert", "snapshot-001"], { from: "user" });
-
-      expect(approvalRequests).toEqual([{ snapshotId: "snapshot-001", actions: 2 }]);
-      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
-      expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
-      expect(logs.some((line) => line.includes("Would delete created.txt"))).toBe(true);
-      expect(logs.some((line) => line.includes("Reverted snapshot snapshot-001"))).toBe(true);
-      expect(await readFile(join(rootDir, "notes.txt"), "utf8")).toBe("before\n");
-      await expect(stat(join(rootDir, "created.txt"))).rejects.toThrow();
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("revert asks for approval and leaves files unchanged when cancelled", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSampleSnapshotLog(rootDir);
-      const { writeFile } = await import("node:fs/promises");
-      await writeFile(join(rootDir, "notes.txt"), "after\n");
-      await writeFile(join(rootDir, "created.txt"), "created\n");
-
-      await buildProgram({
-        cwd: rootDir,
-        revertApprovalPrompter: async () => false,
-      }).parseAsync(["revert", "snapshot-001"], { from: "user" });
-
-      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
-      expect(logs.some((line) => line.includes("Would restore notes.txt"))).toBe(true);
-      expect(logs.some((line) => line.includes("Revert cancelled."))).toBe(true);
-      expect(await readFile(join(rootDir, "notes.txt"), "utf8")).toBe("after\n");
-      expect(await readFile(join(rootDir, "created.txt"), "utf8")).toBe("created\n");
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
-
-  test("revert does not apply in non-interactive mode", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSampleSnapshotLog(rootDir);
-      const { writeFile } = await import("node:fs/promises");
-      await writeFile(join(rootDir, "notes.txt"), "after\n");
-      await writeFile(join(rootDir, "created.txt"), "created\n");
-
-      await buildProgram({ cwd: rootDir }).parseAsync(["revert", "snapshot-001"], {
-        from: "user",
-      });
-
-      expect(stripAnsiLines(logs)).toContain("Snapshot revert plan");
-      expect(
-        logs.some((line) =>
-          line.includes("Run from an interactive terminal to approve the revert."),
-        ),
-      ).toBe(true);
-      expect(logs.some((line) => line.includes("Revert cancelled."))).toBe(true);
-      expect(await readFile(join(rootDir, "notes.txt"), "utf8")).toBe("after\n");
-      expect(await readFile(join(rootDir, "created.txt"), "utf8")).toBe("created\n");
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-    }
-  });
 });
 
-async function writeSampleSnapshotLog(rootDir: string): Promise<void> {
-  const { mkdir, writeFile } = await import("node:fs/promises");
-  const snapshotDir = join(rootDir, ".pony-trail");
-  await mkdir(join(snapshotDir, "files", "snapshot-001", "pre"), { recursive: true });
-  await writeFile(join(snapshotDir, "files", "snapshot-001", "pre", "notes.txt"), "before\n");
-  await writeFile(
-    join(snapshotDir, "snapshots.jsonl"),
-    `${[
-      JSON.stringify({
-        snapshot_id: "snapshot-001",
-        session_id: "session-alpha",
-        phase: "pre",
-        timestamp_utc: "2026-06-21T13:00:00Z",
-        action: "edit note",
-        purpose: "Exercise history",
-        reason: "Test history tree",
-        expected: "A note changes",
-        verify: "Run tests",
-        rollback: "Restore pre snapshot",
-        instruction_context: {
-          mode: "opt_in",
-          captured_at: "2026-06-22T17:04:23Z",
-          session_id_hash: "sha256:session",
-          git: { branch: "main", commit: "abc123", dirty: true },
-          files: [
-            {
-              path: "AGENTS.md",
-              status: "captured",
-              sha256: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              bytes: 12,
-            },
-            { path: "CLAUDE.md", status: "missing" },
-          ],
-          skills: [
-            {
-              name: "pony-trail",
-              path: "bundled-skills/pony-trail/SKILL.md",
-              status: "captured",
-              version_or_sha256:
-                "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-            },
-          ],
-          warnings: [],
-        },
-        files: [
-          {
-            path: "notes.txt",
-            exists: true,
-            type: "file",
-            stored_copy: "files/snapshot-001/pre/notes.txt",
-          },
-          {
-            path: "created.txt",
-            exists: false,
-          },
-        ],
-      }),
-      JSON.stringify({
-        snapshot_id: "snapshot-001",
-        session_id: "session-alpha",
-        phase: "post",
-        timestamp_utc: "2026-06-21T13:01:00Z",
-        summary: "Updated note",
-        checks: "bun test",
-        result: "pass",
-        files: [
-          {
-            path: "notes.txt",
-            exists: true,
-            type: "file",
-            stored_copy: "files/snapshot-001/post/notes.txt",
-          },
-          {
-            path: "created.txt",
-            exists: true,
-            type: "file",
-          },
-        ],
-      }),
-    ].join("\n")}\n`,
-  );
+function stripAnsiLines(lines: string[]): string[] {
+  return lines.map(stripAnsi);
 }
 
 function stripAnsi(value: string): string {
-  return value.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
-}
-
-function stripAnsiLines(values: string[]): string[] {
-  return values.map(stripAnsi);
+  const escapeCharacter = String.fromCharCode(27);
+  return value.replace(new RegExp(`${escapeCharacter}\\[[0-?]*[ -/]*[@-~]`, "g"), "");
 }

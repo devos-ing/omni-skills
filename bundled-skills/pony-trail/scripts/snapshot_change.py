@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-DEFAULT_STORE = ".pony-trail"
+DEFAULT_STORE = ".getsuperpower"
 DEFAULT_COPY_LIMIT = 1024 * 1024
 
 

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "0.1",
+  "name": "real-engineering",
+  "version": "0.1.0",
+  "description": "Shape, plan, implement, test, debug, and preserve evidence for serious engineering work.",
+  "skills": [
+    {
+      "source": "./skills/rtk-command-discipline"
+    },
+    {
+      "source": "pony-trail"
+    },
+    {
+      "source": "superpowers:brainstorming"
+    },
+    {
+      "source": "superpowers:writing-plans"
+    },
+    {
+      "source": "mattpocock:grill-with-docs"
+    },
+    {
+      "source": "mattpocock:tdd"
+    },
+    {
+      "source": "mattpocock:codebase-design"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs"
+    }
+  ],
+  "steps": [
+    {
+      "id": "command-discipline",
+      "title": "Use repo command wrapper",
+      "skill": "./skills/rtk-command-discipline"
+    },
+    {
+      "id": "shape",
+      "title": "Shape the request",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval"
+    },
+    {
+      "id": "grill",
+      "title": "Stress-test the requirement",
+      "skill": "mattpocock:grill-with-docs",
+      "gate": "human_approval"
+    },
+    {
+      "id": "plan",
+      "title": "Write the implementation plan",
+      "skill": "superpowers:writing-plans"
+    },
+    {
+      "id": "design",
+      "title": "Check the codebase design boundary",
+      "skill": "mattpocock:codebase-design"
+    },
+    {
+      "id": "tdd",
+      "title": "Implement with red-green-refactor",
+      "skill": "mattpocock:tdd"
+    },
+    {
+      "id": "debug",
+      "title": "Use systematic debugging when blocked",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "evidence",
+      "title": "Record snapshots and rollback evidence",
+      "skill": "pony-trail"
+    }
+  ]
+}

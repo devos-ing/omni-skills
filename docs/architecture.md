@@ -1,121 +1,106 @@
-# Ponytrail Runtime Architecture
+# GetSuperpower Architecture
 
-The project is split into one thin CLI shell and three long-lived seams:
+This repository now focuses on GetSuperpower bundle skills. The older Ponyrace
+requirement-review runtime has been removed from source.
+
+## Source Map
 
 ```text
 src/
   cli.ts
+  plugins/
+    skill-installer.ts
   runtimes/
     ponytrail/
-      manifest.ts
-      onboarding.ts
-      goal.ts
-      requirement-court.ts
+      instruction-context.ts
       snapshots.ts
-      voting.ts
-  plugins/
-    adapters/
-      codex-cli/
-      claude-cli/
-      github-copilot-cli/
-    stream-runner.ts
-    types.ts
-  skills/
-    types.ts
+      workflow-bundles.ts
 ```
 
-## Runtime
+## CLI
 
-`src/runtimes/ponytrail` is the first runtime module. It owns the requirement-first court lifecycle:
+`src/cli.ts` is a thin Commander shell. It owns command registration, option
+parsing, and output formatting. It delegates bundle behavior to
+`src/getsuperpower.ts` and skill installation to `src/plugins/skill-installer.ts`.
 
-- load and validate the manifest
-- create project onboarding files
-- run the requirements brainstorm gate
-- draft a goal contract from a raw request
-- run each requirement-court pony through a `RequirementPonyRunner`
-- tally the requirement court with the manifest decision rule plus a non-voting Judge
-- read Pony Trail snapshot history and plan file-level reverts
-- print visible role-bot discussion before worker execution is allowed
+Primary commands:
 
-Snapshot entries may also include opt-in `instruction_context` metadata. This metadata belongs to the snapshot system, not a separate audit log: it stores hashes and statuses for allowlisted instruction files plus compact git/session context so history can explain rule changes without recording prompts or file contents.
+- `getsuperpower init <name>`
+- `getsuperpower validate <source>`
+- `getsuperpower deps <source>`
+- `getsuperpower install <source>`
+- `getsuperpower list`
+- `skills install [source]`
+- `skills update [source]`
 
-The CLI should call this runtime through its exported interface instead of knowing the internals of goal drafting or vote tallying.
+Compatibility aliases:
 
-## Models
+- `bundle init`
+- `bundle validate`
+- `workflow install`
+- `workflow list`
 
-`manifest.models` declares named AI model configurations for the court. Each bot references one of those model IDs through `bot.model`, and manifest validation rejects any bot that points at a missing model.
+## GetSuperpower Runtime
 
-The runtime treats `provider` and `name` as configuration values. This keeps goal discussion model selection editable in `.ponytrail/manifest.json` without coupling the core runtime to a specific vendor SDK or CLI flag shape.
+`src/runtimes/ponytrail/workflow-bundles.ts` owns the bundle contract:
 
-`requirement-court.ts` exposes a `RequirementPonyRunner` seam. The deterministic default keeps the CLI offline-friendly, while tests and future plugins can inject process-backed or model-backed ponies. The court invokes the runner for each configured voter in each round until the manifest decision rule approves the direction or the maximum round count is reached.
+- parse and validate `workflow.json`
+- reject duplicate step ids
+- scaffold a local bundle with an entry skill
+- resolve bundled and local bundle sources
+- list skill dependency sources
+- install normalized project-local records under `.getsuperpower/workflows/`
+- list installed GetSuperpowers
 
-## Plugins
+The internal folder name remains `ponytrail` for compatibility with existing
+imports. The product behavior is GetSuperpower-only.
 
-`src/plugins` is the seam for things that vary by environment or integration:
+## Skill Installer
 
-- worker adapters, such as Codex CLI or Claude CLI
-- evidence sources, such as git diffs, test output, screenshots, or CI checks
-- review integrations, such as GitHub PR review or local reports
+`src/plugins/skill-installer.ts` installs reusable agent skills into supported
+agent homes:
 
-Plugins should satisfy the `RuntimePlugin` interface and be loaded by a runtime, not by the CLI directly.
+- Claude: `.claude/skills`
+- Codex and shared agents: `.agents/skills`
+- Codex mirror: `.codex/skills`
+- Cursor: `.cursor/rules`
 
-Worker CLI adapters live under `src/plugins/adapters`:
+Supported sources include bundled skills, local skill directories, Superpowers
+plugin-cache skills, Matt Pocock installed skills, and external packages routed
+through the Skills CLI by `src/getsuperpower.ts`.
 
-- `codex-cli` builds non-interactive `codex exec` prompt invocations for Codex CLI.
-- `claude-cli` builds `/goal` stdin invocations for Claude CLI.
-- `github-copilot-cli` builds `gh copilot suggest` prompt invocations.
+## Paused Pony Trail Runtime
 
-Each worker adapter folder uses the same shape:
+`src/runtimes/ponytrail/snapshots.ts` and
+`src/runtimes/ponytrail/instruction-context.ts` remain in the source tree for
+future or legacy use, but the public GetSuperpower CLI does not expose history,
+revert, or prehook commands while Pony Trail is paused.
 
-- `commands.ts` builds the adapter-specific CLI invocation.
-- `helpers.ts` exposes run helpers that accept injected process or stream runners.
-- `utils.ts` stores adapter-local constants and config.
-- `index.ts` exports the public adapter surface.
+Skill install and workflow install commands do not write snapshot history during
+this pause. Active project-local state is limited to installed workflow records
+under `.getsuperpower/workflows/`.
 
-The adapter modules build invocation descriptions, run them through injected process runners, and stream them through injected stream runners. Worker execution remains behind this seam and is gated by requirement-court approval plus human confirmation. `goal` and `ponyrace` focus on requirement discussion by default instead of launching a worker. The default Bun-backed stream runner is `src/plugins/adapters/stream-runner.ts`; process spawning must stay behind this seam, not inside `src/cli.ts`.
-
-## Skills
-
-`src/skills` is the seam for reusable judge and drafting capabilities:
-
-- intent alignment
-- scope control
-- feasibility review
-- verification design
-- risk review
-
-Skills should describe review behavior and instructions. Bots can compose skills through the manifest without hard-coding those instructions into the runtime.
-
-## Project Onboarding Layout
-
-Running onboarding creates a local runtime workspace:
+## Bundle Layout
 
 ```text
-.ponytrail/
-  manifest.json
+my-getsuperpower/
+  workflow.json
   README.md
-  goals/
-  runtimes/
-  plugins/
   skills/
+    my-getsuperpower/
+      SKILL.md
+    optional-local-skill/
+      SKILL.md
 ```
 
-The `.ponytrail` folder is for project-local policy, bot configuration, evidence, and extensions. Source code under `src/` defines the reusable runtime; `.ponytrail/` defines how a specific project uses it.
+`skills/<name>/SKILL.md` is the callable entry skill. Its required sub-skills
+should stay aligned with `workflow.json`.
 
-## Flow
+## Boundaries
 
-```text
-Human request
-  -> CLI
-  -> ponytrail runtime
-  -> requirements brainstorm
-  -> ask human for details when unclear
-  -> Product Manager, Project Manager, Engineer, and Testing ponies discuss by round
-  -> visible round discussion is printed
-  -> manifest-defined voting ponies approve the direction
-  -> Requirement Judge summarizes and merges one detailed requirement
-  -> human confirms the direction
-  -> worker adapter execution remains gated
-  -> evidence is collected when execution begins
-  -> verdict
-```
+- Keep CLI behavior thin and route implementation through runtime or plugin
+  seams.
+- Keep `workflow-bundles.ts` focused on bundle manifests and install records.
+- Keep `skill-installer.ts` focused on skill source resolution and target writes.
+- Do not reintroduce requirement-court commands, role review modules, or worker
+  pony adapters into this codebase.

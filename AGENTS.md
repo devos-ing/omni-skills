@@ -10,84 +10,69 @@ This file gives AI agents the short operating map for this repository.
 
 ### Architecture
 
-Bun + TypeScript CLI runtime for supervising AI worker agents through a
-requirement-first "Ponytrail" flow.
+Bun + TypeScript CLI runtime for authoring, installing, and validating
+GetSuperpower skill-tree bundles.
 
 - `src/cli.ts` - thin Commander CLI shell.
-- `src/runtimes/ponytrail/` - core runtime module for manifest validation,
-  onboarding, goal drafting, and vote tallying.
-- `src/plugins/` - plugin seam for worker adapters, evidence sources, and
-  review integrations. Worker CLI adapters live in `src/plugins/adapters/`.
-- `src/skills/` - skill seam for reusable judge and drafting capabilities.
+- `src/getsuperpower.ts` - primary GetSuperpower command module.
+- `src/runtimes/ponytrail/` - internal compatibility runtime for workflow
+  manifests and install records; snapshot modules are paused from the public CLI.
+- `src/plugins/` - skill installer seam for bundled, local, Superpowers,
+  external, and agent-target installs.
 - `tests/` - Bun tests for runtime behavior and CLI command registration.
 - `docs/architecture.md` - authoritative architecture map.
-- `outputs/` - user-facing generated artifacts.
 - `work/` - scratch space for local smoke tests and temporary files.
 
 ### Runtime Flow
 
 ```text
-Human request
-  -> CLI
-  -> ponytrail runtime
-  -> requirements brainstorm
-  -> ask human for details when unclear
-  -> manifest-defined models, bots, and skills
-  -> 3 of 4 direction approval
-  -> human lock
-  -> worker adapter streams Codex, Claude, or another agent
-  -> evidence is collected
-  -> verdict
+Author or user request
+  -> getsuperpower CLI
+  -> workflow manifest validation
+  -> skill dependency resolution
+  -> Skills CLI bootstrap when needed
+  -> agent skill target installs
+  -> .getsuperpower workflow records
 ```
 
 ## Module Boundaries
 
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
-  output, and call runtime interfaces. It must not own ponytrail rules.
-- `src/runtimes/ponytrail/` owns the requirement-first lifecycle. Put manifest
-  schemas, goal contracts, onboarding behavior, and vote rules here.
-- `src/plugins/` is for adapters and integration contracts. Plugin code should
-  hide environment-specific behavior behind small interfaces.
-- Worker CLI adapter folders exist for Codex CLI, Claude CLI, and GitHub
-  Copilot CLI under `src/plugins/adapters/`. Process spawning and streaming
-  must stay behind this seam, never in `src/cli.ts`.
-- Each worker adapter folder should keep the same shape: `commands.ts` builds
-  invocations, `helpers.ts` runs or streams them through injected runners,
-  `utils.ts` stores adapter-local constants/config, and `index.ts` exports the
-  public adapter surface.
-- `src/skills/` is for reusable bot capability definitions and instructions.
-  Skills should describe review behavior; they should not perform runtime side
-  effects directly.
-- Generated `.ponytrail/` project workspaces are local runtime state. Do not
+  output, and call runtime or plugin interfaces. It must not own bundle rules.
+- `src/getsuperpower.ts` owns GetSuperpower command registration and skill
+  dependency bootstrap for install/clone/deps/init/validate/list.
+- `src/runtimes/ponytrail/` owns workflow manifest schemas, scaffolding, and
+  install records. The folder name remains for internal compatibility.
+- `src/plugins/` is for skill resolution and target writes. Keep
+  environment-specific behavior behind small interfaces.
+- Generated `.getsuperpower/` project workspaces are local runtime state. Do not
   make source code depend on files generated during smoke tests.
 
-## Ponytrail Rules
+## GetSuperpower Rules
 
-- Requirements brainstorm runs before bot discussion. If the request is vague,
-  the runtime must ask the human owner for missing outcome, scope, and evidence
-  details before drafting a goal.
-- Bot model selection is manifest-defined. Add or edit models in
-  `manifest.models`, then point each bot at a model id through `bot.model`.
-- Goals are drafted before worker agents execute.
-- A goal direction requires at least 3 approvals from the 4 review bots:
-  Product, Project, Engineering, and Testing.
-- Human owner approval is required before a goal becomes locked.
-- Worker agents must request `/amend-goal` instead of silently changing scope.
-- Evidence should be append-only: raw request, drafts, critiques, votes, human
-  decisions, locked contract, actions, commands, changed files, and checks.
+- A GetSuperpower is a deployable bundle skills set with a `workflow.json`,
+  README, and optional local skills.
+- If a workflow provides one callable entry skill, that skill must be listed in
+  `skills[]`; it does not need a workflow step.
+- Every `steps[].skill` value must exactly match a declared `skills[].source`.
+- `getsuperpower install` and `getsuperpower clone` are the same operation.
+- The older `bundle` and `workflow` command surfaces exist only as
+  compatibility aliases.
+- Pony Trail history, revert, and prehook features are paused. Do not expose or
+  document them as active CLI commands unless the feature is explicitly resumed.
 
 ## Commands
 
 ```bash
 bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
-bun run dev -- onboard      # Create local .ponytrail files
-bun run dev -- bots         # List manifest-defined bots
-bun run dev -- goal "..."   # Draft a goal contract
+bun run dev -- install product-dev
+bun run dev -- clone product-dev
+bun run dev -- deps product-dev
+bun run dev -- init my-workflow
+bun run dev -- validate examples/workflows/real-engineering
+bun run dev -- skills install
 bun run build               # Build the packaged CLI bundle
-bun run dev -- vote --votes '[...]'
-bun run dev -- history       # Show Pony Trail snapshot history
-bun run dev -- revert "..."  # Restore files from a snapshot pre-state
 bun test                    # Run Bun tests
 bun run coverage            # Run tests and enforce 90% line coverage
 bun run deps:check-recency -- <package[@version]>
@@ -132,6 +117,7 @@ For CLI changes, also run a smoke check against a scratch directory under
 `work/`, such as:
 
 ```bash
-rtk bun run dev -- onboard --dir work/smoke-runtime --name "Smoke Runtime"
-rtk bun run dev -- bots --manifest work/smoke-runtime/.ponytrail/manifest.json
+rtk bun run dev -- --help
+rtk bun run dev -- deps product-dev
+rtk bun run dev -- validate examples/workflows/release-review
 ```

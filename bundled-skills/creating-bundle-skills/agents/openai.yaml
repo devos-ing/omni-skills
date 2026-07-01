@@ -1,0 +1,4 @@
+interface:
+  display_name: "Creating Bundle Skills"
+  short_description: "Create GetSuperpower entry skills"
+  default_prompt: "Create a GetSuperpower bundle skill for this workflow."

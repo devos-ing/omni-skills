@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "0.1",
+  "name": "openspec-superpowers",
+  "version": "0.1.0",
+  "description": "OpenSpec proposes, reviews, and archives while Superpowers deepens design, executes task by task, and verifies delivery.",
+  "skills": [
+    {
+      "source": "./skills/openspec-superpowers"
+    },
+    {
+      "source": "./skills/opsx-handoff-review"
+    },
+    {
+      "source": "superpowers:brainstorming"
+    },
+    {
+      "source": "superpowers:writing-plans"
+    },
+    {
+      "source": "mattpocock:tdd"
+    },
+    {
+      "source": "pony-trail"
+    }
+  ],
+  "steps": [
+    {
+      "id": "opsx-propose",
+      "title": "Run /opsx:propose to create proposal, specs, and tasks",
+      "skill": "./skills/opsx-handoff-review"
+    },
+    {
+      "id": "opsx-review",
+      "title": "Review proposal.md with the human owner",
+      "skill": "./skills/opsx-handoff-review",
+      "gate": "human_approval"
+    },
+    {
+      "id": "design-deepening",
+      "title": "Deepen design details with Superpowers brainstorming",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval"
+    },
+    {
+      "id": "implementation-plan",
+      "title": "Split tasks into an implementation plan",
+      "skill": "superpowers:writing-plans"
+    },
+    {
+      "id": "task-by-task-build",
+      "title": "Build each task with TDD and specs context",
+      "skill": "mattpocock:tdd"
+    },
+    {
+      "id": "verification",
+      "title": "Verify delivery and preserve evidence",
+      "skill": "pony-trail"
+    },
+    {
+      "id": "opsx-archive",
+      "title": "Run /opsx:archive to update specs and project knowledge",
+      "skill": "./skills/opsx-handoff-review",
+      "gate": "human_approval"
+    }
+  ]
+}

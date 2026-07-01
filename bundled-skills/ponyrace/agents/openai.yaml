@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ponyrace"
-  short_description: "Run requirement discussion from chat"
-  default_prompt: "Use $ponyrace to run a Ponytrail requirement discussion before implementation."

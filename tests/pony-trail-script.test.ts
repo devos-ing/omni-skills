@@ -122,7 +122,7 @@ describe("pony-trail shell helper", () => {
         files: 1,
       });
 
-      const logPath = join(rootDir, ".pony-trail", "snapshots.jsonl");
+      const logPath = join(rootDir, ".getsuperpower", "snapshots.jsonl");
       const entries = (await readFile(logPath, "utf8"))
         .trim()
         .split("\n")
@@ -154,15 +154,15 @@ describe("pony-trail shell helper", () => {
         ],
       });
       await expect(
-        stat(join(rootDir, ".pony-trail/files", snapshotId, "pre", "notes.txt")),
+        stat(join(rootDir, ".getsuperpower/files", snapshotId, "pre", "notes.txt")),
       ).resolves.toBeTruthy();
       await expect(
-        stat(join(rootDir, ".pony-trail/files", snapshotId, "post", "notes.txt")),
+        stat(join(rootDir, ".getsuperpower/files", snapshotId, "post", "notes.txt")),
       ).resolves.toBeTruthy();
 
       const sessionCommitLog = join(
         rootDir,
-        ".pony-trail",
+        ".getsuperpower",
         "sessions",
         "session-alpha",
         "commits.jsonl",
@@ -175,7 +175,7 @@ describe("pony-trail shell helper", () => {
       expect(sessionCommits.map((commit) => commit.phase)).toEqual(["pre", "post"]);
 
       const sessionTree = await readFile(
-        join(rootDir, ".pony-trail", "sessions", "session-alpha", "tree.md"),
+        join(rootDir, ".getsuperpower", "sessions", "session-alpha", "tree.md"),
         "utf8",
       );
       expect(sessionTree).toContain("# Ponytrail Session Tree");
@@ -253,7 +253,7 @@ describe("pony-trail shell helper", () => {
         "Restore the stored pre snapshot",
       ]);
 
-      const entries = (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8"))
+      const entries = (await readFile(join(rootDir, ".getsuperpower", "snapshots.jsonl"), "utf8"))
         .trim()
         .split("\n")
         .map((line): ScriptSnapshotEntry => JSON.parse(line));
@@ -340,7 +340,7 @@ describe("pony-trail shell helper", () => {
       ]);
 
       const entry = JSON.parse(
-        (await readFile(join(rootDir, ".pony-trail", "snapshots.jsonl"), "utf8")).trim(),
+        (await readFile(join(rootDir, ".getsuperpower", "snapshots.jsonl"), "utf8")).trim(),
       ) as ScriptSnapshotEntry;
       if (!entry.instruction_context) {
         throw new Error("Expected Python helper instruction context");
@@ -377,9 +377,13 @@ describe("pony-trail shell helper", () => {
     const hook = await execFileAsync("sh", [preFileChangeHookPath]);
 
     const output = JSON.parse(hook.stdout);
-    expect(output.additionalContext).toContain("$pony-trail");
-    expect(output.additionalContext).toContain("pre-change snapshot");
     expect(output.systemMessage).toContain("Ponytrail");
+    expect(output).not.toHaveProperty("additionalContext");
+    expect(output.hookSpecificOutput).toMatchObject({
+      hookEventName: "PreToolUse",
+    });
+    expect(output.hookSpecificOutput.additionalContext).toContain("$pony-trail");
+    expect(output.hookSpecificOutput.additionalContext).toContain("pre-change snapshot");
   });
 });
 

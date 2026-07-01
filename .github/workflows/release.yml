@@ -44,7 +44,7 @@ jobs:
         run: |
           mkdir -p release
           safe_tag="${GITHUB_REF_NAME//\//-}"
-          cp dist/cli.js "release/ponytrail-${safe_tag}.js"
+          cp dist/cli.js "release/getsuperpower-${safe_tag}.js"
           npm pack --ignore-scripts --pack-destination release
           ls -la release
 

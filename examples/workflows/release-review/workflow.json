@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "0.1",
+  "name": "release-review",
+  "version": "0.1.0",
+  "description": "Shape, review, plan, and preserve evidence for release changes.",
+  "skills": [
+    {
+      "source": "superpowers:brainstorming"
+    },
+    {
+      "source": "./skills/release-risk-review"
+    },
+    {
+      "source": "superpowers:writing-plans"
+    },
+    {
+      "source": "pony-trail"
+    }
+  ],
+  "steps": [
+    {
+      "id": "shape",
+      "title": "Shape the release request",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval"
+    },
+    {
+      "id": "release-risk-review",
+      "title": "Review release risk",
+      "skill": "./skills/release-risk-review",
+      "gate": "human_approval"
+    },
+    {
+      "id": "plan",
+      "title": "Write the release implementation plan",
+      "skill": "superpowers:writing-plans"
+    },
+    {
+      "id": "evidence",
+      "title": "Record release evidence and rollback context",
+      "skill": "pony-trail"
+    }
+  ]
+}

@@ -1,14 +1,16 @@
 {
-  "name": "ponytrail",
-  "version": "0.2.0",
+  "name": "getsuperpower",
+  "version": "0.3.0",
   "type": "module",
   "bin": {
-    "ponytrail": "./dist/cli.js"
+    "getsuperpower": "./dist/cli.js"
   },
   "files": [
     "dist",
     "src",
-    "bundled-skills"
+    "bundled-skills",
+    "bundled-workflows",
+    "examples"
   ],
   "scripts": {
     "dev": "bun src/cli.ts",

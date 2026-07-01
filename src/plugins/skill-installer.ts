@@ -1,4 +1,4 @@
-import { constants } from "node:fs";
+import { constants, type Dirent } from "node:fs";
 import { access, chmod, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,7 +56,53 @@ export interface InstallAgentSkillInput {
   installPrehook?: boolean;
 }
 
-const DEFAULT_BUNDLED_SKILL = "pony-trail";
+export interface ResolveInstallSkillSourceOptions {
+  cwd?: string | undefined;
+  homeDir?: string | undefined;
+}
+
+export class MissingSuperpowersSkillError extends Error {
+  constructor(input: { displayName: string; source: string }) {
+    super(
+      `Superpowers ${input.displayName} skill not found. Install or enable the Superpowers plugin, then run: ${formatSuperpowersInstallCommand(input.source)}`,
+    );
+    this.name = "MissingSuperpowersSkillError";
+  }
+}
+
+export class MissingMattPocockSkillError extends Error {
+  constructor(input: { skillName: string; homeDir?: string | undefined }) {
+    const location = input.homeDir ? ` under ${input.homeDir}` : "";
+    super(
+      `Matt Pocock ${input.skillName} skill not found${location}. Install or refresh Matt Pocock skills with: getsuperpower skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install ${input.skillName}.`,
+    );
+    this.name = "MissingMattPocockSkillError";
+  }
+}
+
+const DEFAULT_BUNDLED_SKILL = "creating-bundle-skills";
+
+interface SupportedSuperpowersSkill {
+  source: string;
+  displayName: string;
+  skillFolder: string;
+  installName: string;
+}
+
+const supportedSuperpowersSkills = [
+  {
+    source: "superpowers:brainstorming",
+    displayName: "brainstorming",
+    skillFolder: "brainstorming",
+    installName: "superpowers-brainstorming",
+  },
+  {
+    source: "superpowers:writing-plans",
+    displayName: "writing-plans",
+    skillFolder: "writing-plans",
+    installName: "superpowers-writing-plans",
+  },
+] as const satisfies readonly SupportedSuperpowersSkill[];
 const bundledSkillAliases: Record<string, string> = {
   "record-change-evidence": "pony-trail",
   "enter-into-evidence": "pony-trail",
@@ -79,6 +125,7 @@ const agentSkillTargets: Record<
 };
 
 const prehookScriptName = "ponytrail-prehook.sh";
+const legacyPrehookScriptNames = ["devcourt-record-change-evidence-prehook.sh"];
 const prehookMatchers = ["Write", "Edit", "MultiEdit", "NotebookEdit", "Bash"];
 const agentPrehookPaths: Record<
   HookCapableSkillInstallAgent,
@@ -92,10 +139,10 @@ const agentPrehookPaths: Record<
 export async function installAgentSkill(
   input: InstallAgentSkillInput,
 ): Promise<SkillInstallResult> {
-  const source = await resolveInstallSkillSource(
-    input.source ?? DEFAULT_BUNDLED_SKILL,
-    input.cwd ? { cwd: input.cwd } : {},
-  );
+  const source = await resolveInstallSkillSource(input.source ?? DEFAULT_BUNDLED_SKILL, {
+    cwd: input.cwd,
+    homeDir: input.homeDir,
+  });
   const targets: SkillInstallTargetResult[] = [];
   const prehooks: SkillInstallPrehookResult[] = [];
   const operation = input.operation ?? "install";
@@ -113,10 +160,7 @@ export async function installAgentSkill(
         handledStatus !== "already_present"
       ) {
         for (const mirrorDestination of mirrorDestinations) {
-          if (await pathExists(mirrorDestination)) {
-            await rm(mirrorDestination, { recursive: true, force: true });
-          }
-          await installSkillTarget({ agent, source, destination: mirrorDestination });
+          await refreshSkillTarget({ agent, source, destination: mirrorDestination });
         }
       }
       targets.push({ agent, destination, status: handledStatus });
@@ -152,15 +196,9 @@ export async function installAgentSkill(
     });
 
     if (!input.dryRun && status !== "skipped_exists" && status !== "already_present") {
-      if (exists) {
-        await rm(destination, { recursive: true, force: true });
-      }
-      await installSkillTarget({ agent, source, destination });
+      await refreshSkillTarget({ agent, source, destination });
       for (const mirrorDestination of mirrorDestinations) {
-        if (await pathExists(mirrorDestination)) {
-          await rm(mirrorDestination, { recursive: true, force: true });
-        }
-        await installSkillTarget({ agent, source, destination: mirrorDestination });
+        await refreshSkillTarget({ agent, source, destination: mirrorDestination });
       }
     }
 
@@ -190,8 +228,20 @@ export async function installAgentSkill(
 
 export async function resolveInstallSkillSource(
   sourceOrName: string,
-  options: { cwd?: string } = {},
+  options: ResolveInstallSkillSourceOptions = {},
 ): Promise<ResolvedInstallSkillSource> {
+  const mattPocockSkillName = parseMattPocockSkillSource(sourceOrName);
+  if (mattPocockSkillName) {
+    return resolveMattPocockSkill(mattPocockSkillName, options);
+  }
+
+  const superpowersSkill = supportedSuperpowersSkills.find(
+    (skill) => skill.source === sourceOrName,
+  );
+  if (superpowersSkill) {
+    return resolveSuperpowersSkill(superpowersSkill, options);
+  }
+
   const cwd = options.cwd ?? process.cwd();
   const pathCandidate = isAbsolute(sourceOrName) ? sourceOrName : resolve(cwd, sourceOrName);
 
@@ -213,6 +263,55 @@ export async function resolveInstallSkillSource(
   throw new Error(`Skill source not found: ${sourceOrName}`);
 }
 
+async function resolveMattPocockSkill(
+  skillName: string,
+  options: ResolveInstallSkillSourceOptions,
+): Promise<ResolvedInstallSkillSource> {
+  const homeDir = options.homeDir ?? process.env.HOME ?? process.cwd();
+  const skillPath = await findInstalledSkillPath(homeDir, skillName);
+
+  if (!skillPath) {
+    throw new MissingMattPocockSkillError({ skillName, homeDir });
+  }
+
+  return resolvePathSkill(skillPath);
+}
+
+function parseMattPocockSkillSource(source: string): string | null {
+  if (source.startsWith("mattpocock:")) {
+    const skillName = source.slice("mattpocock:".length).trim();
+    return skillName || null;
+  }
+
+  const githubPrefix = "github:mattpocock/skills/";
+  if (!source.startsWith(githubPrefix)) {
+    return null;
+  }
+
+  const suffix = source.slice(githubPrefix.length);
+  if (suffix.startsWith("skills/")) {
+    return suffix.slice("skills/".length) || null;
+  }
+
+  return suffix || null;
+}
+
+async function findInstalledSkillPath(homeDir: string, skillName: string): Promise<string | null> {
+  const candidates = [
+    join(homeDir, ".agents", "skills", skillName),
+    join(homeDir, ".codex", "skills", skillName),
+    join(homeDir, ".claude", "skills", skillName),
+  ];
+
+  for (const candidate of candidates) {
+    if (await pathExists(join(candidate, "SKILL.md"))) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 async function resolveBundledSkillPath(skillName: string): Promise<string | null> {
   for (const bundledSkillsDir of bundledSkillsDirCandidates) {
     const bundledPath = join(bundledSkillsDir, skillName);
@@ -222,6 +321,81 @@ async function resolveBundledSkillPath(skillName: string): Promise<string | null
   }
 
   return null;
+}
+
+async function resolveSuperpowersSkill(
+  skill: SupportedSuperpowersSkill,
+  options: ResolveInstallSkillSourceOptions,
+): Promise<ResolvedInstallSkillSource> {
+  const homeDir = options.homeDir ?? process.env.HOME ?? process.cwd();
+  const skillPath = await findSuperpowersSkillPath(homeDir, skill.skillFolder);
+
+  if (!skillPath) {
+    throw new MissingSuperpowersSkillError({
+      displayName: skill.displayName,
+      source: skill.source,
+    });
+  }
+
+  return {
+    kind: "path",
+    name: skill.installName,
+    path: skillPath,
+  };
+}
+
+async function findSuperpowersSkillPath(
+  homeDir: string,
+  skillFolder: string,
+): Promise<string | null> {
+  const roots = [
+    join(homeDir, ".codex", "plugins", "cache", "openai-curated", "superpowers"),
+    join(homeDir, ".codex", "plugins", "cache", "openai-curated-remote", "superpowers"),
+    join(homeDir, ".codex", "plugins", "cache", "openai-bundled", "superpowers"),
+  ];
+
+  for (const root of roots) {
+    const skillPath = await findNestedSuperpowersSkillPath(root, skillFolder);
+    if (skillPath) {
+      return skillPath;
+    }
+  }
+
+  return null;
+}
+
+async function findNestedSuperpowersSkillPath(
+  root: string,
+  skillFolder: string,
+): Promise<string | null> {
+  let entries: Dirent[];
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const skillPath = join(root, entry.name, "skills", skillFolder);
+    if (await pathExists(join(skillPath, "SKILL.md"))) {
+      return skillPath;
+    }
+  }
+
+  return null;
+}
+
+export function isMissingSuperpowersSkillError(
+  error: unknown,
+): error is MissingSuperpowersSkillError {
+  return error instanceof MissingSuperpowersSkillError;
 }
 
 export function parseSkillInstallAgents(rawAgents: string): SkillInstallAgent[] {
@@ -287,6 +461,25 @@ async function installSkillTarget(input: {
   }
 
   await cp(input.source.path, input.destination, { recursive: true });
+}
+
+async function refreshSkillTarget(input: {
+  agent: SkillInstallAgent;
+  source: ResolvedInstallSkillSource;
+  destination: string;
+}): Promise<void> {
+  if (isSourceDestination(input.source, input.destination)) {
+    return;
+  }
+
+  if (await pathExists(input.destination)) {
+    await rm(input.destination, { recursive: true, force: true });
+  }
+  await installSkillTarget(input);
+}
+
+function isSourceDestination(source: ResolvedInstallSkillSource, destination: string): boolean {
+  return resolve(source.path) === resolve(destination);
 }
 
 async function skillTargetsMatchSource(input: {
@@ -433,7 +626,9 @@ function mergePrehookSettings(
     merged.hooks && typeof merged.hooks === "object" && !Array.isArray(merged.hooks)
       ? { ...(merged.hooks as Record<string, unknown>) }
       : {};
-  const preToolUse = Array.isArray(hooks.PreToolUse) ? [...hooks.PreToolUse] : [];
+  const preToolUse = Array.isArray(hooks.PreToolUse)
+    ? removeLegacyPrehookEntries(hooks.PreToolUse)
+    : [];
 
   for (const matcher of prehookMatchers) {
     if (!hasHookEntry(preToolUse, matcher, command)) {
@@ -447,6 +642,40 @@ function mergePrehookSettings(
   hooks.PreToolUse = preToolUse;
   merged.hooks = hooks;
   return merged;
+}
+
+function removeLegacyPrehookEntries(entries: unknown[]): unknown[] {
+  return entries.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return [entry];
+    }
+
+    const hookEntry = entry as Record<string, unknown>;
+    if (!Array.isArray(hookEntry.hooks)) {
+      return [entry];
+    }
+
+    const hooks = hookEntry.hooks.filter((hook) => !isLegacyPrehookCommand(hook));
+    if (hooks.length === 0) {
+      return [];
+    }
+    if (hooks.length === hookEntry.hooks.length) {
+      return [entry];
+    }
+    return [{ ...hookEntry, hooks }];
+  });
+}
+
+function isLegacyPrehookCommand(hook: unknown): boolean {
+  if (!hook || typeof hook !== "object" || Array.isArray(hook)) {
+    return false;
+  }
+
+  const command = (hook as { command?: unknown }).command;
+  return (
+    typeof command === "string" &&
+    legacyPrehookScriptNames.some((scriptName) => command.includes(scriptName))
+  );
 }
 
 function hasPrehookEntries(settings: Record<string, unknown>, command: string): boolean {
@@ -567,6 +796,10 @@ function hasPrehookSupport(agent: SkillInstallAgent): agent is HookCapableSkillI
 
 function looksLikePath(value: string): boolean {
   return value.startsWith(".") || value.startsWith("~") || value.includes(sep) || isAbsolute(value);
+}
+
+function formatSuperpowersInstallCommand(source: string): string {
+  return `getsuperpower skills install ${source} --agents codex,claude,cursor --home ~`;
 }
 
 function shellQuote(value: string): string {
