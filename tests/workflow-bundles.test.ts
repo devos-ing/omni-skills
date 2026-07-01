@@ -16,13 +16,11 @@ describe("workflow bundles", () => {
     expect(bundle.manifest.name).toBe("product-dev");
     expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
       "superpowers:brainstorming",
-      "ponyrace",
       "superpowers:writing-plans",
       "pony-trail",
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["shape", "superpowers:brainstorming"],
-      ["requirement-review", "ponyrace"],
       ["plan", "superpowers:writing-plans"],
       ["evidence", "pony-trail"],
     ]);
@@ -178,7 +176,7 @@ describe("workflow bundles", () => {
     expect(installed.path).toBe(join(rootDir, ".ponyrace", "workflows", "product-dev.json"));
     const installedFile = JSON.parse(await readFile(installed.path, "utf8"));
     expect(installedFile.name).toBe("product-dev");
-    expect(installedFile.steps).toHaveLength(4);
+    expect(installedFile.steps).toHaveLength(3);
 
     const workflows = await listInstalledWorkflowBundles({ rootDir });
     expect(workflows.map((workflow) => workflow.name)).toEqual(["product-dev"]);

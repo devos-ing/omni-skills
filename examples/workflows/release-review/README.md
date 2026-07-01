@@ -17,4 +17,4 @@ ponyrace getsuperpower validate examples/workflows/release-review
 
 The local `release-risk-review` skill is included to demonstrate how
 GetSuperpower authors can add workflow-specific guidance without changing the
-Ponyrace runtime.
+GetSuperpower runtime.

@@ -1,8 +1,8 @@
-<img src="/assets/ponyrace.png" alt="Ponyrace" width="640" />
+<img src="/assets/ponyrace.png" alt="GetSuperpower" width="640" />
 
-# Ponyrace GetSuperpowers
+# GetSuperpower
 
-Ponyrace installs reusable AI-agent workflows.
+GetSuperpower installs reusable AI-agent workflows.
 
 A **GetSuperpower** is a workflow bundle made from several skills. It can install the skills a project needs, record the workflow under `.ponyrace/`, and give users one entry skill to call when the bundle provides one.
 
@@ -32,7 +32,7 @@ Restart Codex, Claude, Cursor, or GitHub Copilot after installing skills so the 
 
 Some GetSuperpowers include an entry skill. That is the one skill a user calls to run the whole skill tree.
 
-From a cloned Ponyrace repo, the OpenSpec + Superpowers example installs `$openspec-superpowers`:
+From a cloned repo, the OpenSpec + Superpowers example installs `$openspec-superpowers`:
 
 ```bash
 npx ponyrace getsuperpower install examples/workflows/openspec-superpowers
@@ -106,34 +106,16 @@ An entry skill is instruction-level orchestration. It tells the agent which skil
 
 | Example | Use it for | Notes |
 | --- | --- | --- |
-| `product-dev` | Product changes with brainstorm, requirement review, planning, and evidence. | Bundled default. |
+| `product-dev` | Product changes with brainstorm, planning, and evidence. | Bundled default. |
 | `examples/workflows/openspec-superpowers` | OpenSpec proposal -> Superpowers planning/TDD -> archive. | Includes `$openspec-superpowers`. |
 | `examples/workflows/real-engineering` | RTK, `pony-trail`, Superpowers, and Matt Pocock skills together. | Fetches Matt Pocock skills if missing. |
 | `examples/workflows/release-review` | Small release-risk review workflow. | Good starter example. |
 
-GetSuperpower install automatically uses the Skills CLI to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same package install through Ponyrace and retry:
+GetSuperpower install automatically uses the Skills CLI to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same package install through the CLI and retry:
 
 ```bash
 npx ponyrace skills install mattpocock/skills
 ```
-
-## Ponyrace Primitive
-
-The lower-level `/ponyrace` requirement review is still available.
-
-Use it when you want role-based requirement discussion before implementation:
-
-```text
-/ponyrace add CSV import to the admin dashboard. Scope: admin import only. Evidence: parser tests and one smoke import.
-```
-
-Or from the shell:
-
-```bash
-npx ponyrace ponyrace "add CSV import to the admin dashboard. Scope: admin import only. Evidence: parser tests and one smoke import."
-```
-
-Ponyrace uses local deterministic review by default. Add `--research --worker codex` only when you explicitly want a worker CLI to inspect the repo.
 
 ## Common Commands
 
@@ -147,7 +129,6 @@ Ponyrace uses local deterministic review by default. Add `--research --worker co
 | `npx ponyrace skills install mattpocock/skills` | Install an external skills package through the Skills CLI. |
 | `npx ponyrace skills install creating-bundle-skills` | Install the GetSuperpower authoring skill. |
 | `npx ponyrace skills install pony-trail` | Install only the file-change history skill. |
-| `npx ponyrace ponyrace "<request>"` | Run requirement review directly. |
 | `npx ponyrace history` | Show local snapshot history. |
 | `npx ponyrace history --details` | Show detailed snapshot metadata. |
 | `npx ponyrace revert <snapshot-id> --dry-run` | Preview restoring files from a snapshot. |
@@ -156,13 +137,11 @@ The older `bundle` and `workflow` commands still work as compatibility aliases.
 
 ## Local Files
 
-Ponyrace writes local project state under `.ponyrace/`:
+The CLI writes local project state under `.ponyrace/`:
 
 ```text
 .ponyrace/
-  manifest.json
   workflows/
-  ponyrace/
   snapshots.jsonl
   sessions/
 ```
@@ -178,16 +157,7 @@ bun test
 bun run check
 ```
 
-## Migration: 0.2.0
+## Migration Note
 
-Version `0.2.0` renamed the package and CLI binary from `ponytrail` to `ponyrace`.
-
-```bash
-npx ponytrail onboard
-# becomes
-npx ponyrace onboard
-
-bunx ponytrail onboard
-# becomes
-bunx ponyrace onboard
-```
+The package and CLI binary are still named `ponyrace` for now. The product
+surface is GetSuperpower-only.

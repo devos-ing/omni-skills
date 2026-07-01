@@ -2,13 +2,10 @@
   "schemaVersion": "0.1",
   "name": "product-dev",
   "version": "0.1.0",
-  "description": "Shape, review, plan, and preserve evidence for product development changes.",
+  "description": "Shape, plan, and preserve evidence for product development changes.",
   "skills": [
     {
       "source": "superpowers:brainstorming"
-    },
-    {
-      "source": "ponyrace"
     },
     {
       "source": "superpowers:writing-plans"
@@ -22,12 +19,6 @@
       "id": "shape",
       "title": "Shape the request",
       "skill": "superpowers:brainstorming",
-      "gate": "human_approval"
-    },
-    {
-      "id": "requirement-review",
-      "title": "Review requirement direction",
-      "skill": "ponyrace",
       "gate": "human_approval"
     },
     {

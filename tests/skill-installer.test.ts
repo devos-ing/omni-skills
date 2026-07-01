@@ -89,66 +89,6 @@ describe("skill installer", () => {
     }
   });
 
-  test("ponyrace skill requires Superpowers gates before implementation", async () => {
-    const source = await resolveInstallSkillSource("ponyrace");
-
-    expect(source.name).toBe("ponyrace");
-    expect(source.kind).toBe("bundled");
-    expect(source.path.endsWith(join("bundled-skills", "ponyrace"))).toBe(true);
-
-    const skill = await readFile(join(source.path, "SKILL.md"), "utf8");
-    expect(skill).toContain("name: ponyrace");
-    expect(skill).toContain("superpowers:brainstorming");
-    expect(skill).toContain("superpowers:writing-plans");
-    expect(skill).toContain(
-      "ponyrace skills install superpowers:brainstorming --agents codex,claude,cursor --home ~",
-    );
-    expect(skill).toContain(
-      "ponyrace skills install superpowers:writing-plans --agents codex,claude,cursor --home ~",
-    );
-    expect(skill).toContain('ponyrace ponyrace "<approved refined requirement>"');
-    expect(skill).toContain("Human confirmation: pending");
-    expect(skill).toContain("explicit human approval of the written implementation plan");
-    expect(skill).toContain("before any implementation action or file edit");
-    expect(skill).toContain("Choosing an approach, selecting an option number");
-    expect(skill).toContain("direction approval only; it is not approval");
-    expect(skill).toContain("Short replies such as");
-    expect(skill).toContain("approve only the requirement");
-    expect(skill).toContain("If no written implementation plan has");
-    expect(skill).toContain("Installed skill copies are refreshed through");
-    expect(skill).toContain("Superpowers approval is not worker execution approval");
-    expect(skill).not.toContain('ponyrace ponyrace "<request>"');
-    expect(skill).not.toContain("rtk bun run dev");
-  });
-
-  test("installs the bundled ponyrace skill into directory and Cursor targets", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
-
-    try {
-      const result = await installAgentSkill({
-        source: "ponyrace",
-        homeDir,
-        agents: ["codex", "cursor"],
-      });
-
-      expect(result.skillName).toBe("ponyrace");
-      expect(result.targets.map((target) => target.status)).toEqual(["installed", "installed"]);
-
-      await expect(
-        stat(join(homeDir, ".agents", "skills", "ponyrace", "SKILL.md")),
-      ).resolves.toBeTruthy();
-      await expect(
-        stat(join(homeDir, ".codex", "skills", "ponyrace", "SKILL.md")),
-      ).resolves.toBeTruthy();
-
-      const cursorRulePath = join(homeDir, ".cursor", "rules", "ponyrace.mdc");
-      await expect(stat(cursorRulePath)).resolves.toBeTruthy();
-      expect(await readFile(cursorRulePath, "utf8")).toContain("name: ponyrace");
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
   test("resolves superpowers brainstorming from the local plugin cache", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
     const sourceDir = join(

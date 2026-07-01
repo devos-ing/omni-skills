@@ -9,13 +9,13 @@ This example combines:
 
 `getsuperpower install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
-package install through Ponyrace and retry:
+package install through the CLI and retry:
 
 ```bash
 bun run dev -- skills install mattpocock/skills
 ```
 
-Validate this GetSuperpower from the Ponyrace repo:
+Validate this GetSuperpower from the repo root:
 
 ```bash
 bun run dev -- getsuperpower validate examples/workflows/real-engineering

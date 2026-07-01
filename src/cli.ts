@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 
-import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, dirname, extname, isAbsolute, join, resolve } from "node:path";
-import { confirm, intro, isCancel, outro, select, text } from "@clack/prompts";
+import { isAbsolute, join, resolve } from "node:path";
+import { confirm, isCancel } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
 import {
@@ -12,112 +11,19 @@ import {
   getSkillsCliPackageForSource,
   installExternalSkillDependencyWithSkillsCli,
 } from "../getsuperpower-command";
-import {
-  type CliStreamRunner,
-  createCliRequirementPonyRunner,
-  createLocalRequirementPonyRunner,
-  getCliWorkerAdapterForCommand,
-  installAgentSkill,
-  isMissingSuperpowersSkillError,
-  parseSkillInstallAgents,
-  resolveInstallSkillSource,
-  type SkillInstallResult,
-  streamCliInvocation,
-} from "./plugins";
+import { installAgentSkill, parseSkillInstallAgents, type SkillInstallResult } from "./plugins";
 import {
   applySnapshotRevert,
-  approveGoalDraft,
-  calculateDefaultSetupRequiredApprovals,
-  completeGoalDiscussion,
-  createCompactSetupManifest,
-  createDefaultSetupReviewBots,
-  createOnboardingFiles,
-  createRequirementCourtHtmlReportPath,
-  createRequirementCourtMarkdownReportPath,
-  draftGoalFromBrainstorm,
-  formatRequirementCourtReportPathForOutput,
-  type GoalContract,
   type InstructionContext,
-  loadManifest,
   planSnapshotRevert,
-  prepareGoalDiscussion,
   type RecordedSnapshotCommit,
-  type RequirementCourtResult,
-  type RequirementPonyRunner,
-  type RunRequirementCourtInput,
   readSnapshotHistory,
   recordSnapshotPost,
   recordSnapshotPre,
-  rejectGoalDraft,
-  renderRequirementCourtHtml,
-  renderRequirementCourtMarkdown,
-  renderRequirementCourtTextReport,
-  runRequirementCourt,
-  type SetupReviewBotInput,
   type SnapshotCommit,
   type SnapshotFileState,
   type SnapshotRevertAction,
-  startGoalFlow,
-  tallyVotes,
 } from "./runtimes/ponytrail";
-
-export type ClarificationMode = "custom" | "open_question" | "skip";
-
-export interface GoalClarificationAnswer {
-  question: string;
-  mode: ClarificationMode;
-  answer: string;
-}
-
-export interface GoalClarificationPromptInput {
-  request: string;
-  questions: string[];
-}
-
-export interface GoalClarificationPromptResult {
-  answers: GoalClarificationAnswer[];
-}
-
-export type GoalClarificationPrompter = (
-  input: GoalClarificationPromptInput,
-) => Promise<GoalClarificationPromptResult>;
-
-export interface GoalApprovalPromptInput {
-  contract: GoalContract;
-}
-
-export type GoalApprovalPrompter = (input: GoalApprovalPromptInput) => Promise<boolean>;
-
-export type ProjectNamePrompter = (defaultName: string) => Promise<string>;
-
-export interface SetupPromptDefaults {
-  projectName: string;
-  bots: SetupReviewBotInput[];
-  requiredApprovals: number;
-  agents: string;
-}
-
-export type SetupPromptResult = SetupPromptDefaults;
-
-export type SetupPrompter = (defaults: SetupPromptDefaults) => Promise<SetupPromptResult>;
-
-export interface SetupPromptIo {
-  isTty: boolean;
-  intro(message: string): void;
-  outro(message: string): void;
-  text(input: { message: string; placeholder: string; defaultValue: string }): Promise<unknown>;
-  select(input: {
-    message: string;
-    options: Array<{ value: "default" | "custom"; label: string }>;
-  }): Promise<unknown>;
-  confirm(input: {
-    message: string;
-    active: string;
-    inactive: string;
-    initialValue: boolean;
-  }): Promise<unknown>;
-  isCancel(value: unknown): boolean;
-}
 
 export interface RevertApprovalPromptInput {
   snapshotId: string;
@@ -129,36 +35,7 @@ export type RevertApprovalPrompter = (input: RevertApprovalPromptInput) => Promi
 type SnapshotHistoryMode = "tree" | "details";
 type SkillChangeOperation = "install" | "update";
 
-const defaultManifestPath = ".ponyrace/manifest.json";
 const skillInstallHistorySessionId = "ponyrace-skills";
-const optionalSuperpowersProcessSkillSources = [
-  "superpowers:brainstorming",
-  "superpowers:writing-plans",
-] as const;
-const clackSetupPromptIo: SetupPromptIo = {
-  get isTty() {
-    return process.stdin.isTTY === true;
-  },
-  intro,
-  outro,
-  text,
-  select,
-  confirm,
-  isCancel,
-};
-
-export interface BuildProgramOptions {
-  cwd?: string;
-  clarificationPrompter?: GoalClarificationPrompter;
-  goalApprovalPrompter?: GoalApprovalPrompter;
-  projectNamePrompter?: ProjectNamePrompter;
-  setupPrompter?: SetupPrompter;
-  ponyRunner?: RequirementPonyRunner | undefined;
-  streamRunner?: CliStreamRunner | undefined;
-  revertApprovalPrompter?: RevertApprovalPrompter;
-  installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller;
-}
-
 const CLI_VERSION = "0.2.0";
 
 interface CommanderVersionInternals {
@@ -168,14 +45,14 @@ interface CommanderVersionInternals {
   _exit: (exitCode: number, code: string, message: string) => never;
 }
 
+export interface BuildProgramOptions {
+  cwd?: string;
+  revertApprovalPrompter?: RevertApprovalPrompter;
+  installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller;
+}
+
 export function buildProgram(options: BuildProgramOptions = {}): Command {
   const rootDir = options.cwd ?? process.cwd();
-  const clarificationPrompter = options.clarificationPrompter ?? promptForGoalClarifications;
-  const goalApprovalPrompter = options.goalApprovalPrompter ?? promptForGoalApproval;
-  const projectNamePrompter = options.projectNamePrompter ?? promptForProjectName;
-  const setupPrompter = options.setupPrompter ?? promptForSetup;
-  const ponyRunner = options.ponyRunner;
-  const streamRunner = options.streamRunner ?? streamCliInvocation;
   const revertApprovalPrompter = options.revertApprovalPrompter ?? promptForRevertApproval;
   const installExternalSkillDependency =
     options.installExternalSkillDependency ?? installExternalSkillDependencyWithSkillsCli;
@@ -183,7 +60,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
   program
     .name("ponyrace")
-    .description("Requirement-first pony race for supervising Codex, Claude, and other AI workers.")
+    .description("Install, author, and inspect GetSuperpower skill trees.")
     .version(CLI_VERSION)
     .option("-v", "output the version number");
 
@@ -192,279 +69,8 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
   });
 
   program
-    .command("setup")
-    .description(
-      "Create local .ponyrace files, configure review ponies, and install Ponyrace skills.",
-    )
-    .option("--dir <dir>", "target directory", rootDir)
-    .option("--name <name>", "project name")
-    .option(
-      "--agents <agents>",
-      "comma-separated skill install targets: codex,claude,cursor",
-      "codex,claude,cursor",
-    )
-    .option("--home <dir>", "home directory that contains agent config folders", homedir())
-    .action(
-      async (commandOptions: { dir: string; name?: string; agents: string; home: string }) => {
-        const targetDir = resolvePath(rootDir, commandOptions.dir);
-        const defaultBots = createDefaultSetupReviewBots();
-        const defaultVotingCount = defaultBots.filter((bot) => bot.votes !== false).length;
-        const setup = await setupPrompter({
-          projectName: commandOptions.name ?? basename(targetDir),
-          bots: defaultBots,
-          requiredApprovals: calculateDefaultSetupRequiredApprovals(defaultVotingCount),
-          agents: commandOptions.agents,
-        });
-        const installAgents = parseSkillInstallAgents(setup.agents);
-        const manifest = createCompactSetupManifest({
-          name: setup.projectName,
-          reviewBots: setup.bots,
-          requiredApprovals: setup.requiredApprovals,
-        });
-
-        const result = await createOnboardingFiles({
-          rootDir: targetDir,
-          projectName: setup.projectName,
-          manifest,
-        });
-
-        for (const source of ["pony-trail", "ponyrace"]) {
-          const skillResult = await installSkillWithLocalHistory({
-            rootDir: targetDir,
-            operation: "install",
-            source,
-            homeDir: resolveHomePath(commandOptions.home),
-            agents: installAgents,
-            dryRun: false,
-            force: false,
-            refreshExisting: true,
-            installPrehook: false,
-          });
-
-          printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install", {
-            showPostSkillChangeWelcome: false,
-          });
-        }
-
-        const optionalSuperpowers = await installOptionalSuperpowersProcessSkills({
-          rootDir: targetDir,
-          homeDir: resolveHomePath(commandOptions.home),
-          agents: installAgents,
-        });
-        for (const optionalSuperpower of optionalSuperpowers) {
-          if (optionalSuperpower.status === "installed") {
-            printSkillInstallResult(
-              optionalSuperpower.result.skillInstall,
-              optionalSuperpower.result.history,
-              "install",
-              { showPostSkillChangeWelcome: false },
-            );
-          }
-        }
-
-        printPonyraceReady({
-          completionLabel: "Ponyrace setup complete",
-          manifestPath: result.manifestPath,
-          agents: installAgents,
-          optionalSuperpowers,
-        });
-      },
-    );
-
-  program
-    .command("onboard")
-    .description("Create local .ponyrace files and install the default /ponyrace skills.")
-    .option("-d, --dir <dir>", "target directory", rootDir)
-    .option("-n, --name <name>", "project name")
-    .option(
-      "-a, --agents <agents>",
-      "comma-separated skill install targets: claude,copilot,codex",
-      "claude,copilot,codex",
-    )
-    .option("--home <dir>", "home directory that contains agent config folders", homedir())
-    .action(
-      async (commandOptions: { dir: string; name?: string; agents: string; home: string }) => {
-        const targetDir = resolvePath(rootDir, commandOptions.dir);
-        const projectName = commandOptions.name ?? (await projectNamePrompter(basename(targetDir)));
-
-        const result = await createOnboardingFiles({
-          rootDir: targetDir,
-          projectName,
-        });
-
-        const installAgents = parseSkillInstallAgents(commandOptions.agents);
-
-        for (const source of ["pony-trail", "ponyrace"]) {
-          const skillResult = await installSkillWithLocalHistory({
-            rootDir: targetDir,
-            operation: "install",
-            source,
-            homeDir: resolveHomePath(commandOptions.home),
-            agents: installAgents,
-            dryRun: false,
-            force: false,
-            refreshExisting: true,
-            installPrehook: false,
-          });
-
-          printSkillInstallResult(skillResult.skillInstall, skillResult.history, "install", {
-            showPostSkillChangeWelcome: false,
-          });
-        }
-
-        const optionalSuperpowers = await installOptionalSuperpowersProcessSkills({
-          rootDir: targetDir,
-          homeDir: resolveHomePath(commandOptions.home),
-          agents: installAgents,
-        });
-        for (const optionalSuperpower of optionalSuperpowers) {
-          if (optionalSuperpower.status === "installed") {
-            printSkillInstallResult(
-              optionalSuperpower.result.skillInstall,
-              optionalSuperpower.result.history,
-              "install",
-              { showPostSkillChangeWelcome: false },
-            );
-          }
-        }
-
-        printPonyraceReady({
-          completionLabel: "Ponyrace onboarding complete",
-          manifestPath: result.manifestPath,
-          agents: installAgents,
-          optionalSuperpowers,
-        });
-      },
-    );
-
-  program
-    .command("bots")
-    .description("List bots from the manifest.")
-    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
-    .action(async (commandOptions: { manifest: string }) => {
-      const manifest = await loadManifest(resolvePath(rootDir, commandOptions.manifest));
-
-      for (const bot of manifest.bots) {
-        const panel = bot.panel ? pc.dim(` (${bot.panel})`) : "";
-        const model = pc.dim(` [model: ${bot.model}]`);
-        console.log(`${pc.cyan(bot.id)} ${bot.displayName}${panel}${model}`);
-      }
-    });
-
-  program
-    .command("goal")
-    .description("Clarify, discuss, and summarize a requirement-first goal.")
-    .argument("<request...>", "raw goal request")
-    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
-    .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
-    .option("--json", "print JSON output", false)
-    .action(
-      async (
-        requestParts: string[],
-        commandOptions: { manifest: string; worker?: string; json: boolean },
-      ) => {
-        await runGoalCommandFlow(requestParts, {
-          rootDir,
-          clarificationPrompter,
-          goalApprovalPrompter,
-          manifestPath: commandOptions.manifest,
-          ponyRunner,
-          jsonOutput: commandOptions.json ? "contract" : false,
-        });
-      },
-    );
-
-  program
-    .command("ponyrace")
-    .description("Run a pony race requirement discussion before implementation.")
-    .argument("<request...>", "raw goal request")
-    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
-    .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
-    .option("--research", "explicitly run each review pony through the selected worker CLI", false)
-    .option("--no-research", "use the local deterministic pony runner instead of worker CLI runs")
-    .option("--json", "print JSON output", false)
-    .option("--markdown <path>", "write Markdown report to a path")
-    .option("--skip-markdown", "skip writing the default Markdown report", false)
-    .action(
-      async (
-        requestParts: string[],
-        commandOptions: {
-          manifest: string;
-          worker?: string;
-          research: boolean;
-          json: boolean;
-          markdown?: string;
-          skipMarkdown: boolean;
-        },
-      ) => {
-        await runGoalFlow(requestParts, {
-          rootDir,
-          clarificationPrompter,
-          manifestPath: commandOptions.manifest,
-          worker: commandOptions.worker,
-          research: commandOptions.research,
-          ponyRunner,
-          streamRunner,
-          jsonOutput: commandOptions.json ? "court" : false,
-          discussionHeading: "Pony race",
-          printVisibleThinking: true,
-          markdownReport:
-            commandOptions.json || commandOptions.skipMarkdown
-              ? undefined
-              : { path: commandOptions.markdown },
-        });
-      },
-    );
-
-  program
-    .command("vote")
-    .description("Apply the manifest decision rule to a JSON array of bot votes.")
-    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
-    .requiredOption("--votes <json>", "JSON array of bot votes")
-    .option("--json", "print JSON output", false)
-    .action(async (commandOptions: { manifest: string; votes: string; json: boolean }) => {
-      const manifest = await loadManifest(resolvePath(rootDir, commandOptions.manifest));
-      const votes = JSON.parse(commandOptions.votes);
-      const verdict = tallyVotes(votes, manifest.deliberation.decisionRule);
-
-      if (commandOptions.json) {
-        console.log(JSON.stringify(verdict, null, 2));
-        return;
-      }
-
-      console.log(verdict.approved ? pc.green("approved") : pc.yellow("not approved"));
-      console.log(`${pc.dim("Approvals:")} ${verdict.approvals}`);
-      console.log(`${pc.dim("Missing voters:")} ${verdict.missingVoters.join(", ") || "none"}`);
-      if (verdict.requiredChanges.length > 0) {
-        console.log(pc.dim("Required changes:"));
-        for (const change of verdict.requiredChanges) {
-          console.log(`- ${change}`);
-        }
-      }
-    });
-
-  program
-    .command("stream-goal")
-    .description("Compatibility alias for goal.")
-    .argument("<request...>", "raw goal request")
-    .option("-m, --manifest <path>", "manifest path", defaultManifestPath)
-    .option("-w, --worker <id>", "accepted for compatibility; worker execution is gated")
-    .action(
-      async (requestParts: string[], commandOptions: { manifest: string; worker?: string }) => {
-        await runGoalFlow(requestParts, {
-          rootDir,
-          clarificationPrompter,
-          manifestPath: commandOptions.manifest,
-          research: false,
-          ponyRunner,
-          jsonOutput: false,
-        });
-      },
-    );
-
-  program
     .command("history")
-    .description("Show Ponyrace snapshot history.")
+    .description("Show local skill and bundle install snapshot history.")
     .option("-s, --session <id>", "only show one snapshot session")
     .option("--mode <mode>", "history output mode: tree,details", "tree")
     .option("--details", "include detailed snapshot metadata", false)
@@ -495,7 +101,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
 
   program
     .command("revert")
-    .description("Restore files from a Ponyrace snapshot pre-state.")
+    .description("Restore files from a snapshot pre-state.")
     .argument("<snapshot-id>", "snapshot id to restore")
     .option("--dry-run", "show planned file actions without writing files", false)
     .action(
@@ -539,7 +145,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
   configureSkillInstallCommand(
     skillsCommand
       .command("install")
-      .description("Install a bundled or local skill for Claude, GitHub Copilot, and Codex."),
+      .description("Install a bundled, local, Superpowers, or external skills package."),
     rootDir,
     installExternalSkillDependency,
   );
@@ -561,475 +167,373 @@ function outputVersionAndExit(program: Command, version: string): never {
   return command._exit(0, "commander.version", version);
 }
 
-export async function promptForSetup(
-  defaults: SetupPromptDefaults,
-  promptIo: SetupPromptIo = clackSetupPromptIo,
-): Promise<SetupPromptResult> {
-  if (!promptIo.isTty) {
-    return defaults;
+async function promptForRevertApproval(input: RevertApprovalPromptInput): Promise<boolean> {
+  if (!process.stdin.isTTY) {
+    console.log(pc.dim("Run from an interactive terminal to approve the revert."));
+    return false;
   }
 
-  promptIo.intro(pc.cyan("Ponyrace setup"));
-
-  const projectName = await readSetupText(promptIo, "Workspace name", defaults.projectName);
-  const defaultBotCount = defaults.bots.length;
-  const botCount = parsePositiveIntegerInput(
-    await readSetupText(promptIo, "Review bot count", String(defaultBotCount)),
-    "Review bot count",
-  );
-  const bots: SetupReviewBotInput[] = [];
-
-  for (let index = 0; index < botCount; index += 1) {
-    const defaultBot = defaults.bots[index] ?? createFallbackSetupBot(index + 1);
-    const displayName = await readSetupText(
-      promptIo,
-      `Bot ${index + 1} display name`,
-      defaultBot.displayName,
-    );
-    const role = await readSetupText(promptIo, `${displayName} role`, defaultBot.role);
-    const id = await readSetupText(promptIo, `${displayName} id`, defaultBot.id);
-    const panel = await readSetupText(
-      promptIo,
-      `${displayName} panel`,
-      defaultBot.panel ?? "requirement_court",
-    );
-    const instruction = await readSetupText(
-      promptIo,
-      `${displayName} instruction`,
-      defaultBot.instruction ??
-        `Review the requirement direction from the ${role} perspective before voting.`,
-    );
-    const modelId = await readSetupText(promptIo, `${displayName} model id`, defaultBot.modelId);
-    const modelName = await readSetupText(
-      promptIo,
-      `${displayName} model name`,
-      defaultBot.modelName,
-    );
-    const votes = await readSetupConfirm(
-      promptIo,
-      `${displayName} votes`,
-      defaultBot.votes !== false,
-    );
-
-    bots.push({
-      ...defaultBot,
-      id,
-      displayName,
-      role,
-      panel,
-      instruction,
-      modelId,
-      modelName,
-      votes,
-    });
-  }
-
-  const voterCount = bots.filter((bot) => bot.votes !== false).length;
-  const defaultRequiredApprovals = calculateDefaultSetupRequiredApprovals(voterCount);
-  const approvalMode = await promptIo.select({
-    message: "Approval rule",
-    options: [
-      {
-        value: "default",
-        label: `Default (${defaultRequiredApprovals} of ${voterCount})`,
-      },
-      {
-        value: "custom",
-        label: "Custom",
-      },
-    ],
+  const answer = await confirm({
+    message: `Apply revert ${input.snapshotId}?`,
+    active: `Apply ${input.actions.length} file action${input.actions.length === 1 ? "" : "s"}`,
+    inactive: "Cancel",
+    initialValue: false,
   });
 
-  if (promptIo.isCancel(approvalMode)) {
-    throw new Error("Setup cancelled");
-  }
-
-  const requiredApprovals =
-    approvalMode === "default"
-      ? defaultRequiredApprovals
-      : parseApprovalCountInput(
-          await readSetupText(promptIo, "Required approvals", String(defaultRequiredApprovals)),
-          voterCount,
-        );
-  const agents = await readSetupText(promptIo, "Skill install targets", defaults.agents);
-
-  const shouldCreate = await readSetupConfirm(promptIo, "Create setup now?", true);
-  if (!shouldCreate) {
-    throw new Error("Setup cancelled");
-  }
-
-  promptIo.outro(pc.green("Creating setup files"));
-  return { projectName, bots, requiredApprovals, agents };
+  return answer === true && !isCancel(answer);
 }
 
-async function promptForProjectName(defaultName: string): Promise<string> {
-  intro(pc.cyan("Ponyrace onboarding"));
-  const answer = await text({
-    message: "Project name",
-    placeholder: defaultName,
-    defaultValue: defaultName,
-  });
-
-  if (isCancel(answer)) {
-    throw new Error("Onboarding cancelled");
-  }
-
-  outro(pc.green("Creating runtime files"));
-  return String(answer);
+function configureSkillInstallCommand(
+  command: Command,
+  rootDir: string,
+  installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller,
+): Command {
+  return configureSkillChangeCommand(
+    command,
+    rootDir,
+    "install",
+    installExternalSkillDependency,
+  ).option("-f, --force", "overwrite existing installed skill folders", false);
 }
 
-async function readSetupText(
-  promptIo: SetupPromptIo,
-  message: string,
-  defaultValue: string,
-): Promise<string> {
-  const answer = await promptIo.text({
-    message,
-    placeholder: defaultValue,
-    defaultValue,
-  });
+function configureSkillChangeCommand(
+  command: Command,
+  rootDir: string,
+  operation: SkillChangeOperation,
+  installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller,
+): Command {
+  return command
+    .argument("[source-or-name]", "bundled skill name or local skill directory", "pony-trail")
+    .option(
+      "-a, --agents <agents>",
+      "comma-separated targets: claude,copilot,codex,cursor",
+      "claude,copilot,codex,cursor",
+    )
+    .option("--home <dir>", "home directory that contains agent config folders", homedir())
+    .option("--dry-run", `show ${operation} destinations without writing files`, false)
+    .option("--prehook", "also install a Ponytrail prehook reminder for file mutations", false)
+    .action(
+      async (
+        sourceOrName: string,
+        commandOptions: {
+          agents: string;
+          home: string;
+          dryRun: boolean;
+          prehook: boolean;
+          force?: boolean;
+        },
+      ) => {
+        const homeDir = resolveHomePath(commandOptions.home);
+        const externalSkillsPackage = getExternalSkillsPackageInstallSource(sourceOrName);
+        if (operation === "install" && externalSkillsPackage && installExternalSkillDependency) {
+          const result = await installExternalSkillsPackageWithLocalHistory({
+            rootDir,
+            source: sourceOrName,
+            packageName: externalSkillsPackage,
+            homeDir,
+            dryRun: commandOptions.dryRun,
+            installExternalSkillDependency,
+          });
+          printExternalSkillsPackageInstallResult(result);
+          return;
+        }
 
-  if (promptIo.isCancel(answer)) {
-    throw new Error("Setup cancelled");
-  }
-
-  return String(answer).trim() || defaultValue;
-}
-
-async function readSetupConfirm(
-  promptIo: SetupPromptIo,
-  message: string,
-  initialValue: boolean,
-): Promise<boolean> {
-  const answer = await promptIo.confirm({
-    message,
-    active: "Yes",
-    inactive: "No",
-    initialValue,
-  });
-
-  if (promptIo.isCancel(answer)) {
-    throw new Error("Setup cancelled");
-  }
-
-  return answer === true;
-}
-
-function parsePositiveIntegerInput(rawValue: string, label: string): number {
-  const value = Number(rawValue.trim());
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${label} must be a positive whole number.`);
-  }
-
-  return value;
-}
-
-function parseApprovalCountInput(rawValue: string, voterCount: number): number {
-  const value = parsePositiveIntegerInput(rawValue, "Required approvals");
-  if (value > voterCount) {
-    throw new Error(`Required approvals must be between 1 and ${voterCount}.`);
-  }
-
-  return value;
-}
-
-function createFallbackSetupBot(position: number): SetupReviewBotInput {
-  return {
-    id: `review_bot_${position}`,
-    displayName: `Review Bot ${position}`,
-    role: "Review",
-    panel: "requirement_court",
-    modelId: `review_bot_${position}_model`,
-    modelName: `review-bot-${position}-review-model`,
-    votes: true,
-  };
-}
-
-interface RunGoalFlowInput {
-  rootDir: string;
-  clarificationPrompter: GoalClarificationPrompter;
-  manifestPath: string;
-  worker?: string | undefined;
-  research?: boolean | undefined;
-  ponyRunner?: RequirementPonyRunner | undefined;
-  streamRunner?: CliStreamRunner | undefined;
-  jsonOutput: "contract" | "court" | false;
-  discussionHeading?: string;
-  printVisibleThinking?: boolean;
-  markdownReport?: MarkdownReportOptions | undefined;
-}
-
-interface RunGoalCommandInput {
-  rootDir: string;
-  clarificationPrompter: GoalClarificationPrompter;
-  goalApprovalPrompter: GoalApprovalPrompter;
-  manifestPath: string;
-  ponyRunner?: RequirementPonyRunner | undefined;
-  jsonOutput: "contract" | false;
-}
-
-interface MarkdownReportOptions {
-  path?: string | undefined;
-}
-
-async function runGoalCommandFlow(
-  requestParts: string[],
-  input: RunGoalCommandInput,
-): Promise<void> {
-  const manifest = await loadManifest(resolvePath(input.rootDir, input.manifestPath));
-  const activePonyRunner = createActivePonyRunner(manifest, {
-    rootDir: input.rootDir,
-    clarificationPrompter: input.clarificationPrompter,
-    manifestPath: input.manifestPath,
-    research: false,
-    ponyRunner: input.ponyRunner,
-    jsonOutput: false,
-  });
-  const request = requestParts.join(" ");
-  const started = startGoalFlow(request, { manifest });
-
-  if (input.jsonOutput) {
-    const pending = draftGoalFromBrainstorm(started, { manifest, answers: [] });
-    console.log(JSON.stringify(pending, null, 2));
-    return;
-  }
-
-  if (!process.stdin.isTTY && input.clarificationPrompter === promptForGoalClarifications) {
-    console.log(JSON.stringify(started, null, 2));
-    return;
-  }
-
-  const clarification =
-    started.brainstorm.questions.length === 0
-      ? { answers: [] }
-      : await input.clarificationPrompter({
-          request: started.brainstorm.normalizedRequest,
-          questions: started.brainstorm.questions.map((question) => question.prompt),
+        const result = await installSkillWithLocalHistory({
+          rootDir,
+          operation,
+          source: sourceOrName,
+          homeDir,
+          agents: parseSkillInstallAgents(commandOptions.agents),
+          dryRun: commandOptions.dryRun,
+          force: operation === "install" ? commandOptions.force === true : false,
+          refreshExisting: false,
+          installPrehook: commandOptions.prehook,
         });
-  const pending = draftGoalFromBrainstorm(started, {
-    manifest,
-    answers: clarification.answers,
-  });
-  const approved = await input.goalApprovalPrompter({ contract: pending.contract });
 
-  if (!approved) {
-    rejectGoalDraft(pending);
-    console.log(pc.dim("Goal paused before pony discussion."));
-    return;
-  }
-
-  const readyForDiscussion = approveGoalDraft(pending);
-  const result = await runRequirementCourt(
-    readyForDiscussion.contract,
-    createRunRequirementCourtInput(manifest, activePonyRunner),
-  );
-  const readyForWritingPlans = completeGoalDiscussion(readyForDiscussion, result);
-
-  await printRequirementCourtResultAndArtifacts(result, {
-    ...input,
-    discussionHeading: "Requirement discussion",
-  });
-  printWritingPlansHandoff(readyForWritingPlans.handoff.message);
-}
-
-async function runGoalFlow(requestParts: string[], input: RunGoalFlowInput): Promise<void> {
-  const manifest = await loadManifest(resolvePath(input.rootDir, input.manifestPath));
-  const activePonyRunner = createActivePonyRunner(manifest, input);
-  const request = requestParts.join(" ");
-  const preparedDiscussion = prepareGoalDiscussion(request, { manifest });
-
-  if (preparedDiscussion.status === "needs_brainstorm_input") {
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(preparedDiscussion, null, 2));
-      return;
-    }
-
-    console.log(pc.yellow("Needs clarification"));
-    for (const question of preparedDiscussion.brainstorm.questions) {
-      console.log(`- ${question.prompt}`);
-    }
-
-    const clarification = await input.clarificationPrompter({
-      request: preparedDiscussion.brainstorm.normalizedRequest,
-      questions: preparedDiscussion.brainstorm.questions.map((question) => question.prompt),
-    });
-    const clarifiedRequest = buildClarifiedRequest(clarification.answers);
-
-    if (!clarifiedRequest) {
-      console.log(pc.dim("Goal paused until the missing details are answered."));
-      return;
-    }
-
-    const clarifiedDiscussion = prepareGoalDiscussion(clarifiedRequest, { manifest });
-
-    if (clarifiedDiscussion.status === "needs_brainstorm_input") {
-      console.log(pc.dim("Goal still needs more detail before a worker starts."));
-      for (const question of clarifiedDiscussion.brainstorm.questions) {
-        console.log(`- ${question.prompt}`);
-      }
-      return;
-    }
-
-    const result = await runRequirementCourt(
-      clarifiedDiscussion.contract,
-      createRunRequirementCourtInput(manifest, activePonyRunner),
+        printSkillInstallResult(result.skillInstall, result.history, operation);
+      },
     );
-
-    await printRequirementCourtResultAndArtifacts(result, input);
-    return;
-  }
-
-  if (input.jsonOutput === "contract") {
-    console.log(JSON.stringify(preparedDiscussion.contract, null, 2));
-    return;
-  }
-
-  const result = await runRequirementCourt(
-    preparedDiscussion.contract,
-    createRunRequirementCourtInput(manifest, activePonyRunner),
-  );
-
-  if (input.jsonOutput === "court") {
-    console.log(JSON.stringify(result, null, 2));
-    return;
-  }
-
-  await printRequirementCourtResultAndArtifacts(result, input);
 }
 
-async function printRequirementCourtResultAndArtifacts(
-  result: RequirementCourtResult,
-  input: RunGoalFlowInput,
-): Promise<void> {
-  const reportPaths = await writeRequirementCourtReports(result, input);
+interface InstallSkillWithLocalHistoryInput {
+  rootDir: string;
+  operation: SkillChangeOperation;
+  source: string;
+  homeDir: string;
+  agents: ReturnType<typeof parseSkillInstallAgents>;
+  dryRun: boolean;
+  force: boolean;
+  refreshExisting: boolean;
+  installPrehook: boolean;
+}
 
-  printRequirementCourtResult(result, {
-    discussionHeading: input.discussionHeading,
-    printVisibleThinking: input.printVisibleThinking,
-    markdownReportPath: reportPaths.markdown,
-    htmlReportPath: reportPaths.html,
+interface InstallSkillWithLocalHistoryResult {
+  skillInstall: SkillInstallResult;
+  history?: RecordedSnapshotCommit | undefined;
+}
+
+interface SkillInstallPrintOptions {
+  showPostSkillChangeWelcome?: boolean;
+}
+
+interface InstallExternalSkillsPackageWithLocalHistoryInput {
+  rootDir: string;
+  source: string;
+  packageName: string;
+  homeDir: string;
+  dryRun: boolean;
+  installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller;
+}
+
+interface InstallExternalSkillsPackageWithLocalHistoryResult {
+  source: string;
+  packageName: string;
+  homeDir: string;
+  dryRun: boolean;
+  history?: RecordedSnapshotCommit | undefined;
+}
+
+async function installSkillWithLocalHistory(
+  input: InstallSkillWithLocalHistoryInput,
+): Promise<InstallSkillWithLocalHistoryResult> {
+  const commandText = formatSkillInstallCommand(input);
+  let history: RecordedSnapshotCommit | undefined;
+
+  if (!input.dryRun) {
+    history = await recordSnapshotPre({
+      rootDir: input.rootDir,
+      sessionId: skillInstallHistorySessionId,
+      idPrefix: `skill-${input.operation}`,
+      action: `${input.operation} skill`,
+      purpose: `${formatSkillChangeVerb(input.operation)} ${input.source} skill for ${formatAgentList(
+        input.agents,
+      )}`,
+      reason: "Keep project-local history before changing agent skill files.",
+      expected: `The skill ${input.operation} result is captured in local history.`,
+      verify: "ponyrace history --details",
+      rollback:
+        "Remove or reinstall the affected agent skill folders, then record another snapshot.",
+    });
+  }
+
+  try {
+    const skillInstall = await installAgentSkill({
+      source: input.source,
+      cwd: input.rootDir,
+      homeDir: input.homeDir,
+      agents: input.agents,
+      dryRun: input.dryRun,
+      force: input.force,
+      operation: input.operation,
+      refreshExisting: input.refreshExisting,
+      installPrehook: input.installPrehook,
+    });
+
+    if (history) {
+      history = await recordSnapshotPost({
+        rootDir: input.rootDir,
+        sessionId: history.sessionId,
+        snapshotId: history.snapshotId,
+        summary: formatSkillInstallSummary(skillInstall, input.operation),
+        checks: commandText,
+        result: formatSkillInstallHistoryResult(skillInstall),
+      });
+    }
+
+    return { skillInstall, history };
+  } catch (error) {
+    if (history) {
+      await recordSnapshotPost({
+        rootDir: input.rootDir,
+        sessionId: history.sessionId,
+        snapshotId: history.snapshotId,
+        summary: `Failed to ${input.operation} ${input.source} skill for ${formatAgentList(
+          input.agents,
+        )}`,
+        checks: commandText,
+        result: `fail: ${formatErrorMessage(error)}`,
+      });
+    }
+    throw error;
+  }
+}
+
+async function installExternalSkillsPackageWithLocalHistory(
+  input: InstallExternalSkillsPackageWithLocalHistoryInput,
+): Promise<InstallExternalSkillsPackageWithLocalHistoryResult> {
+  if (input.dryRun) {
+    return {
+      source: input.source,
+      packageName: input.packageName,
+      homeDir: input.homeDir,
+      dryRun: true,
+    };
+  }
+
+  let history = await recordSnapshotPre({
+    rootDir: input.rootDir,
+    sessionId: skillInstallHistorySessionId,
+    idPrefix: "skills-package-install",
+    action: "install skills package",
+    purpose: `Install ${input.packageName} skills package through the Skills CLI`,
+    reason: "Keep project-local history before changing agent skill files.",
+    expected: `The ${input.packageName} skills package is available under the configured home directory.`,
+    verify: "ponyrace history --details",
+    rollback: "Remove the affected installed skill folders, then record another snapshot.",
   });
-}
 
-interface RequirementCourtReportPaths {
-  markdown?: string | undefined;
-  html?: string | undefined;
-}
+  try {
+    await input.installExternalSkillDependency({
+      source: input.source,
+      homeDir: input.homeDir,
+    });
 
-async function writeRequirementCourtReports(
-  result: RequirementCourtResult,
-  input: RunGoalFlowInput,
-): Promise<RequirementCourtReportPaths> {
-  if (!input.markdownReport) {
-    return {};
+    history = await recordSnapshotPost({
+      rootDir: input.rootDir,
+      sessionId: history.sessionId,
+      snapshotId: history.snapshotId,
+      summary: `Installed ${input.packageName} skills package`,
+      checks: formatExternalSkillsPackageInstallCommand(input),
+      result: `installed:${input.packageName}`,
+    });
+
+    return {
+      source: input.source,
+      packageName: input.packageName,
+      homeDir: input.homeDir,
+      dryRun: false,
+      history,
+    };
+  } catch (error) {
+    await recordSnapshotPost({
+      rootDir: input.rootDir,
+      sessionId: history.sessionId,
+      snapshotId: history.snapshotId,
+      summary: `Failed to install ${input.packageName} skills package`,
+      checks: formatExternalSkillsPackageInstallCommand(input),
+      result: `fail: ${formatErrorMessage(error)}`,
+    });
+    throw error;
   }
-
-  const timestamp = new Date();
-  const markdownReportPath = input.markdownReport.path
-    ? resolvePath(input.rootDir, input.markdownReport.path)
-    : createRequirementCourtMarkdownReportPath(input.rootDir, result, timestamp);
-  const htmlReportPath = input.markdownReport.path
-    ? replacePathExtension(markdownReportPath, ".html")
-    : createRequirementCourtHtmlReportPath(input.rootDir, result, timestamp);
-
-  await mkdir(dirname(markdownReportPath), { recursive: true });
-  await writeFile(markdownReportPath, renderRequirementCourtMarkdown(result));
-  await mkdir(dirname(htmlReportPath), { recursive: true });
-  await writeFile(htmlReportPath, renderRequirementCourtHtml(result));
-
-  return {
-    markdown: formatRequirementCourtReportPathForOutput(input.rootDir, markdownReportPath),
-    html: formatRequirementCourtReportPathForOutput(input.rootDir, htmlReportPath),
-  };
 }
 
-function replacePathExtension(path: string, extension: string): string {
-  const currentExtension = extname(path);
-  if (!currentExtension) {
-    return `${path}${extension}`;
+function getExternalSkillsPackageInstallSource(source: string): string | null {
+  if (source.includes(":")) {
+    return null;
   }
-
-  return `${path.slice(0, -currentExtension.length)}${extension}`;
+  return getSkillsCliPackageForSource(source);
 }
 
-function createRunRequirementCourtInput(
-  manifest: RunRequirementCourtInput["manifest"],
-  ponyRunner: RequirementPonyRunner,
-): RunRequirementCourtInput {
-  return { manifest, ponyRunner };
-}
-
-function createActivePonyRunner(
-  manifest: RunRequirementCourtInput["manifest"],
-  input: RunGoalFlowInput,
-): RequirementPonyRunner {
-  if (input.ponyRunner) {
-    return input.ponyRunner;
+function resolveHomePath(path: string): string {
+  if (path === "~") {
+    return homedir();
   }
-
-  if (input.research === false) {
-    return createLocalRequirementPonyRunner();
+  if (path.startsWith("~/")) {
+    return join(homedir(), path.slice(2));
   }
-
-  const worker = resolveResearchWorker(manifest, input.worker);
-  const adapter = getCliWorkerAdapterForCommand(worker.command);
-  const streamRunner = input.streamRunner ?? streamCliInvocation;
-
-  return createCliRequirementPonyRunner({
-    adapter,
-    workerId: worker.id,
-    streamRunner,
-    writeStdout() {},
-    writeStderr(chunk) {
-      process.stderr.write(chunk);
-    },
-  });
+  return isAbsolute(path) ? path : resolve(path);
 }
 
-function resolveResearchWorker(
-  manifest: RunRequirementCourtInput["manifest"],
-  workerId: string | undefined,
-): RunRequirementCourtInput["manifest"]["runtime"]["workerAgents"][number] {
-  const worker =
-    workerId === undefined
-      ? manifest.runtime.workerAgents[0]
-      : manifest.runtime.workerAgents.find((candidate) => candidate.id === workerId);
-
-  if (!worker) {
-    const availableWorkers = manifest.runtime.workerAgents
-      .map((candidate) => candidate.id)
-      .join(", ");
-    throw new Error(`Unknown worker ${workerId}. Available workers: ${availableWorkers || "none"}`);
-  }
-
-  return worker;
-}
-
-interface RequirementCourtOutputOptions {
-  discussionHeading?: string | undefined;
-  printVisibleThinking?: boolean | undefined;
-  markdownReportPath?: string | undefined;
-  htmlReportPath?: string | undefined;
-}
-
-function printRequirementCourtResult(
-  result: RequirementCourtResult,
-  options: RequirementCourtOutputOptions = {},
+function printSkillInstallResult(
+  result: SkillInstallResult,
+  history?: RecordedSnapshotCommit | undefined,
+  operation: SkillChangeOperation = "install",
+  options: SkillInstallPrintOptions = {},
 ): void {
-  for (const line of renderRequirementCourtTextReport(result, {
-    discussionHeading: options.discussionHeading,
-    includeVisibleThinking: options.printVisibleThinking,
-    markdownReportPath: options.markdownReportPath,
-    htmlReportPath: options.htmlReportPath,
-    style: { heading: pc.cyan },
-  })) {
-    console.log(line);
+  console.log(pc.cyan(result.dryRun ? `Skill ${operation} plan` : `Skill ${operation} result`));
+  console.log(`Skill: ${result.skillName}`);
+  console.log(`${pc.dim("Source:")} ${result.source.path}`);
+
+  for (const target of result.targets) {
+    console.log(
+      `${target.agent}: ${formatSkillInstallStatus(target.status)} ${pc.dim(target.destination)}`,
+    );
+  }
+
+  if (result.prehooks.length > 0) {
+    console.log("");
+    console.log(
+      pc.cyan(result.dryRun ? `Prehook ${operation} plan` : `Prehook ${operation} result`),
+    );
+    for (const prehook of result.prehooks) {
+      console.log(
+        `${prehook.agent}: ${formatSkillInstallStatus(prehook.status)} ${pc.dim(
+          prehook.hookScript,
+        )} ${pc.dim(`settings: ${prehook.settingsPath}`)}`,
+      );
+    }
+  }
+
+  if (history) {
+    console.log("");
+    console.log(`${pc.dim("Local history:")} ${history.snapshotId}`);
+    console.log(`${pc.dim("History log:")} ${history.logPath}`);
+  }
+
+  if (options.showPostSkillChangeWelcome !== false) {
+    printPostSkillChangeWelcome(result);
   }
 }
 
-function printWritingPlansHandoff(message: string): void {
-  console.log(pc.cyan("Ready for writing-plans"));
-  console.log(message);
+function formatSkillInstallStatus(status: SkillInstallResult["targets"][number]["status"]): string {
+  switch (status) {
+    case "would_install":
+      return "would install";
+    case "would_overwrite":
+      return "would overwrite";
+    case "skipped_exists":
+      return "skipped existing";
+    case "overwritten":
+      return "overwritten";
+    case "installed":
+      return "installed";
+    case "updated":
+      return "updated";
+    case "would_update":
+      return "would update";
+    case "already_present":
+      return "already present";
+  }
+}
+
+function formatSkillInstallCommand(input: InstallSkillWithLocalHistoryInput): string {
+  const flags = [
+    `--home ${input.homeDir}`,
+    `--agents ${formatAgentList(input.agents)}`,
+    input.force ? "--force" : "",
+    input.installPrehook ? "--prehook" : "",
+  ].filter(Boolean);
+  return ["ponyrace skills", input.operation, input.source, ...flags].join(" ");
+}
+
+function formatExternalSkillsPackageInstallCommand(input: {
+  source: string;
+  homeDir: string;
+}): string {
+  return `ponyrace skills install ${input.source} --home ${input.homeDir}`;
+}
+
+function printExternalSkillsPackageInstallResult(
+  result: InstallExternalSkillsPackageWithLocalHistoryResult,
+): void {
+  console.log(
+    pc.cyan(result.dryRun ? "Skills package install plan" : "Skills package install result"),
+  );
+  console.log(`Package: ${result.packageName}`);
+  console.log(`${pc.dim("Home:")} ${result.homeDir}`);
+  console.log(`${pc.dim("Internal command:")} npx --yes skills@latest add ${result.packageName}`);
+
+  if (result.history) {
+    console.log("");
+    console.log(`${pc.dim("Local history:")} ${result.history.snapshotId}`);
+    console.log(`${pc.dim("History log:")} ${result.history.logPath}`);
+  }
+
+  if (!result.dryRun) {
+    console.log("");
+    console.log(pc.green("Welcome to GetSuperpower."));
+    console.log("Restart your agent IDE so it loads the latest skills.");
+  }
 }
 
 function printSnapshotHistory(
@@ -1161,551 +665,6 @@ function printSnapshotRevertPlan(actions: SnapshotRevertAction[], dryRun: boolea
   }
 }
 
-function buildClarifiedRequest(answers: GoalClarificationAnswer[]): string | null {
-  const customAnswers = answers
-    .filter((answer) => answer.mode === "custom" && answer.answer.trim())
-    .map((answer) => `${answer.question} ${answer.answer.trim()}`);
-
-  if (customAnswers.length === 0) {
-    return null;
-  }
-
-  return ["Clarified goal details.", ...customAnswers].join(" ");
-}
-
-async function promptForGoalClarifications(
-  input: GoalClarificationPromptInput,
-): Promise<GoalClarificationPromptResult> {
-  if (!process.stdin.isTTY) {
-    return { answers: [] };
-  }
-
-  intro(pc.cyan("Goal clarification"));
-  const answers: GoalClarificationAnswer[] = [];
-
-  for (const question of input.questions) {
-    const mode = await select({
-      message: question,
-      options: [
-        {
-          value: "custom",
-          label: "Custom answer",
-          hint: "Write the missing detail now.",
-        },
-        {
-          value: "open_question",
-          label: "Keep open",
-          hint: "Leave this as an open question.",
-        },
-        {
-          value: "skip",
-          label: "Skip",
-          hint: "Continue without this detail.",
-        },
-      ],
-    });
-
-    if (isCancel(mode)) {
-      throw new Error("Goal clarification cancelled");
-    }
-
-    if (mode !== "custom") {
-      answers.push({ question, mode, answer: "" });
-      continue;
-    }
-
-    const answer = await text({
-      message: "Custom answer",
-      placeholder: input.request,
-    });
-
-    if (isCancel(answer)) {
-      throw new Error("Goal clarification cancelled");
-    }
-
-    answers.push({ question, mode: "custom", answer: String(answer) });
-  }
-
-  outro(pc.green("Goal details captured"));
-  return { answers };
-}
-
-async function promptForGoalApproval(input: GoalApprovalPromptInput): Promise<boolean> {
-  if (!process.stdin.isTTY) {
-    return false;
-  }
-
-  intro(pc.cyan("Goal draft approval"));
-  printGoalDraft(input.contract);
-  const answer = await confirm({
-    message: "Approve this goal before pony discussion?",
-    active: "Approve goal",
-    inactive: "Pause",
-    initialValue: true,
-  });
-
-  if (isCancel(answer)) {
-    throw new Error("Goal approval cancelled");
-  }
-
-  outro(answer === true ? pc.green("Goal approved") : pc.yellow("Goal paused"));
-  return answer === true;
-}
-
-function printGoalDraft(contract: GoalContract): void {
-  console.log(pc.cyan("Draft goal"));
-  console.log(`Title: ${contract.title}`);
-  console.log(`Intent: ${contract.intent}`);
-  if (contract.openQuestions.length > 0) {
-    console.log("Open questions:");
-    for (const question of contract.openQuestions) {
-      console.log(`- ${question}`);
-    }
-  }
-}
-
-async function promptForRevertApproval(input: RevertApprovalPromptInput): Promise<boolean> {
-  if (!process.stdin.isTTY) {
-    console.log(pc.dim("Run from an interactive terminal to approve the revert."));
-    return false;
-  }
-
-  const answer = await confirm({
-    message: `Apply revert ${input.snapshotId}?`,
-    active: `Apply ${input.actions.length} file action${input.actions.length === 1 ? "" : "s"}`,
-    inactive: "Cancel",
-    initialValue: false,
-  });
-
-  return answer === true && !isCancel(answer);
-}
-
-function resolvePath(rootDir: string, path: string): string {
-  return isAbsolute(path) ? path : resolve(join(rootDir, path));
-}
-
-function configureSkillInstallCommand(
-  command: Command,
-  rootDir: string,
-  installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller,
-): Command {
-  return configureSkillChangeCommand(
-    command,
-    rootDir,
-    "install",
-    installExternalSkillDependency,
-  ).option("-f, --force", "overwrite existing installed skill folders", false);
-}
-
-function configureSkillChangeCommand(
-  command: Command,
-  rootDir: string,
-  operation: SkillChangeOperation,
-  installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller,
-): Command {
-  return command
-    .argument("[source-or-name]", "bundled skill name or local skill directory", "pony-trail")
-    .option(
-      "-a, --agents <agents>",
-      "comma-separated targets: claude,copilot,codex,cursor",
-      "claude,copilot,codex,cursor",
-    )
-    .option("--home <dir>", "home directory that contains agent config folders", homedir())
-    .option("--dry-run", `show ${operation} destinations without writing files`, false)
-    .option("--prehook", "also install a Ponytrail prehook reminder for file mutations", false)
-    .action(
-      async (
-        sourceOrName: string,
-        commandOptions: {
-          agents: string;
-          home: string;
-          dryRun: boolean;
-          prehook: boolean;
-          force?: boolean;
-        },
-      ) => {
-        const homeDir = resolveHomePath(commandOptions.home);
-        const externalSkillsPackage = getExternalSkillsPackageInstallSource(sourceOrName);
-        if (operation === "install" && externalSkillsPackage && installExternalSkillDependency) {
-          const result = await installExternalSkillsPackageWithLocalHistory({
-            rootDir,
-            source: sourceOrName,
-            packageName: externalSkillsPackage,
-            homeDir,
-            dryRun: commandOptions.dryRun,
-            installExternalSkillDependency,
-          });
-          printExternalSkillsPackageInstallResult(result);
-          return;
-        }
-
-        const result = await installSkillWithLocalHistory({
-          rootDir,
-          operation,
-          source: sourceOrName,
-          homeDir,
-          agents: parseSkillInstallAgents(commandOptions.agents),
-          dryRun: commandOptions.dryRun,
-          force: operation === "install" ? commandOptions.force === true : false,
-          refreshExisting: false,
-          installPrehook: commandOptions.prehook,
-        });
-
-        printSkillInstallResult(result.skillInstall, result.history, operation);
-      },
-    );
-}
-
-interface InstallSkillWithLocalHistoryInput {
-  rootDir: string;
-  operation: SkillChangeOperation;
-  source: string;
-  homeDir: string;
-  agents: ReturnType<typeof parseSkillInstallAgents>;
-  dryRun: boolean;
-  force: boolean;
-  refreshExisting: boolean;
-  installPrehook: boolean;
-}
-
-interface InstallSkillWithLocalHistoryResult {
-  skillInstall: SkillInstallResult;
-  history?: RecordedSnapshotCommit | undefined;
-}
-
-interface SkillInstallPrintOptions {
-  showPostSkillChangeWelcome?: boolean;
-}
-
-interface InstallExternalSkillsPackageWithLocalHistoryInput {
-  rootDir: string;
-  source: string;
-  packageName: string;
-  homeDir: string;
-  dryRun: boolean;
-  installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller;
-}
-
-interface InstallExternalSkillsPackageWithLocalHistoryResult {
-  source: string;
-  packageName: string;
-  homeDir: string;
-  dryRun: boolean;
-  history?: RecordedSnapshotCommit | undefined;
-}
-
-async function installSkillWithLocalHistory(
-  input: InstallSkillWithLocalHistoryInput,
-): Promise<InstallSkillWithLocalHistoryResult> {
-  const commandText = formatSkillInstallCommand(input);
-  let history: RecordedSnapshotCommit | undefined;
-
-  if (!input.dryRun) {
-    history = await recordSnapshotPre({
-      rootDir: input.rootDir,
-      sessionId: skillInstallHistorySessionId,
-      idPrefix: `skill-${input.operation}`,
-      action: `${input.operation} skill`,
-      purpose: `${formatSkillChangeVerb(input.operation)} ${input.source} skill for ${formatAgentList(
-        input.agents,
-      )}`,
-      reason: "Keep project-local history before changing agent skill files.",
-      expected: `The skill ${input.operation} result is captured in local Ponyrace history.`,
-      verify: "ponyrace history --details",
-      rollback:
-        "Remove or reinstall the affected agent skill folders, then record another snapshot.",
-    });
-  }
-
-  try {
-    const skillInstall = await installAgentSkill({
-      source: input.source,
-      cwd: input.rootDir,
-      homeDir: input.homeDir,
-      agents: input.agents,
-      dryRun: input.dryRun,
-      force: input.force,
-      operation: input.operation,
-      refreshExisting: input.refreshExisting,
-      installPrehook: input.installPrehook,
-    });
-
-    if (history) {
-      history = await recordSnapshotPost({
-        rootDir: input.rootDir,
-        sessionId: history.sessionId,
-        snapshotId: history.snapshotId,
-        summary: formatSkillInstallSummary(skillInstall, input.operation),
-        checks: commandText,
-        result: formatSkillInstallHistoryResult(skillInstall),
-      });
-    }
-
-    return { skillInstall, history };
-  } catch (error) {
-    if (history) {
-      await recordSnapshotPost({
-        rootDir: input.rootDir,
-        sessionId: history.sessionId,
-        snapshotId: history.snapshotId,
-        summary: `Failed to ${input.operation} ${input.source} skill for ${formatAgentList(
-          input.agents,
-        )}`,
-        checks: commandText,
-        result: `fail: ${formatErrorMessage(error)}`,
-      });
-    }
-    throw error;
-  }
-}
-
-async function installExternalSkillsPackageWithLocalHistory(
-  input: InstallExternalSkillsPackageWithLocalHistoryInput,
-): Promise<InstallExternalSkillsPackageWithLocalHistoryResult> {
-  if (input.dryRun) {
-    return {
-      source: input.source,
-      packageName: input.packageName,
-      homeDir: input.homeDir,
-      dryRun: true,
-    };
-  }
-
-  let history = await recordSnapshotPre({
-    rootDir: input.rootDir,
-    sessionId: skillInstallHistorySessionId,
-    idPrefix: "skills-package-install",
-    action: "install skills package",
-    purpose: `Install ${input.packageName} skills package through the Skills CLI`,
-    reason: "Keep project-local history before changing agent skill files.",
-    expected: `The ${input.packageName} skills package is available under the configured home directory.`,
-    verify: "ponyrace history --details",
-    rollback: "Remove the affected installed skill folders, then record another snapshot.",
-  });
-
-  try {
-    await input.installExternalSkillDependency({
-      source: input.source,
-      homeDir: input.homeDir,
-    });
-
-    history = await recordSnapshotPost({
-      rootDir: input.rootDir,
-      sessionId: history.sessionId,
-      snapshotId: history.snapshotId,
-      summary: `Installed ${input.packageName} skills package`,
-      checks: formatExternalSkillsPackageInstallCommand(input),
-      result: `installed:${input.packageName}`,
-    });
-
-    return {
-      source: input.source,
-      packageName: input.packageName,
-      homeDir: input.homeDir,
-      dryRun: false,
-      history,
-    };
-  } catch (error) {
-    await recordSnapshotPost({
-      rootDir: input.rootDir,
-      sessionId: history.sessionId,
-      snapshotId: history.snapshotId,
-      summary: `Failed to install ${input.packageName} skills package`,
-      checks: formatExternalSkillsPackageInstallCommand(input),
-      result: `fail: ${formatErrorMessage(error)}`,
-    });
-    throw error;
-  }
-}
-
-function getExternalSkillsPackageInstallSource(source: string): string | null {
-  if (source.includes(":")) {
-    return null;
-  }
-  return getSkillsCliPackageForSource(source);
-}
-
-type OptionalSuperpowersProcessSkillInstall =
-  | {
-      source: string;
-      status: "installed";
-      result: InstallSkillWithLocalHistoryResult;
-    }
-  | {
-      source: string;
-      status: "missing";
-      installCommand: string;
-    };
-
-async function installOptionalSuperpowersProcessSkills(input: {
-  rootDir: string;
-  homeDir: string;
-  agents: ReturnType<typeof parseSkillInstallAgents>;
-}): Promise<OptionalSuperpowersProcessSkillInstall[]> {
-  const results: OptionalSuperpowersProcessSkillInstall[] = [];
-
-  for (const source of optionalSuperpowersProcessSkillSources) {
-    try {
-      await resolveInstallSkillSource(source, {
-        cwd: input.rootDir,
-        homeDir: input.homeDir,
-      });
-    } catch (error) {
-      if (isMissingSuperpowersSkillError(error)) {
-        results.push({
-          source,
-          status: "missing",
-          installCommand: formatOptionalSuperpowersInstallCommand({
-            source,
-            homeDir: input.homeDir,
-            agents: input.agents,
-          }),
-        });
-        continue;
-      }
-      throw error;
-    }
-
-    const skillResult = await installSkillWithLocalHistory({
-      rootDir: input.rootDir,
-      operation: "install",
-      source,
-      homeDir: input.homeDir,
-      agents: input.agents,
-      dryRun: false,
-      force: false,
-      refreshExisting: true,
-      installPrehook: false,
-    });
-
-    results.push({ source, status: "installed", result: skillResult });
-  }
-
-  return results;
-}
-
-function formatOptionalSuperpowersInstallCommand(input: {
-  source: string;
-  homeDir: string;
-  agents: ReturnType<typeof parseSkillInstallAgents>;
-}): string {
-  return `ponyrace skills install ${input.source} --agents ${formatAgentList(
-    input.agents,
-  )} --home ${input.homeDir}`;
-}
-
-function resolveHomePath(path: string): string {
-  if (path === "~") {
-    return homedir();
-  }
-  if (path.startsWith("~/")) {
-    return join(homedir(), path.slice(2));
-  }
-  return isAbsolute(path) ? path : resolve(path);
-}
-
-function printSkillInstallResult(
-  result: SkillInstallResult,
-  history?: RecordedSnapshotCommit | undefined,
-  operation: SkillChangeOperation = "install",
-  options: SkillInstallPrintOptions = {},
-): void {
-  console.log(pc.cyan(result.dryRun ? `Skill ${operation} plan` : `Skill ${operation} result`));
-  console.log(`Skill: ${result.skillName}`);
-  console.log(`${pc.dim("Source:")} ${result.source.path}`);
-
-  for (const target of result.targets) {
-    console.log(
-      `${target.agent}: ${formatSkillInstallStatus(target.status)} ${pc.dim(target.destination)}`,
-    );
-  }
-
-  if (result.prehooks.length > 0) {
-    console.log("");
-    console.log(
-      pc.cyan(result.dryRun ? `Prehook ${operation} plan` : `Prehook ${operation} result`),
-    );
-    for (const prehook of result.prehooks) {
-      console.log(
-        `${prehook.agent}: ${formatSkillInstallStatus(prehook.status)} ${pc.dim(
-          prehook.hookScript,
-        )} ${pc.dim(`settings: ${prehook.settingsPath}`)}`,
-      );
-    }
-  }
-
-  if (history) {
-    console.log("");
-    console.log(`${pc.dim("Local history:")} ${history.snapshotId}`);
-    console.log(`${pc.dim("History log:")} ${history.logPath}`);
-  }
-
-  if (options.showPostSkillChangeWelcome !== false) {
-    printPostSkillChangeWelcome(result);
-  }
-}
-
-function formatSkillInstallStatus(status: SkillInstallResult["targets"][number]["status"]): string {
-  switch (status) {
-    case "would_install":
-      return "would install";
-    case "would_overwrite":
-      return "would overwrite";
-    case "skipped_exists":
-      return "skipped existing";
-    case "overwritten":
-      return "overwritten";
-    case "installed":
-      return "installed";
-    case "updated":
-      return "updated";
-    case "would_update":
-      return "would update";
-    case "already_present":
-      return "already present";
-  }
-}
-
-function formatSkillInstallCommand(input: InstallSkillWithLocalHistoryInput): string {
-  const flags = [
-    `--home ${input.homeDir}`,
-    `--agents ${formatAgentList(input.agents)}`,
-    input.force ? "--force" : "",
-    input.installPrehook ? "--prehook" : "",
-  ].filter(Boolean);
-  return ["ponyrace skills", input.operation, input.source, ...flags].join(" ");
-}
-
-function formatExternalSkillsPackageInstallCommand(input: {
-  source: string;
-  homeDir: string;
-}): string {
-  return `ponyrace skills install ${input.source} --home ${input.homeDir}`;
-}
-
-function printExternalSkillsPackageInstallResult(
-  result: InstallExternalSkillsPackageWithLocalHistoryResult,
-): void {
-  console.log(
-    pc.cyan(result.dryRun ? "Skills package install plan" : "Skills package install result"),
-  );
-  console.log(`Package: ${result.packageName}`);
-  console.log(`${pc.dim("Home:")} ${result.homeDir}`);
-  console.log(`${pc.dim("Internal command:")} npx --yes skills@latest add ${result.packageName}`);
-
-  if (result.history) {
-    console.log("");
-    console.log(`${pc.dim("Local history:")} ${result.history.snapshotId}`);
-    console.log(`${pc.dim("History log:")} ${result.history.logPath}`);
-  }
-
-  if (!result.dryRun) {
-    console.log("");
-    console.log(pc.green("Welcome to Ponyrace."));
-    console.log("Restart your agent IDE so it loads the latest Ponyrace skills.");
-  }
-}
-
 function formatSkillInstallSummary(
   result: SkillInstallResult,
   operation: SkillChangeOperation,
@@ -1729,77 +688,14 @@ function formatSkillInstallHistoryResult(result: SkillInstallResult): string {
   return [targetStatuses, prehookStatuses].filter(Boolean).join("; ");
 }
 
-function formatAgentDisplayList(agents: string[]): string {
-  const displayNames = agents
-    .map((agent) => {
-      switch (agent) {
-        case "codex":
-          return { label: "Codex", order: 0 };
-        case "claude":
-          return { label: "Claude", order: 1 };
-        case "cursor":
-          return { label: "Cursor", order: 2 };
-        case "copilot":
-          return { label: "GitHub Copilot", order: 3 };
-        default:
-          return { label: agent, order: 99 };
-      }
-    })
-    .sort((left, right) => left.order - right.order || left.label.localeCompare(right.label))
-    .map((agent) => agent.label);
-
-  if (displayNames.length <= 1) {
-    return displayNames[0] ?? "your agent";
-  }
-  if (displayNames.length === 2) {
-    return `${displayNames[0]} and ${displayNames[1]}`;
-  }
-
-  return `${displayNames.slice(0, -1).join(", ")}, and ${displayNames.at(-1)}`;
-}
-
-function printPonyraceReady(input: {
-  completionLabel: string;
-  manifestPath: string;
-  agents: string[];
-  optionalSuperpowers: OptionalSuperpowersProcessSkillInstall[];
-}): void {
-  console.log("");
-  console.log(pc.green("============"));
-  console.log(pc.bold(pc.green("PONYRACE")));
-  console.log(pc.green("============"));
-  console.log(pc.green(input.completionLabel));
-  console.log(`${pc.dim("Manifest:")} ${input.manifestPath}`);
-  console.log(`${pc.dim("Configured targets:")} ${formatAgentDisplayList(input.agents)}`);
-
-  const missingSuperpowers = input.optionalSuperpowers.filter(
-    (optionalSuperpower) => optionalSuperpower.status === "missing",
-  );
-  if (missingSuperpowers.length > 0) {
-    console.log("");
-    console.log(pc.dim("Optional: Superpowers process skills are not installed."));
-    console.log(
-      pc.dim(
-        "Ponyrace still works without them; install missing skills later for the full /ponyrace workflow:",
-      ),
-    );
-    for (const missingSuperpower of missingSuperpowers) {
-      console.log(pc.dim(missingSuperpower.installCommand));
-    }
-  }
-
-  console.log("");
-  console.log(`${pc.dim("Next:")} restart the configured agent app, then run /ponyrace <request>`);
-}
-
 function printPostSkillChangeWelcome(result: SkillInstallResult): void {
   if (result.dryRun) {
     return;
   }
 
   console.log("");
-  console.log(pc.green("Welcome to Ponyrace."));
-  console.log("Restart your agent IDE so it loads the latest Ponyrace skills.");
+  console.log(pc.green("Welcome to GetSuperpower."));
+  console.log("Restart your agent IDE so it loads the latest skills.");
 }
 
 function formatAgentList(agents: string[]): string {
