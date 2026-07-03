@@ -3,8 +3,8 @@ import { access, chmod, cp, mkdir, readdir, readFile, rm, stat, writeFile } from
 import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type SkillInstallAgent = "claude" | "copilot" | "codex" | "cursor";
-type HookCapableSkillInstallAgent = Exclude<SkillInstallAgent, "cursor">;
+export type SkillInstallAgent = "claude" | "copilot" | "codex" | "cursor" | "opencode";
+type HookCapableSkillInstallAgent = Exclude<SkillInstallAgent, "cursor" | "opencode">;
 
 export type SkillInstallStatus =
   | "installed"
@@ -122,6 +122,7 @@ const agentSkillTargets: Record<
   copilot: { kind: "directory", path: [".agents", "skills"] },
   codex: { kind: "directory", path: [".agents", "skills"] },
   cursor: { kind: "cursor_rule", path: [".cursor", "rules"] },
+  opencode: { kind: "directory", path: [".agents", "skills"] },
 };
 
 const prehookScriptName = "ponytrail-prehook.sh";
@@ -411,22 +412,30 @@ export function isMissingSuperpowersSkillError(
 }
 
 export function parseSkillInstallAgents(rawAgents: string): SkillInstallAgent[] {
-  const agents = rawAgents
+  const rawAgentEntries = rawAgents
     .split(",")
     .map((agent) => agent.trim())
     .filter(Boolean);
 
-  if (agents.length === 0) {
+  if (rawAgentEntries.length === 0) {
     throw new Error("At least one agent target is required.");
   }
 
-  for (const agent of agents) {
-    if (!isSkillInstallAgent(agent)) {
-      throw new Error(`Unknown skill install agent: ${agent}`);
+  const uniqueAgents: SkillInstallAgent[] = [];
+  const seenAgents = new Set<SkillInstallAgent>();
+
+  for (const rawAgent of rawAgentEntries) {
+    const agent = normalizeSkillInstallAgent(rawAgent);
+    if (!agent) {
+      throw new Error(`Unknown skill install agent: ${rawAgent}`);
+    }
+    if (!seenAgents.has(agent)) {
+      seenAgents.add(agent);
+      uniqueAgents.push(agent);
     }
   }
 
-  return agents as SkillInstallAgent[];
+  return uniqueAgents;
 }
 
 async function resolvePathSkill(path: string): Promise<ResolvedInstallSkillSource> {
@@ -799,11 +808,33 @@ function getPrehookStatus(input: {
 }
 
 function isSkillInstallAgent(agent: string): agent is SkillInstallAgent {
-  return agent === "claude" || agent === "copilot" || agent === "codex" || agent === "cursor";
+  return (
+    agent === "claude" ||
+    agent === "copilot" ||
+    agent === "codex" ||
+    agent === "cursor" ||
+    agent === "opencode"
+  );
+}
+
+function normalizeSkillInstallAgent(agent: string): SkillInstallAgent | null {
+  const normalized = agent.toLowerCase();
+  const aliases: Record<string, SkillInstallAgent> = {
+    "github copilot": "copilot",
+    "github-copilot": "copilot",
+    githubcopilot: "copilot",
+    github_copilot: "copilot",
+    "open codex": "opencode",
+    "open-codex": "opencode",
+    opencodex: "opencode",
+  };
+  const canonical = aliases[normalized] ?? normalized;
+
+  return isSkillInstallAgent(canonical) ? canonical : null;
 }
 
 function hasPrehookSupport(agent: SkillInstallAgent): agent is HookCapableSkillInstallAgent {
-  return agent !== "cursor";
+  return agent !== "cursor" && agent !== "opencode";
 }
 
 function looksLikePath(value: string): boolean {
@@ -811,7 +842,7 @@ function looksLikePath(value: string): boolean {
 }
 
 function formatSuperpowersInstallCommand(source: string): string {
-  return `getsuperpower skills install ${source} --agents codex,claude,cursor --home ~`;
+  return `getsuperpower skills install ${source} --agents codex,claude,cursor,copilot,opencode --home ~`;
 }
 
 function shellQuote(value: string): string {

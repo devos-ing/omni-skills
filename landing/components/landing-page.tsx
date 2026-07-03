@@ -11,15 +11,33 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { agents, commands, githubUrl, howItWorks, workflows } from "../lib/landing-content";
+import { useEffect, useMemo, useState } from "react";
+import {
+  type AgentBadgeContent,
+  agents,
+  commands,
+  githubUrl,
+  howItWorks,
+  workflows,
+} from "../lib/landing-content";
 import { FlowDiagram } from "./flow-diagram";
 import { TerminalBlock } from "./terminal-block";
 import { WorkflowCard } from "./workflow-card";
+import { WorkflowDetail } from "./workflow-detail";
+import { WorkflowRunDemo } from "./workflow-run-demo";
+
+const agentLogoStyles: Record<AgentBadgeContent["id"], string> = {
+  claude: "border-orange-200/15 bg-orange-300/10 text-orange-200",
+  codex: "border-emerald-200/15 bg-emerald-300/10 text-emerald-200",
+  cursor: "border-white/15 bg-white/[0.06] text-white/80",
+  opencode: "border-sky-200/15 bg-sky-300/10 text-sky-200",
+  "github-copilot": "border-violet-200/15 bg-violet-300/10 text-violet-200",
+};
 
 export function LandingPage() {
   const [activeCommand, setActiveCommand] = useState(0);
   const [query, setQuery] = useState("");
+  const [selectedWorkflowSlug, setSelectedWorkflowSlug] = useState<string | null>(null);
 
   const filteredWorkflows = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -39,6 +57,17 @@ export function LandingPage() {
       );
     });
   }, [query]);
+
+  const selectedWorkflow = useMemo(() => {
+    if (!selectedWorkflowSlug) return null;
+    return filteredWorkflows.find((workflow) => workflow.slug === selectedWorkflowSlug) ?? null;
+  }, [filteredWorkflows, selectedWorkflowSlug]);
+
+  useEffect(() => {
+    if (!selectedWorkflowSlug) return;
+    if (filteredWorkflows.some((workflow) => workflow.slug === selectedWorkflowSlug)) return;
+    setSelectedWorkflowSlug(null);
+  }, [filteredWorkflows, selectedWorkflowSlug]);
 
   const active = commands[activeCommand] ?? commands[0];
 
@@ -102,10 +131,24 @@ export function LandingPage() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
           {agents.map((agent) => (
             <span
-              key={agent}
-              className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-white/42"
+              key={agent.id}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] py-1 pl-1 pr-2.5 text-xs text-white/52"
             >
-              {agent}
+              {agent.logoSrc ? (
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${agentLogoStyles[agent.id]}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 bg-current"
+                    style={{
+                      WebkitMask: `url(${agent.logoSrc}) center / contain no-repeat`,
+                      mask: `url(${agent.logoSrc}) center / contain no-repeat`,
+                    }}
+                  />
+                </span>
+              ) : null}
+              <span>{agent.name}</span>
             </span>
           ))}
         </div>
@@ -140,6 +183,8 @@ export function LandingPage() {
         </div>
       </section>
 
+      <WorkflowRunDemo />
+
       <section id="workflows" className="relative z-10 mx-auto max-w-6xl px-5 py-20">
         <div className="mb-10 text-center">
           <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">Workflow bundles</p>
@@ -169,10 +214,20 @@ export function LandingPage() {
             </button>
           ) : null}
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {filteredWorkflows.map((workflow) => (
-            <WorkflowCard key={workflow.name} {...workflow} />
-          ))}
+        <div
+          className={`grid gap-4 ${selectedWorkflow ? "lg:grid-cols-[minmax(0,1fr)_360px]" : ""}`}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            {filteredWorkflows.map((workflow) => (
+              <WorkflowCard
+                key={workflow.slug}
+                {...workflow}
+                isSelected={workflow.slug === selectedWorkflowSlug}
+                onViewWorkflow={() => setSelectedWorkflowSlug(workflow.slug)}
+              />
+            ))}
+          </div>
+          {selectedWorkflow ? <WorkflowDetail workflow={selectedWorkflow} /> : null}
         </div>
       </section>
 

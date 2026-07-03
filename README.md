@@ -31,7 +31,7 @@ List installed GetSuperpowers:
 npx getsuperpower@latest list
 ```
 
-Supported agents: Claude, Codex, opencode, Cursor, and GitHub Copilot.
+Supported agents: Claude, Codex, Cursor, opencode/OpenCodex, and GitHub Copilot. CLI aliases include `opencode`, `opencodex`, `copilot`, and `github-copilot`.
 
 Restart your agent after installing skills so it reloads them.
 
@@ -44,30 +44,6 @@ Restart your agent after installing skills so it reloads them.
 ### Install And Run Sequence
 
 <img src="assets/diagrams/getsuperpower-install-sequence.svg" alt="GetSuperpower install and run sequence diagram" width="920" />
-
-## Try A Callable Workflow
-
-Some GetSuperpowers include an entry skill. That is the one skill a user calls
-to run the whole skill tree.
-
-Install the OpenSpec Delivery example from this repo to get `$openspec-delivery`:
-
-```bash
-npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'
-```
-
-<img src="assets/diagrams/openspec-delivery-workflow.svg" alt="OpenSpec Delivery workflow diagram" width="920" />
-
-Then restart your agent app and invoke:
-
-```text
-$openspec-delivery implement this OpenSpec change
-```
-
-That one call can propose the spec, run the brainstorming step, write the plan,
-build with TDD, verify, and archive according to the workflow. You do not call
-the separate skills yourself; the entry skill coordinates them. The CLI handles
-installation, validation, and local workflow records.
 
 ## Create Your Own
 
@@ -133,20 +109,21 @@ GetSuperpower install automatically uses the Skills CLI to fetch missing `mattpo
 npx getsuperpower@latest skills install mattpocock/skills
 ```
 
-## Common Commands
+## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `npx getsuperpower@latest install <path-or-git-url>` | Install a GetSuperpower from a local path or public git source. |
-| `npx getsuperpower@latest clone <path-or-git-url>` | Same as install; deploy a GetSuperpower from a local path or public git source. |
-| `npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'` | Install a GetSuperpower from a public git repo. |
-| `npx getsuperpower@latest deps <source>` | Show required skills before install or clone. |
-| `npx getsuperpower@latest list` | Show installed GetSuperpowers. |
-| `npx getsuperpower@latest init <name>` | Create a GetSuperpower scaffold. |
-| `npx getsuperpower@latest validate <path>` | Validate a workflow manifest. |
-| `npx getsuperpower@latest skills install` | Install the GetSuperpower authoring skill. |
-| `npx getsuperpower@latest skills install mattpocock/skills` | Install an external skills package through the Skills CLI. |
-| `npx getsuperpower@latest skills install creating-bundle-skills` | Install the GetSuperpower authoring skill. |
+The GetSuperpower CLI supports workflow install, inspection, authoring, and skill management. Below are some of the most used commands:
+
+- `npx getsuperpower@latest install <path-or-git-url>`
+- `npx getsuperpower@latest clone <path-or-git-url>`
+- `npx getsuperpower@latest deps <source>`
+- `npx getsuperpower@latest list`
+- `npx getsuperpower@latest init <name>`
+- `npx getsuperpower@latest validate <path>`
+- `npx getsuperpower@latest skills install`
+- `npx getsuperpower@latest skills install mattpocock/skills`
+- `npx getsuperpower@latest skills install creating-bundle-skills`
+
+Run `npx getsuperpower@latest --help` or `npx getsuperpower@latest <command> --help` for detailed usage.
 
 The older `bundle` and `workflow` commands still work as compatibility aliases.
 

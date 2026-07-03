@@ -216,7 +216,7 @@ function configureInstallLikeCommand(
     )
     .option(
       "--agents <agents>",
-      "comma-separated skill install targets: codex,claude,cursor",
+      "comma-separated skill install targets: codex,claude,cursor,copilot,opencode (aliases: github-copilot,opencodex)",
       "codex,claude,cursor",
     )
     .option("--home <dir>", "home directory that contains agent config folders", homedir())

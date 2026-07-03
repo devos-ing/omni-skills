@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   installAgentSkill,
+  parseSkillInstallAgents,
   resolveInstallSkillSource,
   type SkillInstallAgent,
 } from "../src/plugins/skill-installer";
@@ -79,6 +80,20 @@ describe("skill installer", () => {
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
+  });
+
+  test("parses opencode, opencodex, and GitHub Copilot agent aliases", () => {
+    expect(
+      parseSkillInstallAgents(
+        "Claude,codex,cursor,opencode,opencodex,github-copilot,GitHub Copilot,githubcopilot",
+      ),
+    ).toEqual(["claude", "codex", "cursor", "opencode", "copilot"]);
+  });
+
+  test("rejects unknown agent targets even when mixed with supported aliases", () => {
+    expect(() => parseSkillInstallAgents("codex,unknown-agent")).toThrow(
+      "Unknown skill install agent: unknown-agent",
+    );
   });
 
   test("installs the bundled review past decisions skill into directory and Cursor targets", async () => {
@@ -202,7 +217,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:brainstorming", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:brainstorming --agents codex,claude,cursor --home ~",
+        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:brainstorming --agents codex,claude,cursor,copilot,opencode --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -216,7 +231,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:writing-plans", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:writing-plans --agents codex,claude,cursor --home ~",
+        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: getsuperpower skills install superpowers:writing-plans --agents codex,claude,cursor,copilot,opencode --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -391,18 +406,19 @@ describe("skill installer", () => {
     }
   });
 
-  test("installs a bundled skill into Claude, Copilot/shared, Codex, and Cursor targets", async () => {
+  test("installs a bundled skill into Claude, Copilot/shared, Codex, Cursor, and opencode targets", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
     try {
       const result = await installAgentSkill({
         source: "pony-trail",
         homeDir,
-        agents: allAgents,
+        agents: [...allAgents, "opencode"],
       });
 
       expect(result.skillName).toBe("pony-trail");
       expect(result.targets.map((target) => target.status)).toEqual([
+        "installed",
         "installed",
         "installed",
         "installed",
@@ -655,6 +671,30 @@ describe("skill installer", () => {
       });
       await expect(
         stat(join(homeDir, ".codex", "hooks", "ponytrail-prehook.sh")),
+      ).rejects.toThrow();
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("does not install prehooks for the opencode shared skill target", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      const result = await installAgentSkill({
+        source: "pony-trail",
+        homeDir,
+        agents: ["opencode"],
+        installPrehook: true,
+      });
+
+      expect(result.targets[0]).toMatchObject({
+        agent: "opencode",
+        status: "installed",
+      });
+      expect(result.prehooks).toEqual([]);
+      await expect(
+        stat(join(homeDir, ".agents", "hooks", "ponytrail-prehook.sh")),
       ).rejects.toThrow();
     } finally {
       await rm(homeDir, { recursive: true, force: true });

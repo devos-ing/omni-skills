@@ -332,6 +332,68 @@ describe("cli", () => {
     }
   });
 
+  test("skills install and update help list supported agent target aliases", () => {
+    const program = buildProgram();
+    const skillsCommand = program.commands.find((command) => command.name() === "skills");
+
+    for (const commandName of ["install", "update"]) {
+      const command = skillsCommand?.commands.find(
+        (subcommand) => subcommand.name() === commandName,
+      );
+      const help = stripAnsi(command?.helpInformation() ?? "");
+
+      expect(help).toContain("claude,copilot,codex,cursor,opencode");
+      expect(help).toContain("github-copilot");
+      expect(help).toContain("opencodex");
+    }
+  });
+
+  test("skills install and update accept opencode and GitHub Copilot aliases", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        [
+          "skills",
+          "install",
+          "pony-trail",
+          "--home",
+          homeDir,
+          "--agents",
+          "opencodex,github-copilot",
+        ],
+        { from: "user" },
+      );
+      await writeFile(
+        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        "stale installed copy",
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "opencode,githubcopilot"],
+        { from: "user" },
+      );
+
+      expect(logs.some((line) => line.includes("opencode: installed"))).toBe(true);
+      expect(logs.some((line) => line.includes("copilot: installed"))).toBe(true);
+      expect(logs.some((line) => line.includes("opencode: updated"))).toBe(true);
+      expect(logs.some((line) => line.includes("copilot: updated"))).toBe(true);
+      expect(
+        await readFile(join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"), "utf8"),
+      ).toContain("name: pony-trail");
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("skills install can still install pony-trail when requested explicitly", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
     const logs: string[] = [];
