@@ -12,16 +12,4 @@ docs/superpowers/
 __pycache__/
 *.pyc
 .env
-outputs/getsuperpower-introduction.pptx
-outputs/getsuperpower-introduction.pptx.inspect.ndjson
-outputs/getsuperpower-introduction/slide-1.png
-outputs/getsuperpower-introduction/slide-2.png
-outputs/getsuperpower-introduction/slide-3.png
-outputs/getsuperpower-introduction/slide-4.png
-outputs/getsuperpower-introduction/slide-5.png
-outputs/getsuperpower-introduction/slide-6.png
-outputs/getsuperpower-introduction/slide-7.png
-outputs/getsuperpower-introduction/slide-8.png
-outputs/getsuperpower-introduction/slide-9.png
-outputs/getsuperpower-introduction/slide-10.png
-outputs/getsuperpower-introduction/slide-11.png
+outputs/
