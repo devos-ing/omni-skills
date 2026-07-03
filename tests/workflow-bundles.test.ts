@@ -13,18 +13,10 @@ import {
 } from "../src/runtimes/ponytrail/workflow-bundles";
 
 describe("workflow bundles", () => {
-  test("loads the bundled product-dev workflow", async () => {
-    const bundle = await loadWorkflowBundle("product-dev");
-
-    expect(bundle.manifest.name).toBe("product-dev");
-    expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
-      "superpowers:brainstorming",
-      "superpowers:writing-plans",
-    ]);
-    expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
-      ["shape", "superpowers:brainstorming"],
-      ["plan", "superpowers:writing-plans"],
-    ]);
+  test("rejects bare workflow names now that bundled workflows are removed", async () => {
+    await expect(loadWorkflowBundle("product-dev")).rejects.toThrow(
+      "Unsupported GetSuperpower source: product-dev",
+    );
   });
 
   test("rejects duplicate workflow step ids", async () => {
@@ -388,20 +380,22 @@ describe("workflow bundles", () => {
 
   test("installs and lists workflow bundles under .getsuperpower", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-install-"));
-    const bundle = await loadWorkflowBundle("product-dev");
+    const bundle = await loadWorkflowBundle("examples/workflows/release-review");
 
     const installed = await installWorkflowBundle({
       rootDir,
       bundle,
     });
 
-    expect(installed.path).toBe(join(rootDir, ".getsuperpower", "workflows", "product-dev.json"));
+    expect(installed.path).toBe(
+      join(rootDir, ".getsuperpower", "workflows", "release-review.json"),
+    );
     const installedFile = JSON.parse(await readFile(installed.path, "utf8"));
-    expect(installedFile.name).toBe("product-dev");
-    expect(installedFile.steps).toHaveLength(2);
+    expect(installedFile.name).toBe("release-review");
+    expect(installedFile.steps).toHaveLength(4);
 
     const workflows = await listInstalledWorkflowBundles({ rootDir });
-    expect(workflows.map((workflow) => workflow.name)).toEqual(["product-dev"]);
+    expect(workflows.map((workflow) => workflow.name)).toEqual(["release-review"]);
   });
 });
 

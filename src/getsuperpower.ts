@@ -207,7 +207,7 @@ function configureInstallLikeCommand(
   command
     .command(verb)
     .description("Install a GetSuperpower and its skills.")
-    .argument("<source>", "GetSuperpower name, local path, or workflow source")
+    .argument("<source>", "local GetSuperpower path, workflow.json path, or public git source")
     .option(
       "--dir <dir>",
       "project directory that receives .getsuperpower/workflows",
@@ -419,7 +419,7 @@ function configureListCommand(command: Command, rootDir: string): void {
 
       if (workflows.length === 0) {
         console.log(muted("No GetSuperpowers installed."));
-        console.log(nextStep("getsuperpower install product-dev"));
+        console.log(nextStep("getsuperpower install <path-or-git-url>"));
         return;
       }
 
@@ -437,7 +437,7 @@ function configureDependencyCommand(
     .command("deps")
     .aliases(["dependencies", "dependence"])
     .description("List the skill dependencies declared by a GetSuperpower.")
-    .argument("<source>", "bundled GetSuperpower name or local GetSuperpower path")
+    .argument("<source>", "local GetSuperpower path, workflow.json path, or public git source")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {
         cwd: options.rootDir,

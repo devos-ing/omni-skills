@@ -74,7 +74,7 @@ export type WorkflowGitCommandRunner = (
 
 export type WorkflowBundleSource =
   | {
-      kind: "bundled" | "local";
+      kind: "local";
       path: string;
     }
   | {
@@ -344,8 +344,9 @@ async function resolveWorkflowBundleSource(
     return { sourceDir, source: { kind: "local", path: sourceDir } };
   }
 
-  const sourceDir = join(findBundledWorkflowsDir(), source);
-  return { sourceDir, source: { kind: "bundled", path: sourceDir } };
+  throw new Error(
+    `Unsupported GetSuperpower source: ${source}. Use a local path, workflow.json path, or public git URL.`,
+  );
 }
 
 function isLocalWorkflowSource(source: string): boolean {
@@ -509,22 +510,4 @@ async function runOptionalGitCommand(
 
 function isMissingFileError(error: unknown): boolean {
   return (error as NodeJS.ErrnoException).code === "ENOENT";
-}
-
-function findBundledWorkflowsDir(): string {
-  const currentDir = dirname(new URL(import.meta.url).pathname);
-  const candidates = [
-    join(currentDir, "..", "..", "..", "bundled-workflows"),
-    join(currentDir, "..", "bundled-workflows"),
-    join(process.cwd(), "bundled-workflows"),
-  ];
-
-  const found = candidates.find((candidate) =>
-    existsSync(join(candidate, "product-dev", workflowFileName)),
-  );
-  if (!found) {
-    throw new Error("Unable to locate bundled workflow files.");
-  }
-
-  return found;
 }

@@ -114,12 +114,12 @@ Install and author workflow skill trees for agent work.
 Start:
   getsuperpower init release-review
   getsuperpower validate ./release-review
-  getsuperpower install product-dev
   getsuperpower clone https://github.com/acme/release-review.git
+  getsuperpower install ./release-review
 
 Inspect:
   getsuperpower list
-  getsuperpower deps product-dev
+  getsuperpower deps ./release-review
 
 Usage:
   getsuperpower [options] [command]
@@ -155,8 +155,8 @@ The first line should use the success helper. Labels such as `Steps:` and
 ### Install Result
 
 ```text
-GetSuperpower installed: product-dev
-GetSuperpower file: /path/to/.getsuperpower/workflows/product-dev.json
+GetSuperpower installed: release-review
+GetSuperpower file: /path/to/.getsuperpower/workflows/release-review.json
 ```
 
 Do not add the ASCII logo here. Installs can be part of scripts and should stay
@@ -177,7 +177,7 @@ Keep target rows scan-friendly. Do not introduce decorative bullets.
 
 ```text
 No GetSuperpowers installed.
-Next: getsuperpower install product-dev
+Next: getsuperpower install <path-or-git-url>
 ```
 
 Empty states should include one useful next command when it is safe and obvious.
@@ -229,7 +229,7 @@ Before delivery, run:
 ```bash
 rtk bun test tests/cli.test.ts tests/getsuperpower.test.ts
 rtk bun run dev -- --help
-rtk bun run dev -- deps product-dev
+rtk bun run dev -- deps examples/workflows/release-review
 rtk bun run dev -- validate examples/workflows/release-review
 rtk bun run check
 ```

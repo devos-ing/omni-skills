@@ -51,12 +51,12 @@ export function rootHelpBanner(): string {
     label("Start:"),
     `  ${commandText("getsuperpower init release-review")}`,
     `  ${commandText("getsuperpower validate ./release-review")}`,
-    `  ${commandText("getsuperpower install product-dev")}`,
     `  ${commandText("getsuperpower clone https://github.com/acme/release-review.git")}`,
+    `  ${commandText("getsuperpower install ./release-review")}`,
     "",
     label("Inspect:"),
     `  ${commandText("getsuperpower list")}`,
-    `  ${commandText("getsuperpower deps product-dev")}`,
+    `  ${commandText("getsuperpower deps ./release-review")}`,
     "",
   ].join("\n");
 }

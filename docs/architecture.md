@@ -47,7 +47,7 @@ Compatibility aliases:
 - parse and validate `workflow.json`
 - reject duplicate step ids
 - scaffold a local bundle with an entry skill
-- resolve bundled and local bundle sources
+- resolve local and public git bundle sources
 - list skill dependency sources
 - install normalized project-local records under `.getsuperpower/workflows/`
 - list installed GetSuperpowers

@@ -66,9 +66,9 @@ Author or user request
 ```bash
 bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
-bun run dev -- install product-dev
-bun run dev -- clone product-dev
-bun run dev -- deps product-dev
+bun run dev -- install examples/workflows/release-review
+bun run dev -- clone examples/workflows/release-review
+bun run dev -- deps examples/workflows/release-review
 bun run dev -- init my-workflow
 bun run dev -- validate examples/workflows/real-engineering
 bun run dev -- skills install
@@ -118,6 +118,6 @@ For CLI changes, also run a smoke check against a scratch directory under
 
 ```bash
 rtk bun run dev -- --help
-rtk bun run dev -- deps product-dev
+rtk bun run dev -- deps examples/workflows/release-review
 rtk bun run dev -- validate examples/workflows/release-review
 ```

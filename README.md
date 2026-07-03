@@ -11,17 +11,17 @@ TDD, and archive the result without the user calling each skill separately.
 
 ## Quick Start
 
-Install or clone the default product-development GetSuperpower:
+Install a workflow example from the GetSuperpower git repository:
 
 ```bash
-npx getsuperpower@latest install product-dev
+npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'
 ```
 
-Install workflow examples from the GetSuperpower git repository:
+Install other workflow examples the same way:
 
 ```bash
 npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'
-npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'
+npx getsuperpower@latest clone 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/real-engineering'
 ```
 
 List installed GetSuperpowers:
@@ -135,8 +135,8 @@ npx getsuperpower@latest skills install mattpocock/skills
 
 | Command | Purpose |
 | --- | --- |
-| `npx getsuperpower@latest install product-dev` | Install the default GetSuperpower. |
-| `npx getsuperpower@latest clone product-dev` | Same as install; deploy a GetSuperpower by name or source. |
+| `npx getsuperpower@latest install <path-or-git-url>` | Install a GetSuperpower from a local path or public git source. |
+| `npx getsuperpower@latest clone <path-or-git-url>` | Same as install; deploy a GetSuperpower from a local path or public git source. |
 | `npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'` | Install a GetSuperpower from a public git repo. |
 | `npx getsuperpower@latest deps <source>` | Show required skills before install or clone. |
 | `npx getsuperpower@latest list` | Show installed GetSuperpowers. |
