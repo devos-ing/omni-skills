@@ -173,6 +173,15 @@ bun run check
 bun scripts/smoke-public-git-install.ts
 ```
 
+Landing app:
+
+```bash
+cd landing
+bun install
+bun run dev
+bun run build
+```
+
 ## Compatibility
 
 The package and CLI binary are named `getsuperpower`.
