@@ -25,7 +25,7 @@ describe("landing app source contract", () => {
     expect(pkg.private).toBe(true);
     expect(pkg.scripts?.dev).toBe("next dev");
     expect(pkg.scripts?.build).toBe("next build");
-    expect(pkg.scripts?.typecheck).toBe("tsc --noEmit");
+    expect(pkg.scripts?.typecheck).toBe("next typegen && tsc --noEmit");
     expect(pkg.dependencies?.next).toBe("16.2.0");
     expect(pkg.dependencies?.react).toBe("19.2.7");
     expect(pkg.dependencies?.["react-dom"]).toBe("19.2.7");
