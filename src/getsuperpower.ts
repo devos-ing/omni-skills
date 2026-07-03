@@ -383,7 +383,7 @@ export async function installExternalSkillDependencyWithSkillsCli(
 
   const result = await (input.runCommand ?? runExternalSkillCommand)({
     executable: "npx",
-    args: ["--yes", "skills@latest", "add", packageName],
+    args: ["--yes", "skills@latest", "add", packageName, "--yes", "--global"],
     cwd: input.homeDir,
     env: {
       ...process.env,

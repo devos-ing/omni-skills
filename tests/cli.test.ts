@@ -444,7 +444,9 @@ describe("cli", () => {
       expect(logs.some((line) => line.includes("Package: mattpocock/skills"))).toBe(true);
       expect(
         logs.some((line) =>
-          line.includes("Internal command: npx --yes skills@latest add mattpocock/skills"),
+          line.includes(
+            "Internal command: npx --yes skills@latest add mattpocock/skills --yes --global",
+          ),
         ),
       ).toBe(true);
       expect(logs.some((line) => line.includes(homeDir))).toBe(true);

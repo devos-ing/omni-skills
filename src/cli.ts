@@ -323,7 +323,12 @@ function printExternalSkillsPackageInstallResult(result: InstallExternalSkillsPa
   );
   console.log(keyValue("Package", result.packageName));
   console.log(keyValue("Home", result.homeDir));
-  console.log(keyValue("Internal command", `npx --yes skills@latest add ${result.packageName}`));
+  console.log(
+    keyValue(
+      "Internal command",
+      `npx --yes skills@latest add ${result.packageName} --yes --global`,
+    ),
+  );
 
   if (!result.dryRun) {
     console.log("");

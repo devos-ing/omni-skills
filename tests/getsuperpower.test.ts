@@ -791,7 +791,7 @@ describe("getsuperpower command module", () => {
     expect(commands).toEqual([
       {
         executable: "npx",
-        args: ["--yes", "skills@latest", "add", "mattpocock/skills"],
+        args: ["--yes", "skills@latest", "add", "mattpocock/skills", "--yes", "--global"],
         cwd: homeDir,
         env: expect.objectContaining({ HOME: homeDir }),
       },
@@ -814,7 +814,7 @@ describe("getsuperpower command module", () => {
     expect(commands).toEqual([
       {
         executable: "npx",
-        args: ["--yes", "skills@latest", "add", "mattpocock/skills"],
+        args: ["--yes", "skills@latest", "add", "mattpocock/skills", "--yes", "--global"],
         cwd: homeDir,
         env: expect.objectContaining({ HOME: homeDir }),
       },
@@ -837,7 +837,7 @@ describe("getsuperpower command module", () => {
     expect(commands).toEqual([
       {
         executable: "npx",
-        args: ["--yes", "skills@latest", "add", "obra/superpowers"],
+        args: ["--yes", "skills@latest", "add", "obra/superpowers", "--yes", "--global"],
         cwd: homeDir,
         env: expect.objectContaining({ HOME: homeDir }),
       },
