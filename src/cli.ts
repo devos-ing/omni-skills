@@ -121,8 +121,8 @@ function configureSkillChangeCommand(
     )
     .option(
       "-a, --agents <agents>",
-      "comma-separated targets: claude,copilot,codex,cursor",
-      "claude,copilot,codex,cursor",
+      "comma-separated targets: claude,copilot,codex,cursor,opencode (aliases: github-copilot,opencodex)",
+      "claude,copilot,codex,cursor,opencode",
     )
     .option("--home <dir>", "home directory that contains agent config folders", homedir())
     .option("--dry-run", `show ${operation} destinations without writing files`, false)

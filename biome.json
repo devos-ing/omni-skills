@@ -16,6 +16,7 @@
       "**",
       "!assets/diagrams",
       "!node_modules",
+      "!landing/.next",
       "!bun.lock",
       "!.bun-cache",
       "!.devos",

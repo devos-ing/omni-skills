@@ -9,7 +9,11 @@ import {
   type GetSuperpowerOnboardCommand,
   installExternalSkillDependencyWithSkillsCli,
 } from "../src/getsuperpower";
-import { MissingMattPocockSkillError, type SkillInstallResult } from "../src/plugins";
+import {
+  MissingMattPocockSkillError,
+  MissingSuperpowersSkillError,
+  type SkillInstallResult,
+} from "../src/plugins";
 import type { WorkflowGitCommand } from "../src/runtimes/ponytrail/workflow-bundles";
 
 function fakeSkillInstallResult(input: {
@@ -641,6 +645,90 @@ describe("getsuperpower command module", () => {
     ).resolves.toBeTruthy();
   });
 
+  test("uses the skills CLI once before retrying missing Superpowers workflow skills", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
+    const bundleDir = join(rootDir, "superpowers-bundle");
+    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
+    const skillInstalls: string[] = [];
+    const printedSkills: string[] = [];
+    const program = new Command();
+
+    await mkdir(bundleDir, { recursive: true });
+    await writeFile(
+      join(bundleDir, "workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "superpowers-bundle",
+          version: "0.1.0",
+          description: "Uses two Superpowers process skills.",
+          skills: [
+            { source: "superpowers:brainstorming" },
+            { source: "superpowers:writing-plans" },
+          ],
+          steps: [
+            {
+              id: "brainstorming",
+              title: "Shape the work",
+              skill: "superpowers:brainstorming",
+            },
+            {
+              id: "planning",
+              title: "Write the plan",
+              skill: "superpowers:writing-plans",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    configureGetSuperpowerCommand(program, {
+      rootDir,
+      installSkill: async (input) => {
+        skillInstalls.push(input.source);
+        if (input.source === "superpowers:brainstorming" && externalInstalls.length === 0) {
+          throw new MissingSuperpowersSkillError({
+            displayName: "brainstorming",
+            source: "superpowers:brainstorming",
+          });
+        }
+
+        return {
+          skillInstall: fakeSkillInstallResult({
+            source: input.source,
+            skillName: input.source.replace(":", "-"),
+            destination: join(homeDir, ".agents", "skills", input.source.replace(":", "-")),
+          }),
+        };
+      },
+      printSkillInstallResult: (result) => {
+        printedSkills.push(result.skillName);
+      },
+      installExternalSkillDependency: async (input) => {
+        externalInstalls.push(input);
+      },
+    });
+
+    await program.parseAsync(
+      ["install", bundleDir, "--dir", rootDir, "--home", homeDir, "--agents", "codex"],
+      { from: "user" },
+    );
+
+    expect(skillInstalls).toEqual([
+      "superpowers:brainstorming",
+      "superpowers:brainstorming",
+      "superpowers:writing-plans",
+    ]);
+    expect(externalInstalls).toEqual([{ source: "superpowers:brainstorming", homeDir }]);
+    expect(printedSkills).toEqual(["superpowers-brainstorming", "superpowers-writing-plans"]);
+    await expect(
+      stat(join(rootDir, ".getsuperpower", "workflows", "superpowers-bundle.json")),
+    ).resolves.toBeTruthy();
+  });
+
   test("explains when the skills CLI ran but the dependency is still missing", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
@@ -727,6 +815,29 @@ describe("getsuperpower command module", () => {
       {
         executable: "npx",
         args: ["--yes", "skills@latest", "add", "mattpocock/skills"],
+        cwd: homeDir,
+        env: expect.objectContaining({ HOME: homeDir }),
+      },
+    ]);
+  });
+
+  test("installs Superpowers external dependencies from the Superpowers package", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
+    const commands: GetSuperpowerExternalSkillCommand[] = [];
+
+    await installExternalSkillDependencyWithSkillsCli({
+      source: "superpowers:brainstorming",
+      homeDir,
+      runCommand: async (command) => {
+        commands.push(command);
+        return { stdout: "", stderr: "", exitCode: 0 };
+      },
+    });
+
+    expect(commands).toEqual([
+      {
+        executable: "npx",
+        args: ["--yes", "skills@latest", "add", "obra/superpowers"],
         cwd: homeDir,
         env: expect.objectContaining({ HOME: homeDir }),
       },

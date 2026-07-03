@@ -53,6 +53,98 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
   });
 
+  test("defines workflow detail metadata for in-page diagrams", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+
+    expect(content).toContain("export interface WorkflowDiagramStep");
+    expect(content).toContain("slug: string");
+    expect(content).toContain("sourceUrl: string");
+    expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
+    expect(content).toContain('slug: "openspec-delivery"');
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/openspec-superpowers`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/release-review`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/real-engineering`);
+    expect(content).toContain(
+      `\${githubUrl}/tree/main/examples/workflows/development-design-delivery`,
+    );
+    expect(content).toContain('label: "Proposal"');
+    expect(content).toContain('skill: "opsx-handoff-review"');
+  });
+
+  test("renders workflow cards as actionable selectors", () => {
+    const card = readLandingFile("components/workflow-card.tsx");
+
+    expect(card).toContain("isSelected");
+    expect(card).toContain("onViewWorkflow");
+    expect(card).toContain('type="button"');
+    expect(card).toContain("View workflow");
+    expect(card).toContain("aria-pressed");
+  });
+
+  test("renders selected workflow details with GitHub source links", () => {
+    const detail = readLandingFile("components/workflow-detail.tsx");
+    const page = readLandingFile("components/landing-page.tsx");
+
+    expect(detail).toContain("WorkflowDetail");
+    expect(detail).toContain("diagramSteps.map");
+    expect(detail).toContain("sourceUrl");
+    expect(detail).toContain('target="_blank"');
+    expect(detail).toContain('rel="noreferrer"');
+    expect(page).toContain("selectedWorkflowSlug");
+    expect(page).toContain("WorkflowDetail");
+    expect(page).toContain("setSelectedWorkflowSlug");
+  });
+
+  test("renders an interactive simulated workflow run section", () => {
+    const demo = readLandingFile("components/workflow-run-demo.tsx");
+    const page = readLandingFile("components/landing-page.tsx");
+
+    expect(demo).toContain("export function WorkflowRunDemo");
+    expect(demo).toContain("const STEPS: SkillStep[]");
+    expect(demo).toContain("OpenSpec Proposal");
+    expect(demo).toContain("Design Brainstorm");
+    expect(demo).toContain("Implementation Plan");
+    expect(demo).toContain("TDD Build");
+    expect(demo).toContain("Try it live");
+    expect(demo).toContain("Watch the workflow run");
+    expect(demo).toContain("> $openspec-delivery implement idempotency for /payments/charge");
+    expect(demo).toContain("setCompletedSteps");
+    expect(demo).toContain("scrollRef.current?.scrollTo");
+    expect(demo).toContain("Replay");
+    expect(demo).toContain("setTimeout");
+    expect(demo).toContain("clearTimeout");
+
+    const demoIndex = page.indexOf("<WorkflowRunDemo");
+    const workflowsIndex = page.indexOf('id="workflows"');
+
+    expect(page).toContain("import { WorkflowRunDemo }");
+    expect(page).not.toContain("workflowRun");
+    expect(demoIndex).toBeGreaterThan(-1);
+    expect(workflowsIndex).toBeGreaterThan(-1);
+    expect(demoIndex).toBeLessThan(workflowsIndex);
+  });
+
+  test("keeps supported agents ready for logo chips", () => {
+    const page = readLandingFile("components/landing-page.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
+
+    const logoAgents = [
+      ["claude", "agent-logos/claude.svg"],
+      ["codex", "agent-logos/openai.svg"],
+      ["cursor", "agent-logos/cursor.svg"],
+      ["github-copilot", "agent-logos/github-copilot.svg"],
+    ] as const;
+
+    for (const [agentId, logoPath] of logoAgents) {
+      expect(content).toContain(`id: "${agentId}"`);
+      expect(content).toContain(`logoSrc: "/${logoPath}"`);
+      expect(existsSync(join(landingRoot, "public", logoPath))).toBe(true);
+    }
+    expect(content).toContain('name: "GitHub Copilot"');
+    expect(page).toContain("WebkitMask");
+    expect(page).toContain("aria-hidden");
+  });
+
   test("keeps attribution with the landing source", () => {
     const attribution = readLandingFile("ATTRIBUTIONS.md");
 

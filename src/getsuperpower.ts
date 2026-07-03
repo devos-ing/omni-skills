@@ -6,6 +6,7 @@ import type { Command } from "commander";
 import { commandText, keyValue, muted, nextStep, success, warning } from "./cli-theme";
 import {
   MissingMattPocockSkillError,
+  MissingSuperpowersSkillError,
   parseSkillInstallAgents,
   type SkillInstallResult,
 } from "./plugins";
@@ -215,7 +216,7 @@ function configureInstallLikeCommand(
     )
     .option(
       "--agents <agents>",
-      "comma-separated skill install targets: codex,claude,cursor",
+      "comma-separated skill install targets: codex,claude,cursor,copilot,opencode (aliases: github-copilot,opencodex)",
       "codex,claude,cursor",
     )
     .option("--home <dir>", "home directory that contains agent config folders", homedir())
@@ -296,7 +297,7 @@ async function installGetSuperpowerSkillDependency(input: {
     try {
       return await installWorkflowSkillDependency(input);
     } catch (retryError) {
-      if (retryError instanceof MissingMattPocockSkillError) {
+      if (isMissingBootstrappableSkillError(retryError)) {
         throw new Error(
           `The skills CLI ran for ${externalPackage}, but ${input.source} is still missing. ${retryError.message}`,
         );
@@ -327,16 +328,28 @@ function installWorkflowSkillDependency(input: {
 }
 
 function getSkillsCliPackageForMissingDependency(source: string, error: unknown): string | null {
-  if (!(error instanceof MissingMattPocockSkillError)) {
+  if (!isMissingBootstrappableSkillError(error)) {
     return null;
   }
 
   return getSkillsCliPackageForSource(source);
 }
 
+function isMissingBootstrappableSkillError(
+  error: unknown,
+): error is MissingMattPocockSkillError | MissingSuperpowersSkillError {
+  return (
+    error instanceof MissingMattPocockSkillError || error instanceof MissingSuperpowersSkillError
+  );
+}
+
 export function getSkillsCliPackageForSource(source: string): string | null {
   if (isBareSkillsCliPackage(source)) {
     return source;
+  }
+
+  if (source.startsWith("superpowers:")) {
+    return "obra/superpowers";
   }
 
   if (source.startsWith("mattpocock:")) {

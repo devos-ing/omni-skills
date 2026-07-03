@@ -61,9 +61,16 @@ imports. The product behavior is GetSuperpower-only.
 agent homes:
 
 - Claude: `.claude/skills`
-- Codex and shared agents: `.agents/skills`
-- Codex mirror: `.codex/skills`
+- Codex: `.agents/skills`, with a compatibility mirror at `.codex/skills`
 - Cursor: `.cursor/rules`
+- opencode/OpenCodex: `.agents/skills`
+- GitHub Copilot: `.agents/skills` through the `copilot` or `github-copilot`
+  target aliases
+
+`opencodex` is accepted as an alias for the canonical `opencode` target.
+Repeated shared destinations are handled once per install/update operation, so
+requesting Codex, opencode, and Copilot together does not copy the same skill
+directory multiple times.
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed

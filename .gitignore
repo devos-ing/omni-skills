@@ -12,3 +12,4 @@ docs/superpowers/
 __pycache__/
 *.pyc
 .env
+outputs/
