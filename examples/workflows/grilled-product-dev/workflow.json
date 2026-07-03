@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "0.1",
+  "name": "grilled-product-dev",
+  "version": "0.1.0",
+  "description": "Sharpen a product-development request with grilling before Superpowers design and planning.",
+  "skills": [
+    {
+      "source": "./skills/grilled-product-dev"
+    },
+    {
+      "source": "mattpocock:grilling"
+    },
+    {
+      "source": "superpowers:brainstorming"
+    },
+    {
+      "source": "superpowers:writing-plans"
+    }
+  ],
+  "steps": [
+    {
+      "id": "grill",
+      "title": "Sharpen the request through grilling",
+      "skill": "mattpocock:grilling",
+      "gate": "human_approval"
+    },
+    {
+      "id": "shape",
+      "title": "Turn the approved direction into a Superpowers design",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval"
+    },
+    {
+      "id": "plan",
+      "title": "Write the implementation plan",
+      "skill": "superpowers:writing-plans"
+    }
+  ]
+}

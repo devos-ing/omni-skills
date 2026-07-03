@@ -119,6 +119,52 @@ describe("workflow bundles", () => {
     ]);
   });
 
+  test("loads the development-design-delivery example workflow", async () => {
+    const bundle = await loadWorkflowBundle("examples/workflows/development-design-delivery");
+
+    expect(bundle.manifest.name).toBe("development-design-delivery");
+    expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
+      "./skills/development-design-delivery",
+      "superpowers:brainstorming",
+      "mattpocock:design-an-interface",
+      "mattpocock:grill-with-docs",
+      "superpowers:writing-plans",
+      "mattpocock:codebase-design",
+      "mattpocock:tdd",
+      "mattpocock:diagnosing-bugs",
+      "mattpocock:review",
+      "pony-trail",
+    ]);
+    expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
+      ["shape", "superpowers:brainstorming", "human_approval"],
+      ["interface-design", "mattpocock:design-an-interface", "human_approval"],
+      ["requirement-review", "mattpocock:grill-with-docs", "human_approval"],
+      ["implementation-plan", "superpowers:writing-plans", null],
+      ["architecture-boundary", "mattpocock:codebase-design", null],
+      ["build", "mattpocock:tdd", null],
+      ["debug", "mattpocock:diagnosing-bugs", null],
+      ["review", "mattpocock:review", null],
+      ["evidence", "pony-trail", null],
+    ]);
+    await expect(
+      readFile(
+        join(
+          import.meta.dir,
+          "..",
+          "examples",
+          "workflows",
+          "development-design-delivery",
+          "skills",
+          "development-design-delivery",
+          "SKILL.md",
+        ),
+        "utf8",
+      ),
+    ).resolves.toContain(
+      "This is the entry skill for the development-design-delivery GetSuperpower.",
+    );
+  });
+
   test("loads the openspec delivery example workflow from the handoff diagram", async () => {
     const bundle = await loadWorkflowBundle("examples/workflows/openspec-superpowers");
 

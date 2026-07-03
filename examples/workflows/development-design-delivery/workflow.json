@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "0.1",
+  "name": "development-design-delivery",
+  "version": "0.1.0",
+  "description": "Shape, design, plan, implement, review, and preserve evidence for serious product engineering work.",
+  "skills": [
+    {
+      "source": "./skills/development-design-delivery"
+    },
+    {
+      "source": "superpowers:brainstorming"
+    },
+    {
+      "source": "mattpocock:design-an-interface"
+    },
+    {
+      "source": "mattpocock:grill-with-docs"
+    },
+    {
+      "source": "superpowers:writing-plans"
+    },
+    {
+      "source": "mattpocock:codebase-design"
+    },
+    {
+      "source": "mattpocock:tdd"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "source": "mattpocock:review"
+    },
+    {
+      "source": "pony-trail"
+    }
+  ],
+  "steps": [
+    {
+      "id": "shape",
+      "title": "Shape the request and success criteria",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval"
+    },
+    {
+      "id": "interface-design",
+      "title": "Explore API, module, or UI interface options",
+      "skill": "mattpocock:design-an-interface",
+      "gate": "human_approval"
+    },
+    {
+      "id": "requirement-review",
+      "title": "Stress-test the plan and record docs",
+      "skill": "mattpocock:grill-with-docs",
+      "gate": "human_approval"
+    },
+    {
+      "id": "implementation-plan",
+      "title": "Write the task-by-task implementation plan",
+      "skill": "superpowers:writing-plans"
+    },
+    {
+      "id": "architecture-boundary",
+      "title": "Check module boundaries and seams",
+      "skill": "mattpocock:codebase-design"
+    },
+    {
+      "id": "build",
+      "title": "Implement with TDD",
+      "skill": "mattpocock:tdd"
+    },
+    {
+      "id": "debug",
+      "title": "Use systematic debugging when blocked",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "review",
+      "title": "Review against standards and spec",
+      "skill": "mattpocock:review"
+    },
+    {
+      "id": "evidence",
+      "title": "Record verification and rollback evidence",
+      "skill": "pony-trail"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ Install other workflow examples the same way:
 ```bash
 npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'
 npx getsuperpower@latest clone 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/real-engineering'
+npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/development-design-delivery'
 ```
 
 List installed GetSuperpowers:
@@ -122,6 +123,7 @@ The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guid
 | Example | Use it for | Notes |
 | --- | --- | --- |
 | `examples/workflows/openspec-superpowers` | OpenSpec Delivery: proposal -> design -> plan -> TDD -> verification -> archive. | Includes `$openspec-delivery`. |
+| `examples/workflows/development-design-delivery` | Product-minded engineering: shape -> interface design -> plan -> TDD -> review -> evidence. | Includes `$development-design-delivery`. |
 | `examples/workflows/real-engineering` | RTK, `pony-trail`, Superpowers, and Matt Pocock skills together. | Fetches Matt Pocock skills if missing. |
 | `examples/workflows/release-review` | Small release-risk review workflow. | Good starter example. |
 
