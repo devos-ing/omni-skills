@@ -26,18 +26,18 @@
 
 ## 4. Implement With TDD
 
-- [ ] Add a failing check or test for the landing page's expected product text
+- [x] Add a failing check or test for the landing page's expected product text
       and workflow cards.
-- [ ] Create the `landing/` Next.js 16 app scaffold.
-- [ ] Port the Figma/Vite export into Next.js components.
-- [ ] Adapt global styling to Tailwind CSS.
-- [ ] Preserve attribution and add local run instructions.
-- [ ] Run focused landing checks.
+- [x] Create the `landing/` Next.js 16 app scaffold.
+- [x] Port the Figma/Vite export into Next.js components.
+- [x] Adapt global styling to Tailwind CSS.
+- [x] Preserve attribution and add local run instructions.
+- [x] Run focused landing checks.
 
 ## 5. Verify And Archive
 
-- [ ] Run landing app checks.
-- [ ] Run `rtk bun run check`.
-- [ ] Run a landing smoke check.
-- [ ] Record Pony Trail post-change evidence.
+- [x] Run landing app checks.
+- [x] Run `rtk bun run check`.
+- [x] Run a landing smoke check.
+- [x] Record Pony Trail post-change evidence.
 - [ ] Run `/opsx:archive` after human approval.

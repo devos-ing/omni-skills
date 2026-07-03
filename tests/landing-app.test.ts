@@ -14,6 +14,7 @@ describe("landing app source contract", () => {
     const packagePath = join(landingRoot, "package.json");
 
     expect(existsSync(packagePath)).toBe(true);
+    expect(existsSync(join(landingRoot, "env.d.ts"))).toBe(true);
 
     const pkg = JSON.parse(readFileSync(packagePath, "utf8")) as {
       private?: boolean;
@@ -31,6 +32,10 @@ describe("landing app source contract", () => {
     expect(pkg.dependencies?.["react-dom"]).toBe("19.2.7");
     expect(pkg.devDependencies?.tailwindcss).toBe("4.1.12");
     expect(pkg.devDependencies?.["@tailwindcss/postcss"]).toBe("4.1.12");
+
+    const gitignore = readLandingFile(".gitignore");
+
+    expect(gitignore).toContain("next-env.d.ts");
   });
 
   test("presents GetSuperpower workflow bundles and root-first commands", () => {
