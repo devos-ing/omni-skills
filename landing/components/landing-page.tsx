@@ -11,7 +11,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   type AgentBadgeContent,
   agents,
@@ -23,7 +23,6 @@ import {
 import { FlowDiagram } from "./flow-diagram";
 import { TerminalBlock } from "./terminal-block";
 import { WorkflowCard } from "./workflow-card";
-import { WorkflowDetail } from "./workflow-detail";
 import { WorkflowRunDemo } from "./workflow-run-demo";
 
 const agentLogoStyles: Record<AgentBadgeContent["id"], string> = {
@@ -37,7 +36,6 @@ const agentLogoStyles: Record<AgentBadgeContent["id"], string> = {
 export function LandingPage() {
   const [activeCommand, setActiveCommand] = useState(0);
   const [query, setQuery] = useState("");
-  const [selectedWorkflowSlug, setSelectedWorkflowSlug] = useState<string | null>(null);
 
   const filteredWorkflows = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -57,17 +55,6 @@ export function LandingPage() {
       );
     });
   }, [query]);
-
-  const selectedWorkflow = useMemo(() => {
-    if (!selectedWorkflowSlug) return null;
-    return filteredWorkflows.find((workflow) => workflow.slug === selectedWorkflowSlug) ?? null;
-  }, [filteredWorkflows, selectedWorkflowSlug]);
-
-  useEffect(() => {
-    if (!selectedWorkflowSlug) return;
-    if (filteredWorkflows.some((workflow) => workflow.slug === selectedWorkflowSlug)) return;
-    setSelectedWorkflowSlug(null);
-  }, [filteredWorkflows, selectedWorkflowSlug]);
 
   const active = commands[activeCommand] ?? commands[0];
 
@@ -214,20 +201,10 @@ export function LandingPage() {
             </button>
           ) : null}
         </div>
-        <div
-          className={`grid gap-4 ${selectedWorkflow ? "lg:grid-cols-[minmax(0,1fr)_360px]" : ""}`}
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            {filteredWorkflows.map((workflow) => (
-              <WorkflowCard
-                key={workflow.slug}
-                {...workflow}
-                isSelected={workflow.slug === selectedWorkflowSlug}
-                onViewWorkflow={() => setSelectedWorkflowSlug(workflow.slug)}
-              />
-            ))}
-          </div>
-          {selectedWorkflow ? <WorkflowDetail workflow={selectedWorkflow} /> : null}
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredWorkflows.map((workflow) => (
+            <WorkflowCard key={workflow.slug} {...workflow} />
+          ))}
         </div>
       </section>
 

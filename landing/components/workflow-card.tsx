@@ -1,29 +1,20 @@
 import { ArrowRight, Zap } from "lucide-react";
+import Link from "next/link";
 import type { WorkflowCardContent } from "../lib/landing-content";
 
-interface WorkflowCardProps extends WorkflowCardContent {
-  isSelected: boolean;
-  onViewWorkflow: () => void;
-}
+type WorkflowCardProps = WorkflowCardContent;
 
 export function WorkflowCard({
+  slug,
   name,
   description,
   entrySkill,
   skills,
   tag,
   accent,
-  isSelected,
-  onViewWorkflow,
 }: WorkflowCardProps) {
   return (
-    <article
-      className={`group relative rounded-lg border p-5 transition ${
-        isSelected
-          ? "border-violet-300/45 bg-violet-300/[0.08]"
-          : "border-white/10 bg-white/[0.035] hover:border-white/20 hover:bg-white/[0.06]"
-      }`}
-    >
+    <article className="group relative rounded-lg border border-white/10 bg-white/[0.035] p-5 transition hover:border-white/20 hover:bg-white/[0.06]">
       <span
         className={`inline-flex rounded-full border border-current/20 px-2 py-0.5 text-xs ${accent}`}
       >
@@ -52,15 +43,13 @@ export function WorkflowCard({
         ))}
       </div>
 
-      <button
-        type="button"
-        aria-pressed={isSelected}
-        onClick={onViewWorkflow}
+      <Link
+        href={`/workflows/${slug}`}
         className="mt-5 inline-flex items-center gap-1.5 text-xs text-white/40 transition hover:text-white/70 focus:outline-none focus-visible:text-white focus-visible:ring-2 focus-visible:ring-violet-300/45"
       >
         View workflow
         <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
-      </button>
+      </Link>
     </article>
   );
 }
