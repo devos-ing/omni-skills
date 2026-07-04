@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "next typegen && tsc --noEmit",
-    "check": "bun run typecheck && bun run build"
+    "test": "bun test tests",
+    "check": "bun run test && bun run typecheck && bun run build"
   },
   "dependencies": {
     "lucide-react": "0.487.0",
