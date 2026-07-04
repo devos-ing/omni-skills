@@ -1,7 +1,7 @@
 # Create Your Own GetSuperpower
 
 This guide shows the shortest path from an idea to a GetSuperpower that other
-users can install or clone.
+users can install.
 
 Vocabulary:
 
@@ -37,7 +37,7 @@ The authoring skill should help you produce or review:
 - `skills/<workflow-name>/SKILL.md`: the entry skill users call
 - `skills/<local-skill>/SKILL.md`: any local skills used by the workflow
 - validation commands: `getsuperpower validate`, `getsuperpower deps`, and a
-  local `install` or `clone` smoke test
+  local `install` smoke test
 
 Use the rest of this guide as the checklist for what that skill should create.
 If you are editing by hand, follow the same steps yourself.
@@ -217,15 +217,11 @@ Show the dependencies before installing:
 bun run dev -- deps examples/workflows/support-triage
 ```
 
-Install or clone it into a project:
+Install it into a project:
 
 ```bash
 bun run dev -- install examples/workflows/support-triage
-bun run dev -- clone examples/workflows/support-triage
 ```
-
-`clone` is the same operation as `install`; it exists so shared GetSuperpowers
-feel natural to adopt from another author.
 
 Then list installed GetSuperpowers:
 

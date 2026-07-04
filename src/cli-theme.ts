@@ -51,7 +51,7 @@ export function rootHelpBanner(): string {
     label("Start:"),
     `  ${commandText("getsuperpower init release-review")}`,
     `  ${commandText("getsuperpower validate ./release-review")}`,
-    `  ${commandText("getsuperpower clone https://github.com/acme/release-review.git")}`,
+    `  ${commandText("getsuperpower install openspec-superpowers")}`,
     `  ${commandText("getsuperpower install ./release-review")}`,
     "",
     label("Inspect:"),

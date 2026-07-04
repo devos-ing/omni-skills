@@ -20,7 +20,7 @@
 - [x] Design doc reviewed and approved by the human owner.
 - [x] Write the implementation plan in `docs/superpowers/plans/`.
 - [x] Include TDD slices for source parsing, alias-not-found handling,
-      install/clone integration, validate/deps integration, docs, and smoke
+      install integration, validate/deps integration, docs, and smoke
       checks.
 
 ## 4. Implement With TDD
@@ -29,7 +29,7 @@
 - [x] Implement minimal alias normalization to the canonical examples git URL.
 - [x] Add a failing install test proving alias installs store canonical source
       metadata and resolve local workflow skills from the fetched checkout.
-- [x] Implement install/clone integration through the shared source loader.
+- [x] Implement install integration through the shared source loader.
 - [x] Add failing validate/deps tests for alias sources.
 - [x] Add a failing unknown-alias test with a clear not-found error.
 - [x] Implement the unknown-alias error path.

@@ -114,7 +114,7 @@ Install and author workflow skill trees for agent work.
 Start:
   getsuperpower init release-review
   getsuperpower validate ./release-review
-  getsuperpower clone https://github.com/acme/release-review.git
+  getsuperpower install openspec-superpowers
   getsuperpower install ./release-review
 
 Inspect:
@@ -128,7 +128,6 @@ Commands:
   init
   validate
   install
-  clone
   list
   deps
   bundle     Compatibility alias

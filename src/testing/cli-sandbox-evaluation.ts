@@ -234,7 +234,7 @@ async function runBaseline(input: {
         id: "baseline-does-not-install",
         label: "Baseline mode leaves the project uninstalled",
         passed: !(await pathExists(workflowRecord)),
-        detail: ".getsuperpower workflow records should not exist before install/clone",
+        detail: ".getsuperpower workflow records should not exist before install",
       },
       {
         id: "baseline-no-external-side-effects",
@@ -259,7 +259,7 @@ async function runWorkflow(input: {
     projectDir: input.projectDir,
     externalCalls,
     commands: [
-      ["clone", input.workflowSourcePath, "--home", input.homeDir, "--agents", "codex"],
+      ["install", input.workflowSourcePath, "--home", input.homeDir, "--agents", "codex"],
       ["list"],
     ],
   });
@@ -278,7 +278,7 @@ async function runWorkflow(input: {
 
   return buildRun({
     mode: "workflow",
-    label: "After workflow clone/use",
+    label: "After workflow install/use",
     projectDir: input.projectDir,
     homeDir: input.homeDir,
     commands,
@@ -300,7 +300,7 @@ async function runWorkflow(input: {
         id: "workflow-list-shows-installed-workflow",
         label: "Workflow mode lists the installed workflow",
         passed: logs.some((line) => stripAnsi(line).includes("openspec-delivery 0.1.0")),
-        detail: "list should show the workflow installed by clone",
+        detail: "list should show the workflow installed by install",
       },
       {
         id: "workflow-no-external-side-effects",

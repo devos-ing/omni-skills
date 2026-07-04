@@ -23,14 +23,6 @@ resolve it to the canonical public examples repository path
 - **WHEN** the user runs `getsuperpower deps openspec-superpowers`
 - **THEN** the CLI lists that workflow's declared skill dependencies.
 
-#### Scenario: user clones a workflow by alias
-
-- **WHEN** the user runs `getsuperpower clone release-review`
-- **THEN** the CLI performs the same install operation as
-  `getsuperpower install release-review`.
-- **AND** the source resolves under `examples/workflows/release-review` in the
-  canonical public examples repository.
-
 #### Scenario: explicit public git source remains supported
 
 - **WHEN** the user runs

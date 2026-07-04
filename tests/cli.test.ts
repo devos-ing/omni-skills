@@ -61,7 +61,6 @@ describe("cli", () => {
       "init",
       "validate",
       "install",
-      "clone",
       "list",
       "deps",
       "onboard",
@@ -115,12 +114,12 @@ describe("cli", () => {
     expect(help).toContain("Install and author workflow skill trees for agent work.");
     expect(help).toContain("getsuperpower init release-review");
     expect(help).toContain("getsuperpower validate ./release-review");
-    expect(help).toContain("getsuperpower clone https://github.com/acme/release-review.git");
     expect(help).toContain("getsuperpower install ./release-review");
     expect(help).toContain("getsuperpower deps ./release-review");
     expect(help).toContain("bundle");
     expect(help).toContain("Compatibility alias for GetSuperpower authoring.");
     expect(help).not.toContain("ponyrace");
+    expect(help).not.toContain("getsuperpower clone");
     expect(help).not.toContain("history");
     expect(help).not.toContain("revert");
   });
@@ -239,45 +238,6 @@ describe("cli", () => {
       }
       expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: release-review");
       expect(stripAnsiLines(logs)).toContain("release-review 0.1.0");
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("clone installs example workflow skills and records the workflow from the root command", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-clone-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-clone-home-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await writeSuperpowersProcessSkills(homeDir);
-
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["clone", releaseReviewWorkflow, "--home", homeDir, "--agents", "codex"],
-        { from: "user" },
-      );
-
-      await expect(
-        stat(join(rootDir, ".getsuperpower", "workflows", "release-review.json")),
-      ).resolves.toBeTruthy();
-      for (const skill of [
-        "release-risk-review",
-        "superpowers-brainstorming",
-        "superpowers-writing-plans",
-        "pony-trail",
-      ]) {
-        await expect(
-          stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
-        ).resolves.toBeTruthy();
-      }
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: release-review");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

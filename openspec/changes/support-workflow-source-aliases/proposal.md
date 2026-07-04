@@ -29,7 +29,7 @@ In scope:
 - Treat bare workflow aliases as public examples under
   `https://github.com/0xroylee/getsuperpower.git#examples/workflows/<alias>`.
 - Support alias sources anywhere the shared GetSuperpower source loader is used:
-  `install`, `clone`, `validate`, and `deps`.
+  `install`, `validate`, and `deps`.
 - Preserve the existing explicit public git URL behavior, including
   `#examples/workflows/<name>` fragments.
 - Resolve aliases by workflow folder name, not by manifest display name. For
@@ -74,7 +74,7 @@ the canonical path it checked.
 
 - `npx getsuperpower@latest install openspec-superpowers` installs the same
   workflow as `npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'`.
-- `clone`, `validate`, and `deps` accept the same alias source form because they
+- `validate` and `deps` accept the same alias source form because they
   share the workflow source loader.
 - Explicit public git URLs still work exactly as they do today.
 - Alias resolution is based on the folder under `examples/workflows`, not the

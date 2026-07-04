@@ -40,7 +40,7 @@ Author or user request
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
   output, and call runtime or plugin interfaces. It must not own bundle rules.
 - `src/getsuperpower.ts` owns GetSuperpower command registration and skill
-  dependency bootstrap for install/clone/deps/init/validate/list.
+  dependency bootstrap for install/deps/init/validate/list.
 - `src/runtimes/ponytrail/` owns workflow manifest schemas, scaffolding, and
   install records. The folder name remains for internal compatibility.
 - `src/plugins/` is for skill resolution and target writes. Keep
@@ -55,7 +55,7 @@ Author or user request
 - If a workflow provides one callable entry skill, that skill must be listed in
   `skills[]`; it does not need a workflow step.
 - Every `steps[].skill` value must exactly match a declared `skills[].source`.
-- `getsuperpower install` and `getsuperpower clone` are the same operation.
+- `getsuperpower install` is the only public workflow install command.
 - The older `bundle` and `workflow` command surfaces exist only as
   compatibility aliases.
 - Pony Trail history, revert, and prehook features are paused. Do not expose or
@@ -67,7 +67,6 @@ Author or user request
 bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
 bun run dev -- install examples/workflows/release-review
-bun run dev -- clone examples/workflows/release-review
 bun run dev -- deps examples/workflows/release-review
 bun run dev -- init my-workflow
 bun run dev -- validate examples/workflows/real-engineering

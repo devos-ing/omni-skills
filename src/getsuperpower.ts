@@ -107,8 +107,6 @@ export interface ConfigureGetSuperpowerCommandOptions {
   onboardCommandRunner?: GetSuperpowerOnboardCommandRunner;
 }
 
-type GetSuperpowerInstallVerb = "install" | "clone";
-
 interface GetSuperpowerInstallCommandOptions {
   dir: string;
   agents: string;
@@ -129,7 +127,7 @@ export function configureGetSuperpowerCommand(
   const workflowCommand = program
     .command("workflow")
     .description("Compatibility alias for GetSuperpower install and list commands.");
-  configureInstallCommand(workflowCommand, options, { includeClone: false });
+  configureInstallCommand(workflowCommand, options);
   configureListCommand(workflowCommand, options.rootDir);
 
   return program;
@@ -192,23 +190,14 @@ function configureAuthorCommands(
 function configureInstallCommand(
   command: Command,
   options: ConfigureGetSuperpowerCommandOptions,
-  commandOptions: { includeClone?: boolean } = {},
-): void {
-  configureInstallLikeCommand(command, options, "install");
-  if (commandOptions.includeClone !== false) {
-    configureInstallLikeCommand(command, options, "clone");
-  }
-}
-
-function configureInstallLikeCommand(
-  command: Command,
-  options: ConfigureGetSuperpowerCommandOptions,
-  verb: GetSuperpowerInstallVerb,
 ): void {
   command
-    .command(verb)
+    .command("install")
     .description("Install a GetSuperpower and its skills.")
-    .argument("<source>", "local GetSuperpower path, workflow.json path, or public git source")
+    .argument(
+      "<source>",
+      "workflow alias, local GetSuperpower path, workflow.json path, or public git source",
+    )
     .option(
       "--dir <dir>",
       "project directory that receives .getsuperpower/workflows",

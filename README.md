@@ -27,7 +27,7 @@ Install other workflow examples the same way:
 
 ```bash
 npx getsuperpower@latest install release-review
-npx getsuperpower@latest clone real-engineering
+npx getsuperpower@latest install real-engineering
 npx getsuperpower@latest install development-design-delivery
 ```
 
@@ -120,7 +120,6 @@ npx getsuperpower@latest skills install mattpocock/skills
 The GetSuperpower CLI supports workflow install, inspection, authoring, and skill management. Below are some of the most used commands:
 
 - `npx getsuperpower@latest install <alias-or-path-or-git-url>`
-- `npx getsuperpower@latest clone <alias-or-path-or-git-url>`
 - `npx getsuperpower@latest deps <source>`
 - `npx getsuperpower@latest list`
 - `npx getsuperpower@latest init <name>`
