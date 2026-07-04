@@ -17,6 +17,7 @@ export interface WorkflowCardContent {
   tag: string;
   accent: string;
   sourceUrl: string;
+  installCommand: string;
   skills: WorkflowSkill[];
   diagramSteps: WorkflowDiagramStep[];
 }
@@ -58,6 +59,8 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Featured",
     accent: "text-violet-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/openspec-superpowers`,
+    installCommand:
+      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'",
     skills: [
       { name: "opsx-propose", description: "Draft the scoped spec change" },
       {
@@ -116,6 +119,8 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Starter",
     accent: "text-sky-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/release-review`,
+    installCommand:
+      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'",
     skills: [
       { name: "shape", description: "Clarify the release request" },
       { name: "release-risk-review", description: "Flag risk by surface area" },
@@ -160,6 +165,8 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Advanced",
     accent: "text-amber-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/real-engineering`,
+    installCommand:
+      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/real-engineering'",
     skills: [
       { name: "rtk", description: "Token-efficient command execution" },
       {
@@ -207,6 +214,8 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Product",
     accent: "text-emerald-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/development-design-delivery`,
+    installCommand:
+      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/development-design-delivery'",
     skills: [
       { name: "brainstorming", description: "Shape the feature and constraints" },
       {
