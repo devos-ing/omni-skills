@@ -1,46 +1,55 @@
-# GetSuperpower Landing Workflow Diagram Spec
+# GetSuperpower Landing Workflow Detail Route Spec
 
 ## ADDED Requirements
 
-### Requirement: Workflow Cards Show In-Page Workflow Details
+### Requirement: Workflow Cards Navigate To Workflow Detail Pages
 
-The landing page SHALL let visitors inspect each workflow from the workflow-card
-section without immediately leaving the page.
+The landing page SHALL let visitors navigate from each workflow card to a
+dedicated detail page for that workflow.
 
-#### Scenario: visitor opens a workflow detail
+#### Scenario: visitor opens a workflow detail page
 
 - **WHEN** a visitor activates "View workflow" on a workflow card
-- **THEN** the landing page shows an in-page detail view for that workflow
-- **AND** the page does not immediately navigate away from the landing page
-- **AND** the detail view identifies the workflow by name
+- **THEN** the browser navigates to `/workflows/[slug]` for that workflow
+- **AND** the detail page identifies the workflow by name
 - **AND** the detail view shows the callable entry skill
-- **AND** the detail view renders the workflow's ordered steps as a diagram
+- **AND** the detail page renders the workflow's ordered steps as a diagram
+- **AND** the detail page includes an install command for that workflow
+- **AND** the detail page includes a path back to the workflow-card section
 
 #### Scenario: visitor opens the source workflow
 
-- **WHEN** a visitor uses the GitHub source action from the workflow detail
+- **WHEN** a visitor uses the GitHub source action from the workflow detail page
 - **THEN** the link targets the matching workflow folder in
   `https://github.com/0xroylee/getsuperpower`
-- **AND** the source action is secondary to the in-page workflow explanation
+- **AND** the source action is secondary to the workflow detail explanation
 
 #### Scenario: visitor searches workflow cards
 
 - **WHEN** a visitor filters workflow cards with the search input
-- **THEN** the workflow detail view does not show a selected workflow that is no
-  longer visible in the filtered card set
-- **AND** clearing the search lets the visitor inspect any workflow card again
+- **THEN** each visible card still links to the correct workflow detail route
+- **AND** clearing the search lets the visitor navigate to any workflow detail
+  route again
 
-### Requirement: Workflow Detail Data Stays Local And Static
+#### Scenario: visitor opens an unknown workflow slug
 
-The landing app SHALL render workflow details from local typed content instead
-of runtime CLI state.
+- **WHEN** a visitor navigates to a workflow detail route with an unknown slug
+- **THEN** the app renders the Next not-found path
+- **AND** it does not render an empty or mismatched workflow detail page
+
+### Requirement: Workflow Detail Pages Use Local Static Data
+
+The landing app SHALL render workflow detail pages from local typed content
+instead of runtime CLI state.
 
 #### Scenario: developer inspects landing workflow data
 
 - **WHEN** a developer opens `landing/lib/landing-content.ts`
 - **THEN** each workflow card includes enough local metadata to render its
-  in-page detail view
+  detail page
 - **AND** each workflow card includes a GitHub source URL for its workflow
   bundle
+- **AND** each workflow card includes or derives an install command for its
+  detail page
 - **AND** the landing app does not read generated `.getsuperpower/` workflow
   records to render public workflow details
