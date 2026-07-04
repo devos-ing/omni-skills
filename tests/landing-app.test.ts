@@ -53,12 +53,13 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
   });
 
-  test("defines workflow detail metadata for in-page diagrams", () => {
+  test("defines workflow detail metadata for route pages", () => {
     const content = readLandingFile("lib/landing-content.ts");
 
     expect(content).toContain("export interface WorkflowDiagramStep");
     expect(content).toContain("slug: string");
     expect(content).toContain("sourceUrl: string");
+    expect(content).toContain("installCommand: string");
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
     expect(content).toContain('slug: "openspec-delivery"');
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/openspec-superpowers`);
@@ -67,32 +68,55 @@ describe("landing app source contract", () => {
     expect(content).toContain(
       `\${githubUrl}/tree/main/examples/workflows/development-design-delivery`,
     );
+    expect(content).toContain(
+      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'",
+    );
     expect(content).toContain('label: "Proposal"');
     expect(content).toContain('skill: "opsx-handoff-review"');
   });
 
-  test("renders workflow cards as actionable selectors", () => {
+  test("renders workflow cards as route links", () => {
     const card = readLandingFile("components/workflow-card.tsx");
 
-    expect(card).toContain("isSelected");
-    expect(card).toContain("onViewWorkflow");
-    expect(card).toContain('type="button"');
+    expect(card).toContain('import Link from "next/link"');
+    expect(card).toContain('href={`/workflows/${slug}`}');
     expect(card).toContain("View workflow");
-    expect(card).toContain("aria-pressed");
+    expect(card).not.toContain("isSelected");
+    expect(card).not.toContain("onViewWorkflow");
+    expect(card).not.toContain('type="button"');
+    expect(card).not.toContain("aria-pressed");
   });
 
-  test("renders selected workflow details with GitHub source links", () => {
-    const detail = readLandingFile("components/workflow-detail.tsx");
+  test("keeps workflow browsing route-only on the landing page", () => {
     const page = readLandingFile("components/landing-page.tsx");
 
-    expect(detail).toContain("WorkflowDetail");
-    expect(detail).toContain("diagramSteps.map");
-    expect(detail).toContain("sourceUrl");
-    expect(detail).toContain('target="_blank"');
-    expect(detail).toContain('rel="noreferrer"');
-    expect(page).toContain("selectedWorkflowSlug");
-    expect(page).toContain("WorkflowDetail");
-    expect(page).toContain("setSelectedWorkflowSlug");
+    expect(page).toContain("<WorkflowCard");
+    expect(page).not.toContain("selectedWorkflowSlug");
+    expect(page).not.toContain("selectedWorkflow");
+    expect(page).not.toContain("setSelectedWorkflowSlug");
+    expect(page).not.toContain("WorkflowDetail");
+  });
+
+  test("renders static workflow detail routes from local workflow data", () => {
+    const routePath = join(landingRoot, "app", "workflows", "[slug]", "page.tsx");
+
+    expect(existsSync(routePath)).toBe(true);
+
+    const route = readLandingFile("app/workflows/[slug]/page.tsx");
+
+    expect(route).toContain('import Link from "next/link"');
+    expect(route).toContain('import { notFound } from "next/navigation"');
+    expect(route).toContain('from "../../../lib/landing-content"');
+    expect(route).toContain("export function generateStaticParams()");
+    expect(route).toContain("workflows.map");
+    expect(route).toContain("workflows.find");
+    expect(route).toContain("notFound()");
+    expect(route).toContain("workflow.installCommand");
+    expect(route).toContain('href="/#workflows"');
+    expect(route).toContain("diagramSteps.map");
+    expect(route).toContain("View source on GitHub");
+    expect(route).toContain('target="_blank"');
+    expect(route).toContain('rel="noreferrer"');
   });
 
   test("renders an interactive simulated workflow run section", () => {
