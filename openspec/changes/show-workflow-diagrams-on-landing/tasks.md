@@ -22,8 +22,8 @@
 
 ## 3. Plan Implementation
 
-- [ ] Write the implementation plan in `docs/superpowers/plans/`.
-- [ ] Include TDD slices for route metadata, card link navigation, detail page
+- [x] Write the implementation plan in `docs/superpowers/plans/`.
+- [x] Include TDD slices for route metadata, card link navigation, detail page
       rendering, unknown slug handling, GitHub source links, search behavior,
       and landing verification.
 
