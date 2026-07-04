@@ -5,13 +5,15 @@
   "description": "Shape, review, plan, and preserve evidence for release changes.",
   "skills": [
     {
-      "source": "superpowers:brainstorming"
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
     },
     {
       "source": "./skills/release-risk-review"
     },
     {
-      "source": "superpowers:writing-plans"
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
     },
     {
       "source": "pony-trail"

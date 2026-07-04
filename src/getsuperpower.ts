@@ -12,7 +12,7 @@ import {
 } from "./plugins";
 import {
   createWorkflowBundleScaffold,
-  getWorkflowSkillInstallSources,
+  getWorkflowSkillInstallDependencies,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
@@ -51,6 +51,7 @@ export type GetSuperpowerSkillInstallPrinter = (
 
 export interface GetSuperpowerExternalSkillDependencyInstallInput {
   source: string;
+  repo?: string;
   homeDir: string;
   runCommand?: GetSuperpowerExternalSkillCommandRunner;
 }
@@ -231,10 +232,11 @@ async function runGetSuperpowerInstall(
   const installedExternalPackages = new Set<string>();
 
   try {
-    for (const skillSource of getWorkflowSkillInstallSources(bundle)) {
+    for (const skillDependency of getWorkflowSkillInstallDependencies(bundle)) {
       const skillResult = await installGetSuperpowerSkillDependency({
         rootDir: targetDir,
-        source: skillSource,
+        source: skillDependency.source,
+        ...(skillDependency.repo ? { repo: skillDependency.repo } : {}),
         homeDir,
         agents: installAgents,
         installSkill: options.installSkill,
@@ -260,6 +262,7 @@ async function runGetSuperpowerInstall(
 async function installGetSuperpowerSkillDependency(input: {
   rootDir: string;
   source: string;
+  repo?: string;
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
   installSkill: GetSuperpowerSkillInstaller;
@@ -269,17 +272,23 @@ async function installGetSuperpowerSkillDependency(input: {
   try {
     return await installWorkflowSkillDependency(input);
   } catch (error) {
-    const externalPackage = getSkillsCliPackageForMissingDependency(input.source, error);
+    const externalPackage = getSkillsCliPackageForMissingDependency(
+      input.source,
+      input.repo,
+      error,
+    );
     if (!externalPackage) {
       throw error;
     }
 
-    const externalInstallKey = getSkillsCliInstallKeyForSource(input.source) ?? externalPackage;
+    const externalInstallKey =
+      getSkillsCliInstallKeyForSource(input.source, input.repo) ?? externalPackage;
 
     if (!input.installedExternalPackages.has(externalInstallKey)) {
       console.log(keyValue("Installing external skill dependency", externalPackage));
       await input.installExternalSkillDependency({
         source: input.source,
+        ...(input.repo ? { repo: input.repo } : {}),
         homeDir: input.homeDir,
       });
       input.installedExternalPackages.add(externalInstallKey);
@@ -318,12 +327,16 @@ function installWorkflowSkillDependency(input: {
   });
 }
 
-function getSkillsCliPackageForMissingDependency(source: string, error: unknown): string | null {
+function getSkillsCliPackageForMissingDependency(
+  source: string,
+  repo: string | undefined,
+  error: unknown,
+): string | null {
   if (!isMissingBootstrappableSkillError(error)) {
     return null;
   }
 
-  return getSkillsCliPackageForSource(source);
+  return getSkillsCliPackageForDependency(source, repo);
 }
 
 function isMissingBootstrappableSkillError(
@@ -360,13 +373,37 @@ export function getSkillsCliPackageForSource(source: string): string | null {
   return `${owner}/${repo}`;
 }
 
-function getSkillsCliInstallKeyForSource(source: string): string | null {
-  const skillName = getSkillsCliSkillNameForSource(source);
-  if (!skillName) {
-    return getSkillsCliPackageForSource(source);
+function getSkillsCliPackageForDependency(source: string, repo: string | undefined): string | null {
+  return normalizeSkillsCliRepoSource(repo) ?? getSkillsCliPackageForSource(source);
+}
+
+function normalizeSkillsCliRepoSource(repo: string | undefined): string | null {
+  const trimmed = repo?.trim();
+  if (!trimmed) {
+    return null;
   }
 
-  const packageName = getSkillsCliPackageForSource(source);
+  const markdownLinkMatch = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(trimmed);
+  if (!markdownLinkMatch) {
+    return trimmed;
+  }
+
+  const label = markdownLinkMatch[1]?.trim();
+  const url = markdownLinkMatch[2]?.trim();
+  if (label && isBareSkillsCliPackage(label)) {
+    return label;
+  }
+
+  return url || null;
+}
+
+function getSkillsCliInstallKeyForSource(source: string, repo?: string): string | null {
+  const skillName = getSkillsCliSkillNameForSource(source);
+  if (!skillName) {
+    return getSkillsCliPackageForDependency(source, repo);
+  }
+
+  const packageName = getSkillsCliPackageForDependency(source, repo);
   return packageName ? `${packageName}:${skillName}` : null;
 }
 
@@ -396,7 +433,7 @@ function isBareSkillsCliPackage(source: string): boolean {
 export async function installExternalSkillDependencyWithSkillsCli(
   input: GetSuperpowerExternalSkillDependencyInstallInput,
 ): Promise<void> {
-  const packageName = getSkillsCliPackageForSource(input.source);
+  const packageName = getSkillsCliPackageForDependency(input.source, input.repo);
   if (!packageName) {
     throw new Error(`No skills CLI package is known for dependency: ${input.source}`);
   }

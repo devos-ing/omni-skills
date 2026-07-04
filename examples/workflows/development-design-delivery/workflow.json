@@ -8,28 +8,36 @@
       "source": "./skills/development-design-delivery"
     },
     {
-      "source": "superpowers:brainstorming"
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:design-an-interface"
+      "source": "mattpocock:design-an-interface",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:grill-with-docs"
+      "source": "mattpocock:grill-with-docs",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "superpowers:writing-plans"
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:codebase-design"
+      "source": "mattpocock:codebase-design",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:tdd"
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:diagnosing-bugs"
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:review"
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
     },
     {
       "source": "pony-trail"

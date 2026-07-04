@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   createWorkflowBundleScaffold,
+  getWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallSources,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
@@ -46,6 +47,65 @@ describe("workflow bundles", () => {
     );
 
     await expect(loadWorkflowBundle(bundleDir)).rejects.toThrow("Duplicate workflow step id: same");
+  });
+
+  test("loads workflow skill repository metadata for external skill installs", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-repo-"));
+    const bundleDir = join(rootDir, "repo-skills");
+    await mkdir(bundleDir, { recursive: true });
+    await writeFile(
+      join(bundleDir, "workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "repo-skills",
+          version: "0.1.0",
+          description: "Uses repo metadata for Skills CLI installs.",
+          skills: [
+            {
+              source: "superpowers:brainstorming",
+              repo: "obra/superpowers",
+            },
+          ],
+          steps: [
+            {
+              id: "brainstorming",
+              title: "Shape the work",
+              skill: "superpowers:brainstorming",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(bundleDir);
+
+      expect(bundle.manifest.skills).toEqual([
+        {
+          source: "superpowers:brainstorming",
+          repo: "obra/superpowers",
+        },
+      ]);
+      expect(getWorkflowSkillInstallDependencies(bundle)).toEqual([
+        {
+          source: "superpowers:brainstorming",
+          repo: "obra/superpowers",
+        },
+      ]);
+      const install = await installWorkflowBundle({ rootDir, bundle });
+      const installed = JSON.parse(await readFile(install.path, "utf8"));
+      expect(installed.skills).toEqual([
+        {
+          source: "superpowers:brainstorming",
+          repo: "obra/superpowers",
+        },
+      ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
   });
 
   test("scaffolds an authorable workflow bundle with a local skill", async () => {
@@ -179,6 +239,15 @@ describe("workflow bundles", () => {
       "superpowers:writing-plans",
       "mattpocock:tdd",
       "pony-trail",
+    ]);
+    expect(
+      bundle.manifest.skills
+        .filter((skill) => skill.source.includes(":"))
+        .map((skill) => [skill.source, skill.repo]),
+    ).toEqual([
+      ["superpowers:brainstorming", "obra/superpowers"],
+      ["superpowers:writing-plans", "obra/superpowers"],
+      ["mattpocock:tdd", "mattpocock/skills"],
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["opsx-propose", "./skills/opsx-handoff-review"],

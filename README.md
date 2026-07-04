@@ -109,7 +109,14 @@ The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guid
 | `examples/workflows/real-engineering` | RTK, `pony-trail`, Superpowers, and Matt Pocock skills together. | Fetches Matt Pocock skills if missing. |
 | `examples/workflows/release-review` | Small release-risk review workflow. | Good starter example. |
 
-GetSuperpower install automatically uses the Skills CLI to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same package install through the CLI and retry:
+GetSuperpower install automatically uses each workflow skill's `repo` metadata
+to fetch missing external skills through the Skills CLI. For example,
+`{ "source": "superpowers:brainstorming", "repo": "obra/superpowers" }`
+keeps the original skill name in `source` and installs it with
+`npx skills add obra/superpowers --skill brainstorming`.
+
+If automatic bootstrap fails, run the same package install through the CLI and
+retry:
 
 ```bash
 npx getsuperpower@latest skills install mattpocock/skills

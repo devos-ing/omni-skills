@@ -12,6 +12,7 @@ const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const WorkflowSkillSchema = z.object({
   source: z.string().min(1),
+  repo: z.string().min(1).optional(),
   optional: z.boolean().optional(),
 });
 
@@ -100,6 +101,11 @@ export interface WorkflowBundleScaffold {
   manifestPath: string;
   readmePath: string;
   entrySkillPath: string;
+}
+
+export interface WorkflowSkillInstallDependency {
+  source: string;
+  repo?: string;
 }
 
 export interface InstalledWorkflowBundle extends WorkflowBundleManifest {
@@ -232,11 +238,21 @@ export async function listInstalledWorkflowBundles(input: {
 }
 
 export function getWorkflowSkillInstallSources(bundle: WorkflowBundle): string[] {
+  return getWorkflowSkillInstallDependencies(bundle).map((skill) => skill.source);
+}
+
+export function getWorkflowSkillInstallDependencies(
+  bundle: WorkflowBundle,
+): WorkflowSkillInstallDependency[] {
   return bundle.manifest.skills.map((skill) => {
-    if (skill.source.startsWith("./") || skill.source.startsWith("../")) {
-      return resolve(bundle.sourceDir, skill.source);
-    }
-    return skill.source;
+    const source =
+      skill.source.startsWith("./") || skill.source.startsWith("../")
+        ? resolve(bundle.sourceDir, skill.source)
+        : skill.source;
+    return {
+      source,
+      ...(skill.repo ? { repo: skill.repo } : {}),
+    };
   });
 }
 
@@ -255,9 +271,9 @@ function createScaffoldManifest(name: string): WorkflowBundleManifest {
     description: `GetSuperpower for ${name}.`,
     skills: [
       { source: `./skills/${name}` },
-      { source: "superpowers:brainstorming" },
+      { source: "superpowers:brainstorming", repo: "obra/superpowers" },
       { source: "./skills/custom-review" },
-      { source: "superpowers:writing-plans" },
+      { source: "superpowers:writing-plans", repo: "obra/superpowers" },
     ],
     steps: [
       {

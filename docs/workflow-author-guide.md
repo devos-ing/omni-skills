@@ -103,9 +103,9 @@ Example:
   "description": "Clarify, review, plan, and preserve evidence for support fixes.",
   "skills": [
     { "source": "./skills/support-triage" },
-    { "source": "superpowers:brainstorming" },
+    { "source": "superpowers:brainstorming", "repo": "obra/superpowers" },
     { "source": "./skills/support-review" },
-    { "source": "superpowers:writing-plans" }
+    { "source": "superpowers:writing-plans", "repo": "obra/superpowers" }
   ],
   "steps": [
     {
@@ -131,6 +131,10 @@ Example:
 
 Keep every `steps[].skill` value exactly equal to one of the `skills[].source`
 values.
+
+For a skill installed from the Skills CLI, keep `source` as the original skill
+name used by workflow steps, and set `repo` to the package passed to
+`npx skills add`, such as `obra/superpowers` or `mattpocock/skills`.
 
 The entry skill itself belongs in `skills[]`, but it does not need its own step.
 It is the callable wrapper that instructs the agent to run the declared steps.

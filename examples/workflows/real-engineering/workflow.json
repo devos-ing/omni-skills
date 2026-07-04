@@ -11,22 +11,28 @@
       "source": "pony-trail"
     },
     {
-      "source": "superpowers:brainstorming"
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "superpowers:writing-plans"
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:grill-with-docs"
+      "source": "mattpocock:grill-with-docs",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:tdd"
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:codebase-design"
+      "source": "mattpocock:codebase-design",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "mattpocock:diagnosing-bugs"
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
     }
   ],
   "steps": [

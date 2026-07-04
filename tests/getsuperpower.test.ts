@@ -679,7 +679,7 @@ describe("getsuperpower command module", () => {
     const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "matt-bundle");
-    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
+    const externalInstalls: Array<{ source: string; repo?: string; homeDir: string }> = [];
     const skillInstalls: string[] = [];
     const printedSkills: string[] = [];
     const program = new Command();
@@ -693,7 +693,7 @@ describe("getsuperpower command module", () => {
           name: "matt-bundle",
           version: "0.1.0",
           description: "Uses one Matt Pocock skill.",
-          skills: [{ source: "mattpocock:tdd" }],
+          skills: [{ source: "mattpocock:tdd", repo: "mattpocock/skills" }],
           steps: [{ id: "tdd", title: "Implement with TDD", skill: "mattpocock:tdd" }],
         },
         null,
@@ -731,7 +731,9 @@ describe("getsuperpower command module", () => {
     );
 
     expect(skillInstalls).toEqual(["mattpocock:tdd", "mattpocock:tdd"]);
-    expect(externalInstalls).toEqual([{ source: "mattpocock:tdd", homeDir }]);
+    expect(externalInstalls).toEqual([
+      { source: "mattpocock:tdd", repo: "mattpocock/skills", homeDir },
+    ]);
     expect(printedSkills).toEqual(["tdd"]);
     await expect(
       stat(join(rootDir, ".getsuperpower", "workflows", "matt-bundle.json")),
@@ -742,7 +744,7 @@ describe("getsuperpower command module", () => {
     const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "superpowers-bundle");
-    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
+    const externalInstalls: Array<{ source: string; repo?: string; homeDir: string }> = [];
     const skillInstalls: string[] = [];
     const printedSkills: string[] = [];
     const installedExternalSources = new Set<string>();
@@ -759,7 +761,7 @@ describe("getsuperpower command module", () => {
           description: "Uses two Superpowers process skills.",
           skills: [
             { source: "superpowers:brainstorming" },
-            { source: "superpowers:writing-plans" },
+            { source: "superpowers:writing-plans", repo: "obra/superpowers" },
           ],
           steps: [
             {
@@ -824,7 +826,7 @@ describe("getsuperpower command module", () => {
     ]);
     expect(externalInstalls).toEqual([
       { source: "superpowers:brainstorming", homeDir },
-      { source: "superpowers:writing-plans", homeDir },
+      { source: "superpowers:writing-plans", repo: "obra/superpowers", homeDir },
     ]);
     expect(printedSkills).toEqual(["superpowers-brainstorming", "superpowers-writing-plans"]);
     await expect(
@@ -836,7 +838,7 @@ describe("getsuperpower command module", () => {
     const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const bundleDir = join(rootDir, "matt-bundle");
-    const externalInstalls: Array<{ source: string; homeDir: string }> = [];
+    const externalInstalls: Array<{ source: string; repo?: string; homeDir: string }> = [];
     const program = new Command();
 
     await mkdir(bundleDir, { recursive: true });
@@ -848,7 +850,7 @@ describe("getsuperpower command module", () => {
           name: "matt-bundle",
           version: "0.1.0",
           description: "Uses one Matt Pocock skill.",
-          skills: [{ source: "mattpocock:tdd" }],
+          skills: [{ source: "mattpocock:tdd", repo: "mattpocock/skills" }],
           steps: [{ id: "tdd", title: "Implement with TDD", skill: "mattpocock:tdd" }],
         },
         null,
@@ -875,15 +877,18 @@ describe("getsuperpower command module", () => {
     ).rejects.toThrow(
       "The skills CLI ran for mattpocock/skills, but mattpocock:tdd is still missing.",
     );
-    expect(externalInstalls).toEqual([{ source: "mattpocock:tdd", homeDir }]);
+    expect(externalInstalls).toEqual([
+      { source: "mattpocock:tdd", repo: "mattpocock/skills", homeDir },
+    ]);
   });
 
-  test("installs the skills CLI package non-interactively before adding external dependencies", async () => {
+  test("installs the declared skills CLI repo non-interactively before adding external dependencies", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
     const commands: GetSuperpowerExternalSkillCommand[] = [];
 
     await installExternalSkillDependencyWithSkillsCli({
       source: "mattpocock:tdd",
+      repo: "mattpocock/skills",
       homeDir,
       runCommand: async (command) => {
         commands.push(command);
@@ -909,6 +914,34 @@ describe("getsuperpower command module", () => {
         cwd: homeDir,
         env: expect.objectContaining({ HOME: homeDir }),
       },
+    ]);
+  });
+
+  test("normalizes markdown repository links before invoking the Skills CLI", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-home-"));
+    const commands: GetSuperpowerExternalSkillCommand[] = [];
+
+    await installExternalSkillDependencyWithSkillsCli({
+      source: "superpowers:brainstorming",
+      repo: "[obra/superpowers](https://github.com/obra/superpowers)",
+      homeDir,
+      runCommand: async (command) => {
+        commands.push(command);
+        return { stdout: "", stderr: "", exitCode: 0 };
+      },
+    });
+
+    expect(commands[0]?.args).toEqual([
+      "--yes",
+      "skills@latest",
+      "add",
+      "obra/superpowers",
+      "--yes",
+      "--global",
+      "--skill",
+      "brainstorming",
+      "--agent",
+      "codex",
     ]);
   });
 

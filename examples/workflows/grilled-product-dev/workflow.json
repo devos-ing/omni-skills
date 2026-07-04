@@ -8,13 +8,16 @@
       "source": "./skills/grilled-product-dev"
     },
     {
-      "source": "mattpocock:grilling"
+      "source": "mattpocock:grilling",
+      "repo": "mattpocock/skills"
     },
     {
-      "source": "superpowers:brainstorming"
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "superpowers:writing-plans"
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
     }
   ],
   "steps": [

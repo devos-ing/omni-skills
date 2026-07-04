@@ -11,13 +11,16 @@
       "source": "./skills/opsx-handoff-review"
     },
     {
-      "source": "superpowers:brainstorming"
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "superpowers:writing-plans"
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:tdd"
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
     },
     {
       "source": "pony-trail"

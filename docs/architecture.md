@@ -48,7 +48,7 @@ Compatibility aliases:
 - reject duplicate step ids
 - scaffold a local bundle with an entry skill
 - resolve local and public git bundle sources
-- list skill dependency sources
+- list skill dependency sources plus optional Skills CLI repository metadata
 - install normalized project-local records under `.getsuperpower/workflows/`
 - list installed GetSuperpowers
 
@@ -74,7 +74,9 @@ directory multiple times.
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed
-through the Skills CLI by `src/getsuperpower.ts`.
+through the Skills CLI by `src/getsuperpower.ts`. Workflow manifests can keep
+the original step skill name in `skills[].source` and declare the installable
+Skills CLI package in `skills[].repo`.
 
 ## Paused Pony Trail Runtime
 
