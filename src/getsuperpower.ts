@@ -20,7 +20,7 @@ import {
 } from "./plugins";
 import {
   createWorkflowBundleScaffold,
-  getWorkflowSkillInstallDependencies,
+  getPreparedWorkflowSkillInstallDependencies,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
@@ -259,6 +259,9 @@ async function runGetSuperpowerInstall(
   const installedExternalPackages = new Set<string>();
   const skillPlans = getWorkflowInstallSkillPlans(bundle);
   const installPrompt = options.installPrompt ?? createDefaultInstallPrompt();
+  let preparedDependencies:
+    | Awaited<ReturnType<typeof getPreparedWorkflowSkillInstallDependencies>>
+    | undefined;
 
   try {
     printGetSuperpowerInstallPlan({
@@ -285,7 +288,8 @@ async function runGetSuperpowerInstall(
 
     console.log(success("Installing skills..."));
 
-    const skillDependencies = getWorkflowSkillInstallDependencies(bundle);
+    preparedDependencies = await getPreparedWorkflowSkillInstallDependencies({ bundle });
+    const skillDependencies = preparedDependencies.dependencies;
     for (const [index, skillDependency] of skillDependencies.entries()) {
       const displaySkill = skillPlans[index]?.source ?? skillDependency.source;
       console.log(`Processing ${index + 1}/${skillDependencies.length}: ${displaySkill}`);
@@ -320,6 +324,7 @@ async function runGetSuperpowerInstall(
       }),
     );
   } finally {
+    await preparedDependencies?.cleanup?.();
     await bundle.cleanup?.();
   }
 }
