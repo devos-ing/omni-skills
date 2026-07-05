@@ -64,9 +64,7 @@ describe("loop runtime", () => {
       await expect(stat(join(runDir, "state.json"))).resolves.toBeTruthy();
       await expect(stat(join(runDir, "events.jsonl"))).resolves.toBeTruthy();
 
-      const status = parseJsonOutput(
-        await runLoop(["status", "--latest", "--json"], homeDir),
-      ) as {
+      const status = parseJsonOutput(await runLoop(["status", "--latest", "--json"], homeDir)) as {
         selectedByLatest: boolean;
         runId: string;
         step: { id: string };
@@ -92,7 +90,12 @@ describe("loop runtime", () => {
           homeDir,
         ),
       ) as {
-        event: { type: string; step: string; metadata: { approvedBy: string } };
+        event: {
+          type: string;
+          step: string;
+          message: string;
+          metadata: { approvedBy: string };
+        };
       };
       expect(log.event).toEqual({
         type: "approval",
@@ -117,9 +120,7 @@ describe("loop runtime", () => {
         summaryPath: string;
       };
       expect(summary.summaryPath).toBe(join(runDir, "summary.md"));
-      await expect(readFile(summary.summaryPath, "utf8")).resolves.toContain(
-        "Current step: shape",
-      );
+      await expect(readFile(summary.summaryPath, "utf8")).resolves.toContain("Current step: shape");
 
       const state = JSON.parse(await readFile(join(runDir, "state.json"), "utf8"));
       expect(state).toMatchObject({

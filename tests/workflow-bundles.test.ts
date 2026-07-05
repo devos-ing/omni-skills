@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
-  createWorkflowLoopMetadata,
   createWorkflowBundleScaffold,
+  createWorkflowLoopMetadata,
   getPreparedWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallSources,
@@ -103,9 +103,7 @@ describe("workflow bundles", () => {
         state: "global",
         execution: "action-only",
       });
-      expect(bundle.manifest.skills).toEqual([
-        { source: "./skills/looped-workflow", entry: true },
-      ]);
+      expect(bundle.manifest.skills).toEqual([{ source: "./skills/looped-workflow", entry: true }]);
       expect(bundle.manifest.steps[0]?.instruction).toBe(
         "Check loop status before doing the next phase.",
       );
@@ -875,10 +873,7 @@ describe("workflow bundles", () => {
           version: "0.1.0",
           description: "Uses a loop runtime.",
           loop: { script: "./loop.mjs", state: "global", execution: "action-only" },
-          skills: [
-            { source: "./skills/looped-workflow", entry: true },
-            { source: "pony-trail" },
-          ],
+          skills: [{ source: "./skills/looped-workflow", entry: true }, { source: "pony-trail" }],
           steps: [
             { id: "entry", title: "Entry", skill: "./skills/looped-workflow" },
             { id: "evidence", title: "Evidence", skill: "pony-trail" },

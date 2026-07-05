@@ -139,6 +139,36 @@ name used by workflow steps, and set `repo` to the package passed to
 The entry skill itself belongs in `skills[]`, but it does not need its own step.
 It is the callable wrapper that instructs the agent to run the declared steps.
 
+### Optional Loop Runtime
+
+A workflow can opt into resumable, action-only loop state by adding `loop.mjs`
+beside `workflow.json`:
+
+```json
+{
+  "loop": {
+    "script": "./loop.mjs",
+    "state": "global",
+    "execution": "action-only"
+  },
+  "skills": [{ "source": "./skills/support-triage", "entry": true }],
+  "steps": [
+    {
+      "id": "shape",
+      "title": "Clarify the support issue",
+      "skill": "superpowers:brainstorming",
+      "instruction": "Clarify the issue and wait for explicit approval."
+    }
+  ]
+}
+```
+
+Looped workflows must mark exactly one local skill as `entry: true`. Put the
+exact phase prompt in `steps[].instruction`; `node loop.mjs status --json`
+returns that instruction. During install, GetSuperpower copies `workflow.json`,
+`loop.mjs`, and generated `loop.metadata.json` into the installed entry skill
+folder only.
+
 ## 4. Edit The Entry Skill
 
 Open:

@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
-import { appendFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
-import { access } from "node:fs/promises";
+import { access, appendFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -348,7 +347,9 @@ async function resolveRunId(context, options) {
 
 async function latestActiveRunId(context) {
   if (!(await pathExists(context.runsRoot))) {
-    throw new Error(`No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`);
+    throw new Error(
+      `No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`,
+    );
   }
 
   const entries = await readdir(context.runsRoot, { withFileTypes: true });
@@ -370,7 +371,9 @@ async function latestActiveRunId(context) {
   states.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   const latest = states[0];
   if (!latest) {
-    throw new Error(`No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`);
+    throw new Error(
+      `No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`,
+    );
   }
   return latest.runId;
 }

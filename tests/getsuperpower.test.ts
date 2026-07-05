@@ -191,9 +191,9 @@ describe("getsuperpower command module", () => {
         await expect(readFile(join(input.source, "loop.mjs"), "utf8")).resolves.toBe(
           "export {};\n",
         );
-        await expect(
-          readFile(join(input.source, "loop.metadata.json"), "utf8"),
-        ).resolves.toContain('"workflow": "git-workflow"');
+        await expect(readFile(join(input.source, "loop.metadata.json"), "utf8")).resolves.toContain(
+          '"workflow": "git-workflow"',
+        );
         return {
           skillInstall: fakeSkillInstallResult({
             source: input.source,

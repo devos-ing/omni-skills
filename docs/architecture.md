@@ -45,10 +45,14 @@ Compatibility aliases:
 `src/runtimes/ponytrail/workflow-bundles.ts` owns the bundle contract:
 
 - parse and validate `workflow.json`
+- validate optional loop metadata: `loop`, one `skills[].entry`, and
+  `steps[].instruction`
 - reject duplicate step ids
 - scaffold a local bundle with an entry skill
 - resolve local and public git bundle sources
 - list skill dependency sources plus optional Skills CLI repository metadata
+- prepare looped workflow entry skill installs with copied `workflow.json`,
+  `loop.mjs`, and generated `loop.metadata.json`
 - install normalized global records under `~/.getsuperpower/workflows/`
 - list installed GetSuperpowers
 
@@ -86,15 +90,17 @@ future or legacy use, but the public GetSuperpower CLI does not expose history,
 revert, or prehook commands while Pony Trail is paused.
 
 Skill install and workflow install commands do not write snapshot history during
-this pause. Active global state is limited to installed workflow records under
+this pause. Installed workflow records live under
 `~/.getsuperpower/workflows/`; project-local records are only written when a
-caller passes `--dir`.
+caller passes `--dir`. Optional looped workflows may write per-run state under
+`~/.getsuperpower/runs/<workflow>/<run-id>/` from their installed `loop.mjs`.
 
 ## Bundle Layout
 
 ```text
 my-getsuperpower/
   workflow.json
+  loop.mjs              # optional, only for loop-enabled workflows
   README.md
   skills/
     my-getsuperpower/
@@ -105,6 +111,10 @@ my-getsuperpower/
 
 `skills/<name>/SKILL.md` is the callable entry skill. Its required sub-skills
 should stay aligned with `workflow.json`.
+
+Loop-enabled workflows declare `loop` in `workflow.json`, mark exactly one local
+skill with `entry: true`, and keep phase instructions in `steps[].instruction`.
+Install copies the loop files only into that entry skill destination.
 
 ## Boundaries
 

@@ -86,12 +86,13 @@ export const WorkflowBundleManifestSchema = z
     }
 
     if (manifest.loop && entrySkillIndexes.length === 1) {
-      const entrySkill = manifest.skills[entrySkillIndexes[0] ?? 0];
+      const entrySkillIndex = entrySkillIndexes[0] ?? 0;
+      const entrySkill = manifest.skills[entrySkillIndex];
       if (entrySkill && !isLocalWorkflowSkillSource(entrySkill.source)) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Looped workflow entry skill must be a local skill path",
-          path: ["skills", entrySkillIndexes[0], "source"],
+          path: ["skills", entrySkillIndex, "source"],
         });
       }
     }
