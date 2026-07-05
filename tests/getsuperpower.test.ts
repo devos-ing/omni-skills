@@ -56,6 +56,9 @@ async function writeGitWorkflowFixtureAt(
       "# git-entry",
     ].join("\n"),
   );
+  if (options.loop) {
+    await writeFile(join(workflowDir, "loop.mjs"), "export {};\n");
+  }
   await writeFile(
     join(workflowDir, "workflow.json"),
     JSON.stringify(
