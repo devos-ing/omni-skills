@@ -104,6 +104,7 @@ compatibility `loop.mjs` wrapper.
 ```text
 my-getsuperpower/
   workflow.json
+  loop.mjs              # optional, only for loop-enabled workflows
   README.md
   skills/
     my-getsuperpower/
