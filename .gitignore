@@ -6,6 +6,7 @@ coverage/
 .getsuperpower/
 .ponyrace/
 work/
+.worktrees/
 .DS_Store
 docs/superpowers/
 .codegraph
