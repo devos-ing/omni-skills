@@ -44,6 +44,53 @@ async function writeSuperpowersProcessSkills(homeDir: string): Promise<void> {
   });
 }
 
+async function writeLoopedWorkflowFixture(workflowDir: string): Promise<void> {
+  await mkdir(join(workflowDir, "skills", "looped-entry"), { recursive: true });
+  await writeFile(
+    join(workflowDir, "skills", "looped-entry", "SKILL.md"),
+    [
+      "---",
+      "name: looped-entry",
+      'description: "Entry skill for a looped workflow."',
+      "---",
+      "",
+      "# looped-entry",
+    ].join("\n"),
+  );
+  await writeFile(
+    join(workflowDir, "loop.mjs"),
+    [
+      "export function status() {",
+      '  return { actions: [{ type: "say", text: "Keep going." }] };',
+      "}",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    join(workflowDir, "workflow.json"),
+    JSON.stringify(
+      {
+        schemaVersion: "0.1",
+        name: "looped-cli",
+        version: "0.1.0",
+        description: "Looped workflow CLI fixture.",
+        loop: { script: "./loop.mjs", state: "global", execution: "action-only" },
+        skills: [{ source: "./skills/looped-entry", entry: true }],
+        steps: [
+          {
+            id: "entry",
+            title: "Entry",
+            skill: "./skills/looped-entry",
+            instruction: "Run the loop status command.",
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 describe("cli", () => {
   const releaseReviewWorkflow = join(
     import.meta.dir,
@@ -240,6 +287,56 @@ describe("cli", () => {
       }
       expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: release-review");
       expect(stripAnsiLines(logs)).toContain("release-review 0.1.0");
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("getsuperpower install copies loop runtime files into the installed entry skill", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-home-"));
+    const workflowDir = join(rootDir, "looped-cli");
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await writeLoopedWorkflowFixture(workflowDir);
+
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["install", workflowDir, "--home", homeDir, "--agents", "codex"],
+        { from: "user" },
+      );
+
+      const installedSkillDir = join(homeDir, ".agents", "skills", "looped-entry");
+      await expect(stat(join(installedSkillDir, "SKILL.md"))).resolves.toBeTruthy();
+      await expect(readFile(join(installedSkillDir, "workflow.json"), "utf8")).resolves.toContain(
+        '"loop"',
+      );
+      await expect(readFile(join(installedSkillDir, "loop.mjs"), "utf8")).resolves.toContain(
+        "Keep going.",
+      );
+      const metadata = JSON.parse(
+        await readFile(join(installedSkillDir, "loop.metadata.json"), "utf8"),
+      );
+      expect(metadata).toEqual({
+        schemaVersion: "0.1",
+        workflow: "looped-cli",
+        entrySkill: "./skills/looped-entry",
+        loopScript: "./loop.mjs",
+        state: "global",
+        execution: "action-only",
+        commands: ["start", "status", "log", "advance", "summary"],
+      });
+      await expect(
+        stat(join(homeDir, ".getsuperpower", "workflows", "looped-cli.json")),
+      ).resolves.toBeTruthy();
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: looped-cli");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
