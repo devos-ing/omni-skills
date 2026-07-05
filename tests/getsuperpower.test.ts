@@ -156,6 +156,196 @@ describe("getsuperpower command module", () => {
     await rm(homeDir, { recursive: true, force: true });
   });
 
+  test("install writes the workflow record to the global home by default", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-default-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-default-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const skillInstalls: string[] = [];
+    const program = new Command();
+
+    await writeGitWorkflowFixtureAt(bundleDir);
+
+    configureGetSuperpowerCommand(program, {
+      rootDir,
+      installSkill: async (input) => {
+        skillInstalls.push(input.source);
+        return {
+          skillInstall: fakeSkillInstallResult({
+            source: input.source,
+            skillName: "git-entry",
+            destination: join(homeDir, ".agents", "skills", "git-entry"),
+          }),
+        };
+      },
+      printSkillInstallResult: () => {},
+    });
+
+    await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+      from: "user",
+    });
+
+    expect(skillInstalls).toEqual([join(bundleDir, "skills", "git-entry")]);
+    await expect(
+      stat(join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")),
+    ).resolves.toBeTruthy();
+    await expect(
+      stat(join(rootDir, ".getsuperpower", "workflows", "git-workflow.json")),
+    ).rejects.toThrow();
+
+    await rm(rootDir, { recursive: true, force: true });
+    await rm(homeDir, { recursive: true, force: true });
+  });
+
+  test("list reads workflow records from the global home by default", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-list-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-list-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir);
+
+      configureGetSuperpowerCommand(program, {
+        rootDir,
+        installSkill: async (input) => ({
+          skillInstall: fakeSkillInstallResult({
+            source: input.source,
+            skillName: "git-entry",
+            destination: join(homeDir, ".agents", "skills", "git-entry"),
+          }),
+        }),
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+      await program.parseAsync(["list", "--home", homeDir], { from: "user" });
+
+      expect(stripAnsiLines(logs)).toContain("git-workflow 0.1.0");
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("install asks for approval with the declared skill list before installing", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-approval-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-approval-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const skillInstalls: string[] = [];
+    const prompts: Array<{ workflowName: string; skills: Array<{ source: string }> }> = [];
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir);
+
+      configureGetSuperpowerCommand(program, {
+        rootDir,
+        installPrompt: {
+          confirmInstall: async (input) => {
+            prompts.push(input);
+            return false;
+          },
+        },
+        installSkill: async (input) => {
+          skillInstalls.push(input.source);
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName: "git-entry",
+              destination: join(homeDir, ".agents", "skills", "git-entry"),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0]?.workflowName).toBe("git-workflow");
+      expect(prompts[0]?.skills.map((skill) => skill.source)).toEqual(["./skills/git-entry"]);
+      expect(stripAnsiLines(logs)).toContain("Skills to install:");
+      expect(stripAnsiLines(logs)).toContain("- ./skills/git-entry");
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower install cancelled.");
+      expect(skillInstalls).toEqual([]);
+      await expect(
+        stat(join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")),
+      ).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("install shows progress and a bordered GETSUPERPOWER result when approved", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-progress-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-progress-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir);
+
+      configureGetSuperpowerCommand(program, {
+        rootDir,
+        installPrompt: {
+          confirmInstall: async () => true,
+        },
+        installSkill: async (input) => ({
+          skillInstall: fakeSkillInstallResult({
+            source: input.source,
+            skillName: "git-entry",
+            destination: join(homeDir, ".agents", "skills", "git-entry"),
+          }),
+        }),
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      const output = stripAnsiLines(logs).join("\n");
+      expect(output).toContain("Installing skills...");
+      expect(output).toContain("Processing 1/1: ./skills/git-entry");
+      expect(output).toContain("Installed skill: git-entry");
+      expect(output).toContain("+");
+      expect(output).toContain("GETSUPERPOWER");
+      expect(output).toContain("GetSuperpower installed: git-workflow");
+      expect(output).toContain(
+        `GetSuperpower file: ${join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")}`,
+      );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("install supports a workflow alias source", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-alias-"));
     const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-alias-home-"));

@@ -49,7 +49,7 @@ Compatibility aliases:
 - scaffold a local bundle with an entry skill
 - resolve local and public git bundle sources
 - list skill dependency sources plus optional Skills CLI repository metadata
-- install normalized project-local records under `.getsuperpower/workflows/`
+- install normalized global records under `~/.getsuperpower/workflows/`
 - list installed GetSuperpowers
 
 The internal folder name remains `ponytrail` for compatibility with existing
@@ -86,8 +86,9 @@ future or legacy use, but the public GetSuperpower CLI does not expose history,
 revert, or prehook commands while Pony Trail is paused.
 
 Skill install and workflow install commands do not write snapshot history during
-this pause. Active project-local state is limited to installed workflow records
-under `.getsuperpower/workflows/`.
+this pause. Active global state is limited to installed workflow records under
+`~/.getsuperpower/workflows/`; project-local records are only written when a
+caller passes `--dir`.
 
 ## Bundle Layout
 

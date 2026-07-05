@@ -41,6 +41,31 @@ export function nextStep(command: string): string {
   return `${label("Next:")} ${commandText(command)}`;
 }
 
+export function borderBox(lines: string[]): string {
+  const content = lines.flatMap((line) => line.split("\n"));
+  const width = Math.max(...content.map((line) => line.length), 1);
+  const horizontal = `+${"-".repeat(width + 2)}+`;
+  return [horizontal, ...content.map((line) => `| ${line.padEnd(width)} |`), horizontal].join("\n");
+}
+
+export function getSuperpowerInstallResultBox(input: {
+  workflowName: string;
+  workflowVersion: string;
+  workflowFile: string;
+  skillCount: number;
+}): string {
+  return brand(
+    borderBox([
+      GETSUPERPOWER_ASCII_LOGO,
+      "",
+      `GetSuperpower installed: ${input.workflowName}`,
+      `Version: ${input.workflowVersion}`,
+      `Skills installed: ${input.skillCount}`,
+      `GetSuperpower file: ${input.workflowFile}`,
+    ]),
+  );
+}
+
 export function rootHelpBanner(): string {
   return [
     brand(GETSUPERPOWER_ASCII_LOGO),

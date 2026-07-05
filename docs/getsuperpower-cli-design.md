@@ -154,12 +154,35 @@ The first line should use the success helper. Labels such as `Steps:` and
 ### Install Result
 
 ```text
+GetSuperpower install plan: release-review@0.1.0
+Workflow records: ~/.getsuperpower
+Skill home: ~/.agents
+Skills to install:
+- superpowers:brainstorming
+- ./skills/release-risk-review
+- superpowers:writing-plans
+- pony-trail
+? Install 4 skills for release-review? yes
+Installing skills...
+Processing 1/4: superpowers:brainstorming
+Installed skill: superpowers-brainstorming
 GetSuperpower installed: release-review
-GetSuperpower file: /path/to/.getsuperpower/workflows/release-review.json
+GetSuperpower file: ~/.getsuperpower/workflows/release-review.json
++---------------------------------------------------------------+
+| GETSUPERPOWER                                                 |
+| Skill trees for serious agent work.                           |
+|                                                               |
+| GetSuperpower installed: release-review                       |
+| Version: 0.1.0                                                |
+| Skills installed: 4                                           |
+| GetSuperpower file: ~/.getsuperpower/workflows/release-review.json |
++---------------------------------------------------------------+
 ```
 
-Do not add the ASCII logo here. Installs can be part of scripts and should stay
-short.
+Install output should list the declared skills before mutating targets, ask for
+yes/no approval in interactive terminals, show per-skill processing, and finish
+with the bordered GETSUPERPOWER result panel. In non-interactive shells, continue
+without prompting after printing the plan.
 
 ### Skill Result
 
