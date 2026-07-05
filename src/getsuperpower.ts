@@ -3,7 +3,15 @@ import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { cancel as clackCancel, confirm as clackConfirm, isCancel } from "@clack/prompts";
 import type { Command } from "commander";
-import { commandText, keyValue, muted, nextStep, success, warning } from "./cli-theme";
+import {
+  commandText,
+  getSuperpowerInstallResultBox,
+  keyValue,
+  muted,
+  nextStep,
+  success,
+  warning,
+} from "./cli-theme";
 import {
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
@@ -81,6 +89,24 @@ export interface GetSuperpowerOnboardPrompt {
   confirm(input: { message: string; defaultValue: boolean }): Promise<boolean>;
 }
 
+export interface GetSuperpowerInstallSkillPlan {
+  source: string;
+  repo?: string | undefined;
+}
+
+export interface GetSuperpowerInstallPromptInput {
+  workflowName: string;
+  workflowVersion: string;
+  skills: GetSuperpowerInstallSkillPlan[];
+  targetDir: string;
+  homeDir: string;
+  agents: ReturnType<typeof parseSkillInstallAgents>;
+}
+
+export interface GetSuperpowerInstallPrompt {
+  confirmInstall(input: GetSuperpowerInstallPromptInput): Promise<boolean>;
+}
+
 export interface GetSuperpowerOnboardCommand {
   executable: string;
   args: string[];
@@ -103,13 +129,14 @@ export interface ConfigureGetSuperpowerCommandOptions {
   installSkill: GetSuperpowerSkillInstaller;
   printSkillInstallResult: GetSuperpowerSkillInstallPrinter;
   installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller;
+  installPrompt?: GetSuperpowerInstallPrompt;
   workflowGitCommandRunner?: WorkflowGitCommandRunner;
   onboardPrompt?: GetSuperpowerOnboardPrompt;
   onboardCommandRunner?: GetSuperpowerOnboardCommandRunner;
 }
 
 interface GetSuperpowerInstallCommandOptions {
-  dir: string;
+  dir?: string;
   agents: string;
   home: string;
 }
@@ -199,17 +226,17 @@ function configureInstallCommand(
       "<source>",
       "workflow alias, local GetSuperpower path, workflow.json path, or public git source",
     )
-    .option(
-      "--dir <dir>",
-      "project directory that receives .getsuperpower/workflows",
-      options.rootDir,
-    )
+    .option("--dir <dir>", "override directory that receives .getsuperpower/workflows")
     .option(
       "--agents <agents>",
       "comma-separated skill install targets: codex,claude,cursor,copilot,opencode (aliases: github-copilot,opencodex)",
       "codex,claude,cursor",
     )
-    .option("--home <dir>", "home directory that contains agent config folders", homedir())
+    .option(
+      "--home <dir>",
+      "home directory for global GetSuperpower records and agent config folders",
+      homedir(),
+    )
     .action((source: string, commandOptions: GetSuperpowerInstallCommandOptions) =>
       runGetSuperpowerInstall(source, commandOptions, options),
     );
@@ -220,7 +247,8 @@ async function runGetSuperpowerInstall(
   commandOptions: GetSuperpowerInstallCommandOptions,
   options: ConfigureGetSuperpowerCommandOptions,
 ): Promise<void> {
-  const targetDir = resolvePath(options.rootDir, commandOptions.dir);
+  const homeDir = resolveHomePath(commandOptions.home);
+  const targetDir = commandOptions.dir ? resolvePath(options.rootDir, commandOptions.dir) : homeDir;
   const bundle = await loadWorkflowBundle(source, {
     cwd: options.rootDir,
     ...(options.workflowGitCommandRunner
@@ -228,11 +256,39 @@ async function runGetSuperpowerInstall(
       : {}),
   });
   const installAgents = parseSkillInstallAgents(commandOptions.agents);
-  const homeDir = resolveHomePath(commandOptions.home);
   const installedExternalPackages = new Set<string>();
+  const skillPlans = getWorkflowInstallSkillPlans(bundle);
+  const installPrompt = options.installPrompt ?? createDefaultInstallPrompt();
 
   try {
-    for (const skillDependency of getWorkflowSkillInstallDependencies(bundle)) {
+    printGetSuperpowerInstallPlan({
+      workflowName: bundle.manifest.name,
+      workflowVersion: bundle.manifest.version,
+      skills: skillPlans,
+      targetDir,
+      homeDir,
+    });
+
+    const approved = await installPrompt.confirmInstall({
+      workflowName: bundle.manifest.name,
+      workflowVersion: bundle.manifest.version,
+      skills: skillPlans,
+      targetDir,
+      homeDir,
+      agents: installAgents,
+    });
+
+    if (!approved) {
+      console.log(warning("GetSuperpower install cancelled."));
+      return;
+    }
+
+    console.log(success("Installing skills..."));
+
+    const skillDependencies = getWorkflowSkillInstallDependencies(bundle);
+    for (const [index, skillDependency] of skillDependencies.entries()) {
+      const displaySkill = skillPlans[index]?.source ?? skillDependency.source;
+      console.log(`Processing ${index + 1}/${skillDependencies.length}: ${displaySkill}`);
       const skillResult = await installGetSuperpowerSkillDependency({
         rootDir: targetDir,
         source: skillDependency.source,
@@ -248,15 +304,55 @@ async function runGetSuperpowerInstall(
       options.printSkillInstallResult(skillResult.skillInstall, "install", {
         showPostSkillChangeWelcome: false,
       });
+      console.log(success(`Installed skill: ${skillResult.skillInstall.skillName}`));
     }
 
     const install = await installWorkflowBundle({ rootDir: targetDir, bundle });
 
     console.log(success(`GetSuperpower installed: ${install.workflow.name}`));
     console.log(keyValue("GetSuperpower file", install.path));
+    console.log(
+      getSuperpowerInstallResultBox({
+        workflowName: install.workflow.name,
+        workflowVersion: install.workflow.version,
+        workflowFile: install.path,
+        skillCount: skillDependencies.length,
+      }),
+    );
   } finally {
     await bundle.cleanup?.();
   }
+}
+
+function getWorkflowInstallSkillPlans(bundle: {
+  manifest: { skills: GetSuperpowerInstallSkillPlan[] };
+}): GetSuperpowerInstallSkillPlan[] {
+  return bundle.manifest.skills.map((skill) => ({
+    source: skill.source,
+    ...(skill.repo ? { repo: skill.repo } : {}),
+  }));
+}
+
+function printGetSuperpowerInstallPlan(input: {
+  workflowName: string;
+  workflowVersion: string;
+  skills: GetSuperpowerInstallSkillPlan[];
+  targetDir: string;
+  homeDir: string;
+}): void {
+  console.log(
+    success(`GetSuperpower install plan: ${input.workflowName}@${input.workflowVersion}`),
+  );
+  console.log(keyValue("Workflow records", input.targetDir));
+  console.log(keyValue("Skill home", input.homeDir));
+  console.log("Skills to install:");
+  for (const skill of input.skills) {
+    console.log(`- ${formatInstallSkillPlan(skill)}`);
+  }
+}
+
+function formatInstallSkillPlan(skill: GetSuperpowerInstallSkillPlan): string {
+  return skill.repo ? `${skill.source} (${skill.repo})` : skill.source;
 }
 
 async function installGetSuperpowerSkillDependency(input: {
@@ -487,10 +583,14 @@ function configureListCommand(command: Command, rootDir: string): void {
   command
     .command("list")
     .description("List installed GetSuperpowers.")
-    .option("--dir <dir>", "project directory with .getsuperpower/workflows", rootDir)
-    .action(async (commandOptions: { dir: string }) => {
+    .option("--dir <dir>", "override directory with .getsuperpower/workflows")
+    .option("--home <dir>", "home directory that contains global GetSuperpower records", homedir())
+    .action(async (commandOptions: { dir?: string; home: string }) => {
+      const targetDir = commandOptions.dir
+        ? resolvePath(rootDir, commandOptions.dir)
+        : resolveHomePath(commandOptions.home);
       const workflows = await listInstalledWorkflowBundles({
-        rootDir: resolvePath(rootDir, commandOptions.dir),
+        rootDir: targetDir,
       });
 
       if (workflows.length === 0) {
@@ -632,6 +732,29 @@ function createDefaultOnboardPrompt(): GetSuperpowerOnboardPrompt {
       if (isCancel(result)) {
         clackCancel("GetSuperpower onboard cancelled");
         throw new Error("GetSuperpower onboard cancelled");
+      }
+
+      return result;
+    },
+  };
+}
+
+function createDefaultInstallPrompt(): GetSuperpowerInstallPrompt {
+  return {
+    confirmInstall: async (input) => {
+      if (!process.stdin.isTTY) {
+        console.log(muted("Non-interactive shell detected; continuing with install."));
+        return true;
+      }
+
+      const result = await clackConfirm({
+        message: `Install ${input.skills.length} skills for ${input.workflowName}?`,
+        initialValue: true,
+      });
+
+      if (isCancel(result)) {
+        clackCancel("GetSuperpower install cancelled");
+        return false;
       }
 
       return result;

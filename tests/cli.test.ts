@@ -221,10 +221,12 @@ describe("cli", () => {
         ["workflow", "install", releaseReviewWorkflow, "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
-      await buildProgram({ cwd: rootDir }).parseAsync(["workflow", "list"], { from: "user" });
+      await buildProgram({ cwd: rootDir }).parseAsync(["workflow", "list", "--home", homeDir], {
+        from: "user",
+      });
 
       await expect(
-        stat(join(rootDir, ".getsuperpower", "workflows", "release-review.json")),
+        stat(join(homeDir, ".getsuperpower", "workflows", "release-review.json")),
       ).resolves.toBeTruthy();
       for (const skill of [
         "release-risk-review",

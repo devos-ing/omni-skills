@@ -139,18 +139,21 @@ Run `npx getsuperpower@latest --help` or `npx getsuperpower@latest <command> --h
 
 The older `bundle` and `workflow` commands still work as compatibility aliases.
 
-## Local Files
+## Installed Files
 
-The CLI writes installed workflow records under `.getsuperpower/`:
+By default, the CLI writes installed workflow records under your home directory:
 
 ```text
+~/
 .getsuperpower/
   workflows/
 ```
 
+Use `--dir <project>` when you intentionally want a project-local workflow record.
+
 Pony Trail history, revert, and prehook features are paused while GetSuperpower focuses on bundle skills.
 
-Keep `.getsuperpower/` out of git unless you intentionally want to share installed workflow records.
+Keep project-local `.getsuperpower/` folders out of git unless you intentionally want to share installed workflow records.
 
 ## Local Development
 

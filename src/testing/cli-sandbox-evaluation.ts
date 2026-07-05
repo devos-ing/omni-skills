@@ -200,7 +200,7 @@ async function runBaseline(input: {
   });
   const logs = commands.flatMap((command) => command.logs);
   const workflowRecord = join(
-    input.projectDir,
+    input.homeDir,
     ".getsuperpower",
     "workflows",
     "openspec-delivery.json",
@@ -260,12 +260,12 @@ async function runWorkflow(input: {
     externalCalls,
     commands: [
       ["install", input.workflowSourcePath, "--home", input.homeDir, "--agents", "codex"],
-      ["list"],
+      ["list", "--home", input.homeDir],
     ],
   });
   const logs = commands.flatMap((command) => command.logs);
   const workflowRecord = join(
-    input.projectDir,
+    input.homeDir,
     ".getsuperpower",
     "workflows",
     "openspec-delivery.json",
@@ -288,7 +288,7 @@ async function runWorkflow(input: {
         id: "workflow-record-written",
         label: "Workflow mode writes the installed workflow record",
         passed: await pathExists(workflowRecord),
-        detail: ".getsuperpower/workflows/openspec-delivery.json should exist",
+        detail: "global .getsuperpower/workflows/openspec-delivery.json should exist",
       },
       {
         id: "workflow-installs-skills",
