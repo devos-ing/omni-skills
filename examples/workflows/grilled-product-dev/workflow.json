@@ -3,9 +3,15 @@
   "name": "grilled-product-dev",
   "version": "0.1.0",
   "description": "Sharpen a product-development request with grilling before Superpowers design and planning.",
+  "loop": {
+    "script": "./loop.mjs",
+    "state": "global",
+    "execution": "action-only"
+  },
   "skills": [
     {
-      "source": "./skills/grilled-product-dev"
+      "source": "./skills/grilled-product-dev",
+      "entry": true
     },
     {
       "source": "mattpocock:grilling",
@@ -25,18 +31,21 @@
       "id": "grill",
       "title": "Sharpen the request through grilling",
       "skill": "mattpocock:grilling",
-      "gate": "human_approval"
+      "gate": "human_approval",
+      "instruction": "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing."
     },
     {
       "id": "shape",
       "title": "Turn the approved direction into a Superpowers design",
       "skill": "superpowers:brainstorming",
-      "gate": "human_approval"
+      "gate": "human_approval",
+      "instruction": "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing."
     },
     {
       "id": "plan",
       "title": "Write the implementation plan",
-      "skill": "superpowers:writing-plans"
+      "skill": "superpowers:writing-plans",
+      "instruction": "Write the approved implementation plan as small executable tasks, then log the plan result."
     }
   ]
 }

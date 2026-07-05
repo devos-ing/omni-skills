@@ -18,6 +18,16 @@ The callable entry skill is:
 skills/grilled-product-dev/SKILL.md
 ```
 
+This example also includes a Node-only loop runtime:
+
+```text
+loop.mjs
+```
+
+The runtime writes global run state under
+`~/.getsuperpower/runs/grilled-product-dev/<run-id>/` and only returns suggested
+actions. It never executes tools or shell commands for the agent.
+
 After install and agent restart, invoke:
 
 ```text
@@ -59,10 +69,14 @@ Install it into a project:
 
 ```bash
 bun run dev -- install examples/workflows/grilled-product-dev
-bun run dev -- clone examples/workflows/grilled-product-dev
 ```
 
-`clone <source>` is equivalent to `install <source>`.
+Try the loop runtime without installing:
+
+```bash
+node examples/workflows/grilled-product-dev/loop.mjs start --json
+node examples/workflows/grilled-product-dev/loop.mjs status --latest --json
+```
 
 Restart the agent app after install so the `$grilled-product-dev` entry skill
 and its sub-skills are available.

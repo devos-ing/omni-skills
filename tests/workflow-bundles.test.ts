@@ -114,6 +114,37 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("loads grilled-product-dev as a looped workflow example", async () => {
+    const bundle = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "grilled-product-dev"),
+    );
+
+    expect(bundle.manifest.loop).toEqual({
+      script: "./loop.mjs",
+      state: "global",
+      execution: "action-only",
+    });
+    expect(bundle.manifest.skills[0]).toEqual({
+      source: "./skills/grilled-product-dev",
+      entry: true,
+    });
+    expect(bundle.manifest.steps.map((step) => step.id)).toEqual(["grill", "shape", "plan"]);
+    expect(bundle.manifest.steps.map((step) => step.instruction)).toEqual([
+      "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing.",
+      "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing.",
+      "Write the approved implementation plan as small executable tasks, then log the plan result.",
+    ]);
+    expect(createWorkflowLoopMetadata(bundle)).toEqual({
+      schemaVersion: "0.1",
+      workflow: "grilled-product-dev",
+      entrySkill: "./skills/grilled-product-dev",
+      loopScript: "./loop.mjs",
+      state: "global",
+      execution: "action-only",
+      commands: ["start", "status", "log", "advance", "summary"],
+    });
+  });
+
   test("rejects looped workflows without exactly one entry skill", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-loop-entry-"));
     const bundleDir = join(rootDir, "bad-loop");
