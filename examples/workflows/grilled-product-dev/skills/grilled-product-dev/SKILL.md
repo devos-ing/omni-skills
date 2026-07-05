@@ -57,6 +57,6 @@ dependency is missing.
 
 ## Author Notes
 
-- Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
+- Keep this entry skill, `workflow.json`, `loop.mjs`, and `README.md` aligned when adding or removing steps.
 - `superpowers:brainstorming` expects `superpowers:writing-plans` to be the next implementation skill, so grilling runs before brainstorming in this workflow.
 - This skill orchestrates required instructions; GetSuperpower installs and validates the dependency skills.
