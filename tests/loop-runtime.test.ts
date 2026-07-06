@@ -53,6 +53,16 @@ function parseJsonOutput(result: LoopResult): unknown {
 }
 
 describe("loop runtime", () => {
+  test("grilled-product-dev loop.mjs is a thin runtime wrapper", async () => {
+    const source = await readFile(loopScript, "utf8");
+
+    expect(source).toContain('import { runWorkflowLoopCli } from "./loop-runtime.mjs";');
+    expect(source).toContain('workflowJson: new URL("./workflow.json", import.meta.url)');
+    expect(source).not.toContain("function parseArgs");
+    expect(source).not.toContain("function buildSummary");
+    expect(source).not.toContain("function writeState");
+  });
+
   test("runWorkflowLoopCli manages run state through the reusable runtime", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-direct-home-"));
     const stdout: string[] = [];
