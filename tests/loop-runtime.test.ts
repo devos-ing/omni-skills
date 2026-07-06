@@ -46,10 +46,42 @@ async function runLoop(args: string[], homeDir: string): Promise<LoopResult> {
   return { stdout, stderr, exitCode };
 }
 
+async function runRuntime(
+  args: string[],
+  homeDir: string,
+  workflowJsonInput: string | URL = pathToFileURL(workflowJson),
+): Promise<LoopResult> {
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  const { runWorkflowLoopCli } = await import(pathToFileURL(runtimeModule).href);
+
+  const exitCode = await runWorkflowLoopCli({
+    argv: args,
+    workflowJson: workflowJsonInput,
+    cwd: repoRoot,
+    homeDir,
+    stdout: (value: string) => stdout.push(value),
+    stderr: (value: string) => stderr.push(value),
+  });
+
+  return {
+    stdout: stdout.join(""),
+    stderr: stderr.join(""),
+    exitCode,
+  };
+}
+
 function parseJsonOutput(result: LoopResult): unknown {
   expect(result.exitCode).toBe(0);
   expect(result.stderr).toBe("");
   return JSON.parse(result.stdout);
+}
+
+function parseRunIdFromTextOutput(stdout: string): string {
+  const firstLine = stdout.split("\n")[0] ?? "";
+  const prefix = "grilled-product-dev ";
+  expect(firstLine.startsWith(prefix)).toBe(true);
+  return firstLine.slice(prefix.length);
 }
 
 describe("loop runtime", () => {
@@ -65,38 +97,247 @@ describe("loop runtime", () => {
 
   test("runWorkflowLoopCli manages run state through the reusable runtime", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-direct-home-"));
-    const stdout: string[] = [];
-    const stderr: string[] = [];
 
     try {
-      const { runWorkflowLoopCli } = await import(pathToFileURL(runtimeModule).href);
-
-      const exitCode = await runWorkflowLoopCli({
-        argv: ["start", "--run", "direct", "--json"],
-        workflowJson: pathToFileURL(workflowJson),
-        cwd: repoRoot,
+      const result = await runRuntime(
+        ["start", "--run", "direct", "--json"],
         homeDir,
-        stdout: (value: string) => stdout.push(value),
-        stderr: (value: string) => stderr.push(value),
-      });
+        workflowJson,
+      );
 
-      expect(exitCode).toBe(0);
-      expect(stderr).toEqual([]);
-      const payload = JSON.parse(stdout.join(""));
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr).toBe("");
+      const payload = JSON.parse(result.stdout);
       expect(payload.runId).toBe("direct");
       expect(payload.step.id).toBe("grill");
       await expect(
         stat(
-          join(
-            homeDir,
-            ".getsuperpower",
-            "runs",
-            "grilled-product-dev",
-            "direct",
-            "state.json",
-          ),
+          join(homeDir, ".getsuperpower", "runs", "grilled-product-dev", "direct", "state.json"),
         ),
       ).resolves.toBeTruthy();
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("runWorkflowLoopCli supports text output, forced advance, summaries, and completion", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-direct-home-"));
+
+    try {
+      const start = await runRuntime(["start"], homeDir);
+      expect(start.exitCode).toBe(0);
+      expect(start.stderr).toBe("");
+      expect(start.stdout).toContain("Status: active");
+      expect(start.stdout).toContain("Step: grill - Sharpen the request through grilling");
+      expect(start.stdout).toContain("Skill: mattpocock:grilling");
+      const runId = parseRunIdFromTextOutput(start.stdout);
+
+      const status = parseJsonOutput(
+        await runRuntime(["status", "--latest", "--json"], homeDir),
+      ) as {
+        selectedByLatest: boolean;
+        runId: string;
+        step: { id: string };
+      };
+      expect(status.selectedByLatest).toBe(true);
+      expect(status.runId).toBe(runId);
+      expect(status.step.id).toBe("grill");
+
+      const log = await runRuntime(
+        [
+          "log",
+          "--run",
+          runId,
+          "--type",
+          "phase_result",
+          "--step",
+          "grill",
+          "--message",
+          "Drafted the grill result",
+          "--metadata",
+          '{"result":"ok"}',
+        ],
+        homeDir,
+      );
+      expect(log.exitCode).toBe(0);
+      expect(log.stderr).toBe("");
+      expect(log.stdout).toContain("Status: ok");
+      expect(log.stdout).toContain("- advance: Run only after explicit human approval.");
+
+      const forced = parseJsonOutput(
+        await runRuntime(
+          [
+            "advance",
+            "--run",
+            runId,
+            "--to",
+            "plan",
+            "--force",
+            "--reason",
+            "Skip shape after approval",
+            "--json",
+          ],
+          homeDir,
+        ),
+      ) as {
+        status: string;
+        step: { id: string; index: number };
+      };
+      expect(forced.status).toBe("active");
+      expect(forced.step).toMatchObject({ id: "plan", index: 2 });
+
+      const summary = await runRuntime(["summary", "--latest"], homeDir);
+      expect(summary.exitCode).toBe(0);
+      expect(summary.stderr).toBe("");
+      expect(summary.stdout).toContain("Status: ok");
+      expect(summary.stdout).toContain("Summary: ");
+      const summaryPath = summary.stdout
+        .split("\n")
+        .find((line) => line.startsWith("Summary: "))
+        ?.slice("Summary: ".length);
+      expect(summaryPath).toBeTruthy();
+      const summaryMarkdown = await readFile(summaryPath ?? "", "utf8");
+      expect(summaryMarkdown).toContain("Current step: plan");
+      expect(summaryMarkdown).toContain("- grill: Sharpen the request through grilling");
+      expect(summaryMarkdown).toContain("Skip shape after approval");
+      expect(summaryMarkdown).toContain("Drafted the grill result");
+
+      const complete = parseJsonOutput(
+        await runRuntime(["advance", "--run", runId, "--json"], homeDir),
+      ) as {
+        status: string;
+        step: null;
+        instruction: string;
+        actions: Array<{ type: string; command: string; description: string }>;
+      };
+      expect(complete.status).toBe("complete");
+      expect(complete.step).toBeNull();
+      expect(complete.instruction).toBe("Workflow is complete.");
+      expect(complete.actions).toEqual([
+        {
+          type: "summary",
+          command: `node loop.mjs summary --run ${runId}`,
+          description: "Generate or refresh the mechanical workflow summary.",
+        },
+      ]);
+
+      const completedStatus = await runRuntime(["status", "--run", runId], homeDir);
+      expect(completedStatus.exitCode).toBe(0);
+      expect(completedStatus.stderr).toBe("");
+      expect(completedStatus.stdout).toContain("Status: complete");
+      expect(completedStatus.stdout).toContain("Instruction: Workflow is complete.");
+      expect(completedStatus.stdout).toContain(
+        "- summary: Generate or refresh the mechanical workflow summary.",
+      );
+
+      const completedSummary = parseJsonOutput(
+        await runRuntime(["summary", "--run", runId, "--json"], homeDir),
+      ) as {
+        summaryPath: string;
+      };
+      await expect(readFile(completedSummary.summaryPath, "utf8")).resolves.toContain(
+        "Current step: complete",
+      );
+
+      const runDir = join(homeDir, ".getsuperpower", "runs", "grilled-product-dev", runId);
+      const eventTypes = (await readFile(join(runDir, "events.jsonl"), "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line).type);
+      expect(eventTypes).toEqual([
+        "start",
+        "status",
+        "phase_result",
+        "force_advance",
+        "summary",
+        "complete",
+        "status",
+        "summary",
+      ]);
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("runWorkflowLoopCli reports command and option errors", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-direct-errors-home-"));
+
+    try {
+      const missingLatest = await runRuntime(["status", "--latest", "--json"], homeDir);
+      expect(missingLatest.exitCode).toBe(1);
+      expect(missingLatest.stdout).toBe("");
+      expect(missingLatest.stderr).toContain(
+        "No active runs found for grilled-product-dev. Start one with: node loop.mjs start",
+      );
+
+      const unknownCommand = await runRuntime(["pause"], homeDir);
+      expect(unknownCommand.exitCode).toBe(1);
+      expect(unknownCommand.stderr).toContain(
+        "Usage: node loop.mjs <start|status|log|advance|summary> [options]",
+      );
+
+      const unexpectedArgument = await runRuntime(["start", "loose"], homeDir);
+      expect(unexpectedArgument.exitCode).toBe(1);
+      expect(unexpectedArgument.stderr).toContain("Unexpected argument: loose");
+
+      const missingValue = await runRuntime(["start", "--run"], homeDir);
+      expect(missingValue.exitCode).toBe(1);
+      expect(missingValue.stderr).toContain("Missing value for --run");
+
+      expect(
+        parseJsonOutput(
+          await runRuntime(
+            ["start", "--run", "override", "--workflow-json", workflowJson, "--json"],
+            homeDir,
+            new URL("file:///tmp/missing-workflow.json"),
+          ),
+        ),
+      ).toMatchObject({ runId: "override", step: { id: "grill" } });
+
+      const duplicateRun = await runRuntime(["start", "--run", "override", "--json"], homeDir);
+      expect(duplicateRun.exitCode).toBe(1);
+      expect(duplicateRun.stderr).toContain("Run already exists: override");
+
+      const unsupportedEvent = await runRuntime(
+        ["log", "--run", "override", "--type", "bogus", "--json"],
+        homeDir,
+      );
+      expect(unsupportedEvent.exitCode).toBe(1);
+      expect(unsupportedEvent.stderr).toContain("Unsupported event type: bogus");
+
+      const invalidMetadata = await runRuntime(
+        ["log", "--run", "override", "--type", "approval", "--metadata", "{", "--json"],
+        homeDir,
+      );
+      expect(invalidMetadata.exitCode).toBe(1);
+      expect(invalidMetadata.stderr).toContain("--metadata must be valid JSON");
+
+      const missingRun = await runRuntime(["log", "--type", "approval"], homeDir);
+      expect(missingRun.exitCode).toBe(1);
+      expect(missingRun.stderr).toContain("log requires --run <id>");
+
+      const forcedWithoutReason = await runRuntime(
+        ["advance", "--run", "override", "--to", "shape", "--force"],
+        homeDir,
+      );
+      expect(forcedWithoutReason.exitCode).toBe(1);
+      expect(forcedWithoutReason.stderr).toContain("advance --to requires --force and --reason");
+
+      const unknownTarget = await runRuntime(
+        [
+          "advance",
+          "--run",
+          "override",
+          "--to",
+          "missing",
+          "--force",
+          "--reason",
+          "Try a missing step",
+        ],
+        homeDir,
+      );
+      expect(unknownTarget.exitCode).toBe(1);
+      expect(unknownTarget.stderr).toContain("Unknown workflow step: missing");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
