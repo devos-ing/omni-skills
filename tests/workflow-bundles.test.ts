@@ -942,6 +942,20 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("does not prepare loop runtime files for non-loop workflows", async () => {
+    const bundle = await loadWorkflowBundle("examples/workflows/release-review");
+    const prepared = await getPreparedWorkflowSkillInstallDependencies({ bundle });
+
+    try {
+      expect(prepared.dependencies.map((dependency) => dependency.source)).toEqual(
+        getWorkflowSkillInstallSources(bundle),
+      );
+      expect(prepared.cleanup).toBeUndefined();
+    } finally {
+      await prepared.cleanup?.();
+    }
+  });
+
   test("installs and lists workflow bundles under .getsuperpower", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-install-"));
     const bundle = await loadWorkflowBundle("examples/workflows/release-review");
