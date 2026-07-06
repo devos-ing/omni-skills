@@ -1,4 +1,4 @@
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Boxes, Zap } from "lucide-react";
 import Link from "next/link";
 import type { WorkflowCardContent } from "../lib/landing-content";
 
@@ -9,47 +9,46 @@ export function WorkflowCard({
   name,
   description,
   entrySkill,
-  skills,
   tag,
   accent,
+  skills,
 }: WorkflowCardProps) {
   return (
-    <article className="group relative rounded-lg border border-white/10 bg-white/[0.035] p-5 transition hover:border-white/20 hover:bg-white/[0.06]">
-      <span
-        className={`inline-flex rounded-full border border-current/20 px-2 py-0.5 text-xs ${accent}`}
-      >
-        {tag}
-      </span>
-      <h3 className="mt-4 text-lg font-medium text-white/90">{name}</h3>
-      <p className="mt-2 min-h-16 text-sm leading-6 text-white/50">{description}</p>
-
-      <div className="mt-5 rounded-lg border border-white/10 bg-black/35 p-3">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/35">
-          <Zap size={12} className="text-amber-300" />
-          entry skill
+    <Link
+      href={`/workflows/${slug}`}
+      className="group grid gap-4 rounded-lg border border-white/10 bg-white/[0.025] p-4 transition hover:border-white/20 hover:bg-white/[0.055] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/45 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+    >
+      <div className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <h3 className="truncate text-sm font-medium text-white/88 transition group-hover:text-white">
+            {name}
+          </h3>
+          <span
+            className={`inline-flex shrink-0 rounded border border-current/20 px-1.5 py-0.5 text-[10px] ${accent}`}
+          >
+            {tag}
+          </span>
         </div>
-        <code className={`mt-2 block break-all font-mono text-sm ${accent}`}>${entrySkill}</code>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/42">{description}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 font-mono text-xs text-white/48">
+            <Zap size={11} className="text-amber-300" />${entrySkill}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-white/35">
+            <Boxes size={11} className="text-white/25" />
+            {skills.length} skills
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-white/35">
+            View workflow
+            <ArrowRight size={11} className="transition group-hover:translate-x-0.5" />
+          </span>
+        </div>
       </div>
 
-      <div className="mt-5 space-y-3">
-        {skills.map((skill) => (
-          <div key={skill.name} className="flex gap-3">
-            <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white/25" />
-            <div>
-              <code className="font-mono text-xs text-white/65">{skill.name}</code>
-              <p className="mt-0.5 text-xs leading-5 text-white/38">{skill.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Link
-        href={`/workflows/${slug}`}
-        className="mt-5 inline-flex items-center gap-1.5 text-xs text-white/40 transition hover:text-white/70 focus:outline-none focus-visible:text-white focus-visible:ring-2 focus-visible:ring-violet-300/45"
-      >
-        View workflow
+      <span className="inline-flex items-center gap-1.5 text-xs text-white/35 transition group-hover:text-white/62 md:justify-self-end">
+        Open detail
         <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
-      </Link>
-    </article>
+      </span>
+    </Link>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { metadata } from "../app/layout";
+import { metadata } from "../app/metadata";
 
 const canonicalUrl = "https://github.com/0xroylee/getsuperpower";
 const seoTitle = "GetSuperpower - Install AI Agent Workflows as Callable Skills";
