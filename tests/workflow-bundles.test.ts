@@ -913,21 +913,30 @@ describe("workflow bundles", () => {
       expect(prepared.dependencies).toHaveLength(2);
       expect(prepared.dependencies[0]?.source).toContain("looped-workflow-entry-");
       expect(prepared.dependencies[1]).toEqual({ source: "pony-trail" });
+      const preparedEntry = prepared.dependencies[0];
+      expect(preparedEntry).toBeDefined();
       await expect(
-        readFile(join(prepared.dependencies[0]?.source ?? "", "SKILL.md"), "utf8"),
+        readFile(join(preparedEntry?.source ?? "", "SKILL.md"), "utf8"),
       ).resolves.toContain("Loop-enabled entry skill.");
       await expect(
-        readFile(join(prepared.dependencies[0]?.source ?? "", "workflow.json"), "utf8"),
+        readFile(join(preparedEntry?.source ?? "", "workflow.json"), "utf8"),
       ).resolves.toContain('"name": "looped-workflow"');
       await expect(
-        readFile(join(prepared.dependencies[0]?.source ?? "", "loop.mjs"), "utf8"),
+        readFile(join(preparedEntry?.source ?? "", "loop.mjs"), "utf8"),
       ).resolves.toBe("export {};\n");
       await expect(
-        readFile(join(prepared.dependencies[0]?.source ?? "", "loop.metadata.json"), "utf8"),
+        readFile(join(preparedEntry?.source ?? "", "loop.metadata.json"), "utf8"),
       ).resolves.toContain('"workflow": "looped-workflow"');
+      const runtimeSource = await readFile(
+        join(import.meta.dir, "..", "src", "runtimes", "getsuperpower", "workflow-loop-runtime.mjs"),
+        "utf8",
+      );
+      await expect(readFile(join(preparedEntry?.source ?? "", "loop-runtime.mjs"), "utf8")).resolves.toBe(
+        runtimeSource,
+      );
 
       await prepared.cleanup?.();
-      await expect(stat(prepared.dependencies[0]?.source ?? "")).rejects.toThrow();
+      await expect(stat(preparedEntry?.source ?? "")).rejects.toThrow();
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }

@@ -321,6 +321,9 @@ describe("cli", () => {
       await expect(readFile(join(installedSkillDir, "loop.mjs"), "utf8")).resolves.toContain(
         "Keep going.",
       );
+      await expect(readFile(join(installedSkillDir, "loop-runtime.mjs"), "utf8")).resolves.toContain(
+        "runWorkflowLoopCli",
+      );
       const metadata = JSON.parse(
         await readFile(join(installedSkillDir, "loop.metadata.json"), "utf8"),
       );

@@ -2,10 +2,13 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 const workflowFileName = "workflow.json";
 const workflowStoreDir = ".getsuperpower/workflows";
+const workflowLoopRuntimeSourceFileName = "workflow-loop-runtime.mjs";
+const installedLoopRuntimeFileName = "loop-runtime.mjs";
 const canonicalExamplesGitUrl = "https://github.com/0xroylee/getsuperpower.git";
 const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -370,6 +373,7 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
   await cp(sourceDependency.source, preparedSkillDir, { recursive: true });
   await cp(input.bundle.manifestPath, join(preparedSkillDir, workflowFileName));
   await cp(loopScriptPath, join(preparedSkillDir, "loop.mjs"));
+  await cp(getWorkflowLoopRuntimeAssetPath(), join(preparedSkillDir, installedLoopRuntimeFileName));
   await writeFile(
     join(preparedSkillDir, "loop.metadata.json"),
     `${JSON.stringify(metadata, null, 2)}\n`,
@@ -383,6 +387,10 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
     dependencies: preparedDependencies,
     cleanup: () => rm(preparedRoot, { recursive: true, force: true }),
   };
+}
+
+function getWorkflowLoopRuntimeAssetPath(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), workflowLoopRuntimeSourceFileName);
 }
 
 function getWorkflowEntrySkill(manifest: WorkflowBundleManifest) {
