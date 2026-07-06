@@ -25,7 +25,7 @@ import {
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
   type WorkflowGitCommandRunner,
-} from "./runtimes/ponytrail";
+} from "./runtimes/getsuperpower";
 
 export interface GetSuperpowerInstallSkillInput {
   rootDir: string;

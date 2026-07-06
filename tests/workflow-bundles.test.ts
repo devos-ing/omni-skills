@@ -13,9 +13,16 @@ import {
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
   type WorkflowGitCommand,
-} from "../src/runtimes/ponytrail/workflow-bundles";
+} from "../src/runtimes/getsuperpower/workflow-bundles";
 
 describe("workflow bundles", () => {
+  test("exports workflow bundle helpers from the GetSuperpower runtime namespace", async () => {
+    const runtime = await import("../src/runtimes/getsuperpower/workflow-bundles");
+
+    expect(typeof runtime.loadWorkflowBundle).toBe("function");
+    expect(typeof runtime.getPreparedWorkflowSkillInstallDependencies).toBe("function");
+  });
+
   test("rejects bare sources that are not valid workflow aliases", async () => {
     await expect(loadWorkflowBundle("ProductDev")).rejects.toThrow(
       "Unsupported GetSuperpower source: ProductDev",

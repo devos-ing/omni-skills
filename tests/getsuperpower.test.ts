@@ -14,7 +14,7 @@ import {
   MissingSuperpowersSkillError,
   type SkillInstallResult,
 } from "../src/plugins";
-import type { WorkflowGitCommand } from "../src/runtimes/ponytrail/workflow-bundles";
+import type { WorkflowGitCommand } from "../src/runtimes/getsuperpower/workflow-bundles";
 
 function fakeSkillInstallResult(input: {
   source: string;

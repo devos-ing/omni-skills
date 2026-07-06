@@ -8,7 +8,7 @@ import {
   readSnapshotHistory,
   recordSnapshotPost,
   recordSnapshotPre,
-} from "../src/runtimes/ponytrail/snapshots";
+} from "../src/runtimes/getsuperpower/snapshots";
 
 describe("snapshot history", () => {
   test("reads snapshot commits grouped by session", async () => {

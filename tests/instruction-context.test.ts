@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import {
   captureInstructionContext,
   shouldCaptureInstructionContext,
-} from "../src/runtimes/ponytrail/instruction-context";
+} from "../src/runtimes/getsuperpower/instruction-context";
 
 const execFileAsync = promisify(execFile);
 
