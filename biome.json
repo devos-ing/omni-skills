@@ -25,6 +25,7 @@
       "!.ponytrail",
       "!coverage",
       "!dist",
+      "!.worktrees",
       "!work",
       "!packages"
     ]

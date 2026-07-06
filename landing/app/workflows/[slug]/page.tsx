@@ -1,6 +1,7 @@
-import { ArrowLeft, ArrowRight, ExternalLink, GitBranch, Terminal, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, GitBranch, Zap } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CopyableInstallCommand } from "../../../components/copyable-install-command";
 import { workflows } from "../../../lib/landing-content";
 
 interface WorkflowPageProps {
@@ -57,14 +58,8 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/48">{workflow.description}</p>
 
-          <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.035] p-4">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/35">
-              <Terminal size={13} className="text-emerald-300" />
-              install command
-            </div>
-            <code className="mt-3 block break-words font-mono text-sm leading-6 text-white/72">
-              {workflow.installCommand}
-            </code>
+          <div className="mt-8">
+            <CopyableInstallCommand command={workflow.installCommand} />
           </div>
 
           <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.035] p-4">

@@ -1,6 +1,6 @@
 {
   "name": "getsuperpower",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "type": "module",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "dev": "bun src/cli.ts",
-    "build": "bun build --target=bun --outfile=dist/cli.js src/cli.ts",
+    "build": "bun build --target=node --outfile=dist/cli.js src/cli.ts",
     "test": "bun test tests",
     "ci:test": "find tests -maxdepth 1 -name '*.test.ts' ! -name '*.e2e.test.ts' -print0 | xargs -0 bun test",
     "ci:check": "biome check . && bun run typecheck && bun run ci:test",

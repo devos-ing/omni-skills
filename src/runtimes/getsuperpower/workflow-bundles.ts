@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { runSubprocess } from "../../process";
 
 const workflowFileName = "workflow.json";
 const workflowStoreDir = ".getsuperpower/workflows";
@@ -723,19 +724,7 @@ async function runOptionalGitCommand(
     return runGitCommand(command);
   }
 
-  const subprocess = Bun.spawn([command.executable, ...command.args], {
-    cwd: command.cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: command.env,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(subprocess.stdout).text(),
-    new Response(subprocess.stderr).text(),
-    subprocess.exited,
-  ]);
-
-  return { stdout, stderr, exitCode };
+  return runSubprocess(command);
 }
 
 function isMissingFileError(error: unknown): boolean {

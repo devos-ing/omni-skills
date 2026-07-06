@@ -53,6 +53,48 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
   });
 
+  test("uses Vercel Geist Sans as the landing app font", () => {
+    const layout = readLandingFile("app/layout.tsx");
+    const globals = readLandingFile("app/globals.css");
+    const design = readLandingFile("design.md");
+
+    expect(layout).toContain('import { Geist } from "next/font/google"');
+    expect(layout).toContain("const geistSans = Geist");
+    expect(layout).toContain('variable: "--font-geist-sans"');
+    expect(layout).toContain("className={geistSans.variable}");
+    expect(globals).toContain('var(--font-geist-sans), "Geist Sans"');
+    expect(design).toContain("Vercel Geist Sans");
+  });
+
+  test("documents the reference-derived registry design", () => {
+    const design = readLandingFile("design.md");
+
+    expect(design).toContain("/Users/roy/Downloads/Create GetSuperpower Workflows/");
+    expect(design).toContain("Workflow Registry");
+    expect(design).toContain("hide activity, rank, and install counts");
+    expect(design).toContain("copyable");
+    expect(design).toContain("landing/components/workflow-card.tsx");
+    expect(design).not.toContain("Workflows Leaderboard");
+    expect(design).not.toContain("All Time");
+    expect(design).not.toContain("Trending");
+    expect(design).not.toContain("Hot");
+    expect(design).not.toContain("dependency-free mini bar/sparkline");
+  });
+
+  test("does not define placeholder workflow activity or install metrics", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+
+    expect(content).not.toContain("export type WorkflowActivityMode");
+    expect(content).not.toContain("export interface WorkflowDisplayMetrics");
+    expect(content).not.toContain("displayMetrics");
+    expect(content).not.toContain("sourceLabel");
+    expect(content).not.toContain("installCount");
+    expect(content).not.toContain("activity:");
+    expect(content).not.toContain('"allTime"');
+    expect(content).not.toContain('"trending"');
+    expect(content).not.toContain('"hot"');
+  });
+
   test("defines workflow detail metadata for route pages", () => {
     const content = readLandingFile("lib/landing-content.ts");
 
@@ -81,6 +123,14 @@ describe("landing app source contract", () => {
     expect(card).toContain('import Link from "next/link"');
     expect(card).toContain(`href={\`/workflows/\${slug}\`}`);
     expect(card).toContain("View workflow");
+    expect(card).toContain("skills.length");
+    expect(card).not.toContain("activityValues");
+    expect(card).not.toContain("installCount");
+    expect(card).not.toContain("sourceLabel");
+    expect(card).not.toContain("Local activity signal");
+    expect(card).not.toContain("Download");
+    expect(card).not.toContain("recharts");
+    expect(card).not.toContain("AreaChart");
     expect(card).not.toContain("isSelected");
     expect(card).not.toContain("onViewWorkflow");
     expect(card).not.toContain('type="button"');
@@ -91,10 +141,28 @@ describe("landing app source contract", () => {
     const page = readLandingFile("components/landing-page.tsx");
 
     expect(page).toContain("<WorkflowCard");
+    expect(page).toContain("Workflow Registry");
+    expect(page).toContain("filteredWorkflows.map");
+    expect(page).toContain(
+      '<span className="text-xs uppercase tracking-[0.18em] text-white/25">Workflow</span>',
+    );
+    expect(page).toContain("Detail");
+    expect(page).not.toContain("type WorkflowActivityMode");
+    expect(page).not.toContain("Workflows Leaderboard");
+    expect(page).not.toContain("All Time");
+    expect(page).not.toContain("Trending");
+    expect(page).not.toContain("Hot");
+    expect(page).not.toContain("activeActivityMode");
+    expect(page).not.toContain("setActiveActivityMode");
+    expect(page).not.toContain("displayMetrics.activity");
+    expect(page).not.toContain("Installs");
+    expect(page).not.toContain("Activity");
     expect(page).not.toContain("selectedWorkflowSlug");
     expect(page).not.toContain("selectedWorkflow");
     expect(page).not.toContain("setSelectedWorkflowSlug");
     expect(page).not.toContain("WorkflowDetail");
+    expect(page).not.toContain("AreaChart");
+    expect(page).not.toContain("recharts");
   });
 
   test("renders static workflow detail routes from local workflow data", () => {
@@ -117,6 +185,22 @@ describe("landing app source contract", () => {
     expect(route).toContain("View source on GitHub");
     expect(route).toContain('target="_blank"');
     expect(route).toContain('rel="noreferrer"');
+  });
+
+  test("renders copyable install commands on workflow detail pages", () => {
+    const route = readLandingFile("app/workflows/[slug]/page.tsx");
+
+    expect(existsSync(join(landingRoot, "components", "copyable-install-command.tsx"))).toBe(true);
+    expect(route).toContain("CopyableInstallCommand");
+    expect(route).toContain("workflow.installCommand");
+
+    const copyable = readLandingFile("components/copyable-install-command.tsx");
+
+    expect(copyable).toContain('"use client"');
+    expect(copyable).toContain("navigator.clipboard.writeText(command)");
+    expect(copyable).toContain("Copied");
+    expect(copyable).toContain("Copy");
+    expect(copyable).toContain("install command");
   });
 
   test("renders GitHub stars in the landing header from cached server metadata", () => {

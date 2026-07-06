@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
@@ -21,7 +21,7 @@ import { installAgentSkill, parseSkillInstallAgents, type SkillInstallResult } f
 
 type SkillChangeOperation = "install" | "update";
 
-const CLI_VERSION = "0.3.5";
+const CLI_VERSION = "0.3.6";
 
 interface CommanderVersionInternals {
   _outputConfiguration: {

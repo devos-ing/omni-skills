@@ -18,6 +18,7 @@ import {
   parseSkillInstallAgents,
   type SkillInstallResult,
 } from "./plugins";
+import { runSubprocess } from "./process";
 import {
   createWorkflowBundleScaffold,
   getPreparedWorkflowSkillInstallDependencies,
@@ -569,19 +570,7 @@ export async function installExternalSkillDependencyWithSkillsCli(
 async function runExternalSkillCommand(
   command: GetSuperpowerExternalSkillCommand,
 ): Promise<GetSuperpowerExternalSkillCommandResult> {
-  const subprocess = Bun.spawn([command.executable, ...command.args], {
-    cwd: command.cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: command.env,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(subprocess.stdout).text(),
-    new Response(subprocess.stderr).text(),
-    subprocess.exited,
-  ]);
-
-  return { stdout, stderr, exitCode };
+  return runSubprocess(command);
 }
 
 function configureListCommand(command: Command, rootDir: string): void {
