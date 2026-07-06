@@ -22,8 +22,8 @@
 
 ## 3. Plan Implementation
 
-- [ ] Write the implementation plan in `docs/superpowers/plans/`.
-- [ ] Include TDD slices for the runtime entrypoint, wrapper behavior,
+- [x] Write the implementation plan in `docs/superpowers/plans/`.
+- [x] Include TDD slices for the runtime entrypoint, wrapper behavior,
       install-time copied files, non-loop workflow compatibility, and docs.
 
 ## 4. Implement With TDD
