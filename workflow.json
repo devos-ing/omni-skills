@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "0.1",
+  "name": "file-git-workflow",
+  "version": "0.1.0",
+  "description": "Installs from a file git source.",
+  "skills": [
+    {
+      "source": "./skills/file-entry"
+    }
+  ],
+  "steps": [
+    {
+      "id": "entry",
+      "title": "Entry",
+      "skill": "./skills/file-entry"
+    }
+  ]
+}
