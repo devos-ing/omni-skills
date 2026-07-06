@@ -2,9 +2,24 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const repoRoot = join(import.meta.dir, "..");
 const loopScript = join(repoRoot, "examples", "workflows", "grilled-product-dev", "loop.mjs");
+const runtimeModule = join(
+  repoRoot,
+  "src",
+  "runtimes",
+  "getsuperpower",
+  "workflow-loop-runtime.mjs",
+);
+const workflowJson = join(
+  repoRoot,
+  "examples",
+  "workflows",
+  "grilled-product-dev",
+  "workflow.json",
+);
 
 interface LoopResult {
   stdout: string;
@@ -38,6 +53,45 @@ function parseJsonOutput(result: LoopResult): unknown {
 }
 
 describe("loop runtime", () => {
+  test("runWorkflowLoopCli manages run state through the reusable runtime", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-direct-home-"));
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+
+    try {
+      const { runWorkflowLoopCli } = await import(pathToFileURL(runtimeModule).href);
+
+      const exitCode = await runWorkflowLoopCli({
+        argv: ["start", "--run", "direct", "--json"],
+        workflowJson: pathToFileURL(workflowJson),
+        cwd: repoRoot,
+        homeDir,
+        stdout: (value: string) => stdout.push(value),
+        stderr: (value: string) => stderr.push(value),
+      });
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toEqual([]);
+      const payload = JSON.parse(stdout.join(""));
+      expect(payload.runId).toBe("direct");
+      expect(payload.step.id).toBe("grill");
+      await expect(
+        stat(
+          join(
+            homeDir,
+            ".getsuperpower",
+            "runs",
+            "grilled-product-dev",
+            "direct",
+            "state.json",
+          ),
+        ),
+      ).resolves.toBeTruthy();
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("grilled-product-dev loop.mjs manages global run state and structured events", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-home-"));
 
