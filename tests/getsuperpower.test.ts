@@ -56,9 +56,6 @@ async function writeGitWorkflowFixtureAt(
       "# git-entry",
     ].join("\n"),
   );
-  if (options.loop) {
-    await writeFile(join(workflowDir, "loop.mjs"), "export {};\n");
-  }
   await writeFile(
     join(workflowDir, "workflow.json"),
     JSON.stringify(
@@ -109,6 +106,7 @@ describe("getsuperpower command module", () => {
       "list",
       "deps",
       "onboard",
+      "loop",
       "bundle",
       "workflow",
     ]);
@@ -116,6 +114,11 @@ describe("getsuperpower command module", () => {
       "dependencies",
       "dependence",
     ]);
+    expect(
+      program.commands
+        .find((command) => command.name() === "loop")
+        ?.commands.map((command) => command.name()),
+    ).toEqual(["start", "status", "log", "advance", "summary"]);
   });
 
   test("install supports a public git workflow source", async () => {
@@ -188,12 +191,14 @@ describe("getsuperpower command module", () => {
         await expect(readFile(join(input.source, "workflow.json"), "utf8")).resolves.toContain(
           '"loop"',
         );
-        await expect(readFile(join(input.source, "loop.mjs"), "utf8")).resolves.toBe(
-          "export {};\n",
-        );
+        const generatedRunner = await readFile(join(input.source, "loop.mjs"), "utf8");
+        expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
+        expect(generatedRunner).toContain("getsuperpower");
+        expect(generatedRunner).toContain("workflow.json");
         await expect(readFile(join(input.source, "loop.metadata.json"), "utf8")).resolves.toContain(
           '"workflow": "git-workflow"',
         );
+        await expect(stat(join(input.source, "loop-runtime.mjs"))).rejects.toThrow();
         return {
           skillInstall: fakeSkillInstallResult({
             source: input.source,

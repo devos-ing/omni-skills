@@ -26,7 +26,9 @@ export async function runWorkflowLoopCli(input = {}) {
   try {
     const parsed = parseArgs(input.argv ?? process.argv.slice(2));
     if (!parsed.command || !commandNames.has(parsed.command)) {
-      throw new Error("Usage: node loop.mjs <start|status|log|advance|summary> [options]");
+      throw new Error(
+        `Usage: ${formatInputCommand(input, "<start|status|log|advance|summary>")} [options]`,
+      );
     }
 
     const manifestPath = resolveManifestPath(input.workflowJson, parsed.options.workflowJson);
@@ -40,6 +42,8 @@ export async function runWorkflowLoopCli(input = {}) {
       json: parsed.options.json === true,
       cwd: input.cwd ?? process.cwd(),
       stdout,
+      commandPrefix:
+        typeof input.commandPrefix === "function" ? input.commandPrefix : defaultCommandPrefix,
     };
 
     await runCommand(context, parsed.command, parsed.options);
@@ -280,7 +284,7 @@ function buildActions(context, state) {
     return [
       {
         type: "summary",
-        command: `node loop.mjs summary --run ${state.runId}`,
+        command: `${formatCommand(context, "summary")} --run ${state.runId}`,
         description: "Generate or refresh the mechanical workflow summary.",
       },
     ];
@@ -296,12 +300,12 @@ function buildActions(context, state) {
     },
     {
       type: "log_event",
-      command: `node loop.mjs log --run ${state.runId} --type phase_result --message "..."`,
+      command: `${formatCommand(context, "log")} --run ${state.runId} --type phase_result --message "..."`,
       description: "Record what happened before advancing.",
     },
     {
       type: "advance",
-      command: `node loop.mjs advance --run ${state.runId}`,
+      command: `${formatCommand(context, "advance")} --run ${state.runId}`,
       description:
         step.gate === "human_approval"
           ? "Run only after explicit human approval."
@@ -369,7 +373,7 @@ async function resolveRunId(context, options) {
 async function latestActiveRunId(context) {
   if (!(await pathExists(context.runsRoot))) {
     throw new Error(
-      `No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`,
+      `No active runs found for ${context.workflowName}. Start one with: ${formatCommand(context, "start")}`,
     );
   }
 
@@ -393,7 +397,7 @@ async function latestActiveRunId(context) {
   const latest = states[0];
   if (!latest) {
     throw new Error(
-      `No active runs found for ${context.workflowName}. Start one with: node loop.mjs start`,
+      `No active runs found for ${context.workflowName}. Start one with: ${formatCommand(context, "start")}`,
     );
   }
   return latest.runId;
@@ -466,6 +470,21 @@ function requireOption(options, name, message) {
     throw new Error(message);
   }
   return value;
+}
+
+function formatInputCommand(input, command) {
+  if (typeof input.commandPrefix === "function") {
+    return input.commandPrefix(command);
+  }
+  return defaultCommandPrefix(command);
+}
+
+function formatCommand(context, command) {
+  return context.commandPrefix(command);
+}
+
+function defaultCommandPrefix(command) {
+  return `node loop.mjs ${command}`;
 }
 
 function writeOutput(context, payload) {

@@ -141,8 +141,8 @@ It is the callable wrapper that instructs the agent to run the declared steps.
 
 ### Optional Loop Runtime
 
-A workflow can opt into resumable, action-only loop state by adding `loop.mjs`
-beside `workflow.json`:
+A workflow can opt into resumable, action-only loop state by declaring a
+generated loop runner path in `workflow.json`:
 
 ```json
 {
@@ -164,28 +164,28 @@ beside `workflow.json`:
 ```
 
 Looped workflows must mark exactly one local skill as `entry: true`. Put the
-exact phase prompt in `steps[].instruction`; `node loop.mjs status --json`
-returns that instruction.
+exact phase prompt in `steps[].instruction`; `getsuperpower loop status
+<source> --json` returns that instruction.
 
-Looped workflow `loop.mjs` files should be thin wrappers around the shared
-runtime:
+`loop.script` is an install output path, not a required source file. During
+install, GetSuperpower copies `workflow.json`, writes generated
+`loop.metadata.json`, and writes a generated `loop.mjs` bridge into the
+installed entry skill folder only. The bridge delegates back to the
+GetSuperpower CLI, where the generic loop runtime lives.
 
-```js
-#!/usr/bin/env node
+Agents should operate looped workflows with:
 
-import { runWorkflowLoopCli } from "./loop-runtime.mjs";
-
-process.exitCode = await runWorkflowLoopCli({
-  argv: process.argv.slice(2),
-  workflowJson: new URL("./workflow.json", import.meta.url),
-});
+```bash
+getsuperpower loop start <source> --json
+getsuperpower loop status <source> --latest --json
+getsuperpower loop log <source> --run <id> --type phase_result --message "..."
+getsuperpower loop advance <source> --run <id> --json
+getsuperpower loop summary <source> --run <id> --json
 ```
 
-GetSuperpower copies the shared `loop-runtime.mjs` asset into the installed
-entry skill automatically when `workflow.json` declares `loop`. During install,
-GetSuperpower copies `workflow.json`, `loop.mjs`, generated
-`loop.metadata.json`, and `loop-runtime.mjs` into the installed entry skill
-folder only.
+The generated `loop.mjs` wrapper remains a Node compatibility fallback after
+install. It requires the `getsuperpower` CLI on `PATH` or a `GETSUPERPOWER_BIN`
+environment override.
 
 ## 4. Edit The Entry Skill
 

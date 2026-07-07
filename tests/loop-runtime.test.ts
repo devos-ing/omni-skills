@@ -1,11 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+  getPreparedWorkflowSkillInstallDependencies,
+  loadWorkflowBundle,
+} from "../src/runtimes/getsuperpower/workflow-bundles";
 
 const repoRoot = join(import.meta.dir, "..");
-const loopScript = join(repoRoot, "examples", "workflows", "grilled-product-dev", "loop.mjs");
 const runtimeModule = join(
   repoRoot,
   "src",
@@ -27,14 +30,17 @@ interface LoopResult {
   exitCode: number;
 }
 
-async function runLoop(args: string[], homeDir: string): Promise<LoopResult> {
-  const subprocess = Bun.spawn(["node", loopScript, ...args], {
+async function runNode(
+  args: string[],
+  env: Record<string, string | undefined> = {},
+): Promise<LoopResult> {
+  const subprocess = Bun.spawn(["node", ...args], {
     cwd: repoRoot,
     stdout: "pipe",
     stderr: "pipe",
     env: {
       ...process.env,
-      HOME: homeDir,
+      ...env,
     },
   });
   const [stdout, stderr, exitCode] = await Promise.all([
@@ -50,6 +56,7 @@ async function runRuntime(
   args: string[],
   homeDir: string,
   workflowJsonInput: string | URL = pathToFileURL(workflowJson),
+  extraInput: Record<string, unknown> = {},
 ): Promise<LoopResult> {
   const stdout: string[] = [];
   const stderr: string[] = [];
@@ -60,6 +67,7 @@ async function runRuntime(
     workflowJson: workflowJsonInput,
     cwd: repoRoot,
     homeDir,
+    ...extraInput,
     stdout: (value: string) => stdout.push(value),
     stderr: (value: string) => stderr.push(value),
   });
@@ -85,14 +93,62 @@ function parseRunIdFromTextOutput(stdout: string): string {
 }
 
 describe("loop runtime", () => {
-  test("grilled-product-dev loop.mjs is a thin runtime wrapper", async () => {
-    const source = await readFile(loopScript, "utf8");
+  test("generated loop.mjs bridge forwards to the GetSuperpower CLI", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "loop-runtime-generated-"));
+    const bundle = await loadWorkflowBundle(
+      join(repoRoot, "examples", "workflows", "grilled-product-dev"),
+    );
+    const prepared = await getPreparedWorkflowSkillInstallDependencies({ bundle, tempDir });
 
-    expect(source).toContain('import { runWorkflowLoopCli } from "./loop-runtime.mjs";');
-    expect(source).toContain('workflowJson: new URL("./workflow.json", import.meta.url)');
-    expect(source).not.toContain("function parseArgs");
-    expect(source).not.toContain("function buildSummary");
-    expect(source).not.toContain("function writeState");
+    try {
+      const preparedEntry = prepared.dependencies[0]?.source ?? "";
+      const generatedRunnerPath = join(preparedEntry, "loop.mjs");
+      const generatedRunner = await readFile(generatedRunnerPath, "utf8");
+      expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
+      expect(generatedRunner).toContain("getsuperpower");
+      expect(generatedRunner).toContain("workflow.json");
+      expect(generatedRunner).not.toContain("function parseArgs");
+      await expect(stat(join(preparedEntry, "loop-runtime.mjs"))).rejects.toThrow();
+
+      const shimDir = join(tempDir, "bin");
+      const callsPath = join(tempDir, "cli-call.json");
+      const shimPath = join(shimDir, "getsuperpower-shim.mjs");
+      await mkdir(shimDir, { recursive: true });
+      await writeFile(
+        shimPath,
+        [
+          "#!/usr/bin/env node",
+          'import { writeFileSync } from "node:fs";',
+          `writeFileSync(${JSON.stringify(callsPath)}, JSON.stringify(process.argv.slice(2)));`,
+          "",
+        ].join("\n"),
+      );
+      await chmod(shimPath, 0o755);
+
+      const forwarded = await runNode([generatedRunnerPath, "status", "--latest", "--json"], {
+        GETSUPERPOWER_BIN: shimPath,
+      });
+      expect(forwarded.exitCode).toBe(0);
+      expect(forwarded.stderr).toBe("");
+      expect(JSON.parse(await readFile(callsPath, "utf8"))).toEqual([
+        "loop",
+        "status",
+        await realpath(join(preparedEntry, "workflow.json")),
+        "--latest",
+        "--json",
+      ]);
+
+      const missingCli = await runNode([generatedRunnerPath, "status", "--latest", "--json"], {
+        GETSUPERPOWER_BIN: join(tempDir, "missing-getsuperpower"),
+      });
+      expect(missingCli.exitCode).toBe(1);
+      expect(missingCli.stderr).toContain(
+        "GetSuperpower CLI is required to run loop.mjs. Install or expose getsuperpower on PATH.",
+      );
+    } finally {
+      await prepared.cleanup?.();
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 
   test("runWorkflowLoopCli manages run state through the reusable runtime", async () => {
@@ -115,6 +171,30 @@ describe("loop runtime", () => {
           join(homeDir, ".getsuperpower", "runs", "grilled-product-dev", "direct", "state.json"),
         ),
       ).resolves.toBeTruthy();
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("runWorkflowLoopCli can render caller-specific action commands", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-prefix-home-"));
+    const workflowSource = "examples/workflows/grilled-product-dev";
+
+    try {
+      const payload = parseJsonOutput(
+        await runRuntime(["start", "--run", "prefix", "--json"], homeDir, workflowJson, {
+          commandPrefix: (command: string) => `getsuperpower loop ${command} ${workflowSource}`,
+        }),
+      ) as {
+        actions: Array<{ type: string; command?: string }>;
+      };
+
+      const commands = payload.actions.map((action) => action.command).filter(Boolean);
+      expect(commands).toContain(
+        `getsuperpower loop log ${workflowSource} --run prefix --type phase_result --message "..."`,
+      );
+      expect(commands).toContain(`getsuperpower loop advance ${workflowSource} --run prefix`);
+      expect(commands.join("\n")).not.toContain("node loop.mjs");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -343,114 +423,11 @@ describe("loop runtime", () => {
     }
   });
 
-  test("grilled-product-dev loop.mjs manages global run state and structured events", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-home-"));
-
-    try {
-      const start = parseJsonOutput(
-        await runLoop(["start", "--run", "smoke", "--json"], homeDir),
-      ) as {
-        runId: string;
-        step: { id: string; instruction: string };
-        actions: Array<{ type: string }>;
-      };
-      expect(start.runId).toBe("smoke");
-      expect(start.step.id).toBe("grill");
-      expect(start.step.instruction).toBe(
-        "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing.",
-      );
-      expect(start.actions.map((action) => action.type)).toEqual([
-        "run_phase",
-        "log_event",
-        "advance",
-      ]);
-
-      const runDir = join(homeDir, ".getsuperpower", "runs", "grilled-product-dev", "smoke");
-      await expect(stat(join(runDir, "state.json"))).resolves.toBeTruthy();
-      await expect(stat(join(runDir, "events.jsonl"))).resolves.toBeTruthy();
-
-      const status = parseJsonOutput(await runLoop(["status", "--latest", "--json"], homeDir)) as {
-        selectedByLatest: boolean;
-        runId: string;
-        step: { id: string };
-      };
-      expect(status.selectedByLatest).toBe(true);
-      expect(status.runId).toBe("smoke");
-      expect(status.step.id).toBe("grill");
-
-      const log = parseJsonOutput(
-        await runLoop(
-          [
-            "log",
-            "--run",
-            "smoke",
-            "--type",
-            "approval",
-            "--message",
-            "User approved the grilled direction",
-            "--metadata",
-            '{"approvedBy":"human"}',
-            "--json",
-          ],
-          homeDir,
-        ),
-      ) as {
-        event: {
-          type: string;
-          step: string;
-          message: string;
-          metadata: { approvedBy: string };
-        };
-      };
-      expect(log.event).toEqual({
-        type: "approval",
-        step: "grill",
-        message: "User approved the grilled direction",
-        metadata: { approvedBy: "human" },
-      });
-
-      const advance = parseJsonOutput(
-        await runLoop(["advance", "--run", "smoke", "--json"], homeDir),
-      ) as {
-        step: { id: string; instruction: string };
-      };
-      expect(advance.step.id).toBe("shape");
-      expect(advance.step.instruction).toBe(
-        "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing.",
-      );
-
-      const summary = parseJsonOutput(
-        await runLoop(["summary", "--run", "smoke", "--json"], homeDir),
-      ) as {
-        summaryPath: string;
-      };
-      expect(summary.summaryPath).toBe(join(runDir, "summary.md"));
-      await expect(readFile(summary.summaryPath, "utf8")).resolves.toContain("Current step: shape");
-
-      const state = JSON.parse(await readFile(join(runDir, "state.json"), "utf8"));
-      expect(state).toMatchObject({
-        workflow: "grilled-product-dev",
-        runId: "smoke",
-        status: "active",
-        currentStep: "shape",
-        currentStepIndex: 1,
-      });
-
-      const eventTypes = (await readFile(join(runDir, "events.jsonl"), "utf8"))
-        .trim()
-        .split("\n")
-        .map((line) => JSON.parse(line).type);
-      expect(eventTypes).toEqual(["start", "status", "approval", "advance", "summary"]);
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
   test("status fails plainly without a run id or latest selector", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "loop-runtime-home-"));
 
     try {
-      const result = await runLoop(["status", "--json"], homeDir);
+      const result = await runRuntime(["status", "--json"], homeDir);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("Pass --run <id> or --latest.");

@@ -73,7 +73,6 @@ describe("workflow bundles", () => {
         "# looped-workflow",
       ].join("\n"),
     );
-    await writeFile(join(bundleDir, "loop.mjs"), "export {};\n");
     await writeFile(
       join(bundleDir, "workflow.json"),
       JSON.stringify(
@@ -235,7 +234,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("rejects invalid loop script paths", async () => {
+  test("rejects invalid generated loop script paths", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-loop-path-"));
     const bundleDir = join(rootDir, "bad-loop-path");
     await mkdir(join(bundleDir, "skills", "bad-loop-path"), { recursive: true });
@@ -286,10 +285,9 @@ describe("workflow bundles", () => {
         "Workflow loop script must use a .mjs extension",
       );
 
-      await writeManifest("./missing.mjs");
-      await expect(loadWorkflowBundle(bundleDir)).rejects.toThrow(
-        "Workflow loop script was not found",
-      );
+      await writeManifest("./generated-loop.mjs");
+      const bundle = await loadWorkflowBundle(bundleDir);
+      expect(bundle.manifest.loop?.script).toBe("./generated-loop.mjs");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
@@ -854,7 +852,7 @@ describe("workflow bundles", () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  test("prepares a looped workflow entry skill with copied runtime files", async () => {
+  test("prepares a looped workflow entry skill with generated runner files", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-loop-prepare-"));
     const bundleDir = join(rootDir, "looped-workflow");
     const tempDir = join(rootDir, "prepared");
@@ -870,7 +868,6 @@ describe("workflow bundles", () => {
         "# looped-workflow",
       ].join("\n"),
     );
-    await writeFile(join(bundleDir, "loop.mjs"), "export {};\n");
     await writeFile(
       join(bundleDir, "workflow.json"),
       JSON.stringify(
@@ -921,26 +918,14 @@ describe("workflow bundles", () => {
       await expect(
         readFile(join(preparedEntry?.source ?? "", "workflow.json"), "utf8"),
       ).resolves.toContain('"name": "looped-workflow"');
-      await expect(readFile(join(preparedEntry?.source ?? "", "loop.mjs"), "utf8")).resolves.toBe(
-        "export {};\n",
-      );
+      const generatedRunner = await readFile(join(preparedEntry?.source ?? "", "loop.mjs"), "utf8");
+      expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
+      expect(generatedRunner).toContain("getsuperpower");
+      expect(generatedRunner).toContain("workflow.json");
       await expect(
         readFile(join(preparedEntry?.source ?? "", "loop.metadata.json"), "utf8"),
       ).resolves.toContain('"workflow": "looped-workflow"');
-      const runtimeSource = await readFile(
-        join(
-          import.meta.dir,
-          "..",
-          "src",
-          "runtimes",
-          "getsuperpower",
-          "workflow-loop-runtime.mjs",
-        ),
-        "utf8",
-      );
-      await expect(
-        readFile(join(preparedEntry?.source ?? "", "loop-runtime.mjs"), "utf8"),
-      ).resolves.toBe(runtimeSource);
+      await expect(stat(join(preparedEntry?.source ?? "", "loop-runtime.mjs"))).rejects.toThrow();
 
       await prepared.cleanup?.();
       await expect(stat(preparedEntry?.source ?? "")).rejects.toThrow();

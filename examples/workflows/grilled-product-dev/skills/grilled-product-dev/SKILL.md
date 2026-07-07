@@ -12,18 +12,23 @@ required sub-skill before doing the work for its phase.
 
 ## Loop Runtime
 
-If `loop.mjs` is present next to this skill, use it to track the workflow run.
-The runtime only prints actions; you still decide and perform the actual work.
+Use the GetSuperpower CLI to track the workflow run. The runtime only prints
+actions; you still decide and perform the actual work. Use the `workflow.json`
+file copied next to this skill as the loop `<source>` when running from an
+installed skill directory.
 
 1. Start or resume a run:
-   - New run: `node loop.mjs start --json`
-   - Existing run: `node loop.mjs status --latest --json`
-2. Before every phase, run `node loop.mjs status --run <run-id> --json`.
+   - New run: `getsuperpower loop start <source> --json`
+   - Existing run: `getsuperpower loop status <source> --latest --json`
+2. Before every phase, run `getsuperpower loop status <source> --run <run-id> --json`.
 3. Follow the returned `actions` and the exact phase `instruction`.
 4. After phase work, log a structured event, for example:
-   `node loop.mjs log --run <run-id> --type phase_result --message "..."`
-5. When the human gate is satisfied, run `node loop.mjs advance --run <run-id> --json`.
+   `getsuperpower loop log <source> --run <run-id> --type phase_result --message "..."`
+5. When the human gate is satisfied, run `getsuperpower loop advance <source> --run <run-id> --json`.
 6. Repeat status, phase work, log, and advance until the workflow is complete.
+
+The installed entry skill also gets a generated `loop.mjs` compatibility
+wrapper, but agents should prefer the CLI command above.
 
 ## Required Sub-Skills
 
@@ -52,6 +57,6 @@ dependency is missing.
 
 ## Author Notes
 
-- Keep this entry skill, `workflow.json`, `loop.mjs`, and `README.md` aligned when adding or removing steps.
+- Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
 - `superpowers:brainstorming` expects `superpowers:writing-plans` to be the next implementation skill, so grilling runs before brainstorming in this workflow.
 - This skill orchestrates required instructions; GetSuperpower installs and validates the dependency skills.

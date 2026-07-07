@@ -2,14 +2,11 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { runSubprocess } from "../../process";
 
 const workflowFileName = "workflow.json";
 const workflowStoreDir = ".getsuperpower/workflows";
-const workflowLoopRuntimeSourceFileName = "workflow-loop-runtime.mjs";
-const installedLoopRuntimeFileName = "loop-runtime.mjs";
 const canonicalExamplesGitUrl = "https://github.com/0xroylee/getsuperpower.git";
 const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -361,10 +358,10 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
   await mkdir(tempRoot, { recursive: true });
   const preparedRoot = await mkdtemp(join(tempRoot, "looped-workflow-entry-"));
   const preparedSkillDir = join(preparedRoot, basename(sourceDependency.source));
-  const loopScriptPath = resolveWorkflowLoopScriptPath({
-    sourceDir: input.bundle.sourceDir,
+  const preparedLoopScriptPath = resolveWorkflowLoopScriptPath({
+    sourceDir: preparedSkillDir,
     script: input.bundle.manifest.loop.script,
-    requireExists: true,
+    requireExists: false,
   });
   const metadata = createWorkflowLoopMetadata(input.bundle);
   if (!metadata) {
@@ -373,8 +370,8 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
 
   await cp(sourceDependency.source, preparedSkillDir, { recursive: true });
   await cp(input.bundle.manifestPath, join(preparedSkillDir, workflowFileName));
-  await cp(loopScriptPath, join(preparedSkillDir, "loop.mjs"));
-  await cp(getWorkflowLoopRuntimeAssetPath(), join(preparedSkillDir, installedLoopRuntimeFileName));
+  await mkdir(dirname(preparedLoopScriptPath), { recursive: true });
+  await writeFile(preparedLoopScriptPath, renderGeneratedWorkflowLoopRunner());
   await writeFile(
     join(preparedSkillDir, "loop.metadata.json"),
     `${JSON.stringify(metadata, null, 2)}\n`,
@@ -390,8 +387,44 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
   };
 }
 
-function getWorkflowLoopRuntimeAssetPath(): string {
-  return join(dirname(fileURLToPath(import.meta.url)), workflowLoopRuntimeSourceFileName);
+function renderGeneratedWorkflowLoopRunner(): string {
+  return [
+    "#!/usr/bin/env node",
+    "",
+    'import { spawnSync } from "node:child_process";',
+    'import { fileURLToPath } from "node:url";',
+    "",
+    'const workflowJson = fileURLToPath(new URL("./workflow.json", import.meta.url));',
+    'const cliCommand = process.env.GETSUPERPOWER_BIN ?? "getsuperpower";',
+    "const [command, ...args] = process.argv.slice(2);",
+    "",
+    "if (!command) {",
+    '  console.error("Usage: node loop.mjs <start|status|log|advance|summary> [options]");',
+    "  process.exitCode = 1;",
+    "} else {",
+    '  const result = spawnSync(cliCommand, ["loop", command, workflowJson, ...args], {',
+    '    stdio: "inherit",',
+    "  });",
+    "",
+    "  if (result.error) {",
+    '    if (result.error.code === "ENOENT") {',
+    '      console.error("GetSuperpower CLI is required to run loop.mjs. Install or expose getsuperpower on PATH.");',
+    "      process.exitCode = 1;",
+    "    } else {",
+    "      console.error(result.error.message);",
+    "      process.exitCode = 1;",
+    "    }",
+    '  } else if (typeof result.status === "number") {',
+    "    process.exitCode = result.status;",
+    "  } else {",
+    "    if (result.signal) {",
+    '      console.error("getsuperpower terminated by signal " + result.signal);',
+    "    }",
+    "    process.exitCode = 1;",
+    "  }",
+    "}",
+    "",
+  ].join("\n");
 }
 
 function getWorkflowEntrySkill(manifest: WorkflowBundleManifest) {
@@ -416,7 +449,7 @@ function validateWorkflowBundleFiles(input: {
   resolveWorkflowLoopScriptPath({
     sourceDir: input.sourceDir,
     script: input.manifest.loop.script,
-    requireExists: true,
+    requireExists: false,
   });
 }
 

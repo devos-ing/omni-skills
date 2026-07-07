@@ -142,6 +142,32 @@ interface GetSuperpowerInstallCommandOptions {
   home: string;
 }
 
+type GetSuperpowerLoopCommandName = "start" | "status" | "log" | "advance" | "summary";
+
+interface GetSuperpowerLoopCommandOptions {
+  home: string;
+  run?: string;
+  latest?: boolean;
+  json?: boolean;
+  type?: string;
+  step?: string;
+  message?: string;
+  metadata?: string;
+  to?: string;
+  force?: boolean;
+  reason?: string;
+}
+
+interface WorkflowLoopRuntimeModule {
+  runWorkflowLoopCli(input: {
+    argv: string[];
+    workflowJson: string;
+    cwd: string;
+    homeDir: string;
+    commandPrefix: (command: string) => string;
+  }): Promise<number>;
+}
+
 export function configureGetSuperpowerCommand(
   program: Command,
   options: ConfigureGetSuperpowerCommandOptions,
@@ -171,6 +197,7 @@ function configureGetSuperpowerCommands(
   configureListCommand(command, options.rootDir);
   configureDependencyCommand(command, options);
   configureOnboardCommand(command, options);
+  configureLoopCommand(command, options);
 }
 
 function configureAuthorCommands(
@@ -625,6 +652,139 @@ function configureDependencyCommand(
         await bundle.cleanup?.();
       }
     });
+}
+
+function configureLoopCommand(
+  command: Command,
+  options: ConfigureGetSuperpowerCommandOptions,
+): void {
+  const loopCommand = command.command("loop").description("Control looped workflow runs.");
+
+  configureLoopSubcommand(loopCommand, "start", "Start a looped workflow run.", options)
+    .option("--run <id>", "run id to create")
+    .option("--json", "print JSON output", false);
+
+  configureLoopSubcommand(loopCommand, "status", "Show looped workflow run status.", options)
+    .option("--run <id>", "run id to inspect")
+    .option("--latest", "select the latest active run", false)
+    .option("--json", "print JSON output", false);
+
+  configureLoopSubcommand(loopCommand, "log", "Append a structured loop event.", options)
+    .option("--run <id>", "run id to append to")
+    .option("--type <event-type>", "structured event type")
+    .option("--step <step-id>", "override the event step id")
+    .option("--message <message>", "event message")
+    .option("--metadata <json>", "event metadata as JSON")
+    .option("--json", "print JSON output", false);
+
+  configureLoopSubcommand(loopCommand, "advance", "Advance a looped workflow run.", options)
+    .option("--run <id>", "run id to advance")
+    .option("--to <step-id>", "force advancement to a specific step")
+    .option("--force", "allow forced advancement when paired with --reason", false)
+    .option("--reason <reason>", "reason for forced advancement")
+    .option("--json", "print JSON output", false);
+
+  configureLoopSubcommand(loopCommand, "summary", "Write a looped workflow run summary.", options)
+    .option("--run <id>", "run id to summarize")
+    .option("--latest", "select the latest active run", false)
+    .option("--json", "print JSON output", false);
+}
+
+function configureLoopSubcommand(
+  command: Command,
+  name: GetSuperpowerLoopCommandName,
+  description: string,
+  options: ConfigureGetSuperpowerCommandOptions,
+): Command {
+  return command
+    .command(name)
+    .description(description)
+    .argument(
+      "<source>",
+      "workflow alias, local GetSuperpower path, workflow.json path, or public git source",
+    )
+    .option("--home <dir>", "home directory for global GetSuperpower loop run state", homedir())
+    .action((source: string, commandOptions: GetSuperpowerLoopCommandOptions) =>
+      runGetSuperpowerLoop(name, source, commandOptions, options),
+    );
+}
+
+async function runGetSuperpowerLoop(
+  command: GetSuperpowerLoopCommandName,
+  source: string,
+  commandOptions: GetSuperpowerLoopCommandOptions,
+  options: ConfigureGetSuperpowerCommandOptions,
+): Promise<void> {
+  const homeDir = resolveHomePath(commandOptions.home);
+  const bundle = await loadWorkflowBundle(source, {
+    cwd: options.rootDir,
+    ...(options.workflowGitCommandRunner
+      ? { runGitCommand: options.workflowGitCommandRunner }
+      : {}),
+  });
+
+  try {
+    if (!bundle.manifest.loop) {
+      throw new Error(`GetSuperpower is not loop-enabled: ${bundle.manifest.name}`);
+    }
+
+    const { runWorkflowLoopCli } = (await importWorkflowLoopRuntime()) as WorkflowLoopRuntimeModule;
+    const exitCode = await runWorkflowLoopCli({
+      argv: buildLoopRuntimeArgs(command, commandOptions),
+      workflowJson: bundle.manifestPath,
+      cwd: options.rootDir,
+      homeDir,
+      commandPrefix: (loopCommand) => `getsuperpower loop ${loopCommand} ${quoteShellArg(source)}`,
+    });
+
+    if (exitCode !== 0) {
+      process.exitCode = exitCode;
+    }
+  } finally {
+    await bundle.cleanup?.();
+  }
+}
+
+async function importWorkflowLoopRuntime(): Promise<unknown> {
+  const runtimeModulePath = "./runtimes/getsuperpower/workflow-loop-runtime.mjs";
+  return import(runtimeModulePath);
+}
+
+function buildLoopRuntimeArgs(
+  command: GetSuperpowerLoopCommandName,
+  options: GetSuperpowerLoopCommandOptions,
+): string[] {
+  const args = [command];
+  appendStringOption(args, "run", options.run);
+  appendStringOption(args, "type", options.type);
+  appendStringOption(args, "step", options.step);
+  appendStringOption(args, "message", options.message);
+  appendStringOption(args, "metadata", options.metadata);
+  appendStringOption(args, "to", options.to);
+  appendStringOption(args, "reason", options.reason);
+  appendBooleanOption(args, "latest", options.latest);
+  appendBooleanOption(args, "force", options.force);
+  appendBooleanOption(args, "json", options.json);
+  return args;
+}
+
+function appendStringOption(args: string[], name: string, value: string | undefined): void {
+  if (value !== undefined) {
+    args.push(`--${name}`, value);
+  }
+}
+
+function appendBooleanOption(args: string[], name: string, value: boolean | undefined): void {
+  if (value === true) {
+    args.push(`--${name}`);
+  }
+}
+
+function quoteShellArg(value: string): string {
+  if (/^[a-zA-Z0-9_./:@#-]+$/.test(value)) {
+    return value;
+  }
+  return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
 function configureOnboardCommand(

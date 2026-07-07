@@ -31,6 +31,7 @@ Primary commands:
 - `getsuperpower deps <source>`
 - `getsuperpower install <source>`
 - `getsuperpower list`
+- `getsuperpower loop <start|status|log|advance|summary> <source>`
 - `skills install [source]`
 - `skills update [source]`
 
@@ -53,7 +54,7 @@ Compatibility aliases:
 - resolve local and public git bundle sources
 - list skill dependency sources plus optional Skills CLI repository metadata
 - prepare looped workflow entry skill installs with copied `workflow.json`,
-  `loop.mjs`, generated `loop.metadata.json`, and copied `loop-runtime.mjs`
+  generated `loop.mjs`, and generated `loop.metadata.json`
 - install normalized global records under `~/.getsuperpower/workflows/`
 - list installed GetSuperpowers
 
@@ -95,14 +96,14 @@ Skill install and workflow install commands do not write snapshot history during
 this pause. Installed workflow records live under
 `~/.getsuperpower/workflows/`; project-local records are only written when a
 caller passes `--dir`. Optional looped workflows may write per-run state under
-`~/.getsuperpower/runs/<workflow>/<run-id>/` from their installed `loop.mjs`.
+`~/.getsuperpower/runs/<workflow>/<run-id>/` through `getsuperpower loop` or the
+compatibility `loop.mjs` wrapper.
 
 ## Bundle Layout
 
 ```text
 my-getsuperpower/
   workflow.json
-  loop.mjs              # optional, only for loop-enabled workflows
   README.md
   skills/
     my-getsuperpower/
@@ -116,8 +117,10 @@ should stay aligned with `workflow.json`.
 
 Loop-enabled workflows declare `loop` in `workflow.json`, mark exactly one local
 skill with `entry: true`, and keep phase instructions in `steps[].instruction`.
-Install copies `workflow.json`, `loop.mjs`, `loop.metadata.json`, and
-`loop-runtime.mjs` only into that entry skill destination.
+`loop.script` names the generated compatibility runner output path, usually
+`./loop.mjs`; workflow authors do not need to check in that file. Install copies
+`workflow.json` and generated `loop.metadata.json` plus generated `loop.mjs`
+only into the entry skill destination.
 
 ## Boundaries
 

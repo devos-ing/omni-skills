@@ -18,15 +18,17 @@ The callable entry skill is:
 skills/grilled-product-dev/SKILL.md
 ```
 
-This example also includes a Node-only loop runtime:
+This example also declares a generated loop runner:
 
 ```text
-loop.mjs
+workflow.json -> loop.script: ./loop.mjs
 ```
 
-The runtime writes global run state under
-`~/.getsuperpower/runs/grilled-product-dev/<run-id>/` and only returns suggested
-actions. It never executes tools or shell commands for the agent.
+The generated runner is written into the installed entry skill during
+`getsuperpower install`. Loop state lives under
+`~/.getsuperpower/runs/grilled-product-dev/<run-id>/`, and the runtime only
+returns suggested actions. It never executes tools or shell commands for the
+agent.
 
 After install and agent restart, invoke:
 
@@ -71,12 +73,15 @@ Install it into a project:
 bun run dev -- install examples/workflows/grilled-product-dev
 ```
 
-Try the loop runtime without installing:
+Try the loop runtime through the GetSuperpower CLI:
 
 ```bash
-node examples/workflows/grilled-product-dev/loop.mjs start --json
-node examples/workflows/grilled-product-dev/loop.mjs status --latest --json
+bun run dev -- loop start examples/workflows/grilled-product-dev --json
+bun run dev -- loop status examples/workflows/grilled-product-dev --latest --json
 ```
+
+The installed `loop.mjs` remains runnable with plain Node for compatibility, but
+agents should use `getsuperpower loop ...`.
 
 Restart the agent app after install so the `$grilled-product-dev` entry skill
 and its sub-skills are available.

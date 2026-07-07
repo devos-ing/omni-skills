@@ -1,12 +1,18 @@
 # Reusable Loop Runtime Design
 
+> Superseded note: this design established the reusable Node runtime and wrapper
+> compatibility. The current contract is the CLI-owned generated runner design
+> in `2026-07-07-generated-loop-runner-design.md`: workflow sources declare
+> `loop.script`, install generates `loop.mjs`, and installed entries no longer
+> carry `loop-runtime.mjs`.
+
 ## Summary
 
-GetSuperpower looped workflows should keep `node loop.mjs ...` as the stable
-agent-facing command while moving generic loop machinery into a shared runtime.
-The approved v1 design uses a checked-in Node ESM runtime asset, a thin
-workflow-local wrapper, automatic install-time runtime copying, and an internal
-runtime namespace rename from `ponytrail` to `getsuperpower`.
+GetSuperpower looped workflows should keep `node loop.mjs ...` as a compatibility
+command while moving generic loop machinery into a shared runtime. The approved
+runtime design uses a checked-in Node ESM runtime asset, a thin workflow-local
+wrapper, automatic install-time runtime copying, and an internal runtime
+namespace rename from `ponytrail` to `getsuperpower`.
 
 ## Approved Decisions
 
@@ -17,9 +23,10 @@ runtime namespace rename from `ponytrail` to `getsuperpower`.
 - Keep workflow-local `loop.mjs` files as thin wrappers.
 - Automatically copy `loop-runtime.mjs` into installed entry skills whenever
   `workflow.json` declares `loop`.
-- Defer a `getsuperpower loop ...` CLI adapter until another workflow proves
-  the need.
-- Keep `node loop.mjs <start|status|log|advance|summary>` as the v1 contract.
+- Add a later `getsuperpower loop ...` CLI adapter when workflow use proves the
+  need.
+- Keep `node loop.mjs <start|status|log|advance|summary>` as a compatibility
+  contract.
 - Keep unrelated legacy names, such as `ponytrail-prehook.sh`, out of this
   rename unless implementation requires touching them.
 
@@ -69,7 +76,7 @@ skill by copying `workflow.json`, the workflow wrapper `loop.mjs`, generated
 
 ## Data Flow
 
-At runtime, an agent or user runs:
+At runtime, the compatibility wrapper still supports:
 
 ```bash
 node loop.mjs status --latest --json
@@ -144,7 +151,7 @@ rtk bun run check
 
 This design does not change loop state location, command names, manifest shape,
 or the action-only v1 behavior. It does not make the loop autonomously execute
-workflow phases. It also does not add a `getsuperpower loop` command in v1.
+workflow phases. The CLI command is added by the follow-up CLI loop design.
 
 The internal namespace rename is limited to active runtime modules, imports,
 tests, and docs. Legacy generated hook filenames remain unchanged unless a
