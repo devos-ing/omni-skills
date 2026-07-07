@@ -158,6 +158,32 @@ export interface WorkflowInstallSkillArtifact {
   paths: string[];
 }
 
+export interface WorkflowRemovalArtifact {
+  source: string;
+  skillName: string;
+  agent: string;
+  status: string;
+  path: string;
+}
+
+export interface WorkflowRemovalKeptArtifact extends WorkflowRemovalArtifact {
+  usedByWorkflows: string[];
+}
+
+export interface WorkflowRemovalSkippedArtifact {
+  source: string;
+  reason: string;
+}
+
+export interface WorkflowRemovalPlan {
+  workflow: InstalledWorkflowBundle;
+  workflowRecordPath: string;
+  legacy: boolean;
+  artifactsToRemove: WorkflowRemovalArtifact[];
+  artifactsToKeep: WorkflowRemovalKeptArtifact[];
+  skippedArtifacts: WorkflowRemovalSkippedArtifact[];
+}
+
 export interface WorkflowLoopMetadata {
   schemaVersion: "0.1";
   workflow: string;
@@ -305,6 +331,81 @@ export async function listInstalledWorkflowBundles(input: {
   return workflows.sort((left, right) => left.name.localeCompare(right.name));
 }
 
+export function getInstalledWorkflowBundlePath(input: {
+  rootDir: string;
+  workflowName: string;
+}): string {
+  return join(input.rootDir, workflowStoreDir, `${input.workflowName}.json`);
+}
+
+export async function loadInstalledWorkflowBundle(input: {
+  rootDir: string;
+  workflowName: string;
+}): Promise<{ workflow: InstalledWorkflowBundle; path: string }> {
+  const path = getInstalledWorkflowBundlePath(input);
+  try {
+    const raw = await readFile(path, "utf8");
+    return { workflow: JSON.parse(raw) as InstalledWorkflowBundle, path };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(`GetSuperpower is not installed: ${input.workflowName}`);
+    }
+    throw error;
+  }
+}
+
+export async function createWorkflowRemovalPlan(input: {
+  rootDir: string;
+  homeDir: string;
+  workflowName: string;
+}): Promise<WorkflowRemovalPlan> {
+  const installed = await loadInstalledWorkflowBundle({
+    rootDir: input.rootDir,
+    workflowName: input.workflowName,
+  });
+  const otherWorkflows = (await listInstalledWorkflowBundles({ rootDir: input.rootDir })).filter(
+    (workflow) => workflow.name !== input.workflowName,
+  );
+  const legacy = !installed.workflow.installArtifacts?.length;
+  const skippedArtifacts: WorkflowRemovalSkippedArtifact[] = [];
+  const candidates = legacy
+    ? inferLegacyRemovalArtifacts(installed.workflow, input.homeDir, skippedArtifacts)
+    : flattenInstallArtifacts(installed.workflow.installArtifacts ?? []);
+  const otherPathOwners = getArtifactPathOwners(otherWorkflows);
+  const artifactsToRemove: WorkflowRemovalArtifact[] = [];
+  const artifactsToKeep: WorkflowRemovalKeptArtifact[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of candidates) {
+    if (seen.has(candidate.path)) {
+      continue;
+    }
+    seen.add(candidate.path);
+    const usedByWorkflows = otherPathOwners.get(candidate.path) ?? [];
+    if (usedByWorkflows.length > 0) {
+      artifactsToKeep.push({ ...candidate, usedByWorkflows });
+      continue;
+    }
+    artifactsToRemove.push(candidate);
+  }
+
+  return {
+    workflow: installed.workflow,
+    workflowRecordPath: installed.path,
+    legacy,
+    artifactsToRemove,
+    artifactsToKeep,
+    skippedArtifacts,
+  };
+}
+
+export async function executeWorkflowRemovalPlan(plan: WorkflowRemovalPlan): Promise<void> {
+  for (const artifact of plan.artifactsToRemove) {
+    await rm(artifact.path, { recursive: true, force: true });
+  }
+  await rm(plan.workflowRecordPath, { force: true });
+}
+
 export function getWorkflowSkillInstallSources(bundle: WorkflowBundle): string[] {
   return getWorkflowSkillInstallDependencies(bundle).map((skill) => skill.source);
 }
@@ -450,6 +551,104 @@ function createInstalledWorkflowBundle(
     source: bundle.source,
     ...(installArtifacts.length > 0 ? { installArtifacts } : {}),
   };
+}
+
+function flattenInstallArtifacts(
+  artifacts: WorkflowInstallSkillArtifact[],
+): WorkflowRemovalArtifact[] {
+  return artifacts.flatMap((artifact) =>
+    isRemovableInstallStatus(artifact.status)
+      ? artifact.paths.map((path) => ({
+          source: artifact.source,
+          skillName: artifact.skillName,
+          agent: artifact.agent,
+          status: artifact.status,
+          path,
+        }))
+      : [],
+  );
+}
+
+function isRemovableInstallStatus(status: string): boolean {
+  return status === "installed" || status === "updated" || status === "overwritten";
+}
+
+function getArtifactPathOwners(workflows: InstalledWorkflowBundle[]): Map<string, string[]> {
+  const owners = new Map<string, string[]>();
+  for (const workflow of workflows) {
+    for (const artifact of workflow.installArtifacts ?? []) {
+      for (const path of artifact.paths) {
+        const existing = owners.get(path) ?? [];
+        existing.push(workflow.name);
+        owners.set(path, existing);
+      }
+    }
+  }
+  return owners;
+}
+
+function inferLegacyRemovalArtifacts(
+  workflow: InstalledWorkflowBundle,
+  homeDir: string,
+  skippedArtifacts: WorkflowRemovalSkippedArtifact[],
+): WorkflowRemovalArtifact[] {
+  const artifacts: WorkflowRemovalArtifact[] = [];
+  for (const skill of workflow.skills) {
+    const inferred = inferLegacySkillName(skill.source);
+    if (!("skillName" in inferred)) {
+      skippedArtifacts.push({ source: skill.source, reason: inferred.reason });
+      continue;
+    }
+    for (const path of getLegacySkillArtifactPaths(homeDir, inferred.skillName)) {
+      artifacts.push({
+        source: skill.source,
+        skillName: inferred.skillName,
+        agent: "legacy",
+        status: "legacy_inferred",
+        path,
+      });
+    }
+  }
+  return artifacts;
+}
+
+function inferLegacySkillName(source: string): { skillName: string } | { reason: string } {
+  if (isLocalWorkflowSkillSource(source)) {
+    const skillName = basename(source);
+    return skillName ? { skillName } : { reason: "Local skill source has no folder name" };
+  }
+  if (source === "superpowers:brainstorming") {
+    return { skillName: "superpowers-brainstorming" };
+  }
+  if (source === "superpowers:writing-plans") {
+    return { skillName: "superpowers-writing-plans" };
+  }
+  if (source.startsWith("mattpocock:")) {
+    const skillName = source.slice("mattpocock:".length).trim();
+    return skillName ? { skillName } : { reason: "Matt Pocock skill source has no skill name" };
+  }
+
+  const mattPocockGithubPrefix = "github:mattpocock/skills/";
+  if (source.startsWith(mattPocockGithubPrefix)) {
+    const suffix = source.slice(mattPocockGithubPrefix.length);
+    const skillName = suffix.startsWith("skills/") ? suffix.slice("skills/".length) : suffix;
+    return skillName ? { skillName } : { reason: "Matt Pocock GitHub source has no skill name" };
+  }
+
+  if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(source)) {
+    return { skillName: source };
+  }
+
+  return { reason: `Cannot safely infer installed skill name from ${source}` };
+}
+
+function getLegacySkillArtifactPaths(homeDir: string, skillName: string): string[] {
+  return [
+    join(homeDir, ".claude", "skills", skillName),
+    join(homeDir, ".agents", "skills", skillName),
+    join(homeDir, ".codex", "skills", skillName),
+    join(homeDir, ".cursor", "rules", `${skillName}.mdc`),
+  ];
 }
 
 function validateWorkflowBundleFiles(input: {

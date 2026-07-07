@@ -6,6 +6,8 @@ import { pathToFileURL } from "node:url";
 import {
   createWorkflowBundleScaffold,
   createWorkflowLoopMetadata,
+  createWorkflowRemovalPlan,
+  executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallSources,
@@ -407,6 +409,201 @@ describe("workflow bundles", () => {
       const installed = JSON.parse(await readFile(install.path, "utf8"));
 
       expect(installed.installArtifacts).toEqual(installArtifacts);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("plans removal from recorded workflow artifacts", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-plan-"));
+    const bundle = await loadWorkflowBundle("examples/workflows/release-review");
+    const artifactPath = join(rootDir, ".agents", "skills", "release-risk-review");
+
+    try {
+      await installWorkflowBundle({
+        rootDir,
+        bundle,
+        installArtifacts: [
+          {
+            source: "./skills/release-risk-review",
+            skillName: "release-risk-review",
+            agent: "codex",
+            status: "installed",
+            paths: [artifactPath],
+          },
+        ],
+      });
+
+      const plan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: "release-review",
+      });
+
+      expect(plan.workflow.name).toBe("release-review");
+      expect(plan.legacy).toBe(false);
+      expect(plan.artifactsToRemove.map((artifact) => artifact.path)).toEqual([artifactPath]);
+      expect(plan.artifactsToKeep).toEqual([]);
+      expect(plan.skippedArtifacts).toEqual([]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("preserves artifacts referenced by another installed workflow", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-shared-"));
+    const releaseBundle = await loadWorkflowBundle("examples/workflows/release-review");
+    const sharedPath = join(rootDir, ".agents", "skills", "pony-trail");
+    const otherBundle = {
+      ...releaseBundle,
+      manifest: { ...releaseBundle.manifest, name: "ops-review" },
+    };
+
+    try {
+      await installWorkflowBundle({
+        rootDir,
+        bundle: releaseBundle,
+        installArtifacts: [
+          {
+            source: "pony-trail",
+            skillName: "pony-trail",
+            agent: "codex",
+            status: "installed",
+            paths: [sharedPath],
+          },
+        ],
+      });
+      await installWorkflowBundle({
+        rootDir,
+        bundle: otherBundle,
+        installArtifacts: [
+          {
+            source: "pony-trail",
+            skillName: "pony-trail",
+            agent: "codex",
+            status: "installed",
+            paths: [sharedPath],
+          },
+        ],
+      });
+
+      const plan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: "release-review",
+      });
+
+      expect(plan.artifactsToRemove).toEqual([]);
+      expect(plan.artifactsToKeep).toEqual([
+        expect.objectContaining({ path: sharedPath, usedByWorkflows: ["ops-review"] }),
+      ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("fails clearly when removing a workflow that is not installed", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-missing-"));
+
+    try {
+      await expect(
+        createWorkflowRemovalPlan({
+          rootDir,
+          homeDir: rootDir,
+          workflowName: "missing-workflow",
+        }),
+      ).rejects.toThrow("GetSuperpower is not installed: missing-workflow");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("executes a removal plan by deleting artifacts and the workflow record", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-execute-"));
+    const bundle = await loadWorkflowBundle("examples/workflows/release-review");
+    const artifactPath = join(rootDir, ".agents", "skills", "release-risk-review");
+
+    try {
+      await mkdir(artifactPath, { recursive: true });
+      await writeFile(join(artifactPath, "SKILL.md"), "installed skill");
+      const install = await installWorkflowBundle({
+        rootDir,
+        bundle,
+        installArtifacts: [
+          {
+            source: "./skills/release-risk-review",
+            skillName: "release-risk-review",
+            agent: "codex",
+            status: "installed",
+            paths: [artifactPath],
+          },
+        ],
+      });
+
+      const plan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: "release-review",
+      });
+      await executeWorkflowRemovalPlan(plan);
+
+      await expect(stat(artifactPath)).rejects.toThrow();
+      await expect(stat(install.path)).rejects.toThrow();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("infers legacy removal artifacts and skips unmappable legacy sources", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-legacy-"));
+    const workflowDir = join(rootDir, ".getsuperpower", "workflows");
+
+    try {
+      await mkdir(workflowDir, { recursive: true });
+      await writeFile(
+        join(workflowDir, "legacy-workflow.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            name: "legacy-workflow",
+            version: "0.1.0",
+            description: "Legacy workflow record.",
+            source: { kind: "local", path: "/tmp/legacy-workflow" },
+            skills: [
+              { source: "./skills/local-review" },
+              { source: "superpowers:brainstorming" },
+              { source: "https://example.com/unknown.git#skills/custom" },
+            ],
+            steps: [
+              { id: "local", title: "Local", skill: "./skills/local-review" },
+              { id: "shape", title: "Shape", skill: "superpowers:brainstorming" },
+            ],
+          },
+          null,
+          2,
+        ),
+      );
+
+      const plan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: "legacy-workflow",
+      });
+
+      expect(plan.legacy).toBe(true);
+      expect(plan.artifactsToRemove.map((artifact) => artifact.path)).toContain(
+        join(rootDir, ".agents", "skills", "local-review"),
+      );
+      expect(plan.artifactsToRemove.map((artifact) => artifact.path)).toContain(
+        join(rootDir, ".agents", "skills", "superpowers-brainstorming"),
+      );
+      expect(plan.skippedArtifacts).toEqual([
+        {
+          source: "https://example.com/unknown.git#skills/custom",
+          reason:
+            "Cannot safely infer installed skill name from https://example.com/unknown.git#skills/custom",
+        },
+      ]);
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
