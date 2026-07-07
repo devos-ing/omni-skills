@@ -26,23 +26,23 @@
 
 ## 4. Implement With TDD
 
-- [ ] Add failing registration tests for `remove` and `workflow remove`.
-- [ ] Add failing workflow-runtime tests for reading, planning, and deleting a
+- [x] Add failing registration tests for `remove` and `workflow remove`.
+- [x] Add failing workflow-runtime tests for reading, planning, and deleting a
       named installed workflow record.
-- [ ] Add failing install tests proving workflow records capture exact skill
+- [x] Add failing install tests proving workflow records capture exact skill
       artifact metadata.
-- [ ] Add failing CLI tests for dry-run, missing workflow, confirmed removal,
+- [x] Add failing CLI tests for dry-run, missing workflow, confirmed removal,
       shared-artifact preservation, and legacy fallback output.
-- [ ] Implement workflow-record metadata persistence.
-- [ ] Implement remove planning and artifact deletion through runtime/plugin
+- [x] Implement workflow-record metadata persistence.
+- [x] Implement remove planning and artifact deletion through runtime/plugin
       seams.
-- [ ] Wire root and compatibility remove commands.
-- [ ] Update help text and architecture/docs references.
-- [ ] Run focused tests after each vertical slice.
+- [x] Wire root and compatibility remove commands.
+- [x] Update help text and architecture/docs references.
+- [x] Run focused tests after each vertical slice.
 
 ## 5. Verify And Archive
 
-- [ ] Run a scratch-home install/remove smoke check under `work/`.
-- [ ] Run `rtk bun run check`.
-- [ ] Record Pony Trail post-change evidence.
+- [x] Run a scratch-home install/remove smoke check under `work/`.
+- [x] Run `rtk bun run check`.
+- [x] Record Pony Trail post-change evidence.
 - [ ] Run `/opsx:archive` after human approval.

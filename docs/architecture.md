@@ -31,6 +31,7 @@ Primary commands:
 - `getsuperpower deps <source>`
 - `getsuperpower install <source>`
 - `getsuperpower list`
+- `getsuperpower remove <workflow-name>`
 - `getsuperpower loop <start|status|log|advance|summary> <source>`
 - `skills install [source]`
 - `skills update [source]`
@@ -41,6 +42,7 @@ Compatibility aliases:
 - `bundle validate`
 - `workflow install`
 - `workflow list`
+- `workflow remove`
 
 ## GetSuperpower Runtime
 
@@ -55,8 +57,11 @@ Compatibility aliases:
 - list skill dependency sources plus optional Skills CLI repository metadata
 - prepare looped workflow entry skill installs with copied `workflow.json`,
   generated `loop.mjs`, and generated `loop.metadata.json`
-- install normalized global records under `~/.getsuperpower/workflows/`
+- install normalized global records under `~/.getsuperpower/workflows/` with
+  exact skill artifact metadata for later removal
 - list installed GetSuperpowers
+- plan and execute removal of installed workflow skill artifacts while
+  preserving artifacts referenced by other workflow records
 
 The runtime folder uses the GetSuperpower name. Older Pony Trail history,
 revert, and prehook behavior remains paused and is not exposed by the public
