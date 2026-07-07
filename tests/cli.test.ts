@@ -394,15 +394,40 @@ describe("cli", () => {
       );
       expect(start.stderr).toBe("");
       const startPayload = JSON.parse(start.stdout) as {
+        goal: { type: string; goal: string };
         runId: string;
-        step: { id: string };
-        actions: Array<{ type: string; command?: string }>;
+        step: { id: string; verify: { type: string } };
+        actions: Array<{
+          type: string;
+          step?: string;
+          command?: string;
+          description?: string;
+          verify?: { type: string; event?: string; message_includes?: string };
+        }>;
       };
       expect(startPayload.runId).toBe("cli-smoke");
+      expect(startPayload.goal).toMatchObject({
+        type: "goal_based",
+        goal: "Produce an approved implementation plan for a product-development request.",
+      });
       expect(startPayload.step.id).toBe("grill");
+      expect(startPayload.step.verify.type).toBe("human_approval");
+      expect(startPayload.actions).toContainEqual({
+        type: "verify",
+        step: "grill",
+        verify: {
+          type: "human_approval",
+          event: "approval",
+          message_includes: "direction ready",
+        },
+        description: "Check the phase verification rule before advancing.",
+      });
       const startCommands = startPayload.actions.map((action) => action.command).filter(Boolean);
       expect(startCommands).toContain(
-        `getsuperpower loop log ${workflowSource} --run cli-smoke --type phase_result --message "..."`,
+        `getsuperpower loop log ${workflowSource} --home ${homeDir} --run cli-smoke --type phase_result --message "..."`,
+      );
+      expect(startCommands).toContain(
+        `getsuperpower loop advance ${workflowSource} --home ${homeDir} --run cli-smoke`,
       );
       expect(startCommands.join("\n")).not.toContain("node loop.mjs");
 

@@ -15,7 +15,7 @@ GetSuperpower skill-tree bundles.
 
 - `src/cli.ts` - thin Commander CLI shell.
 - `src/getsuperpower.ts` - primary GetSuperpower command module.
-- `src/runtimes/ponytrail/` - internal compatibility runtime for workflow
+- `src/runtimes/getsuperpower/` - internal runtime for workflow
   manifests and install records; snapshot modules are paused from the public CLI.
 - `src/plugins/` - skill installer seam for bundled, local, Superpowers,
   external, and agent-target installs.
@@ -40,9 +40,9 @@ Author or user request
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
   output, and call runtime or plugin interfaces. It must not own bundle rules.
 - `src/getsuperpower.ts` owns GetSuperpower command registration and skill
-  dependency bootstrap for install/deps/init/validate/list.
-- `src/runtimes/ponytrail/` owns workflow manifest schemas, scaffolding, and
-  install records. The folder name remains for internal compatibility.
+  dependency bootstrap for install/deps/init/validate/list/remove/onboard/loop.
+- `src/runtimes/getsuperpower/` owns workflow manifest schemas, scaffolding,
+  install records, removal plans, and loop metadata.
 - `src/plugins/` is for skill resolution and target writes. Keep
   environment-specific behavior behind small interfaces.
 - Generated `.getsuperpower/` project workspaces are local runtime state. Do not
@@ -68,6 +68,9 @@ bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
 bun run dev -- install examples/workflows/release-review
 bun run dev -- deps examples/workflows/release-review
+bun run dev -- list
+bun run dev -- remove release-review --dry-run
+bun run dev -- loop status examples/workflows/grilled-product-dev --latest --json
 bun run dev -- init my-workflow
 bun run dev -- validate examples/workflows/real-engineering
 bun run dev -- skills install

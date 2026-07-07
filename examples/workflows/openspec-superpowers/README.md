@@ -54,7 +54,7 @@ skills:
 - `mattpocock:tdd`
 - `pony-trail`
 
-`getsuperpower install` and `getsuperpower clone` automatically use the Skills CLI to fetch missing
+`getsuperpower install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
 package install through the CLI and retry:
 
@@ -80,10 +80,7 @@ Install it into a project:
 
 ```bash
 bun run dev -- install examples/workflows/openspec-superpowers
-bun run dev -- clone examples/workflows/openspec-superpowers
 ```
-
-`clone <source>` is equivalent to `install <source>`.
 
 Restart the agent app after install so the `$openspec-delivery` entry skill
 and its sub-skills are available.

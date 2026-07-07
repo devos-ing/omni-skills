@@ -24,6 +24,12 @@ This example also declares a generated loop runner:
 workflow.json -> loop.script: ./loop.mjs
 ```
 
+The loop is goal-based and action-only. Its goal is to produce an approved
+implementation plan, with explicit `done_when`, `stop_when`, and per-step
+`verify` rules in `workflow.json`. The runtime prints those rules as actions;
+the agent still performs the work and decides whether the evidence is good
+enough to advance.
+
 The generated runner is written into the installed entry skill during
 `getsuperpower install`. Loop state lives under
 `~/.getsuperpower/runs/grilled-product-dev/<run-id>/`, and the runtime only
@@ -45,9 +51,9 @@ This GetSuperpower combines one Matt Pocock skill with two Superpowers skills:
 - `superpowers:brainstorming`
 - `superpowers:writing-plans`
 
-`getsuperpower install` and `getsuperpower clone` automatically use the Skills
-CLI to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap
-fails, install the Matt Pocock skills package and retry:
+`getsuperpower install` automatically uses the Skills CLI to fetch missing
+`mattpocock:*` dependencies. If that automatic bootstrap fails, install the
+Matt Pocock skills package and retry:
 
 ```bash
 bun run dev -- skills install mattpocock/skills

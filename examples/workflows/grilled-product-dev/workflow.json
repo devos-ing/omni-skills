@@ -1,12 +1,20 @@
 {
   "schemaVersion": "0.1",
   "name": "grilled-product-dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sharpen a product-development request with grilling before Superpowers design and planning.",
   "loop": {
     "script": "./loop.mjs",
     "state": "global",
-    "execution": "action-only"
+    "execution": "action-only",
+    "type": "goal_based",
+    "goal": "Produce an approved implementation plan for a product-development request.",
+    "done_when": [
+      "grilled_direction_approved",
+      "design_spec_approved",
+      "implementation_plan_written"
+    ],
+    "stop_when": ["human_blocks", "verification_fails", "workflow_complete"]
   },
   "skills": [
     {
@@ -32,20 +40,35 @@
       "title": "Sharpen the request through grilling",
       "skill": "mattpocock:grilling",
       "gate": "human_approval",
-      "instruction": "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing."
+      "instruction": "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing.",
+      "verify": {
+        "type": "human_approval",
+        "event": "approval",
+        "message_includes": "direction ready"
+      }
     },
     {
       "id": "shape",
       "title": "Turn the approved direction into a Superpowers design",
       "skill": "superpowers:brainstorming",
       "gate": "human_approval",
-      "instruction": "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing."
+      "instruction": "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing.",
+      "verify": {
+        "type": "human_approval",
+        "event": "approval",
+        "message_includes": "design approved"
+      }
     },
     {
       "id": "plan",
       "title": "Write the implementation plan",
       "skill": "superpowers:writing-plans",
-      "instruction": "Write the approved implementation plan as small executable tasks, then log the plan result."
+      "instruction": "Write the approved implementation plan as small executable tasks, then log the plan result.",
+      "verify": {
+        "type": "event",
+        "event": "phase_result",
+        "message_includes": "implementation plan written"
+      }
     }
   ]
 }

@@ -17,6 +17,9 @@
   ],
   "scripts": {
     "dev": "bun src/cli.ts",
+    "dev:alias": "scripts/dev-cli-alias.sh install",
+    "dev:alias:status": "scripts/dev-cli-alias.sh status",
+    "dev:unalias": "scripts/dev-cli-alias.sh uninstall",
     "build": "bun build --target=node --outfile=dist/cli.js src/cli.ts",
     "test": "bun test tests",
     "ci:test": "find tests -maxdepth 1 -name '*.test.ts' ! -name '*.e2e.test.ts' -print0 | xargs -0 bun test",

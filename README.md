@@ -129,9 +129,12 @@ The GetSuperpower CLI supports workflow install, inspection, authoring, and skil
 - `npx getsuperpower@latest install <alias-or-path-or-git-url>`
 - `npx getsuperpower@latest deps <source>`
 - `npx getsuperpower@latest list`
+- `npx getsuperpower@latest remove <workflow-name>`
 - `npx getsuperpower@latest init <name>`
 - `npx getsuperpower@latest validate <source>`
+- `npx getsuperpower@latest loop <start|status|log|advance|summary> <source>`
 - `npx getsuperpower@latest skills install`
+- `npx getsuperpower@latest skills update`
 - `npx getsuperpower@latest skills install mattpocock/skills`
 - `npx getsuperpower@latest skills install creating-bundle-skills`
 

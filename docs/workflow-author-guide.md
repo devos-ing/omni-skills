@@ -13,7 +13,7 @@ Vocabulary:
 Command note:
 
 - In a cloned GetSuperpower repo, use `bun run dev -- <command>`.
-- In another project, use `npx getsuperpower <command>`.
+- In another project, use `npx getsuperpower@latest <command>`.
 
 ## Recommended: Call The Authoring Skill
 
@@ -21,7 +21,7 @@ Start here when you want an agent to help create the workflow and skills set.
 Install the bundled authoring skill:
 
 ```bash
-npx getsuperpower skills install creating-bundle-skills
+npx getsuperpower@latest skills install creating-bundle-skills
 ```
 
 Restart your agent app so it reloads the skill, then call it directly:
@@ -332,14 +332,14 @@ Users can also install a workflow directly from a public git repository when
 the repository root contains `workflow.json`:
 
 ```bash
-npx getsuperpower install https://github.com/acme/support-triage.git
+npx getsuperpower@latest install https://github.com/acme/support-triage.git
 ```
 
 If the workflow lives in a subdirectory, add the workflow path as a URL
 fragment:
 
 ```bash
-npx getsuperpower install 'https://github.com/acme/workflows.git#examples/workflows/support-triage'
+npx getsuperpower@latest install 'https://github.com/acme/workflows.git#examples/workflows/support-triage'
 ```
 
 Before opening the pull request, run:

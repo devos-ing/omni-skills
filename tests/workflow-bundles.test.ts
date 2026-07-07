@@ -88,6 +88,10 @@ describe("workflow bundles", () => {
             script: "./loop.mjs",
             state: "global",
             execution: "action-only",
+            type: "goal_based",
+            goal: "Finish the entry workflow.",
+            done_when: ["entry_result_logged"],
+            stop_when: ["workflow_complete"],
           },
           skills: [{ source: "./skills/looped-workflow", entry: true }],
           steps: [
@@ -96,6 +100,11 @@ describe("workflow bundles", () => {
               title: "Run the entry skill",
               skill: "./skills/looped-workflow",
               instruction: "Check loop status before doing the next phase.",
+              verify: {
+                type: "event",
+                event: "phase_result",
+                message_includes: "entry result",
+              },
             },
           ],
         },
@@ -111,11 +120,20 @@ describe("workflow bundles", () => {
         script: "./loop.mjs",
         state: "global",
         execution: "action-only",
+        type: "goal_based",
+        goal: "Finish the entry workflow.",
+        done_when: ["entry_result_logged"],
+        stop_when: ["workflow_complete"],
       });
       expect(bundle.manifest.skills).toEqual([{ source: "./skills/looped-workflow", entry: true }]);
       expect(bundle.manifest.steps[0]?.instruction).toBe(
         "Check loop status before doing the next phase.",
       );
+      expect(bundle.manifest.steps[0]?.verify).toEqual({
+        type: "event",
+        event: "phase_result",
+        message_includes: "entry result",
+      });
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
@@ -130,12 +148,37 @@ describe("workflow bundles", () => {
       script: "./loop.mjs",
       state: "global",
       execution: "action-only",
+      type: "goal_based",
+      goal: "Produce an approved implementation plan for a product-development request.",
+      done_when: [
+        "grilled_direction_approved",
+        "design_spec_approved",
+        "implementation_plan_written",
+      ],
+      stop_when: ["human_blocks", "verification_fails", "workflow_complete"],
     });
     expect(bundle.manifest.skills[0]).toEqual({
       source: "./skills/grilled-product-dev",
       entry: true,
     });
     expect(bundle.manifest.steps.map((step) => step.id)).toEqual(["grill", "shape", "plan"]);
+    expect(bundle.manifest.steps.map((step) => step.verify)).toEqual([
+      {
+        type: "human_approval",
+        event: "approval",
+        message_includes: "direction ready",
+      },
+      {
+        type: "human_approval",
+        event: "approval",
+        message_includes: "design approved",
+      },
+      {
+        type: "event",
+        event: "phase_result",
+        message_includes: "implementation plan written",
+      },
+    ]);
     expect(bundle.manifest.steps.map((step) => step.instruction)).toEqual([
       "Ask one grilling question, include your recommended answer, and wait for explicit human approval before advancing.",
       "Turn the approved direction into a Superpowers design spec, then wait for explicit human approval before advancing.",
@@ -148,6 +191,14 @@ describe("workflow bundles", () => {
       loopScript: "./loop.mjs",
       state: "global",
       execution: "action-only",
+      type: "goal_based",
+      goal: "Produce an approved implementation plan for a product-development request.",
+      done_when: [
+        "grilled_direction_approved",
+        "design_spec_approved",
+        "implementation_plan_written",
+      ],
+      stop_when: ["human_blocks", "verification_fails", "workflow_complete"],
       commands: ["start", "status", "log", "advance", "summary"],
     });
   });

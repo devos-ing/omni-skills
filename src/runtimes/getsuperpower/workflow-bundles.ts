@@ -18,18 +18,30 @@ const WorkflowSkillSchema = z.object({
   entry: z.boolean().optional(),
 });
 
+const WorkflowStepVerifySchema = z.object({
+  type: z.enum(["human_approval", "event", "manual"]),
+  event: z.string().min(1).optional(),
+  message_includes: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+});
+
 const WorkflowStepSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   skill: z.string().min(1),
   gate: z.enum(["human_approval"]).optional(),
   instruction: z.string().min(1).optional(),
+  verify: WorkflowStepVerifySchema.optional(),
 });
 
 const WorkflowLoopSchema = z.object({
   script: z.string().min(1),
   state: z.literal("global"),
   execution: z.literal("action-only"),
+  type: z.enum(["goal_based"]).optional(),
+  goal: z.string().min(1).optional(),
+  done_when: z.array(z.string().min(1)).min(1).optional(),
+  stop_when: z.array(z.string().min(1)).min(1).optional(),
 });
 
 export const WorkflowBundleManifestSchema = z
@@ -94,6 +106,30 @@ export const WorkflowBundleManifestSchema = z
           code: z.ZodIssueCode.custom,
           message: "Looped workflow entry skill must be a local skill path",
           path: ["skills", entrySkillIndex, "source"],
+        });
+      }
+    }
+
+    if (manifest.loop?.type === "goal_based") {
+      if (!manifest.loop.goal) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Goal-based loops must declare loop.goal",
+          path: ["loop", "goal"],
+        });
+      }
+      if (!manifest.loop.done_when) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Goal-based loops must declare loop.done_when",
+          path: ["loop", "done_when"],
+        });
+      }
+      if (!manifest.loop.stop_when) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Goal-based loops must declare loop.stop_when",
+          path: ["loop", "stop_when"],
         });
       }
     }
@@ -191,6 +227,10 @@ export interface WorkflowLoopMetadata {
   loopScript: string;
   state: "global";
   execution: "action-only";
+  type?: "goal_based";
+  goal?: string;
+  done_when?: string[];
+  stop_when?: string[];
   commands: ["start", "status", "log", "advance", "summary"];
 }
 
@@ -441,6 +481,10 @@ export function createWorkflowLoopMetadata(bundle: WorkflowBundle): WorkflowLoop
     loopScript: bundle.manifest.loop.script,
     state: bundle.manifest.loop.state,
     execution: bundle.manifest.loop.execution,
+    ...(bundle.manifest.loop.type ? { type: bundle.manifest.loop.type } : {}),
+    ...(bundle.manifest.loop.goal ? { goal: bundle.manifest.loop.goal } : {}),
+    ...(bundle.manifest.loop.done_when ? { done_when: bundle.manifest.loop.done_when } : {}),
+    ...(bundle.manifest.loop.stop_when ? { stop_when: bundle.manifest.loop.stop_when } : {}),
     commands: ["start", "status", "log", "advance", "summary"],
   };
 }

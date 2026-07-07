@@ -854,7 +854,7 @@ async function runGetSuperpowerLoop(
       workflowJson: bundle.manifestPath,
       cwd: options.rootDir,
       homeDir,
-      commandPrefix: (loopCommand) => `getsuperpower loop ${loopCommand} ${quoteShellArg(source)}`,
+      commandPrefix: createLoopCommandPrefix(source, homeDir),
     });
 
     if (exitCode !== 0) {
@@ -868,6 +868,12 @@ async function runGetSuperpowerLoop(
 async function importWorkflowLoopRuntime(): Promise<unknown> {
   const runtimeModulePath = "./runtimes/getsuperpower/workflow-loop-runtime.mjs";
   return import(runtimeModulePath);
+}
+
+function createLoopCommandPrefix(source: string, homeDir: string): (command: string) => string {
+  const defaultHomeDir = resolveHomePath(homedir());
+  const homeOption = homeDir === defaultHomeDir ? "" : ` --home ${quoteShellArg(homeDir)}`;
+  return (command) => `getsuperpower loop ${command} ${quoteShellArg(source)}${homeOption}`;
 }
 
 function buildLoopRuntimeArgs(

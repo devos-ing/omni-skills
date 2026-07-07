@@ -165,7 +165,32 @@ describe("loop runtime", () => {
       expect(result.stderr).toBe("");
       const payload = JSON.parse(result.stdout);
       expect(payload.runId).toBe("direct");
+      expect(payload.goal).toEqual({
+        type: "goal_based",
+        goal: "Produce an approved implementation plan for a product-development request.",
+        done_when: [
+          "grilled_direction_approved",
+          "design_spec_approved",
+          "implementation_plan_written",
+        ],
+        stop_when: ["human_blocks", "verification_fails", "workflow_complete"],
+      });
       expect(payload.step.id).toBe("grill");
+      expect(payload.step.verify).toEqual({
+        type: "human_approval",
+        event: "approval",
+        message_includes: "direction ready",
+      });
+      expect(payload.actions).toContainEqual({
+        type: "verify",
+        step: "grill",
+        verify: {
+          type: "human_approval",
+          event: "approval",
+          message_includes: "direction ready",
+        },
+        description: "Check the phase verification rule before advancing.",
+      });
       await expect(
         stat(
           join(homeDir, ".getsuperpower", "runs", "grilled-product-dev", "direct", "state.json"),
@@ -215,13 +240,18 @@ describe("loop runtime", () => {
       const status = parseJsonOutput(
         await runRuntime(["status", "--latest", "--json"], homeDir),
       ) as {
+        goal: { goal: string };
         selectedByLatest: boolean;
         runId: string;
-        step: { id: string };
+        step: { id: string; verify: { type: string } };
       };
+      expect(status.goal.goal).toBe(
+        "Produce an approved implementation plan for a product-development request.",
+      );
       expect(status.selectedByLatest).toBe(true);
       expect(status.runId).toBe(runId);
       expect(status.step.id).toBe("grill");
+      expect(status.step.verify.type).toBe("human_approval");
 
       const log = await runRuntime(
         [
@@ -278,6 +308,11 @@ describe("loop runtime", () => {
       expect(summaryPath).toBeTruthy();
       const summaryMarkdown = await readFile(summaryPath ?? "", "utf8");
       expect(summaryMarkdown).toContain("Current step: plan");
+      expect(summaryMarkdown).toContain(
+        "Goal: Produce an approved implementation plan for a product-development request.",
+      );
+      expect(summaryMarkdown).toContain("- done_when: grilled_direction_approved");
+      expect(summaryMarkdown).toContain("- stop_when: workflow_complete");
       expect(summaryMarkdown).toContain("- grill: Sharpen the request through grilling");
       expect(summaryMarkdown).toContain("Skip shape after approval");
       expect(summaryMarkdown).toContain("Drafted the grill result");

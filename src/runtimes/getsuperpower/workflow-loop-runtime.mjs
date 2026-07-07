@@ -105,6 +105,7 @@ async function startRun(context, options) {
     status: "active",
     currentStepIndex: 0,
     currentStep: context.manifest.steps[0]?.id ?? null,
+    goal: buildGoalPayload(context),
     cwd: context.cwd,
     startedAt: now.toISOString(),
     updatedAt: now.toISOString(),
@@ -270,11 +271,26 @@ function buildStatusPayload(context, state, extra = {}) {
           skill: step.skill,
           gate: step.gate ?? null,
           instruction: step.instruction ?? "",
+          verify: step.verify ?? null,
           index: state.currentStepIndex,
         }
       : null,
     instruction: step?.instruction ?? "Workflow is complete.",
+    goal: buildGoalPayload(context),
     actions: buildActions(context, state),
+  };
+}
+
+function buildGoalPayload(context) {
+  const loop = context.manifest.loop;
+  if (!loop?.goal) {
+    return null;
+  }
+  return {
+    type: loop.type ?? "goal_based",
+    goal: loop.goal,
+    done_when: loop.done_when ?? [],
+    stop_when: loop.stop_when ?? [],
   };
 }
 
@@ -303,6 +319,16 @@ function buildActions(context, state) {
       command: `${formatCommand(context, "log")} --run ${state.runId} --type phase_result --message "..."`,
       description: "Record what happened before advancing.",
     },
+    ...(step.verify
+      ? [
+          {
+            type: "verify",
+            step: step.id,
+            verify: step.verify,
+            description: "Check the phase verification rule before advancing.",
+          },
+        ]
+      : []),
     {
       type: "advance",
       command: `${formatCommand(context, "advance")} --run ${state.runId}`,
@@ -319,6 +345,7 @@ function buildSummary(context, state, events) {
   const errors = events.filter((event) => event.type === "error");
   const forceAdvances = events.filter((event) => event.type === "force_advance");
   const latestPhaseResult = [...events].reverse().find((event) => event.type === "phase_result");
+  const goal = buildGoalPayload(context);
   const completedSteps = context.manifest.steps
     .slice(0, Math.min(state.currentStepIndex, context.manifest.steps.length))
     .map((step) => `- ${step.id}: ${step.title}`);
@@ -328,6 +355,9 @@ function buildSummary(context, state, events) {
     "",
     `Status: ${state.status}`,
     `Current step: ${state.currentStep ?? "complete"}`,
+    "",
+    "## Goal",
+    goal ? formatGoal(goal) : "- none",
     "",
     "## Completed Steps",
     completedSteps.length > 0 ? completedSteps.join("\n") : "- none",
@@ -349,6 +379,15 @@ function buildSummary(context, state, events) {
       .map((action) => `- ${action.type}: ${action.description}`)
       .join("\n"),
     "",
+  ].join("\n");
+}
+
+function formatGoal(goal) {
+  return [
+    `Goal: ${goal.goal}`,
+    `Type: ${goal.type}`,
+    ...goal.done_when.map((condition) => `- done_when: ${condition}`),
+    ...goal.stop_when.map((condition) => `- stop_when: ${condition}`),
   ].join("\n");
 }
 
@@ -498,9 +537,15 @@ function writeOutput(context, payload) {
   lines.push(`${payload.workflow} ${payload.runId}`);
   lines.push(`Status: ${payload.status ?? "ok"}`);
   if (step) {
+    if (payload.goal?.goal) {
+      lines.push(`Goal: ${payload.goal.goal}`);
+    }
     lines.push(`Step: ${step.id} - ${step.title}`);
     lines.push(`Skill: ${step.skill}`);
     lines.push(`Instruction: ${step.instruction}`);
+    if (step.verify) {
+      lines.push(`Verify: ${formatVerifyRule(step.verify)}`);
+    }
   } else if (payload.instruction) {
     lines.push(`Instruction: ${payload.instruction}`);
   }
@@ -512,6 +557,20 @@ function writeOutput(context, payload) {
     lines.push(`- ${action.type}: ${action.description}`);
   }
   context.stdout(`${lines.join("\n")}\n`);
+}
+
+function formatVerifyRule(verify) {
+  const parts = [`type=${verify.type}`];
+  if (verify.event) {
+    parts.push(`event=${verify.event}`);
+  }
+  if (verify.message_includes) {
+    parts.push(`message_includes=${verify.message_includes}`);
+  }
+  if (verify.description) {
+    parts.push(`description=${verify.description}`);
+  }
+  return parts.join(" ");
 }
 
 function parseArgs(args) {

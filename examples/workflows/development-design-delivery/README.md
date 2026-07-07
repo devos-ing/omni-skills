@@ -46,9 +46,9 @@ This GetSuperpower combines reusable agent skills:
 - `mattpocock:review`
 - `pony-trail`
 
-`getsuperpower install` and `getsuperpower clone` automatically use the Skills
-CLI to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap
-fails, run the same package install through the CLI and retry:
+`getsuperpower install` automatically uses the Skills CLI to fetch missing
+`mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
+package install through the CLI and retry:
 
 ```bash
 bun run dev -- skills install mattpocock/skills
@@ -72,7 +72,4 @@ Install it into a project:
 
 ```bash
 bun run dev -- install examples/workflows/development-design-delivery
-bun run dev -- clone examples/workflows/development-design-delivery
 ```
-
-`clone <source>` is equivalent to `install <source>`.

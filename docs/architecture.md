@@ -127,6 +127,12 @@ skill with `entry: true`, and keep phase instructions in `steps[].instruction`.
 `workflow.json` and generated `loop.metadata.json` plus generated `loop.mjs`
 only into the entry skill destination.
 
+Goal-based loops add `loop.type: "goal_based"`, `loop.goal`,
+`loop.done_when`, and `loop.stop_when` while keeping `execution:
+"action-only"`. The runtime exposes that goal contract in `loop start` and
+`loop status` output, and optional `steps[].verify` rules add a verification
+action before the generated advance action.
+
 ## Boundaries
 
 - Keep CLI behavior thin and route implementation through runtime or plugin
