@@ -20,6 +20,7 @@ function fakeSkillInstallResult(input: {
   source: string;
   skillName: string;
   destination: string;
+  artifactPaths?: string[];
 }): SkillInstallResult {
   return {
     skillName: input.skillName,
@@ -33,6 +34,7 @@ function fakeSkillInstallResult(input: {
       {
         agent: "codex",
         destination: input.destination,
+        artifactPaths: input.artifactPaths ?? [input.destination],
         status: "installed",
       },
     ],

@@ -26,6 +26,7 @@ export interface ResolvedInstallSkillSource {
 export interface SkillInstallTargetResult {
   agent: SkillInstallAgent;
   destination: string;
+  artifactPaths: string[];
   status: SkillInstallStatus;
 }
 
@@ -153,6 +154,7 @@ export async function installAgentSkill(
   for (const agent of input.agents) {
     const destination = getSkillDestination(input.homeDir, agent, source.name);
     const mirrorDestinations = getSkillMirrorDestinations(input.homeDir, agent, source.name);
+    const artifactPaths = [destination, ...mirrorDestinations];
     const handledStatus = handledDestinations.get(destination);
     if (handledStatus) {
       if (
@@ -164,7 +166,7 @@ export async function installAgentSkill(
           await refreshSkillTarget({ agent, source, destination: mirrorDestination });
         }
       }
-      targets.push({ agent, destination, status: handledStatus });
+      targets.push({ agent, destination, artifactPaths, status: handledStatus });
       if (input.installPrehook && hasPrehookSupport(agent)) {
         prehooks.push(
           await installAgentSkillPrehook({
@@ -204,7 +206,7 @@ export async function installAgentSkill(
     }
 
     handledDestinations.set(destination, status);
-    targets.push({ agent, destination, status });
+    targets.push({ agent, destination, artifactPaths, status });
 
     if (input.installPrehook && hasPrehookSupport(agent)) {
       prehooks.push(

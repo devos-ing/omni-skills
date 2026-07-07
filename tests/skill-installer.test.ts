@@ -424,6 +424,41 @@ describe("skill installer", () => {
         "installed",
         "installed",
       ]);
+      expect(result.targets).toEqual([
+        expect.objectContaining({
+          agent: "claude",
+          destination: join(homeDir, ".claude", "skills", "pony-trail"),
+          artifactPaths: [join(homeDir, ".claude", "skills", "pony-trail")],
+          status: "installed",
+        }),
+        expect.objectContaining({
+          agent: "copilot",
+          destination: join(homeDir, ".agents", "skills", "pony-trail"),
+          artifactPaths: [join(homeDir, ".agents", "skills", "pony-trail")],
+          status: "installed",
+        }),
+        expect.objectContaining({
+          agent: "codex",
+          destination: join(homeDir, ".agents", "skills", "pony-trail"),
+          artifactPaths: [
+            join(homeDir, ".agents", "skills", "pony-trail"),
+            join(homeDir, ".codex", "skills", "pony-trail"),
+          ],
+          status: "installed",
+        }),
+        expect.objectContaining({
+          agent: "cursor",
+          destination: join(homeDir, ".cursor", "rules", "pony-trail.mdc"),
+          artifactPaths: [join(homeDir, ".cursor", "rules", "pony-trail.mdc")],
+          status: "installed",
+        }),
+        expect.objectContaining({
+          agent: "opencode",
+          destination: join(homeDir, ".agents", "skills", "pony-trail"),
+          artifactPaths: [join(homeDir, ".agents", "skills", "pony-trail")],
+          status: "installed",
+        }),
+      ]);
 
       await expect(
         stat(join(homeDir, ".claude", "skills", "pony-trail", "SKILL.md")),
