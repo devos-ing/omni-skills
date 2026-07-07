@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "startup-team",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:34.144Z",
+  "skills": [
+    {
+      "source": "./skills/startup-team",
+      "resolvedName": "startup-team",
+      "kind": "local",
+      "hash": "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f"
+    },
+    {
+      "source": "./skills/ceo",
+      "resolvedName": "ceo",
+      "kind": "local",
+      "hash": "sha256:1c20329a35a67c75a1279d59aa69551701cdab2df703c7682ec977c97e29f528"
+    },
+    {
+      "source": "./skills/cto",
+      "resolvedName": "cto",
+      "kind": "local",
+      "hash": "sha256:5b95da7970f4cf9f240139b3d898b17f09948525b0428954a32c18763e400d26"
+    },
+    {
+      "source": "./skills/product-manager",
+      "resolvedName": "product-manager",
+      "kind": "local",
+      "hash": "sha256:6222bc1a42109c77b87ce8dc52410bc17ed776c967cc79c919ea087b2fa6e4bf"
+    },
+    {
+      "source": "./skills/engineering-manager",
+      "resolvedName": "engineering-manager",
+      "kind": "local",
+      "hash": "sha256:e41617993cb66fc44e0bc3cba8835522b17a39a41c8dcd1dc129b6d292bf2fce"
+    },
+    {
+      "source": "./skills/founding-engineer",
+      "resolvedName": "founding-engineer",
+      "kind": "local",
+      "hash": "sha256:fa5746026c1f2b8685cbb77bbf7bf9bdd9d27f0d08bbb2a37b7370253ba5603f"
+    },
+    {
+      "source": "./skills/qa-lead",
+      "resolvedName": "qa-lead",
+      "kind": "local",
+      "hash": "sha256:04c18eae220e8ab77f07ff602ae008f40e60df73ec101333fa6a4488ce10347d"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:9d82390ff4b859cc1c9a3a4bcc9a548dc60587ebebbf44a1df8b48fff5d5020f"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:8a8ea7693023742a048a23a7da0255031bc13ee03c80c1f01d400cab99fbbd84"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers:verification-before-completion",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:c0cd676b75a7eed20cc419b3c5fe46abbac00fd28cd87b6617fbc3607b1d3fd8"
+    },
+    {
+      "source": "mattpocock:decision-mapping",
+      "resolvedName": "decision-mapping",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:4f85dd52dfcf4b6a11c404fbcb461cf454a734ceb084084e4272020c7a66962e"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "resolvedName": "grill-with-docs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:69d15d68b241680fbccaccd86cb986bd4da2589428d5e11b1fc97e84b2956bf4"
+    },
+    {
+      "source": "mattpocock:to-prd",
+      "resolvedName": "to-prd",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f5a4c297fd4a5fa0370a1ec2a92acd55f1c8f2647982cedf5b359ecdcc61d0f4"
+    },
+    {
+      "source": "mattpocock:to-issues",
+      "resolvedName": "to-issues",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:a8f15faddfb49ce73ae581ed91447285037de158bcc1911e02c5a7b9c1d004e3"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:d921291ee4c38b537d2cad94205e6c983798644777ed0aeac0c44d2d6e3adbcd"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "resolvedName": "domain-modeling",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:41c64419a43153fd1aaca8be36f03c5a6e8cbf484d53e40a88fbb1ae0e6d3ace"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:1fd1eb7a880e3e52debaa8e3b9248b7b71816e2a38f519974e22674cf37b82b9"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+    },
+    {
+      "source": "mattpocock:review",
+      "resolvedName": "review",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+    },
+    {
+      "source": "implement",
+      "resolvedName": "implement",
+      "kind": "external",
+      "hash": "sha256:6c84d6b8b3e4e2624d5009841023404b9aec0ac06134f3d2c2aff473b25f259d"
+    }
+  ]
+}

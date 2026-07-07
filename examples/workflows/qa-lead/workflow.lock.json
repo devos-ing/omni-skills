@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "qa-lead",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:34.149Z",
+  "skills": [
+    {
+      "source": "./skills/qa-lead",
+      "resolvedName": "qa-lead",
+      "kind": "local",
+      "hash": "sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53"
+    },
+    {
+      "source": "mattpocock:review",
+      "resolvedName": "review",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers:verification-before-completion",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:c0cd676b75a7eed20cc419b3c5fe46abbac00fd28cd87b6617fbc3607b1d3fd8"
+    }
+  ]
+}

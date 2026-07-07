@@ -127,6 +127,7 @@ describe("cli", () => {
     expect(program.commands.map((command) => command.name())).toEqual([
       "init",
       "validate",
+      "lock",
       "install",
       "list",
       "remove",
@@ -157,7 +158,11 @@ describe("cli", () => {
     const loopCommand = program.commands.find((command) => command.name() === "loop");
 
     expect(rootDepsCommand?.aliases()).toEqual(["dependencies", "dependence"]);
-    expect(bundleCommand?.commands.map((command) => command.name())).toEqual(["init", "validate"]);
+    expect(bundleCommand?.commands.map((command) => command.name())).toEqual([
+      "init",
+      "validate",
+      "lock",
+    ]);
     expect(workflowCommand?.commands.map((command) => command.name())).toEqual([
       "install",
       "list",
@@ -266,6 +271,12 @@ describe("cli", () => {
         ["bundle", "validate", "bundles/release-review"],
         { from: "user" },
       );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        ["bundle", "lock", "bundles/release-review"],
+        {
+          from: "user",
+        },
+      );
 
       await expect(
         stat(join(rootDir, "bundles", "release-review", "workflow.json")),
@@ -276,10 +287,14 @@ describe("cli", () => {
       await expect(
         stat(join(rootDir, "bundles", "release-review", "skills", "custom-review", "SKILL.md")),
       ).resolves.toBeTruthy();
+      await expect(
+        stat(join(rootDir, "bundles", "release-review", "workflow.lock.json")),
+      ).resolves.toBeTruthy();
       expect(stripAnsiLines(logs)).toContain(
         `GetSuperpower created: ${join(rootDir, "bundles", "release-review")}`,
       );
       expect(stripAnsiLines(logs)).toContain("GetSuperpower valid: release-review@0.1.0");
+      expect(stripAnsiLines(logs)).toContain("GetSuperpower lock written: release-review");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "engineering-manager",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:34.138Z",
+  "skills": [
+    {
+      "source": "./skills/engineering-manager",
+      "resolvedName": "engineering-manager",
+      "kind": "local",
+      "hash": "sha256:70d97c45ac61d3774317681dc7ae318126e14a3d0b19f00183d8227ca0fb1071"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:8a8ea7693023742a048a23a7da0255031bc13ee03c80c1f01d400cab99fbbd84"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:1fd1eb7a880e3e52debaa8e3b9248b7b71816e2a38f519974e22674cf37b82b9"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+    },
+    {
+      "source": "mattpocock:review",
+      "resolvedName": "review",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+    }
+  ]
+}

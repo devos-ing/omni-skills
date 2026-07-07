@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "0.1",
+  "name": "product-manager",
+  "version": "0.1.0",
+  "description": "Act as the startup product manager for discovery, PRDs, issue slicing, and customer-value sequencing.",
+  "skills": [
+    {
+      "source": "./skills/product-manager",
+      "entry": true
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "mattpocock:to-prd",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:to-issues",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
+    }
+  ],
+  "steps": [
+    {
+      "id": "pm-brief",
+      "title": "Frame the product problem",
+      "skill": "./skills/product-manager",
+      "gate": "human_approval"
+    },
+    {
+      "id": "brainstorm",
+      "title": "Explore product options",
+      "skill": "superpowers:brainstorming"
+    },
+    {
+      "id": "prd",
+      "title": "Write the PRD",
+      "skill": "mattpocock:to-prd"
+    },
+    {
+      "id": "issues",
+      "title": "Slice the work into issues",
+      "skill": "mattpocock:to-issues"
+    },
+    {
+      "id": "plan",
+      "title": "Write the delivery plan",
+      "skill": "superpowers:writing-plans"
+    }
+  ]
+}

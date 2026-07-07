@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   createWorkflowBundleScaffold,
+  createWorkflowLockFile,
   createWorkflowLoopMetadata,
   createWorkflowRemovalPlan,
   executeWorkflowRemovalPlan,
@@ -14,8 +15,11 @@ import {
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
+  loadWorkflowLockFile,
   type WorkflowGitCommand,
   type WorkflowInstallSkillArtifact,
+  workflowLockFileName,
+  writeWorkflowLockFile,
 } from "../src/runtimes/getsuperpower/workflow-bundles";
 
 describe("workflow bundles", () => {
@@ -201,6 +205,31 @@ describe("workflow bundles", () => {
       stop_when: ["human_blocks", "verification_fails", "workflow_complete"],
       commands: ["start", "status", "log", "advance", "summary"],
     });
+  });
+
+  test("loads startup role workflows with checked skill locks and no pony-trail dependency", async () => {
+    const roleWorkflowNames = [
+      "ceo",
+      "cto",
+      "product-manager",
+      "engineering-manager",
+      "founding-engineer",
+      "qa-lead",
+      "startup-team",
+    ];
+
+    for (const workflowName of roleWorkflowNames) {
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "workflows", workflowName),
+      );
+
+      expect(bundle.manifest.name).toBe(workflowName);
+      expect(bundle.lock?.workflow).toBe(workflowName);
+      expect(bundle.lock?.skills.map((skill) => skill.source)).toEqual(
+        bundle.manifest.skills.map((skill) => skill.source),
+      );
+      expect(bundle.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
+    }
   });
 
   test("rejects looped workflows without exactly one entry skill", async () => {
@@ -401,6 +430,149 @@ describe("workflow bundles", () => {
           repo: "obra/superpowers",
         },
       ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("creates deterministic workflow lock files for local and external skills", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-lock-"));
+    const bundleDir = join(rootDir, "locked-workflow");
+    await mkdir(join(bundleDir, "skills", "locked-workflow", "nested"), { recursive: true });
+    await writeFile(
+      join(bundleDir, "skills", "locked-workflow", "SKILL.md"),
+      [
+        "---",
+        "name: locked-workflow",
+        'description: "Locked workflow entry skill."',
+        "---",
+        "",
+        "# locked-workflow",
+      ].join("\n"),
+    );
+    await writeFile(join(bundleDir, "skills", "locked-workflow", "nested", "notes.md"), "notes\n");
+    await writeFile(
+      join(bundleDir, "workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "locked-workflow",
+          version: "0.1.0",
+          description: "Uses locked skill fingerprints.",
+          skills: [
+            { source: "./skills/locked-workflow", entry: true },
+            { source: "superpowers:writing-plans", repo: "obra/superpowers" },
+          ],
+          steps: [
+            { id: "entry", title: "Entry", skill: "./skills/locked-workflow" },
+            { id: "plan", title: "Plan", skill: "superpowers:writing-plans" },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(bundleDir);
+      expect(bundle.lock).toBeUndefined();
+
+      const lock = await createWorkflowLockFile(bundle, {
+        generatedAt: "2026-07-07T00:00:00.000Z",
+      });
+      const secondLock = await createWorkflowLockFile(bundle, {
+        generatedAt: "2026-07-07T00:00:00.000Z",
+      });
+
+      expect(secondLock).toEqual(lock);
+      expect(lock.workflow).toBe("locked-workflow");
+      expect(lock.skills).toMatchObject([
+        {
+          source: "./skills/locked-workflow",
+          resolvedName: "locked-workflow",
+          kind: "local",
+        },
+        {
+          source: "superpowers:writing-plans",
+          resolvedName: "superpowers-writing-plans",
+          kind: "external",
+          repo: "obra/superpowers",
+        },
+      ]);
+      for (const skill of lock.skills) {
+        expect(skill.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+      }
+
+      const written = await writeWorkflowLockFile(bundle, {
+        generatedAt: "2026-07-07T00:00:00.000Z",
+      });
+      expect(written.path).toBe(join(bundleDir, workflowLockFileName));
+      expect(await loadWorkflowLockFile(bundle)).toEqual(lock);
+
+      const bundleWithLock = await loadWorkflowBundle(bundleDir);
+      expect(bundleWithLock.lock).toEqual(lock);
+      expect(bundleWithLock.lockPath).toBe(join(bundleDir, workflowLockFileName));
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects workflow lock files that no longer match the manifest", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-lock-mismatch-"));
+    const bundleDir = join(rootDir, "mismatched-lock");
+    await mkdir(join(bundleDir, "skills", "mismatched-lock"), { recursive: true });
+    await writeFile(
+      join(bundleDir, "skills", "mismatched-lock", "SKILL.md"),
+      [
+        "---",
+        "name: mismatched-lock",
+        'description: "Mismatched lock entry skill."',
+        "---",
+        "",
+        "# mismatched-lock",
+      ].join("\n"),
+    );
+    await writeFile(
+      join(bundleDir, "workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "mismatched-lock",
+          version: "0.1.0",
+          description: "Rejects stale lock files.",
+          skills: [{ source: "./skills/mismatched-lock", entry: true }],
+          steps: [{ id: "entry", title: "Entry", skill: "./skills/mismatched-lock" }],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      join(bundleDir, workflowLockFileName),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          workflow: "different-workflow",
+          workflowVersion: "0.1.0",
+          generatedAt: "2026-07-07T00:00:00.000Z",
+          skills: [
+            {
+              source: "./skills/mismatched-lock",
+              resolvedName: "mismatched-lock",
+              kind: "local",
+              hash: "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    try {
+      await expect(loadWorkflowBundle(bundleDir)).rejects.toThrow(
+        "Workflow lock file does not match manifest",
+      );
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }

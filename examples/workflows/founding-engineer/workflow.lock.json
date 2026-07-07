@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "founding-engineer",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:34.156Z",
+  "skills": [
+    {
+      "source": "./skills/founding-engineer",
+      "resolvedName": "founding-engineer",
+      "kind": "local",
+      "hash": "sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078"
+    },
+    {
+      "source": "implement",
+      "resolvedName": "implement",
+      "kind": "external",
+      "hash": "sha256:6c84d6b8b3e4e2624d5009841023404b9aec0ac06134f3d2c2aff473b25f259d"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:1fd1eb7a880e3e52debaa8e3b9248b7b71816e2a38f519974e22674cf37b82b9"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+    },
+    {
+      "source": "mattpocock:review",
+      "resolvedName": "review",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers:verification-before-completion",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:c0cd676b75a7eed20cc419b3c5fe46abbac00fd28cd87b6617fbc3607b1d3fd8"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "0.1",
+  "name": "qa-lead",
+  "version": "0.1.0",
+  "description": "Act as the startup QA lead for release risk, acceptance checks, regression focus, and verification evidence.",
+  "skills": [
+    {
+      "source": "./skills/qa-lead",
+      "entry": true
+    },
+    {
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
+    }
+  ],
+  "steps": [
+    {
+      "id": "qa-brief",
+      "title": "Set the release-risk frame",
+      "skill": "./skills/qa-lead",
+      "gate": "human_approval"
+    },
+    {
+      "id": "review",
+      "title": "Review acceptance and risk",
+      "skill": "mattpocock:review"
+    },
+    {
+      "id": "debug",
+      "title": "Diagnose failures and reproduction gaps",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "verify",
+      "title": "Verify before completion",
+      "skill": "superpowers:verification-before-completion"
+    }
+  ]
+}

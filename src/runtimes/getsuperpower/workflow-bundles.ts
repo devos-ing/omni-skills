@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -5,7 +6,8 @@ import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } 
 import { z } from "zod";
 import { runSubprocess } from "../../process";
 
-const workflowFileName = "workflow.json";
+export const workflowFileName = "workflow.json";
+export const workflowLockFileName = "workflow.lock.json";
 const workflowStoreDir = ".getsuperpower/workflows";
 const canonicalExamplesGitUrl = "https://github.com/0xroylee/getsuperpower.git";
 const canonicalExamplesWorkflowPath = "examples/workflows";
@@ -137,6 +139,25 @@ export const WorkflowBundleManifestSchema = z
 
 export type WorkflowBundleManifest = z.infer<typeof WorkflowBundleManifestSchema>;
 
+const WorkflowSkillLockEntrySchema = z.object({
+  source: z.string().min(1),
+  resolvedName: z.string().min(1),
+  kind: z.enum(["local", "external"]),
+  repo: z.string().min(1).optional(),
+  hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+});
+
+export const WorkflowLockFileSchema = z.object({
+  schemaVersion: z.literal("0.1"),
+  workflow: z.string().min(1),
+  workflowVersion: z.string().min(1),
+  generatedAt: z.string().datetime(),
+  skills: z.array(WorkflowSkillLockEntrySchema).min(1),
+});
+
+export type WorkflowSkillLockEntry = z.infer<typeof WorkflowSkillLockEntrySchema>;
+export type WorkflowLockFile = z.infer<typeof WorkflowLockFileSchema>;
+
 export interface WorkflowGitCommand {
   executable: string;
   args: string[];
@@ -170,6 +191,8 @@ export interface WorkflowBundle {
   manifest: WorkflowBundleManifest;
   sourceDir: string;
   manifestPath: string;
+  lock?: WorkflowLockFile;
+  lockPath?: string;
   source: WorkflowBundleSource;
   cleanup?: () => Promise<void>;
 }
@@ -273,11 +296,13 @@ export async function loadWorkflowBundle(
     const rawManifest = await readFile(manifestPath, "utf8");
     const manifest = WorkflowBundleManifestSchema.parse(JSON.parse(rawManifest));
     validateWorkflowBundleFiles({ manifest, sourceDir: manifestDir });
+    const loadedLock = await loadWorkflowLockFileForManifest({ manifest, sourceDir: manifestDir });
 
     return {
       manifest,
       sourceDir: manifestDir,
       manifestPath,
+      ...(loadedLock ? { lock: loadedLock.lock, lockPath: loadedLock.path } : {}),
       source: resolvedSource.source,
       ...(resolvedSource.cleanup ? { cleanup: resolvedSource.cleanup } : {}),
     };
@@ -295,6 +320,62 @@ export async function loadWorkflowBundle(
     }
     throw error;
   }
+}
+
+export async function loadWorkflowLockFile(
+  bundle: WorkflowBundle,
+): Promise<WorkflowLockFile | null> {
+  return (
+    (
+      await loadWorkflowLockFileForManifest({
+        manifest: bundle.manifest,
+        sourceDir: bundle.sourceDir,
+      })
+    )?.lock ?? null
+  );
+}
+
+export async function createWorkflowLockFile(
+  bundle: WorkflowBundle,
+  options: { generatedAt?: Date | string } = {},
+): Promise<WorkflowLockFile> {
+  const generatedAt =
+    typeof options.generatedAt === "string"
+      ? options.generatedAt
+      : (options.generatedAt ?? new Date()).toISOString();
+
+  return WorkflowLockFileSchema.parse({
+    schemaVersion: "0.1",
+    workflow: bundle.manifest.name,
+    workflowVersion: bundle.manifest.version,
+    generatedAt,
+    skills: await Promise.all(
+      bundle.manifest.skills.map(async (skill) => {
+        const isLocal = isLocalWorkflowSkillSource(skill.source);
+        const entry = {
+          source: skill.source,
+          resolvedName: getWorkflowLockResolvedName(skill.source),
+          kind: isLocal ? "local" : "external",
+          ...(skill.repo ? { repo: skill.repo } : {}),
+          hash: isLocal
+            ? await hashLocalWorkflowSkill(resolve(bundle.sourceDir, skill.source))
+            : hashExternalWorkflowSkill(skill.source, skill.repo),
+        } satisfies WorkflowSkillLockEntry;
+
+        return entry;
+      }),
+    ),
+  });
+}
+
+export async function writeWorkflowLockFile(
+  bundle: WorkflowBundle,
+  options: { generatedAt?: Date | string } = {},
+): Promise<{ lock: WorkflowLockFile; path: string }> {
+  const lock = await createWorkflowLockFile(bundle, options);
+  const path = join(bundle.sourceDir, workflowLockFileName);
+  await writeFile(path, `${JSON.stringify(lock, null, 2)}\n`);
+  return { lock, path };
 }
 
 export async function createWorkflowBundleScaffold(input: {
@@ -732,6 +813,134 @@ function resolveWorkflowLoopScriptPath(input: {
   }
 
   return scriptPath;
+}
+
+async function loadWorkflowLockFileForManifest(input: {
+  manifest: WorkflowBundleManifest;
+  sourceDir: string;
+}): Promise<{ lock: WorkflowLockFile; path: string } | null> {
+  const path = join(input.sourceDir, workflowLockFileName);
+  if (!existsSync(path)) {
+    return null;
+  }
+
+  const rawLock = await readFile(path, "utf8");
+  const lock = WorkflowLockFileSchema.parse(JSON.parse(rawLock));
+  validateWorkflowLockFile({ lock, manifest: input.manifest, path });
+
+  return { lock, path };
+}
+
+function validateWorkflowLockFile(input: {
+  lock: WorkflowLockFile;
+  manifest: WorkflowBundleManifest;
+  path: string;
+}): void {
+  const issues: string[] = [];
+  if (input.lock.workflow !== input.manifest.name) {
+    issues.push(`workflow is ${input.lock.workflow}, expected ${input.manifest.name}`);
+  }
+  if (input.lock.workflowVersion !== input.manifest.version) {
+    issues.push(
+      `workflowVersion is ${input.lock.workflowVersion}, expected ${input.manifest.version}`,
+    );
+  }
+  if (input.lock.skills.length !== input.manifest.skills.length) {
+    issues.push(
+      `skills length is ${input.lock.skills.length}, expected ${input.manifest.skills.length}`,
+    );
+  }
+
+  for (const [index, skill] of input.manifest.skills.entries()) {
+    const lockedSkill = input.lock.skills[index];
+    if (!lockedSkill) {
+      continue;
+    }
+    if (lockedSkill.source !== skill.source) {
+      issues.push(`skills[${index}].source is ${lockedSkill.source}, expected ${skill.source}`);
+    }
+    if (lockedSkill.repo !== skill.repo) {
+      issues.push(
+        `skills[${index}].repo is ${lockedSkill.repo ?? "<none>"}, expected ${
+          skill.repo ?? "<none>"
+        }`,
+      );
+    }
+    const expectedKind = isLocalWorkflowSkillSource(skill.source) ? "local" : "external";
+    if (lockedSkill.kind !== expectedKind) {
+      issues.push(`skills[${index}].kind is ${lockedSkill.kind}, expected ${expectedKind}`);
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(
+      `Workflow lock file does not match manifest: ${input.path}\n${issues.join("\n")}`,
+    );
+  }
+}
+
+function getWorkflowLockResolvedName(source: string): string {
+  if (isLocalWorkflowSkillSource(source)) {
+    return basename(source);
+  }
+
+  const inferred = inferLegacySkillName(source);
+  if ("skillName" in inferred) {
+    return inferred.skillName;
+  }
+
+  return source;
+}
+
+async function hashLocalWorkflowSkill(skillDir: string): Promise<string> {
+  const files = await listWorkflowSkillFiles(skillDir);
+  if (files.length === 0) {
+    throw new Error(`Local workflow skill has no files to lock: ${skillDir}`);
+  }
+
+  const hash = createHash("sha256");
+  hash.update("getsuperpower-workflow-lock-local-skill-v0.1\n");
+  for (const filePath of files) {
+    const relativePath = normalizeLockPath(relative(skillDir, filePath));
+    const content = await readFile(filePath);
+    hash.update(`file:${relativePath}\n`);
+    hash.update(`bytes:${content.length}\n`);
+    hash.update(content);
+    hash.update("\n");
+  }
+
+  return `sha256:${hash.digest("hex")}`;
+}
+
+async function listWorkflowSkillFiles(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listWorkflowSkillFiles(path)));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(path);
+    }
+  }
+
+  return files.sort((left, right) =>
+    normalizeLockPath(left).localeCompare(normalizeLockPath(right)),
+  );
+}
+
+function hashExternalWorkflowSkill(source: string, repo: string | undefined): string {
+  const hash = createHash("sha256");
+  hash.update("getsuperpower-workflow-lock-external-skill-v0.1\n");
+  hash.update(`source:${source}\n`);
+  hash.update(`repo:${repo ?? ""}\n`);
+  return `sha256:${hash.digest("hex")}`;
+}
+
+function normalizeLockPath(path: string): string {
+  return path.split(sep).join("/");
 }
 
 function createScaffoldManifest(name: string): WorkflowBundleManifest {

@@ -11,24 +11,26 @@ TDD, and archive the result without the user calling each skill separately.
 
 ## Quick Start
 
-Install a workflow example by alias:
+Install the startup team role catalog by alias:
 
 ```bash
-npx getsuperpower@latest install openspec-superpowers
+npx getsuperpower@latest install startup-team
 ```
 
 The alias is shorthand for the checked-in workflow path:
 
 ```bash
-npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'
+npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/startup-team'
 ```
 
-Install other workflow examples the same way:
+Install individual startup roles the same way:
 
 ```bash
-npx getsuperpower@latest install release-review
-npx getsuperpower@latest install real-engineering
-npx getsuperpower@latest install development-design-delivery
+npx getsuperpower@latest install ceo
+npx getsuperpower@latest install cto
+npx getsuperpower@latest install product-manager
+npx getsuperpower@latest install founding-engineer
+npx getsuperpower@latest install qa-lead
 ```
 
 List installed GetSuperpowers:
@@ -104,10 +106,17 @@ The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guid
 
 | Example | Use it for | Notes |
 | --- | --- | --- |
-| `examples/workflows/openspec-superpowers` | OpenSpec Delivery: proposal -> design -> plan -> TDD -> verification -> archive. | Includes `$openspec-delivery`. |
-| `examples/workflows/development-design-delivery` | Product-minded engineering: shape -> interface design -> plan -> TDD -> review -> evidence. | Includes `$development-design-delivery`. |
-| `examples/workflows/real-engineering` | RTK, `pony-trail`, Superpowers, and Matt Pocock skills together. | Fetches Matt Pocock skills if missing. |
-| `examples/workflows/release-review` | Small release-risk review workflow. | Good starter example. |
+| `examples/workflows/startup-team` | Install a realistic startup operating bench in one shot. | Includes `$startup-team`, `$ceo`, `$cto`, `$product-manager`, `$engineering-manager`, `$founding-engineer`, and `$qa-lead`. |
+| `examples/workflows/ceo` | Company direction, strategy, tradeoffs, and decision mapping. | Uses Matt Pocock decision and grilling skills. |
+| `examples/workflows/cto` | Architecture, domain model, technical risk, and review. | Uses Matt Pocock architecture/review skills. |
+| `examples/workflows/product-manager` | Discovery, PRD, issue slicing, and product planning. | Uses Superpowers plus Matt Pocock PRD/issue skills. |
+| `examples/workflows/engineering-manager` | Delivery sequencing, quality gates, and execution risk. | Uses planning, TDD, diagnosing, and review skills. |
+| `examples/workflows/founding-engineer` | Implementation, tests, debugging, review, and final verification. | Uses `$implement` as the implementation role. |
+| `examples/workflows/qa-lead` | Acceptance checks, regression focus, and release verification. | Uses review, diagnosing, and verification skills. |
+| `examples/workflows/openspec-superpowers` | Compatibility/demo workflow for OpenSpec delivery. | Kept for one release while the role catalog becomes the primary example set. |
+| `examples/workflows/development-design-delivery` | Compatibility/demo workflow for product-minded engineering. | Kept as a richer composition example. |
+| `examples/workflows/real-engineering` | Compatibility/demo workflow combining RTK, Ponytrail, Superpowers, and Matt Pocock skills. | Fetches Matt Pocock skills if missing. |
+| `examples/workflows/release-review` | Compatibility/demo workflow for release-risk review. | Good minimal example. |
 
 GetSuperpower install automatically uses each workflow skill's `repo` metadata
 to fetch missing external skills through the Skills CLI. For example,
@@ -132,6 +141,7 @@ The GetSuperpower CLI supports workflow install, inspection, authoring, and skil
 - `npx getsuperpower@latest remove <workflow-name>`
 - `npx getsuperpower@latest init <name>`
 - `npx getsuperpower@latest validate <source>`
+- `npx getsuperpower@latest lock <source>`
 - `npx getsuperpower@latest loop <start|status|log|advance|summary> <source>`
 - `npx getsuperpower@latest skills install`
 - `npx getsuperpower@latest skills update`

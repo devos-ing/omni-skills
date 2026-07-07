@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "0.1",
+  "name": "engineering-manager",
+  "version": "0.1.0",
+  "description": "Act as the startup engineering manager for delivery sequencing, execution risk, quality gates, and team-level engineering process.",
+  "skills": [
+    {
+      "source": "./skills/engineering-manager",
+      "entry": true
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
+    }
+  ],
+  "steps": [
+    {
+      "id": "em-brief",
+      "title": "Set the delivery frame",
+      "skill": "./skills/engineering-manager",
+      "gate": "human_approval"
+    },
+    {
+      "id": "plan",
+      "title": "Write the execution plan",
+      "skill": "superpowers:writing-plans"
+    },
+    {
+      "id": "quality",
+      "title": "Choose the test strategy",
+      "skill": "mattpocock:tdd"
+    },
+    {
+      "id": "debug",
+      "title": "Triage blockers systematically",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "review",
+      "title": "Review the delivery risk",
+      "skill": "mattpocock:review"
+    }
+  ]
+}

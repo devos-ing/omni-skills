@@ -29,6 +29,7 @@ GetSuperpower skill-tree bundles.
 Author or user request
   -> getsuperpower CLI
   -> workflow manifest validation
+  -> optional workflow.lock skill fingerprint validation
   -> skill dependency resolution
   -> Skills CLI bootstrap when needed
   -> agent skill target installs
@@ -40,9 +41,9 @@ Author or user request
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
   output, and call runtime or plugin interfaces. It must not own bundle rules.
 - `src/getsuperpower.ts` owns GetSuperpower command registration and skill
-  dependency bootstrap for install/deps/init/validate/list/remove/onboard/loop.
+  dependency bootstrap for install/deps/init/validate/lock/list/remove/onboard/loop.
 - `src/runtimes/getsuperpower/` owns workflow manifest schemas, scaffolding,
-  install records, removal plans, and loop metadata.
+  lock files, install records, removal plans, and loop metadata.
 - `src/plugins/` is for skill resolution and target writes. Keep
   environment-specific behavior behind small interfaces.
 - Generated `.getsuperpower/` project workspaces are local runtime state. Do not
@@ -51,7 +52,10 @@ Author or user request
 ## GetSuperpower Rules
 
 - A GetSuperpower is a deployable bundle skills set with a `workflow.json`,
-  README, and optional local skills.
+  optional `workflow.lock.json`, README, and optional local skills.
+- Role workflows such as `startup-team`, `cto`, `product-manager`, and
+  `founding-engineer` are the primary public examples. Older workflows remain
+  compatibility/demo examples for now.
 - If a workflow provides one callable entry skill, that skill must be listed in
   `skills[]`; it does not need a workflow step.
 - Every `steps[].skill` value must exactly match a declared `skills[].source`.
@@ -66,13 +70,14 @@ Author or user request
 ```bash
 bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
-bun run dev -- install examples/workflows/release-review
-bun run dev -- deps examples/workflows/release-review
+bun run dev -- install examples/workflows/startup-team
+bun run dev -- deps examples/workflows/startup-team
 bun run dev -- list
-bun run dev -- remove release-review --dry-run
+bun run dev -- remove startup-team --dry-run
 bun run dev -- loop status examples/workflows/grilled-product-dev --latest --json
 bun run dev -- init my-workflow
-bun run dev -- validate examples/workflows/real-engineering
+bun run dev -- lock examples/workflows/cto
+bun run dev -- validate examples/workflows/cto
 bun run dev -- skills install
 bun run build               # Build the packaged CLI bundle
 bun test                    # Run Bun tests
@@ -120,6 +125,6 @@ For CLI changes, also run a smoke check against a scratch directory under
 
 ```bash
 rtk bun run dev -- --help
-rtk bun run dev -- deps examples/workflows/release-review
-rtk bun run dev -- validate examples/workflows/release-review
+rtk bun run dev -- deps examples/workflows/startup-team
+rtk bun run dev -- validate examples/workflows/startup-team
 ```

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "cto",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:33.931Z",
+  "skills": [
+    {
+      "source": "./skills/cto",
+      "resolvedName": "cto",
+      "kind": "local",
+      "hash": "sha256:644afba52d60f4bbcf9a608c6ead98688650e9fc3f8ed0a63ac0d30ca4931156"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:d921291ee4c38b537d2cad94205e6c983798644777ed0aeac0c44d2d6e3adbcd"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "resolvedName": "domain-modeling",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:41c64419a43153fd1aaca8be36f03c5a6e8cbf484d53e40a88fbb1ae0e6d3ace"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+    },
+    {
+      "source": "mattpocock:review",
+      "resolvedName": "review",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+    }
+  ]
+}

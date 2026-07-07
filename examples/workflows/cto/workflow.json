@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "0.1",
+  "name": "cto",
+  "version": "0.1.0",
+  "description": "Act as the startup CTO for architecture, technical risk, platform boundaries, and engineering strategy.",
+  "skills": [
+    {
+      "source": "./skills/cto",
+      "entry": true
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
+    }
+  ],
+  "steps": [
+    {
+      "id": "cto-brief",
+      "title": "Set the technical frame",
+      "skill": "./skills/cto",
+      "gate": "human_approval"
+    },
+    {
+      "id": "domain-model",
+      "title": "Clarify the domain model",
+      "skill": "mattpocock:domain-modeling"
+    },
+    {
+      "id": "architecture",
+      "title": "Review the architecture boundary",
+      "skill": "mattpocock:codebase-design"
+    },
+    {
+      "id": "risk",
+      "title": "Diagnose technical risk",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "review",
+      "title": "Review the technical decision",
+      "skill": "mattpocock:review"
+    }
+  ]
+}

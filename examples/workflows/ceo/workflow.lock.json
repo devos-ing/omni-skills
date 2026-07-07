@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "ceo",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-07T12:15:26.289Z",
+  "skills": [
+    {
+      "source": "./skills/ceo",
+      "resolvedName": "ceo",
+      "kind": "local",
+      "hash": "sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a"
+    },
+    {
+      "source": "mattpocock:decision-mapping",
+      "resolvedName": "decision-mapping",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:4f85dd52dfcf4b6a11c404fbcb461cf454a734ceb084084e4272020c7a66962e"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "resolvedName": "grill-with-docs",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:69d15d68b241680fbccaccd86cb986bd4da2589428d5e11b1fc97e84b2956bf4"
+    }
+  ]
+}

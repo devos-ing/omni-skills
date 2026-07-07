@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "0.1",
+  "name": "founding-engineer",
+  "version": "0.1.0",
+  "description": "Act as the startup founding engineer for implementation, testing, debugging, review, and verification before handoff.",
+  "skills": [
+    {
+      "source": "./skills/founding-engineer",
+      "entry": true
+    },
+    {
+      "source": "implement"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
+    }
+  ],
+  "steps": [
+    {
+      "id": "fe-brief",
+      "title": "Set the implementation frame",
+      "skill": "./skills/founding-engineer",
+      "gate": "human_approval"
+    },
+    {
+      "id": "implement",
+      "title": "Implement the planned change",
+      "skill": "implement"
+    },
+    {
+      "id": "tdd",
+      "title": "Use test-first development where practical",
+      "skill": "mattpocock:tdd"
+    },
+    {
+      "id": "debug",
+      "title": "Diagnose failures systematically",
+      "skill": "mattpocock:diagnosing-bugs"
+    },
+    {
+      "id": "review",
+      "title": "Review the implementation",
+      "skill": "mattpocock:review"
+    },
+    {
+      "id": "verify",
+      "title": "Verify before completion",
+      "skill": "superpowers:verification-before-completion"
+    }
+  ]
+}

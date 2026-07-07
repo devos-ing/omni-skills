@@ -30,6 +30,7 @@ import {
   type WorkflowGitCommandRunner,
   type WorkflowInstallSkillArtifact,
   type WorkflowRemovalPlan,
+  writeWorkflowLockFile,
 } from "./runtimes/getsuperpower";
 
 export interface GetSuperpowerInstallSkillInput {
@@ -200,6 +201,7 @@ export function configureGetSuperpowerCommand(
     .command("bundle")
     .description("Compatibility alias for GetSuperpower authoring.");
   configureAuthorCommands(bundleCommand, options);
+  configureLockCommand(bundleCommand, options);
 
   const workflowCommand = program
     .command("workflow")
@@ -216,6 +218,7 @@ function configureGetSuperpowerCommands(
   options: ConfigureGetSuperpowerCommandOptions,
 ): void {
   configureAuthorCommands(command, options);
+  configureLockCommand(command, options);
   configureInstallCommand(command, options);
   configureListCommand(command, options.rootDir);
   configureRemoveCommand(command, options);
@@ -261,6 +264,39 @@ function configureAuthorCommands(
         );
         console.log(keyValue("Steps", String(bundle.manifest.steps.length)));
         console.log(keyValue("Skills", String(bundle.manifest.skills.length)));
+      } finally {
+        await bundle.cleanup?.();
+      }
+    });
+}
+
+function configureLockCommand(
+  command: Command,
+  options: ConfigureGetSuperpowerCommandOptions,
+): void {
+  command
+    .command("lock")
+    .description("Generate workflow.lock.json skill fingerprints for a local GetSuperpower.")
+    .argument("<source>", "local GetSuperpower directory or workflow.json path")
+    .action(async (source: string) => {
+      const bundle = await loadWorkflowBundle(source, {
+        cwd: options.rootDir,
+        ...(options.workflowGitCommandRunner
+          ? { runGitCommand: options.workflowGitCommandRunner }
+          : {}),
+      });
+
+      try {
+        if (bundle.source.kind !== "local") {
+          throw new Error(
+            "GetSuperpower lock can only write local workflow sources. Clone or open the workflow source directory, then run lock there.",
+          );
+        }
+
+        const result = await writeWorkflowLockFile(bundle);
+        console.log(success(`GetSuperpower lock written: ${bundle.manifest.name}`));
+        console.log(keyValue("Lock file", result.path));
+        console.log(keyValue("Skills", String(result.lock.skills.length)));
       } finally {
         await bundle.cleanup?.();
       }

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "0.1",
+  "name": "startup-team",
+  "version": "0.1.0",
+  "description": "Install the core startup operating roles as one GetSuperpower: CEO, CTO, product manager, engineering manager, founding engineer, and QA lead.",
+  "skills": [
+    {
+      "source": "./skills/startup-team",
+      "entry": true
+    },
+    {
+      "source": "./skills/ceo"
+    },
+    {
+      "source": "./skills/cto"
+    },
+    {
+      "source": "./skills/product-manager"
+    },
+    {
+      "source": "./skills/engineering-manager"
+    },
+    {
+      "source": "./skills/founding-engineer"
+    },
+    {
+      "source": "./skills/qa-lead"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "mattpocock:decision-mapping",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:to-prd",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:to-issues",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "mattpocock:review",
+      "repo": "mattpocock/skills"
+    },
+    {
+      "source": "implement"
+    }
+  ],
+  "steps": [
+    {
+      "id": "route",
+      "title": "Route the startup request",
+      "skill": "./skills/startup-team",
+      "gate": "human_approval"
+    },
+    {
+      "id": "strategy",
+      "title": "Clarify company direction",
+      "skill": "./skills/ceo",
+      "gate": "human_approval"
+    },
+    {
+      "id": "product",
+      "title": "Shape product scope",
+      "skill": "./skills/product-manager"
+    },
+    {
+      "id": "technology",
+      "title": "Set technical direction",
+      "skill": "./skills/cto"
+    },
+    {
+      "id": "delivery",
+      "title": "Plan engineering execution",
+      "skill": "./skills/engineering-manager"
+    },
+    {
+      "id": "implementation",
+      "title": "Implement the slice",
+      "skill": "./skills/founding-engineer"
+    },
+    {
+      "id": "qa",
+      "title": "Verify release readiness",
+      "skill": "./skills/qa-lead"
+    }
+  ]
+}
