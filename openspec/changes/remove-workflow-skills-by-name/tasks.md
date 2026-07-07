@@ -19,8 +19,8 @@
 
 ## 3. Plan Implementation
 
-- [ ] Write the implementation plan in `docs/superpowers/plans/`.
-- [ ] Include TDD slices for command registration, workflow-record metadata,
+- [x] Write the implementation plan in `docs/superpowers/plans/`.
+- [x] Include TDD slices for command registration, workflow-record metadata,
       dry-run output, shared-artifact protection, legacy fallback behavior, and
       scratch-home smoke checks.
 
