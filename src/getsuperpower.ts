@@ -21,12 +21,15 @@ import {
 import { runSubprocess } from "./process";
 import {
   createWorkflowBundleScaffold,
+  createWorkflowRemovalPlan,
+  executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
   type WorkflowGitCommandRunner,
   type WorkflowInstallSkillArtifact,
+  type WorkflowRemovalPlan,
 } from "./runtimes/getsuperpower";
 
 export interface GetSuperpowerInstallSkillInput {
@@ -109,6 +112,16 @@ export interface GetSuperpowerInstallPrompt {
   confirmInstall(input: GetSuperpowerInstallPromptInput): Promise<boolean>;
 }
 
+export interface GetSuperpowerRemovePromptInput {
+  workflowName: string;
+  artifactsToRemove: number;
+  artifactsToKeep: number;
+}
+
+export interface GetSuperpowerRemovePrompt {
+  confirmRemove(input: GetSuperpowerRemovePromptInput): Promise<boolean>;
+}
+
 export interface GetSuperpowerOnboardCommand {
   executable: string;
   args: string[];
@@ -132,6 +145,7 @@ export interface ConfigureGetSuperpowerCommandOptions {
   printSkillInstallResult: GetSuperpowerSkillInstallPrinter;
   installExternalSkillDependency?: GetSuperpowerExternalSkillDependencyInstaller;
   installPrompt?: GetSuperpowerInstallPrompt;
+  removePrompt?: GetSuperpowerRemovePrompt;
   workflowGitCommandRunner?: WorkflowGitCommandRunner;
   onboardPrompt?: GetSuperpowerOnboardPrompt;
   onboardCommandRunner?: GetSuperpowerOnboardCommandRunner;
@@ -141,6 +155,13 @@ interface GetSuperpowerInstallCommandOptions {
   dir?: string;
   agents: string;
   home: string;
+}
+
+interface GetSuperpowerRemoveCommandOptions {
+  dir?: string;
+  home: string;
+  dryRun: boolean;
+  yes: boolean;
 }
 
 type GetSuperpowerLoopCommandName = "start" | "status" | "log" | "advance" | "summary";
@@ -182,9 +203,10 @@ export function configureGetSuperpowerCommand(
 
   const workflowCommand = program
     .command("workflow")
-    .description("Compatibility alias for GetSuperpower install and list commands.");
+    .description("Compatibility alias for GetSuperpower install, list, and remove commands.");
   configureInstallCommand(workflowCommand, options);
   configureListCommand(workflowCommand, options.rootDir);
+  configureRemoveCommand(workflowCommand, options);
 
   return program;
 }
@@ -196,6 +218,7 @@ function configureGetSuperpowerCommands(
   configureAuthorCommands(command, options);
   configureInstallCommand(command, options);
   configureListCommand(command, options.rootDir);
+  configureRemoveCommand(command, options);
   configureDependencyCommand(command, options);
   configureOnboardCommand(command, options);
   configureLoopCommand(command, options);
@@ -639,6 +662,90 @@ function configureListCommand(command: Command, rootDir: string): void {
     });
 }
 
+function configureRemoveCommand(
+  command: Command,
+  options: ConfigureGetSuperpowerCommandOptions,
+): void {
+  command
+    .command("remove")
+    .description("Remove an installed GetSuperpower and its recorded skill artifacts.")
+    .argument("<workflow-name>", "installed GetSuperpower workflow name")
+    .option("--dir <dir>", "override directory with .getsuperpower/workflows")
+    .option("--home <dir>", "home directory with global GetSuperpower records", homedir())
+    .option("--dry-run", "print the removal plan without deleting files", false)
+    .option("--yes", "remove without prompting for confirmation", false)
+    .action((workflowName: string, commandOptions: GetSuperpowerRemoveCommandOptions) =>
+      runGetSuperpowerRemove(workflowName, commandOptions, options),
+    );
+}
+
+async function runGetSuperpowerRemove(
+  workflowName: string,
+  commandOptions: GetSuperpowerRemoveCommandOptions,
+  options: ConfigureGetSuperpowerCommandOptions,
+): Promise<void> {
+  const homeDir = resolveHomePath(commandOptions.home);
+  const targetDir = commandOptions.dir ? resolvePath(options.rootDir, commandOptions.dir) : homeDir;
+  const plan = await createWorkflowRemovalPlan({
+    rootDir: targetDir,
+    homeDir,
+    workflowName,
+  });
+  printGetSuperpowerRemovePlan(plan, commandOptions.dryRun);
+
+  if (commandOptions.dryRun) {
+    return;
+  }
+
+  const prompt = options.removePrompt ?? createDefaultRemovePrompt();
+  const approved =
+    commandOptions.yes ||
+    (await prompt.confirmRemove({
+      workflowName,
+      artifactsToRemove: plan.artifactsToRemove.length,
+      artifactsToKeep: plan.artifactsToKeep.length,
+    }));
+  if (!approved) {
+    console.log(warning("GetSuperpower remove cancelled."));
+    return;
+  }
+
+  await executeWorkflowRemovalPlan(plan);
+  console.log(success(`GetSuperpower removed: ${workflowName}`));
+}
+
+function printGetSuperpowerRemovePlan(plan: WorkflowRemovalPlan, dryRun: boolean): void {
+  console.log(success(`GetSuperpower remove plan: ${plan.workflow.name}`));
+  console.log(keyValue("Workflow record", plan.workflowRecordPath));
+  if (plan.legacy) {
+    console.log(warning("Legacy workflow record detected; removal paths are inferred."));
+  }
+
+  const removeHeading = dryRun ? "Artifacts that would be removed:" : "Artifacts to remove:";
+  console.log(removeHeading);
+  if (plan.artifactsToRemove.length === 0) {
+    console.log("- none");
+  } else {
+    for (const artifact of plan.artifactsToRemove) {
+      console.log(`- ${artifact.path}`);
+    }
+  }
+
+  if (plan.artifactsToKeep.length > 0) {
+    console.log("Artifacts kept:");
+    for (const artifact of plan.artifactsToKeep) {
+      console.log(`- ${artifact.path} (still used by ${artifact.usedByWorkflows.join(", ")})`);
+    }
+  }
+
+  if (plan.skippedArtifacts.length > 0) {
+    console.log("Skipped artifacts:");
+    for (const artifact of plan.skippedArtifacts) {
+      console.log(`- ${artifact.source}: ${artifact.reason}`);
+    }
+  }
+}
+
 function configureDependencyCommand(
   command: Command,
   options: ConfigureGetSuperpowerCommandOptions,
@@ -921,6 +1028,29 @@ function createDefaultInstallPrompt(): GetSuperpowerInstallPrompt {
 
       if (isCancel(result)) {
         clackCancel("GetSuperpower install cancelled");
+        return false;
+      }
+
+      return result;
+    },
+  };
+}
+
+function createDefaultRemovePrompt(): GetSuperpowerRemovePrompt {
+  return {
+    confirmRemove: async (input) => {
+      if (!process.stdin.isTTY) {
+        console.log(muted("Non-interactive shell detected; pass --yes to remove."));
+        return false;
+      }
+
+      const result = await clackConfirm({
+        message: `Remove ${input.workflowName} and ${input.artifactsToRemove} skill artifacts?`,
+        initialValue: false,
+      });
+
+      if (isCancel(result)) {
+        clackCancel("GetSuperpower remove cancelled");
         return false;
       }
 

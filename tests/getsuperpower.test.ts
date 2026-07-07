@@ -106,6 +106,7 @@ describe("getsuperpower command module", () => {
       "validate",
       "install",
       "list",
+      "remove",
       "deps",
       "onboard",
       "loop",
@@ -121,6 +122,11 @@ describe("getsuperpower command module", () => {
         .find((command) => command.name() === "loop")
         ?.commands.map((command) => command.name()),
     ).toEqual(["start", "status", "log", "advance", "summary"]);
+    expect(
+      program.commands
+        .find((command) => command.name() === "workflow")
+        ?.commands.map((command) => command.name()),
+    ).toEqual(["install", "list", "remove"]);
   });
 
   test("install supports a public git workflow source", async () => {

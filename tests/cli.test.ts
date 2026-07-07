@@ -129,6 +129,7 @@ describe("cli", () => {
       "validate",
       "install",
       "list",
+      "remove",
       "deps",
       "onboard",
       "loop",
@@ -157,7 +158,11 @@ describe("cli", () => {
 
     expect(rootDepsCommand?.aliases()).toEqual(["dependencies", "dependence"]);
     expect(bundleCommand?.commands.map((command) => command.name())).toEqual(["init", "validate"]);
-    expect(workflowCommand?.commands.map((command) => command.name())).toEqual(["install", "list"]);
+    expect(workflowCommand?.commands.map((command) => command.name())).toEqual([
+      "install",
+      "list",
+      "remove",
+    ]);
     expect(loopCommand?.commands.map((command) => command.name())).toEqual([
       "start",
       "status",
@@ -184,6 +189,7 @@ describe("cli", () => {
     program.outputHelp();
 
     const help = stripAnsi(output.join(""));
+    const normalizedHelp = help.replace(/\s+/g, " ");
 
     expect(help).toContain("GETSUPERPOWER");
     expect(help).toContain("Welcome to GetSuperpower.");
@@ -193,7 +199,7 @@ describe("cli", () => {
     expect(help).toContain("getsuperpower install ./release-review");
     expect(help).toContain("getsuperpower deps ./release-review");
     expect(help).toContain("bundle");
-    expect(help).toContain("Compatibility alias for GetSuperpower authoring.");
+    expect(normalizedHelp).toContain("Compatibility alias for GetSuperpower authoring.");
     expect(help).not.toContain("ponyrace");
     expect(help).not.toContain("getsuperpower clone");
     expect(help).not.toContain("history");
