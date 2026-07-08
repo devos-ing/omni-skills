@@ -14,6 +14,7 @@ describe("README source contract", () => {
     const readme = readReadme();
     const firstScreen = readme.slice(0, 1800);
 
+    expect(readme.trimStart().startsWith("# GetSuperpower")).toBe(true);
     expect(firstScreen).toContain("# GetSuperpower");
     expect(firstScreen).toContain("Power your ability.");
     expect(firstScreen).toContain("installable workflow skill trees");
@@ -83,10 +84,12 @@ describe("README source contract", () => {
   test("uses the startup role registry image instead of old diagrams", () => {
     const readme = readReadme();
     const imageSrc = "assets/getsuperpower-startup-role-registry.png";
+    const imageTag = `<img src="${imageSrc}" alt="GetSuperpower startup role workflow registry" width="920" />`;
+    const imageIndex = readme.indexOf(imageTag);
+    const quickStartIndex = readme.indexOf("## Quick Start");
 
-    expect(readme).toContain(
-      `<img src="${imageSrc}" alt="GetSuperpower startup role workflow registry" width="920" />`,
-    );
+    expect(readme.trimStart().startsWith(imageTag)).toBe(false);
+    expect(imageIndex).toBeGreaterThan(quickStartIndex);
     expect(existsSync(join(repoRoot, imageSrc))).toBe(true);
     expect(readme).not.toContain("assets/diagrams/getsuperpower-how-it-works.svg");
     expect(readme).not.toContain("assets/diagrams/getsuperpower-install-sequence.svg");

@@ -1,5 +1,3 @@
-<img src="assets/getsuperpower-startup-role-registry.png" alt="GetSuperpower startup role workflow registry" width="920" />
-
 # GetSuperpower
 
 Power your ability.
@@ -40,6 +38,13 @@ npx getsuperpower@latest install qa-lead
 ```
 
 Restart your agent after installing skills so it reloads the new entry skills.
+
+## Workflow Registry
+
+Use the registry view to pick a GetSuperpower, inspect its role workflow, and
+copy the install command.
+
+<img src="assets/getsuperpower-startup-role-registry.png" alt="GetSuperpower startup role workflow registry" width="920" />
 
 ## Startup Role Workflows
 
