@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "0.1",
+  "name": "haaland",
+  "version": "0.1.0",
+  "description": "Create playful Haaland/JTS meme captions and post concepts with an original parody logo asset.",
+  "skills": [
+    {
+      "source": "./skills/haaland",
+      "entry": true
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "mattpocock:writing-fragments",
+      "repo": "mattpocock/skills"
+    }
+  ],
+  "steps": [
+    {
+      "id": "jts-brief",
+      "title": "Set the meme frame",
+      "skill": "./skills/haaland",
+      "gate": "human_approval"
+    },
+    {
+      "id": "angle-race",
+      "title": "Brainstorm the tap-in angles",
+      "skill": "superpowers:brainstorming"
+    },
+    {
+      "id": "caption-fragments",
+      "title": "Draft punchline fragments",
+      "skill": "mattpocock:writing-fragments"
+    },
+    {
+      "id": "final-whistle",
+      "title": "Pick the final meme",
+      "skill": "./skills/haaland"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Haaland JTS meme logo</title>
+  <desc id="desc">Original parody badge with H9, JTS, a blond striker silhouette, and a football.</desc>
+  <defs>
+    <linearGradient id="pitch" x1="96" x2="416" y1="84" y2="428" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38f5a5" />
+      <stop offset="0.48" stop-color="#0f9f78" />
+      <stop offset="1" stop-color="#0b1020" />
+    </linearGradient>
+    <linearGradient id="hair" x1="195" x2="317" y1="112" y2="218" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe86c" />
+      <stop offset="1" stop-color="#f7a51d" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#071016" />
+  <circle cx="256" cy="256" r="204" fill="url(#pitch)" />
+  <circle cx="256" cy="256" r="184" fill="none" stroke="#eafff7" stroke-opacity="0.28" stroke-width="10" />
+  <path d="M136 340c43 48 197 49 240 0-9-62-54-105-120-105s-111 43-120 105Z" fill="#101827" />
+  <path d="M184 173c20-53 124-55 145 0 10 26-2 61-31 78-24 14-60 14-84 0-29-17-41-52-30-78Z" fill="#f7c9a9" />
+  <path d="M171 181c13-61 55-84 100-78 42 5 70 34 76 83-34-23-59-25-83-15-36 15-67 7-93 10Z" fill="url(#hair)" />
+  <path d="M163 186c28-11 70 7 111-19 28-18 64 5 75 18-1-48-39-91-91-91-55 0-95 42-95 92Z" fill="#ffdd43" />
+  <path d="M207 199c19 19 77 19 98 0" fill="none" stroke="#101827" stroke-width="12" stroke-linecap="round" />
+  <text x="256" y="332" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" fill="#ffffff" letter-spacing="2">H9</text>
+  <text x="256" y="383" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="42" fill="#ffe86c" letter-spacing="4">JTS</text>
+  <g transform="translate(341 335)">
+    <circle cx="48" cy="48" r="42" fill="#f8fafc" />
+    <path d="M48 14 65 34 58 59H38L31 34Z" fill="#101827" />
+    <path d="M16 47h24M56 47h24M31 34 18 21M65 34l13-13M38 59 27 78M58 59l11 19" fill="none" stroke="#101827" stroke-width="7" stroke-linecap="round" />
+  </g>
+</svg>

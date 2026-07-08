@@ -389,6 +389,45 @@ export const workflows: WorkflowCardContent[] = [
       },
     ],
   },
+  {
+    slug: "haaland",
+    name: "Haaland",
+    description:
+      "A playful JTS meme workflow for football-finisher captions, parody post concepts, and the included original H9/JTS logo asset.",
+    entrySkill: "haaland",
+    avatarSeed: "sha256:5296e05286fac64d6b7e62d7f8834096f57f09f537db7f37bd4c163627a60b5e",
+    tag: "Meme",
+    accent: "text-lime-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/haaland`,
+    installCommand: "npx getsuperpower@latest install haaland",
+    skills: [
+      { name: "haaland", description: "Set the JTS meme frame" },
+      { name: "superpowers:brainstorming", description: "Generate meme angles" },
+      { name: "mattpocock:writing-fragments", description: "Shape punchline fragments" },
+    ],
+    diagramSteps: [
+      {
+        label: "Brief",
+        skill: "haaland",
+        description: "Name the meme target and tone boundary.",
+      },
+      {
+        label: "Angles",
+        skill: "superpowers:brainstorming",
+        description: "Explore tap-in, robot-finisher, and deadpan angles.",
+      },
+      {
+        label: "Fragments",
+        skill: "mattpocock:writing-fragments",
+        description: "Draft short caption fragments.",
+      },
+      {
+        label: "Final",
+        skill: "haaland",
+        description: "Choose the caption and logo placement.",
+      },
+    ],
+  },
 ];
 
 export const commands: CommandExample[] = [

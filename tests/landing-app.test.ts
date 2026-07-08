@@ -125,9 +125,12 @@ describe("landing app source contract", () => {
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
     expect(content).toContain('slug: "startup-team"');
     expect(content).toContain('slug: "founding-engineer"');
+    expect(content).toContain('slug: "haaland"');
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/startup-team`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/haaland`);
     expect(content).toContain("npx getsuperpower@latest install startup-team");
+    expect(content).toContain("npx getsuperpower@latest install haaland");
     expect(content).toContain('label: "Implementation"');
     expect(content).toContain('skill: "founding-engineer"');
   });

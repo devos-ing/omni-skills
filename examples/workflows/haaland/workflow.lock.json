@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "haaland",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-08T06:27:54.337Z",
+  "skills": [
+    {
+      "source": "./skills/haaland",
+      "resolvedName": "haaland",
+      "kind": "local",
+      "hash": "sha256:5296e05286fac64d6b7e62d7f8834096f57f09f537db7f37bd4c163627a60b5e"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:9d82390ff4b859cc1c9a3a4bcc9a548dc60587ebebbf44a1df8b48fff5d5020f"
+    },
+    {
+      "source": "mattpocock:writing-fragments",
+      "resolvedName": "writing-fragments",
+      "kind": "external",
+      "repo": "mattpocock/skills",
+      "hash": "sha256:7292b7dbf5ed00ecfc23fcfe9dab18786b91552c9d5c31455569439109756321"
+    }
+  ]
+}

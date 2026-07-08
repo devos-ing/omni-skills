@@ -207,8 +207,8 @@ describe("workflow bundles", () => {
     });
   });
 
-  test("loads startup role workflows with checked skill locks and no pony-trail dependency", async () => {
-    const roleWorkflowNames = [
+  test("loads curated workflow examples with checked skill locks and no pony-trail dependency", async () => {
+    const curatedWorkflowNames = [
       "ceo",
       "cto",
       "product-manager",
@@ -216,9 +216,10 @@ describe("workflow bundles", () => {
       "founding-engineer",
       "qa-lead",
       "startup-team",
+      "haaland",
     ];
 
-    for (const workflowName of roleWorkflowNames) {
+    for (const workflowName of curatedWorkflowNames) {
       const bundle = await loadWorkflowBundle(
         join(import.meta.dir, "..", "examples", "workflows", workflowName),
       );
