@@ -1,5 +1,6 @@
 import { ArrowRight, ExternalLink, GitBranch, Zap } from "lucide-react";
 import type { WorkflowCardContent } from "../lib/landing-content";
+import { WorkflowAvatar } from "./workflow-avatar";
 
 interface WorkflowDetailProps {
   workflow: WorkflowCardContent;
@@ -9,11 +10,14 @@ export function WorkflowDetail({ workflow }: WorkflowDetailProps) {
   return (
     <aside className="rounded-lg border border-white/10 bg-white/[0.035] p-5 lg:sticky lg:top-6">
       <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.18em] text-white/35">
-            Selected workflow
-          </p>
-          <h3 className="text-xl font-medium text-white/90">{workflow.name}</h3>
+        <div className="flex min-w-0 gap-3">
+          <WorkflowAvatar seed={workflow.avatarSeed} label={workflow.name} size={44} />
+          <div className="min-w-0">
+            <p className="mb-2 text-xs uppercase tracking-[0.18em] text-white/35">
+              Selected workflow
+            </p>
+            <h3 className="text-xl font-medium text-white/90">{workflow.name}</h3>
+          </div>
         </div>
         <span
           className={`rounded-full border border-current/20 px-2 py-0.5 text-xs ${workflow.accent}`}

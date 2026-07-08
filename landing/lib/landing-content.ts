@@ -14,6 +14,7 @@ export interface WorkflowCardContent {
   name: string;
   description: string;
   entrySkill: string;
+  avatarSeed: string;
   tag: string;
   accent: string;
   sourceUrl: string;
@@ -51,206 +52,340 @@ export const agents: AgentBadgeContent[] = [
 
 export const workflows: WorkflowCardContent[] = [
   {
-    slug: "openspec-delivery",
-    name: "OpenSpec Delivery",
+    slug: "startup-team",
+    name: "Startup Team",
     description:
-      "A complete delivery lifecycle from proposal through design, TDD build, verification, and archive.",
-    entrySkill: "openspec-delivery",
-    tag: "Featured",
+      "Install the core startup operating roles as one workflow: CEO, CTO, PM, EM, founding engineer, and QA lead.",
+    entrySkill: "startup-team",
+    avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
+    tag: "Team",
     accent: "text-violet-300",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/openspec-superpowers`,
-    installCommand:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/startup-team`,
+    installCommand: "npx getsuperpower@latest install startup-team",
     skills: [
-      { name: "opsx-propose", description: "Draft the scoped spec change" },
+      { name: "startup-team", description: "Route work across startup roles" },
+      { name: "ceo", description: "Company direction and tradeoffs" },
+      { name: "cto", description: "Architecture and technical risk" },
+      { name: "product-manager", description: "Discovery, PRDs, and issue slicing" },
+      { name: "engineering-manager", description: "Delivery sequencing and quality gates" },
+      { name: "founding-engineer", description: "Implementation and verification" },
+      { name: "qa-lead", description: "Acceptance checks and release risk" },
+      { name: "superpowers:brainstorming", description: "Explore options before scope locks" },
+      { name: "superpowers:writing-plans", description: "Create executable plans" },
       {
-        name: "brainstorming",
-        description: "Explore viable design approaches",
+        name: "superpowers:verification-before-completion",
+        description: "Verify before claiming done",
       },
-      {
-        name: "writing-plans",
-        description: "Create an executable implementation plan",
-      },
-      { name: "tdd-build", description: "Build task by task with tests first" },
-      {
-        name: "pony-trail",
-        description: "Record verification and rollback context",
-      },
+      { name: "mattpocock:decision-mapping", description: "Map decisions and uncertainty" },
+      { name: "mattpocock:grill-with-docs", description: "Stress-test direction" },
+      { name: "mattpocock:to-prd", description: "Write product requirements" },
+      { name: "mattpocock:to-issues", description: "Slice work into issues" },
+      { name: "mattpocock:codebase-design", description: "Review codebase boundaries" },
+      { name: "mattpocock:domain-modeling", description: "Name domain concepts" },
+      { name: "mattpocock:tdd", description: "Build with tests where practical" },
+      { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures from evidence" },
+      { name: "mattpocock:review", description: "Review behavior and risk" },
+      { name: "implement", description: "Execute the implementation slice" },
     ],
     diagramSteps: [
       {
-        label: "Proposal",
-        skill: "opsx-handoff-review",
-        description: "Create proposal, specs, and task handoff.",
+        label: "Route",
+        skill: "startup-team",
+        description: "Pick the accountable role for the next decision.",
       },
       {
-        label: "Design",
+        label: "Strategy",
+        skill: "ceo",
+        description: "Clarify company direction and tradeoffs.",
+      },
+      {
+        label: "Product",
+        skill: "product-manager",
+        description: "Shape customer value, PRD, and issue slices.",
+      },
+      {
+        label: "Technology",
+        skill: "cto",
+        description: "Set architecture and technical risk boundaries.",
+      },
+      {
+        label: "Delivery",
+        skill: "engineering-manager",
+        description: "Sequence execution and quality gates.",
+      },
+      {
+        label: "Implementation",
+        skill: "founding-engineer",
+        description: "Build the smallest verified slice.",
+      },
+      {
+        label: "QA",
+        skill: "qa-lead",
+        description: "Check release readiness and residual risk.",
+      },
+    ],
+  },
+  {
+    slug: "ceo",
+    name: "CEO",
+    description:
+      "Founder-level strategy for direction, hard tradeoffs, fundraising/customer framing, and company decisions.",
+    entrySkill: "ceo",
+    avatarSeed: "sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a",
+    tag: "Strategy",
+    accent: "text-rose-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/ceo`,
+    installCommand: "npx getsuperpower@latest install ceo",
+    skills: [
+      { name: "ceo", description: "Set the executive frame" },
+      { name: "mattpocock:decision-mapping", description: "Map strategic uncertainty" },
+      { name: "mattpocock:grill-with-docs", description: "Stress-test the company direction" },
+    ],
+    diagramSteps: [
+      {
+        label: "Brief",
+        skill: "ceo",
+        description: "State the company-level decision.",
+      },
+      {
+        label: "Decision Map",
+        skill: "mattpocock:decision-mapping",
+        description: "Map options, constraints, and uncertainties.",
+      },
+      {
+        label: "Grill",
+        skill: "mattpocock:grill-with-docs",
+        description: "Stress-test the direction before committing.",
+      },
+    ],
+  },
+  {
+    slug: "cto",
+    name: "CTO",
+    description:
+      "Technical leadership for architecture, domain model, platform direction, and engineering risk.",
+    entrySkill: "cto",
+    avatarSeed: "sha256:644afba52d60f4bbcf9a608c6ead98688650e9fc3f8ed0a63ac0d30ca4931156",
+    tag: "Architecture",
+    accent: "text-sky-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/cto`,
+    installCommand: "npx getsuperpower@latest install cto",
+    skills: [
+      { name: "cto", description: "Set the technical frame" },
+      { name: "mattpocock:codebase-design", description: "Review module boundaries" },
+      { name: "mattpocock:domain-modeling", description: "Clarify domain concepts" },
+      { name: "mattpocock:diagnosing-bugs", description: "Diagnose technical risk" },
+      { name: "mattpocock:review", description: "Review the technical decision" },
+    ],
+    diagramSteps: [
+      {
+        label: "Brief",
+        skill: "cto",
+        description: "Identify the technical trajectory decision.",
+      },
+      {
+        label: "Domain",
+        skill: "mattpocock:domain-modeling",
+        description: "Name the business concepts before abstractions.",
+      },
+      {
+        label: "Architecture",
+        skill: "mattpocock:codebase-design",
+        description: "Review boundaries and interfaces.",
+      },
+      {
+        label: "Risk",
+        skill: "mattpocock:diagnosing-bugs",
+        description: "Diagnose failures and fragile assumptions.",
+      },
+      {
+        label: "Review",
+        skill: "mattpocock:review",
+        description: "Check behavior, blast radius, and tradeoffs.",
+      },
+    ],
+  },
+  {
+    slug: "product-manager",
+    name: "Product Manager",
+    description:
+      "Product discovery, PRDs, acceptance criteria, roadmap tradeoffs, and issue slicing.",
+    entrySkill: "product-manager",
+    avatarSeed: "sha256:c0c7094ce1e2d9c614bd9939d9a379f488d809b0316d568017f584263f1eab8f",
+    tag: "Product",
+    accent: "text-emerald-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/product-manager`,
+    installCommand: "npx getsuperpower@latest install product-manager",
+    skills: [
+      { name: "product-manager", description: "Frame the product problem" },
+      { name: "superpowers:brainstorming", description: "Explore product options" },
+      { name: "mattpocock:to-prd", description: "Write the PRD" },
+      { name: "mattpocock:to-issues", description: "Slice delivery issues" },
+      { name: "superpowers:writing-plans", description: "Write the delivery plan" },
+    ],
+    diagramSteps: [
+      {
+        label: "Brief",
+        skill: "product-manager",
+        description: "Name the user, pain, and desired behavior change.",
+      },
+      {
+        label: "Brainstorm",
         skill: "superpowers:brainstorming",
-        description: "Explore approaches and get human approval.",
+        description: "Explore product options before locking scope.",
+      },
+      {
+        label: "PRD",
+        skill: "mattpocock:to-prd",
+        description: "Write the requirement and acceptance criteria.",
+      },
+      {
+        label: "Issues",
+        skill: "mattpocock:to-issues",
+        description: "Slice the PRD into visible progress.",
       },
       {
         label: "Plan",
         skill: "superpowers:writing-plans",
-        description: "Split approved scope into executable tasks.",
-      },
-      {
-        label: "Build",
-        skill: "mattpocock:tdd",
-        description: "Implement each slice with failing tests first.",
-      },
-      {
-        label: "Evidence",
-        skill: "pony-trail",
-        description: "Record verification, rationale, and rollback context.",
-      },
-      {
-        label: "Archive",
-        skill: "opsx-handoff-review",
-        description: "Update specs and project knowledge after delivery.",
+        description: "Turn scope into executable delivery steps.",
       },
     ],
   },
   {
-    slug: "release-review",
-    name: "Release Review",
+    slug: "engineering-manager",
+    name: "Engineering Manager",
     description:
-      "A lightweight workflow for shaping release risk, reviewing diffs, and preserving evidence.",
-    entrySkill: "release-review",
-    tag: "Starter",
-    accent: "text-sky-300",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/release-review`,
-    installCommand:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'",
+      "Delivery sequencing, execution risk, quality gates, blocker triage, and engineering process.",
+    entrySkill: "engineering-manager",
+    avatarSeed: "sha256:70d97c45ac61d3774317681dc7ae318126e14a3d0b19f00183d8227ca0fb1071",
+    tag: "Delivery",
+    accent: "text-amber-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/engineering-manager`,
+    installCommand: "npx getsuperpower@latest install engineering-manager",
     skills: [
-      { name: "shape", description: "Clarify the release request" },
-      { name: "release-risk-review", description: "Flag risk by surface area" },
-      {
-        name: "writing-plans",
-        description: "Plan the release follow-through",
-      },
-      {
-        name: "pony-trail",
-        description: "Capture evidence and rollback notes",
-      },
+      { name: "engineering-manager", description: "Set the delivery frame" },
+      { name: "superpowers:writing-plans", description: "Write the execution plan" },
+      { name: "mattpocock:tdd", description: "Choose the test strategy" },
+      { name: "mattpocock:diagnosing-bugs", description: "Triage blockers" },
+      { name: "mattpocock:review", description: "Review delivery risk" },
     ],
     diagramSteps: [
       {
-        label: "Shape",
-        skill: "shape",
-        description: "Clarify the release goal and constraints.",
-      },
-      {
-        label: "Risk Review",
-        skill: "release-risk-review",
-        description: "Review the diff for release risks.",
+        label: "Brief",
+        skill: "engineering-manager",
+        description: "Identify the shippable outcome and delivery risk.",
       },
       {
         label: "Plan",
-        skill: "writing-plans",
-        description: "Write concrete follow-through tasks.",
+        skill: "superpowers:writing-plans",
+        description: "Sequence work into verifiable steps.",
       },
       {
-        label: "Evidence",
-        skill: "pony-trail",
-        description: "Preserve checks, rationale, and rollback notes.",
+        label: "Quality",
+        skill: "mattpocock:tdd",
+        description: "Pick test gates by blast radius.",
+      },
+      {
+        label: "Debug",
+        skill: "mattpocock:diagnosing-bugs",
+        description: "Triage blockers from evidence.",
+      },
+      {
+        label: "Review",
+        skill: "mattpocock:review",
+        description: "Review delivery risk before handoff.",
       },
     ],
   },
   {
-    slug: "real-engineering",
-    name: "Real Engineering",
+    slug: "founding-engineer",
+    name: "Founding Engineer",
     description:
-      "Combines RTK, pony-trail, Superpowers, and Matt Pocock skills for TypeScript-heavy engineering.",
-    entrySkill: "real-engineering",
-    tag: "Advanced",
-    accent: "text-amber-300",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/real-engineering`,
-    installCommand:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/real-engineering'",
+      "Implementation lane for the smallest correct change: tests, debugging, review, and verification.",
+    entrySkill: "founding-engineer",
+    avatarSeed: "sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078",
+    tag: "Build",
+    accent: "text-fuchsia-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/founding-engineer`,
+    installCommand: "npx getsuperpower@latest install founding-engineer",
     skills: [
-      { name: "rtk", description: "Token-efficient command execution" },
-      {
-        name: "mattpocock:tdd",
-        description: "Focused red-green-refactor loops",
-      },
-      {
-        name: "superpowers:verify",
-        description: "Completion checks before delivery",
-      },
-      {
-        name: "pony-trail",
-        description: "Decision snapshots around file changes",
-      },
+      { name: "founding-engineer", description: "Set the implementation frame" },
+      { name: "implement", description: "Implement the planned change" },
+      { name: "mattpocock:tdd", description: "Use test-first development" },
+      { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
+      { name: "mattpocock:review", description: "Review the implementation" },
+      { name: "superpowers:verification-before-completion", description: "Verify completion" },
     ],
     diagramSteps: [
       {
-        label: "Run",
-        skill: "rtk",
-        description: "Use token-efficient commands for repo work.",
+        label: "Brief",
+        skill: "founding-engineer",
+        description: "Read the plan and acceptance criteria.",
       },
       {
-        label: "Test",
+        label: "Implement",
+        skill: "implement",
+        description: "Ship the smallest correct slice.",
+      },
+      {
+        label: "TDD",
         skill: "mattpocock:tdd",
-        description: "Drive behavior with focused tests.",
+        description: "Keep tests close to changed behavior.",
+      },
+      {
+        label: "Debug",
+        skill: "mattpocock:diagnosing-bugs",
+        description: "Debug from evidence when checks fail.",
+      },
+      {
+        label: "Review",
+        skill: "mattpocock:review",
+        description: "Review risks and behavior.",
       },
       {
         label: "Verify",
         skill: "superpowers:verification-before-completion",
-        description: "Check completion claims before handoff.",
-      },
-      {
-        label: "Record",
-        skill: "pony-trail",
-        description: "Snapshot file-change intent and evidence.",
+        description: "Run final checks before handoff.",
       },
     ],
   },
   {
-    slug: "development-design-delivery",
-    name: "Development Design Delivery",
+    slug: "qa-lead",
+    name: "QA Lead",
     description:
-      "Product-minded engineering from shape to interface design, plan, TDD, review, and evidence.",
-    entrySkill: "development-design-delivery",
-    tag: "Product",
-    accent: "text-emerald-300",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/development-design-delivery`,
-    installCommand:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/development-design-delivery'",
+      "Release-risk lens for acceptance checks, regression focus, reproduction gaps, and verification evidence.",
+    entrySkill: "qa-lead",
+    avatarSeed: "sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53",
+    tag: "Quality",
+    accent: "text-cyan-300",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/qa-lead`,
+    installCommand: "npx getsuperpower@latest install qa-lead",
     skills: [
-      { name: "brainstorming", description: "Shape the feature and constraints" },
-      {
-        name: "design-an-interface",
-        description: "Explore interface directions",
-      },
-      { name: "writing-plans", description: "Split the work into small tasks" },
-      { name: "tdd", description: "Build through public seams" },
-      { name: "review", description: "Check behavior and risks" },
+      { name: "qa-lead", description: "Set the release-risk frame" },
+      { name: "mattpocock:review", description: "Review acceptance and risk" },
+      { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
+      { name: "superpowers:verification-before-completion", description: "Verify before handoff" },
     ],
     diagramSteps: [
       {
-        label: "Shape",
-        skill: "brainstorming",
-        description: "Clarify the product problem and constraints.",
-      },
-      {
-        label: "Design",
-        skill: "design-an-interface",
-        description: "Explore interface directions before building.",
-      },
-      {
-        label: "Plan",
-        skill: "writing-plans",
-        description: "Break the approved design into implementation tasks.",
-      },
-      {
-        label: "Build",
-        skill: "tdd",
-        description: "Implement through public behavior seams.",
+        label: "Brief",
+        skill: "qa-lead",
+        description: "Restate the user-facing behavior that must be true.",
       },
       {
         label: "Review",
-        skill: "review",
-        description: "Check risks, behavior, and evidence.",
+        skill: "mattpocock:review",
+        description: "Review acceptance and release risk.",
+      },
+      {
+        label: "Debug",
+        skill: "mattpocock:diagnosing-bugs",
+        description: "Identify reproduction gaps and failure evidence.",
+      },
+      {
+        label: "Verify",
+        skill: "superpowers:verification-before-completion",
+        description: "Separate verified facts from residual risk.",
       },
     ],
   },
@@ -258,14 +393,12 @@ export const workflows: WorkflowCardContent[] = [
 
 export const commands: CommandExample[] = [
   {
-    label: "Install OpenSpec Delivery",
-    command:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'",
+    label: "Install Startup Team",
+    command: "npx getsuperpower@latest install startup-team",
   },
   {
-    label: "Install Release Review",
-    command:
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/release-review'",
+    label: "Install CTO",
+    command: "npx getsuperpower@latest install cto",
   },
   {
     label: "List installed GetSuperpowers",
@@ -288,10 +421,10 @@ export const howItWorks = [
   },
   {
     title: "The entry skill is the one command users call",
-    body: "Users invoke a single skill, such as $openspec-delivery, and the workflow coordinates the rest.",
+    body: "Users invoke a single skill, such as $startup-team, and the workflow coordinates the rest.",
   },
   {
     title: "Sub-skills run in a deliberate order",
-    body: "Proposal, design, planning, TDD, verification, and archive steps stay aligned without manual juggling.",
+    body: "Strategy, product, architecture, delivery, implementation, and QA roles stay aligned without manual juggling.",
   },
 ];

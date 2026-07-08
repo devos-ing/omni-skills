@@ -53,6 +53,8 @@ Adopt these ideas from the downloaded reference:
 - Workflow entries that scan like compact rows, not only marketing cards.
 - Searchable workflow rows with name, tag, entry skill, sub-skill count, and a
   detail-route affordance.
+- Deterministic workflow avatars that give each row a visual identity without
+  implying user activity or popularity.
 - Workflow detail pages that make the install command obvious and copyable.
 
 Do not copy these reference details:
@@ -87,12 +89,17 @@ rows/items, command choices, terminal previews, and the final CTA panel.
 The workflow browsing section should feel like a lightweight package registry:
 
 - Section label: `Workflow Registry`.
+- Content set: lead with the current startup role catalog (`startup-team`,
+  `ceo`, `cto`, `product-manager`, `engineering-manager`,
+  `founding-engineer`, and `qa-lead`).
 - Search input: full-width inside the section, with an obvious clear action
   when a query is active.
-- Desktop rows: workflow identity, tag, callable entry skill, sub-skill count,
-  and route affordance.
+- Desktop rows: hash-seeded avatar, workflow identity, tag, callable entry
+  skill, sub-skill count, and route affordance.
 - Mobile rows: stack into a stable one-column scan layout; preserve workflow
-  name, tag, entry skill, sub-skill count, and the route link.
+  avatar, name, tag, entry skill, sub-skill count, and the route link.
+- Avatars: render `boring-avatars` from the workflow's checked
+  `workflow.lock.json` skill hash so visual identity follows the skill tree.
 - Metrics: hide activity, rank, and install counts until the app has real
   registry telemetry.
 - Route behavior: each row links to `/workflows/[slug]`.
@@ -104,6 +111,7 @@ workflow:
 
 - Show the workflow name, tag, callable entry skill, ordered steps, source link,
   and install command.
+- Reuse the same hash-seeded workflow avatar from the registry row.
 - Render the install command as command-line text in a stable terminal-style
   control.
 - Provide an explicit copy action for the install command.

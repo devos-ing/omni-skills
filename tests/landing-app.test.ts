@@ -30,6 +30,7 @@ describe("landing app source contract", () => {
     expect(pkg.dependencies?.next).toBe("16.2.0");
     expect(pkg.dependencies?.react).toBe("19.2.7");
     expect(pkg.dependencies?.["react-dom"]).toBe("19.2.7");
+    expect(pkg.dependencies?.["boring-avatars"]).toBe("2.0.4");
     expect(pkg.devDependencies?.tailwindcss).toBe("4.1.12");
     expect(pkg.devDependencies?.["@tailwindcss/postcss"]).toBe("4.1.12");
 
@@ -44,10 +45,14 @@ describe("landing app source contract", () => {
 
     expect(page).toContain("LandingPage");
     expect(content).toContain("GetSuperpower");
-    expect(content).toContain("OpenSpec Delivery");
-    expect(content).toContain("Release Review");
-    expect(content).toContain("Real Engineering");
-    expect(content).toContain("Development Design Delivery");
+    expect(content).toContain("Startup Team");
+    expect(content).toContain("CEO");
+    expect(content).toContain("CTO");
+    expect(content).toContain("Product Manager");
+    expect(content).toContain("Engineering Manager");
+    expect(content).toContain("Founding Engineer");
+    expect(content).toContain("QA Lead");
+    expect(content).toContain("avatarSeed");
     expect(content).toContain("npx getsuperpower@latest install");
     expect(content).toContain("npx getsuperpower@latest validate");
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
@@ -100,30 +105,33 @@ describe("landing app source contract", () => {
 
     expect(content).toContain("export interface WorkflowDiagramStep");
     expect(content).toContain("slug: string");
+    expect(content).toContain("avatarSeed: string");
     expect(content).toContain("sourceUrl: string");
     expect(content).toContain("installCommand: string");
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
-    expect(content).toContain('slug: "openspec-delivery"');
-    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/openspec-superpowers`);
-    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/release-review`);
-    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/real-engineering`);
-    expect(content).toContain(
-      `\${githubUrl}/tree/main/examples/workflows/development-design-delivery`,
-    );
-    expect(content).toContain(
-      "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/openspec-superpowers'",
-    );
-    expect(content).toContain('label: "Proposal"');
-    expect(content).toContain('skill: "opsx-handoff-review"');
+    expect(content).toContain('slug: "startup-team"');
+    expect(content).toContain('slug: "founding-engineer"');
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/startup-team`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
+    expect(content).toContain("npx getsuperpower@latest install startup-team");
+    expect(content).toContain('label: "Implementation"');
+    expect(content).toContain('skill: "founding-engineer"');
   });
 
-  test("renders workflow cards as route links", () => {
+  test("renders workflow cards as route links with hash-seeded avatars", () => {
     const card = readLandingFile("components/workflow-card.tsx");
+    const avatar = readLandingFile("components/workflow-avatar.tsx");
 
     expect(card).toContain('import Link from "next/link"');
+    expect(card).toContain('import { WorkflowAvatar } from "./workflow-avatar"');
     expect(card).toContain(`href={\`/workflows/\${slug}\`}`);
+    expect(card).toContain("avatarSeed");
+    expect(card).toContain("<WorkflowAvatar");
     expect(card).toContain("View workflow");
     expect(card).toContain("skills.length");
+    expect(avatar).toContain('import Avatar from "boring-avatars"');
+    expect(avatar).toContain("name={seed}");
+    expect(avatar).toContain('variant="beam"');
     expect(card).not.toContain("activityValues");
     expect(card).not.toContain("installCount");
     expect(card).not.toContain("sourceLabel");
@@ -180,6 +188,8 @@ describe("landing app source contract", () => {
     expect(route).toContain("workflows.find");
     expect(route).toContain("notFound()");
     expect(route).toContain("workflow.installCommand");
+    expect(route).toContain("WorkflowAvatar");
+    expect(route).toContain("workflow.avatarSeed");
     expect(route).toContain('href="/#workflows"');
     expect(route).toContain("diagramSteps.map");
     expect(route).toContain("View source on GitHub");

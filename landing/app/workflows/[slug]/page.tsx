@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, ExternalLink, GitBranch, Zap } from "lucide-reac
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyableInstallCommand } from "../../../components/copyable-install-command";
+import { WorkflowAvatar } from "../../../components/workflow-avatar";
 import { workflows } from "../../../lib/landing-content";
 
 interface WorkflowPageProps {
@@ -48,11 +49,14 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
 
       <section className="mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div>
-          <span
-            className={`inline-flex rounded-full border border-current/20 px-2 py-0.5 text-xs ${workflow.accent}`}
-          >
-            {workflow.tag}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <WorkflowAvatar seed={workflow.avatarSeed} label={workflow.name} size={52} />
+            <span
+              className={`inline-flex rounded-full border border-current/20 px-2 py-0.5 text-xs ${workflow.accent}`}
+            >
+              {workflow.tag}
+            </span>
+          </div>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-white sm:text-5xl">
             {workflow.name}
           </h1>
