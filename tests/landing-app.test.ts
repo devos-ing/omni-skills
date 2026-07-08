@@ -53,7 +53,19 @@ describe("landing app source contract", () => {
     expect(content).toContain("Founding Engineer");
     expect(content).toContain("QA Lead");
     expect(content).toContain("avatarSeed");
-    expect(content).toContain("npx getsuperpower@latest install");
+    expect(content).toContain("npx getsuperpower@latest install startup-team");
+    expect(content).toContain("npx getsuperpower@latest install ceo");
+    expect(content).toContain("npx getsuperpower@latest install cto");
+    expect(content).toContain("npx getsuperpower@latest install product-manager");
+    expect(content).toContain("npx getsuperpower@latest install engineering-manager");
+    expect(content).toContain("npx getsuperpower@latest install founding-engineer");
+    expect(content).toContain("npx getsuperpower@latest install qa-lead");
+    expect(content).toContain("npx getsuperpower@latest deps startup-team");
+    expect(content).toContain("npx getsuperpower@latest lock examples/workflows/startup-team");
+    expect(content).toContain("npx getsuperpower@latest remove startup-team");
+    expect(content).toContain(
+      "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
+    );
     expect(content).toContain("npx getsuperpower@latest validate");
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
   });
@@ -95,6 +107,8 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("sourceLabel");
     expect(content).not.toContain("installCount");
     expect(content).not.toContain("activity:");
+    expect(content).not.toContain("rank");
+    expect(content).not.toContain("workflow telemetry");
     expect(content).not.toContain('"allTime"');
     expect(content).not.toContain('"trending"');
     expect(content).not.toContain('"hot"');
@@ -171,6 +185,33 @@ describe("landing app source contract", () => {
     expect(page).not.toContain("WorkflowDetail");
     expect(page).not.toContain("AreaChart");
     expect(page).not.toContain("recharts");
+  });
+
+  test("explains current install behavior without reading generated workflow state", () => {
+    const page = readLandingFile("components/landing-page.tsx");
+
+    expect(page).toContain("Install by alias, public git URL, or local path");
+    expect(page).toContain("validates the workflow");
+    expect(page).toContain("manifest");
+    expect(page).toContain("bootstraps missing external skills");
+    expect(page).toContain("~/.getsuperpower/workflows/");
+    expect(page).toContain("getsuperpower loop");
+    expect(page).toContain("action-only");
+    expect(page).not.toContain("browser executes live agent workflows");
+    expect(page).not.toContain("generated .getsuperpower run state");
+  });
+
+  test("describes loop-enabled workflows as CLI-controlled and action-only", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+    const demo = readLandingFile("components/workflow-run-demo.tsx");
+
+    expect(content).toContain(
+      "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
+    );
+    expect(content).toContain("resumable, action-only workflow state");
+    expect(demo).toContain("Simulate calling");
+    expect(content).not.toContain("executes tools");
+    expect(content).not.toContain("runs live workflows in the browser");
   });
 
   test("renders static workflow detail routes from local workflow data", () => {

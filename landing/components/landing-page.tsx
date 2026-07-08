@@ -254,9 +254,12 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
             </p>
             <h2 className="mb-4 text-3xl font-medium text-white/90">Get up and running fast</h2>
             <p className="mb-8 text-sm leading-6 text-white/45">
-              Install from npm, git, or a local path. The CLI handles validation, dependency
-              resolution, and local workflow records under{" "}
-              <code className="text-white/65">.getsuperpower/</code>.
+              Install by alias, public git URL, or local path. The CLI validates the workflow
+              manifest, bootstraps missing external skills from workflow metadata, and records
+              installed GetSuperpowers under{" "}
+              <code className="text-white/65">~/.getsuperpower/workflows/</code> by default.
+              Loop-enabled workflows use <code className="text-white/65">getsuperpower loop</code>{" "}
+              for resumable, action-only state.
             </p>
             <div className="space-y-2">
               {commands.map((command, index) => (

@@ -397,12 +397,16 @@ export const commands: CommandExample[] = [
     command: "npx getsuperpower@latest install startup-team",
   },
   {
-    label: "Install CTO",
-    command: "npx getsuperpower@latest install cto",
+    label: "Inspect Startup Team deps",
+    command: "npx getsuperpower@latest deps startup-team",
   },
   {
-    label: "List installed GetSuperpowers",
-    command: "npx getsuperpower@latest list",
+    label: "Lock skill fingerprints",
+    command: "npx getsuperpower@latest lock examples/workflows/startup-team",
+  },
+  {
+    label: "Check loop status",
+    command: "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
   },
   {
     label: "Create your own workflow",
@@ -411,6 +415,14 @@ export const commands: CommandExample[] = [
   {
     label: "Validate before sharing",
     command: "npx getsuperpower@latest validate my-workflow",
+  },
+  {
+    label: "List installed GetSuperpowers",
+    command: "npx getsuperpower@latest list",
+  },
+  {
+    label: "Remove installed workflow",
+    command: "npx getsuperpower@latest remove startup-team",
   },
 ];
 
@@ -425,6 +437,6 @@ export const howItWorks = [
   },
   {
     title: "Sub-skills run in a deliberate order",
-    body: "Strategy, product, architecture, delivery, implementation, and QA roles stay aligned without manual juggling.",
+    body: "Strategy, product, architecture, delivery, implementation, and QA roles stay aligned without manual juggling. Looped workflows can track resumable, action-only workflow state through the CLI.",
   },
 ];
