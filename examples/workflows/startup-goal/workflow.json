@@ -80,10 +80,18 @@
   ],
   "steps": [
     {
+      "id": "requirements",
+      "title": "Interview and approve startup requirements",
+      "skill": "superpowers:brainstorming",
+      "gate": "human_approval",
+      "instruction": "Interview the user one question at a time until the startup goal, constraints, success criteria, and required roles are clear. Present the requirement brief and wait for explicit human approval before routing the startup flow."
+    },
+    {
       "id": "route",
-      "title": "Route the startup goal",
+      "title": "Route the approved startup goal",
       "skill": "./skills/startup-goal",
-      "gate": "human_approval"
+      "gate": "human_approval",
+      "instruction": "Use the approved requirement brief to choose the needed startup roles, prepare role briefs, and wait for explicit human approval before role execution."
     },
     {
       "id": "strategy",

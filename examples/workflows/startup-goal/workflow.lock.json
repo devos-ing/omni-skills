@@ -2,13 +2,13 @@
   "schemaVersion": "0.1",
   "workflow": "startup-goal",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-08T10:10:04.181Z",
+  "generatedAt": "2026-07-08T17:26:03.472Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
       "resolvedName": "startup-goal",
       "kind": "local",
-      "hash": "sha256:255ed6ff48f4072507df7c2e804711bfb10bb9e816b5598d6f0c0f51a7aee600"
+      "hash": "sha256:4b36aae986cfbdc3a627b70f33876d0ecb9ef6b9a1f5d730d684eebc2382f65d"
     },
     {
       "source": "./skills/ceo",

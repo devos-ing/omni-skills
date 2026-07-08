@@ -234,6 +234,9 @@ describe("workflow bundles", () => {
   });
 
   test("startup goal entry skill dispatches role subagents and combines results", async () => {
+    const bundle = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "startup-goal"),
+    );
     const skill = await readFile(
       join(
         import.meta.dir,
@@ -248,7 +251,21 @@ describe("workflow bundles", () => {
       "utf8",
     );
 
+    expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
+      ["requirements", "superpowers:brainstorming", "human_approval"],
+      ["route", "./skills/startup-goal", "human_approval"],
+      ["strategy", "./skills/ceo", "human_approval"],
+      ["product", "./skills/product-manager", null],
+      ["technology", "./skills/cto", null],
+      ["delivery", "./skills/engineering-manager", null],
+      ["implementation", "./skills/founding-engineer", null],
+      ["qa", "./skills/qa-lead", null],
+    ]);
+    expect(bundle.manifest.steps[0]?.instruction).toContain(
+      "Interview the user one question at a time",
+    );
     expect(skill).toContain("name: startup-goal");
+    expect(skill).toContain("approved requirement brief");
     expect(skill).toContain("Dispatch a separate role-scoped subagent");
     expect(skill).toContain("Wait for all dispatched role subagents to finish");
     expect(skill).toContain("Combine the role outputs into one owner-facing decision log");
