@@ -1,6 +1,6 @@
-<img src="/assets/getsupwerpower.jpg" alt="GetSuperpower" width="640" />
-
 # GetSuperpower
+
+[繁體中文](README.zh-Hant.md)
 
 GetSuperpower packages a whole AI-agent workflow as one callable skill.
 
@@ -8,6 +8,8 @@ A **GetSuperpower** is an all-in-one workflow skill. Install it once, call one
 entry skill, and the agent follows the required sub-skills in order. A workflow
 can plan a spec, brainstorm design, write an implementation plan, build with
 TDD, and archive the result without the user calling each skill separately.
+
+<img src="/assets/getsupwerpower.jpg" alt="GetSuperpower" width="640" />
 
 ## Quick Start
 
