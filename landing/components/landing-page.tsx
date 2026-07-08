@@ -100,17 +100,18 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
           </span>
         </div>
         <h1 className="text-5xl font-semibold leading-[1.05] text-white sm:text-6xl lg:text-7xl">
-          One command.
+          Power your ability.
           <br />
-          Whole workflow.
+          Install the workflow.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/48">
-          GetSuperpower packages a complete AI-agent workflow as a single callable skill. Install
-          once, invoke the entry skill, and the agent follows every required sub-skill in order.
+          GetSuperpower is a many-skill bank for AI agents. Install one workflow skill tree, call
+          one entry skill with a goal, and give your agent the roles, playbooks, and verification
+          habits that 3x your ability.
         </p>
         <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <div className="rounded-lg border border-white/10 bg-[#0d0d0d] px-4 py-3 font-mono text-sm text-white/70">
-            <span className="break-words">npx getsuperpower@latest install ...</span>
+            <span className="break-words">npx getsuperpower@latest install startup-goal</span>
           </div>
           <a
             href="#workflows"
@@ -150,7 +151,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         <div className="mb-12 text-center">
           <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">How it works</p>
           <h2 className="text-3xl font-medium text-white/90">
-            Install the skill tree. Invoke once.
+            One entry skill. Many specialist skills.
           </h2>
         </div>
         <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -186,8 +187,8 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
             <div>
               <h2 className="text-3xl font-medium text-white/90">Pick a GetSuperpower</h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/42">
-                Browse workflow bundles like installable registry entries, then open the detail
-                route for the full skill path and copyable install command.
+                Browse installable workflow bundles, then open a detail route for the role map,
+                skill tree, and copyable install command.
               </p>
             </div>
             <div className="relative">
@@ -297,20 +298,15 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
                 lines={[
                   {
                     prefix: ">",
-                    text: "$openspec-delivery implement this OpenSpec change",
+                    text: "$startup-goal help me launch this product from idea to shipped v1",
                   },
                   { text: "", dim: true },
-                  { text: "[ok] proposal   scoped the change", dim: true },
-                  { text: "[ok] design     selected the approach", dim: true },
-                  { text: "[ok] plan       wrote executable tasks", dim: true },
-                  {
-                    text: "[ok] TDD        built through public seams",
-                    dim: true,
-                  },
-                  {
-                    text: "[ok] archive    preserved project knowledge",
-                    dim: true,
-                  },
+                  { text: "[ok] CEO        framed strategy and tradeoffs", dim: true },
+                  { text: "[ok] PM         scoped the v1 promise", dim: true },
+                  { text: "[ok] CTO        set architecture guardrails", dim: true },
+                  { text: "[ok] EM         sequenced delivery risk", dim: true },
+                  { text: "[ok] engineer   selected the smallest implementation slice", dim: true },
+                  { text: "[ok] QA         checked release risk and evidence", dim: true },
                 ]}
               />
             </div>

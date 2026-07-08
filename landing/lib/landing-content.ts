@@ -448,15 +448,15 @@ export const commands: CommandExample[] = [
 
 export const howItWorks = [
   {
-    title: "workflow.json installs the skill tree",
-    body: "A single manifest defines the callable entry skill and every local or external sub-skill it needs.",
+    title: "Install a many-skill bank",
+    body: "A workflow manifest defines the callable entry skill plus every local or external specialist skill it needs.",
   },
   {
-    title: "The entry skill is the one command users call",
-    body: "Users invoke a single skill, such as $startup-goal, and the workflow coordinates the rest.",
+    title: "Call one entry skill with a goal",
+    body: "Users invoke a single skill, such as $startup-goal, and the workflow routes the goal through the right roles.",
   },
   {
-    title: "Sub-skills run in a deliberate order",
-    body: "Strategy, product, architecture, delivery, implementation, and QA roles stay aligned without manual juggling. Looped workflows can track resumable, action-only workflow state through the CLI.",
+    title: "Compound specialist judgment",
+    body: "Strategy, product, architecture, delivery, implementation, and QA roles stay aligned so the agent can 3x your ability without manual skill juggling. Looped workflows can track resumable, action-only workflow state through the CLI.",
   },
 ];

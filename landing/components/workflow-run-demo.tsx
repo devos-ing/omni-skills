@@ -13,66 +13,80 @@ interface SkillStep {
 
 const STEPS: SkillStep[] = [
   {
-    skill: "opsx-propose",
-    label: "OpenSpec Proposal",
+    skill: "startup-goal",
+    label: "Route Goal",
     color: "text-violet-400",
     bg: "bg-violet-500/10",
     lines: [
-      "Reading current OpenSpec contract...",
-      "Identifying change surface: /payments/charge endpoint",
-      "Drafting spec amendment — adding idempotency-key header",
-      "Aligning with existing versioning conventions",
-      "✓ Spec proposal written → openspec-proposal.md",
+      "Reading goal: launch this product from idea to shipped v1",
+      "Selecting the role skills needed for the next decision",
+      "Dispatching CEO, CTO, PM, EM, founding engineer, and QA lead",
+      "✓ Startup Goal route assembled",
     ],
   },
   {
-    skill: "brainstorming",
-    label: "Design Brainstorm",
+    skill: "ceo",
+    label: "Strategy",
     color: "text-sky-400",
     bg: "bg-sky-500/10",
     lines: [
-      "Exploring approach A: client-generated UUID header",
-      "Exploring approach B: server-side dedup store (Redis TTL)",
-      "Exploring approach C: database unique constraint + retry",
-      "Evaluating tradeoffs: latency, storage, failure modes",
-      "Selected: approach B — best balance of correctness & perf",
-      "✓ Design decision recorded → brainstorm-notes.md",
+      "Clarifying customer, wedge, and first painful workflow",
+      "Choosing launch learning over broad platform scope",
+      "Naming the hard tradeoff: speed before breadth",
+      "✓ CEO strategy frame returned",
     ],
   },
   {
-    skill: "writing-plans",
-    label: "Implementation Plan",
+    skill: "product-manager",
+    label: "Product Scope",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     lines: [
-      "Breaking spec into ordered tasks...",
-      "  [1] Add idempotency middleware to Express stack",
-      "  [2] Provision Redis dedup store with 24h TTL",
-      "  [3] Wire idempotency-key header validation",
-      "  [4] Return cached response on duplicate key",
-      "✓ Plan written → implementation-plan.md (4 tasks)",
+      "Translating strategy into user problem and v1 promise",
+      "Writing acceptance criteria for the first useful demo",
+      "Slicing launch work into docs, onboarding, and feedback loop",
+      "✓ PM scope and issue slices returned",
     ],
   },
   {
-    skill: "tdd-build",
-    label: "TDD Build",
+    skill: "cto",
+    label: "Architecture",
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/10",
+    lines: [
+      "Checking the workflow manifest and install path",
+      "Flagging integration risk around external skill dependencies",
+      "Keeping the entry skill thin and role coordination explicit",
+      "✓ CTO architecture guardrails returned",
+    ],
+  },
+  {
+    skill: "founding-engineer",
+    label: "Implementation",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
     lines: [
-      "Writing failing tests first...",
-      "  ✗ should reject missing idempotency-key",
-      "  ✗ should return 200 on first request",
-      "  ✗ should return cached response on duplicate",
-      "Implementing middleware...",
-      "  ✓ should reject missing idempotency-key",
-      "  ✓ should return 200 on first request",
-      "  ✓ should return cached response on duplicate",
-      "✓ All 3 tests passing — coverage 94%",
+      "Finding the smallest implementation slice",
+      "Updating the manifest, README, and landing source contract",
+      "Running focused tests before the repo gate",
+      "✓ Verified implementation path returned",
+    ],
+  },
+  {
+    skill: "qa-lead",
+    label: "QA Review",
+    color: "text-rose-400",
+    bg: "bg-rose-500/10",
+    lines: [
+      "Checking acceptance against the original startup goal",
+      "Scanning for stale startup-team and OpenSpec-facing examples",
+      "Separating verified facts from residual launch risk",
+      "✓ Combined startup answer ready",
     ],
   },
 ];
 
-const PROMPT = "> $openspec-delivery implement idempotency for /payments/charge";
+const PROMPT = "> $startup-goal help me launch this product from idea to shipped v1";
 const LINE_DELAY = 170;
 const BETWEEN_STEPS = 500;
 
@@ -155,8 +169,8 @@ export function WorkflowRunDemo() {
         <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">Try it live</p>
         <h2 className="text-3xl font-medium text-white/90">Watch the workflow run</h2>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/42">
-          Simulate calling <code className="text-white/60">$openspec-delivery</code> and see each
-          sub-skill execute in order — just like your agent would.
+          Simulate calling <code className="text-white/60">$startup-goal</code> and see each role
+          skill return its part of the combined answer.
         </p>
       </div>
 
@@ -167,7 +181,7 @@ export function WorkflowRunDemo() {
             <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
             <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-white/25">$openspec-delivery</span>
+          <span className="font-mono text-xs text-white/25">$startup-goal</span>
           <button
             type="button"
             onClick={reset}
@@ -269,9 +283,11 @@ export function WorkflowRunDemo() {
             <div className="mt-3 border-t border-white/[0.06] pt-3">
               <div className="flex items-center gap-2 text-emerald-400">
                 <span>✓</span>
-                <span>Workflow complete — all 4 skills executed</span>
+                <span>Workflow complete — all 6 role skills combined</span>
               </div>
-              <div className="mt-0.5 pl-4 text-white/25">Artifacts saved to workspace.</div>
+              <div className="mt-0.5 pl-4 text-white/25">
+                Startup plan ready for the next action.
+              </div>
             </div>
           ) : null}
         </div>

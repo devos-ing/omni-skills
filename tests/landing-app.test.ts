@@ -71,6 +71,22 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
   });
 
+  test("leads with the power-your-ability positioning", () => {
+    const page = readLandingFile("components/landing-page.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
+
+    expect(page).toContain("Power your ability.");
+    expect(page).toContain("Install the workflow.");
+    expect(page).toContain("many-skill bank");
+    expect(page).toContain("3x your ability");
+    expect(page).toContain("npx getsuperpower@latest install startup-goal");
+    expect(page).toContain("One entry skill. Many specialist skills.");
+    expect(content).toContain("Install a many-skill bank");
+    expect(content).toContain("Call one entry skill with a goal");
+    expect(content).toContain("Compound specialist judgment");
+    expect(content).toContain("3x your ability without manual skill juggling");
+  });
+
   test("uses Vercel Geist Sans as the landing app font", () => {
     const layout = readLandingFile("app/layout.tsx");
     const globals = readLandingFile("app/globals.css");
@@ -278,17 +294,28 @@ describe("landing app source contract", () => {
 
   test("renders an interactive simulated workflow run section", () => {
     const demo = readLandingFile("components/workflow-run-demo.tsx");
+    const flow = readLandingFile("components/flow-diagram.tsx");
     const page = readLandingFile("components/landing-page.tsx");
 
     expect(demo).toContain("export function WorkflowRunDemo");
     expect(demo).toContain("const STEPS: SkillStep[]");
-    expect(demo).toContain("OpenSpec Proposal");
-    expect(demo).toContain("Design Brainstorm");
-    expect(demo).toContain("Implementation Plan");
-    expect(demo).toContain("TDD Build");
+    expect(flow).toContain("$startup-goal");
+    expect(flow).toContain("startup-goal entry skill");
+    expect(flow).toContain("Role skills combine");
+    expect(demo).toContain("Route Goal");
+    expect(demo).toContain("Strategy");
+    expect(demo).toContain("Product Scope");
+    expect(demo).toContain("Architecture");
+    expect(demo).toContain("Implementation");
+    expect(demo).toContain("QA Review");
     expect(demo).toContain("Try it live");
     expect(demo).toContain("Watch the workflow run");
-    expect(demo).toContain("> $openspec-delivery implement idempotency for /payments/charge");
+    expect(demo).toContain("> $startup-goal help me launch this product from idea to shipped v1");
+    expect(page).toContain("$startup-goal help me launch this product from idea to shipped v1");
+    expect(page).toContain("[ok] CEO");
+    expect(page).toContain("[ok] QA");
+    expect(demo).not.toContain("$openspec-delivery");
+    expect(flow).not.toContain("$openspec-delivery");
     expect(demo).toContain("setCompletedSteps");
     expect(demo).toContain("scrollRef.current?.scrollTo");
     expect(demo).toContain("Replay");

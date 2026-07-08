@@ -3,17 +3,17 @@ import { ArrowDown } from "lucide-react";
 const steps = [
   {
     label: "User invokes",
-    value: "$openspec-delivery",
+    value: "$startup-goal",
     classes: "border-violet-400/25 bg-violet-400/10 text-violet-200",
   },
   {
     label: "Entry skill coordinates",
-    value: "SKILL.md orchestrator",
+    value: "startup-goal entry skill",
     classes: "border-sky-400/25 bg-sky-400/10 text-sky-200",
   },
   {
-    label: "Sub-skills run in order",
-    values: ["proposal", "brainstorm", "plan", "TDD", "verify", "archive"],
+    label: "Role skills combine",
+    values: ["CEO", "PM", "CTO", "EM", "engineer", "QA"],
     classes: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
   },
 ];
