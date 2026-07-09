@@ -266,10 +266,77 @@ describe("workflow bundles", () => {
     );
     expect(skill).toContain("name: startup-goal");
     expect(skill).toContain("approved requirement brief");
+    expect(skill).toContain("Treat a raw user requirement as incomplete");
+    expect(skill).toContain("ask one question at a time");
+    expect(skill).toContain("without open questions or ambiguity");
+    expect(skill).toContain("If the user says `run it`, `process`, `continue`");
+    expect(skill).toContain("Only after the user explicitly approves that brief");
+    expect(skill).toContain("Lazy Routing Gate");
+    expect(skill).toContain("Lazy means deliberate, not role-starved");
+    expect(skill).toContain("Default to broad startup-operating coverage");
+    expect(skill).toContain("Do not default to one or two roles");
+    expect(skill).toContain("Skipped roles are exceptions, not savings targets");
+    expect(skill).toContain("Visible Processing Contract");
+    expect(skill).toContain("Never make the lazy path invisible");
+    expect(skill).toContain("controls pacing and role");
+    expect(skill).toContain("Processing plan");
+    expect(skill).toContain("Active roles");
+    expect(skill).toContain("Skipped roles");
+    expect(skill).toContain("Completed role outputs");
+    expect(skill).toContain("Unavailable dispatch");
     expect(skill).toContain("Dispatch a separate role-scoped subagent");
     expect(skill).toContain("Wait for all dispatched role subagents to finish");
     expect(skill).toContain("Combine the role outputs into one owner-facing decision log");
     expect(skill).toContain("Recommend the next action from the combined result");
+  });
+
+  test("startup goal bundled role skills define role-specific operating modes", async () => {
+    const skillsDir = join(
+      import.meta.dir,
+      "..",
+      "examples",
+      "workflows",
+      "startup-goal",
+      "skills",
+    );
+    const roleContracts = [
+      {
+        role: "ceo",
+        phrases: ["State the company-level decision", "smallest evidence-gathering step"],
+      },
+      {
+        role: "product-manager",
+        phrases: ["Write acceptance criteria", "visible product progress"],
+      },
+      {
+        role: "cto",
+        phrases: ["technical trajectory", "verification gate"],
+      },
+      {
+        role: "engineering-manager",
+        phrases: ["smallest shippable outcome", "verifiable state"],
+      },
+      {
+        role: "founding-engineer",
+        phrases: ["Read the plan", "commands run, files changed, and any residual risk"],
+      },
+      {
+        role: "qa-lead",
+        phrases: ["Restate the user-facing behavior", "Separate verified facts"],
+      },
+    ];
+
+    for (const contract of roleContracts) {
+      const skill = await readFile(join(skillsDir, contract.role, "SKILL.md"), "utf8");
+
+      expect(skill).toContain(`name: ${contract.role}`);
+      expect(skill).toContain("## Required Companion Skills");
+      expect(skill).toContain("If a companion skill is unavailable");
+      expect(skill).toContain("## Operating Mode");
+      for (const phrase of contract.phrases) {
+        expect(skill).toContain(phrase);
+      }
+    }
   });
 
   test("haaland workflow stays one-step and unconditional", async () => {

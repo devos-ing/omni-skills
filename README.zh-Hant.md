@@ -27,7 +27,7 @@ npx getsuperpower@latest install startup-goal
 然後請你的 agent 帶著目標執行 entry skill：
 
 ```text
-$startup-goal help me launch this product from idea to shipped v1
+$startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks
 ```
 
 這個 alias 會指向 repo 內已提交的 workflow bundle：

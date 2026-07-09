@@ -41,6 +41,14 @@ The authoring skill should help you produce or review:
 - validation commands: `getsuperpower validate`, `getsuperpower deps`, and a
   local `install` smoke test
 
+When the workflow shape is already clear and you only need help writing the
+entry skill, local role skills, dependency choices, gates, or handoff contracts,
+install and invoke the narrower prompt-writing helper:
+
+```bash
+npx getsuperpower@latest skills install writing-workflow-skills
+```
+
 Use the rest of this guide as the checklist for what that skill should create.
 If you are editing by hand, follow the same steps yourself.
 

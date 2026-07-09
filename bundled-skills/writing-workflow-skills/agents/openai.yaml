@@ -1,0 +1,4 @@
+interface:
+  display_name: "Writing Workflow Skills"
+  short_description: "Write GetSuperpower skill prompts"
+  default_prompt: "Help me write the entry and local skill prompts for this GetSuperpower workflow."

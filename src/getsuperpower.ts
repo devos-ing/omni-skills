@@ -40,8 +40,8 @@ export interface GetSuperpowerInstallSkillInput {
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
   dryRun: false;
-  force: false;
-  refreshExisting: true;
+  force: boolean;
+  refreshExisting: boolean;
   installPrehook: false;
 }
 
@@ -376,11 +376,17 @@ async function runGetSuperpowerInstall(
 
     console.log(success("Installing skills..."));
 
+    const versionRefreshSources = await getWorkflowVersionRefreshSources({
+      rootDir: targetDir,
+      workflowName: bundle.manifest.name,
+      workflowVersion: bundle.manifest.version,
+    });
     preparedDependencies = await getPreparedWorkflowSkillInstallDependencies({ bundle });
     const skillDependencies = preparedDependencies.dependencies;
     const installArtifacts: WorkflowInstallSkillArtifact[] = [];
     for (const [index, skillDependency] of skillDependencies.entries()) {
-      const displaySkill = skillPlans[index]?.source ?? skillDependency.source;
+      const manifestSource = skillPlans[index]?.source ?? skillDependency.source;
+      const displaySkill = manifestSource;
       console.log(`Processing ${index + 1}/${skillDependencies.length}: ${displaySkill}`);
       const skillResult = await installGetSuperpowerSkillDependency({
         rootDir: targetDir,
@@ -392,9 +398,9 @@ async function runGetSuperpowerInstall(
         installExternalSkillDependency:
           options.installExternalSkillDependency ?? installExternalSkillDependencyWithSkillsCli,
         installedExternalPackages,
+        forceRefreshExisting: versionRefreshSources.has(manifestSource),
       });
 
-      const manifestSource = skillPlans[index]?.source ?? skillDependency.source;
       for (const target of skillResult.skillInstall.targets) {
         installArtifacts.push({
           source: manifestSource,
@@ -427,6 +433,21 @@ async function runGetSuperpowerInstall(
     await preparedDependencies?.cleanup?.();
     await bundle.cleanup?.();
   }
+}
+
+async function getWorkflowVersionRefreshSources(input: {
+  rootDir: string;
+  workflowName: string;
+  workflowVersion: string;
+}): Promise<Set<string>> {
+  const installedWorkflow = (await listInstalledWorkflowBundles({ rootDir: input.rootDir })).find(
+    (workflow) => workflow.name === input.workflowName,
+  );
+  if (!installedWorkflow || installedWorkflow.version === input.workflowVersion) {
+    return new Set();
+  }
+
+  return new Set((installedWorkflow.installArtifacts ?? []).map((artifact) => artifact.source));
 }
 
 function getWorkflowInstallSkillPlans(bundle: {
@@ -469,6 +490,7 @@ async function installGetSuperpowerSkillDependency(input: {
   installSkill: GetSuperpowerSkillInstaller;
   installExternalSkillDependency: GetSuperpowerExternalSkillDependencyInstaller;
   installedExternalPackages: Set<string>;
+  forceRefreshExisting: boolean;
 }): Promise<GetSuperpowerInstallSkillResult> {
   try {
     return await installWorkflowSkillDependency(input);
@@ -514,6 +536,7 @@ function installWorkflowSkillDependency(input: {
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
   installSkill: GetSuperpowerSkillInstaller;
+  forceRefreshExisting: boolean;
 }): Promise<GetSuperpowerInstallSkillResult> {
   return input.installSkill({
     rootDir: input.rootDir,
@@ -522,8 +545,8 @@ function installWorkflowSkillDependency(input: {
     homeDir: input.homeDir,
     agents: input.agents,
     dryRun: false,
-    force: false,
-    refreshExisting: true,
+    force: input.forceRefreshExisting,
+    refreshExisting: !input.forceRefreshExisting,
     installPrehook: false,
   });
 }

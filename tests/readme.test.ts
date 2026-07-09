@@ -52,13 +52,18 @@ describe("README source contract", () => {
       expect(readme).toContain(`npx getsuperpower@latest install ${alias}`);
     }
 
-    expect(readme).toContain("$startup-goal help me launch this product from idea to shipped v1");
+    expect(readme).toContain(
+      "$startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
+    );
     expect(readme).toContain(
       "npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/startup-goal'",
     );
     expect(readme).not.toContain("npx getsuperpower@latest install startup-team");
     expect(readme).not.toContain(
       "$startup-team help me launch this product from idea to shipped v1",
+    );
+    expect(readme).not.toContain(
+      "$startup-goal help me launch this product from idea to shipped v1",
     );
   });
 
@@ -118,7 +123,9 @@ describe("README source contract", () => {
     expect(readme).toContain("npx getsuperpower@latest install startup-goal");
     expect(readme).toContain("npx getsuperpower@latest install ceo");
     expect(readme).toContain("npx getsuperpower@latest install qa-lead");
-    expect(readme).toContain("$startup-goal help me launch this product from idea to shipped v1");
+    expect(readme).toContain(
+      "$startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
+    );
     expect(readme).toContain("npx getsuperpower@latest loop start grilled-product-dev --json");
     expect(readme).toContain("workflow.json");
     expect(readme).toContain("$creating-bundle-skills");

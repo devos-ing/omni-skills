@@ -5,6 +5,36 @@ export const GETSUPERPOWER_ASCII_LOGO = [
   "Skill trees for serious agent work.",
 ].join("\n");
 
+const GETSUPERPOWER_WORDMARK_LINES = [
+  "GGGG  EEEEE TTTTT  SSSS  U   U PPPP  EEEEE RRRR  PPPP   OOO  W   W EEEEE RRRR ",
+  "G     E       T   S      U   U P   P E     R   R P   P O   O W   W E     R   R",
+  "G GGG EEEE    T    SSS   U   U PPPP  EEEE  RRRR  PPPP  O   O W W W EEEE  RRRR ",
+  "G   G E       T       S  U   U P     E     R  R  P     O   O WW WW E     R  R ",
+  "GGGG  EEEEE   T   SSSS    UUU  P     EEEEE R   R P      OOO  W   W EEEEE R   R",
+];
+
+const WORDMARK_MIN_COLUMNS = 78;
+
+function supportsWordmarkLogo(): boolean {
+  return (process.stdout.columns ?? 120) >= WORDMARK_MIN_COLUMNS;
+}
+
+export function getSuperpowerWordmarkLogo(): string {
+  if (!supportsWordmarkLogo()) return GETSUPERPOWER_ASCII_LOGO;
+
+  const [top, high, mid, low, bottom] = GETSUPERPOWER_WORDMARK_LINES;
+  return [
+    pc.whiteBright(top),
+    pc.white(high),
+    pc.gray(mid),
+    pc.dim(low),
+    pc.dim(bottom),
+    pc.magenta("____"),
+    brand("GETSUPERPOWER"),
+    muted("Skill trees for serious agent work."),
+  ].join("\n");
+}
+
 export function brand(value: string): string {
   return pc.bold(pc.cyan(value));
 }
@@ -68,7 +98,7 @@ export function getSuperpowerInstallResultBox(input: {
 
 export function rootHelpBanner(): string {
   return [
-    brand(GETSUPERPOWER_ASCII_LOGO),
+    getSuperpowerWordmarkLogo(),
     "",
     success("Welcome to GetSuperpower."),
     "Install and author workflow skill trees for agent work.",

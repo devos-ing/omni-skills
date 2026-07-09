@@ -24,7 +24,7 @@ npx getsuperpower@latest install startup-goal
 Then ask your agent to run the entry skill with a goal:
 
 ```text
-$startup-goal help me launch this product from idea to shipped v1
+$startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks
 ```
 
 The alias points to the checked-in workflow bundle:

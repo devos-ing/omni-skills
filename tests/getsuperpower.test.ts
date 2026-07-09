@@ -44,7 +44,7 @@ function fakeSkillInstallResult(input: {
 
 async function writeGitWorkflowFixtureAt(
   workflowDir: string,
-  options: { loop?: boolean } = {},
+  options: { loop?: boolean; version?: string; extraSkill?: boolean } = {},
 ): Promise<void> {
   await mkdir(join(workflowDir, "skills", "git-entry"), { recursive: true });
   await writeFile(
@@ -58,18 +58,35 @@ async function writeGitWorkflowFixtureAt(
       "# git-entry",
     ].join("\n"),
   );
+  if (options.extraSkill) {
+    await mkdir(join(workflowDir, "skills", "git-extra"), { recursive: true });
+    await writeFile(
+      join(workflowDir, "skills", "git-extra", "SKILL.md"),
+      [
+        "---",
+        "name: git-extra",
+        'description: "Extra skill from a public git workflow."',
+        "---",
+        "",
+        "# git-extra",
+      ].join("\n"),
+    );
+  }
   await writeFile(
     join(workflowDir, "workflow.json"),
     JSON.stringify(
       {
         schemaVersion: "0.1",
         name: "git-workflow",
-        version: "0.1.0",
+        version: options.version ?? "0.1.0",
         description: "Uses one local skill from git.",
         ...(options.loop
           ? { loop: { script: "./loop.mjs", state: "global", execution: "action-only" } }
           : {}),
-        skills: [{ source: "./skills/git-entry", ...(options.loop ? { entry: true } : {}) }],
+        skills: [
+          { source: "./skills/git-entry", ...(options.loop ? { entry: true } : {}) },
+          ...(options.extraSkill ? [{ source: "./skills/git-extra" }] : []),
+        ],
         steps: [
           {
             id: "entry",
@@ -77,6 +94,15 @@ async function writeGitWorkflowFixtureAt(
             skill: "./skills/git-entry",
             ...(options.loop ? { instruction: "Check loop status." } : {}),
           },
+          ...(options.extraSkill
+            ? [
+                {
+                  id: "extra",
+                  title: "Extra",
+                  skill: "./skills/git-extra",
+                },
+              ]
+            : []),
         ],
       },
       null,
@@ -270,6 +296,92 @@ describe("getsuperpower command module", () => {
     await expect(
       stat(join(rootDir, ".getsuperpower", "workflows", "git-workflow.json")),
     ).rejects.toThrow();
+
+    await rm(rootDir, { recursive: true, force: true });
+    await rm(homeDir, { recursive: true, force: true });
+  });
+
+  test("install force-refreshes only recorded workflow artifacts when workflow version changes", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "getsuperpower-version-refresh-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "getsuperpower-version-refresh-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const previousSkillPath = join(homeDir, ".agents", "skills", "git-entry");
+    const skillInstalls: Array<{
+      source: string;
+      force: boolean | undefined;
+      refreshExisting: boolean | undefined;
+    }> = [];
+    const program = new Command();
+
+    await writeGitWorkflowFixtureAt(bundleDir, { version: "0.1.1", extraSkill: true });
+    await mkdir(join(rootDir, ".getsuperpower", "workflows"), { recursive: true });
+    await writeFile(
+      join(rootDir, ".getsuperpower", "workflows", "git-workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "git-workflow",
+          version: "0.1.0",
+          description: "Previous install record.",
+          skills: [{ source: "./skills/git-entry" }],
+          steps: [{ id: "entry", title: "Entry", skill: "./skills/git-entry" }],
+          source: { kind: "local", path: bundleDir },
+          installArtifacts: [
+            {
+              source: "./skills/git-entry",
+              skillName: "git-entry",
+              agent: "codex",
+              status: "installed",
+              paths: [previousSkillPath],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    configureGetSuperpowerCommand(program, {
+      rootDir,
+      installSkill: async (input) => {
+        skillInstalls.push({
+          source: input.source,
+          force: input.force,
+          refreshExisting: input.refreshExisting,
+        });
+        const skillName = input.source.endsWith("git-extra") ? "git-extra" : "git-entry";
+        return {
+          skillInstall: fakeSkillInstallResult({
+            source: input.source,
+            skillName,
+            destination: join(homeDir, ".agents", "skills", skillName),
+          }),
+        };
+      },
+      printSkillInstallResult: () => {},
+    });
+
+    await program.parseAsync(
+      ["install", bundleDir, "--dir", rootDir, "--home", homeDir, "--agents", "codex"],
+      { from: "user" },
+    );
+
+    expect(skillInstalls).toEqual([
+      {
+        source: join(bundleDir, "skills", "git-entry"),
+        force: true,
+        refreshExisting: false,
+      },
+      {
+        source: join(bundleDir, "skills", "git-extra"),
+        force: false,
+        refreshExisting: true,
+      },
+    ]);
+    const installed = JSON.parse(
+      await readFile(join(rootDir, ".getsuperpower", "workflows", "git-workflow.json"), "utf8"),
+    );
+    expect(installed.version).toBe("0.1.1");
 
     await rm(rootDir, { recursive: true, force: true });
     await rm(homeDir, { recursive: true, force: true });

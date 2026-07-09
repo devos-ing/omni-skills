@@ -197,6 +197,9 @@ describe("cli", () => {
     const normalizedHelp = help.replace(/\s+/g, " ");
 
     expect(help).toContain("GETSUPERPOWER");
+    expect(help).toContain("GGGG  EEEEE TTTTT");
+    expect(help).toContain("PPPP   OOO  W   W");
+    expect(help).toContain("____");
     expect(help).toContain("Welcome to GetSuperpower.");
     expect(help).toContain("Install and author workflow skill trees for agent work.");
     expect(help).toContain("getsuperpower init release-review");
@@ -228,6 +231,8 @@ describe("cli", () => {
 
     const text = stripAnsi(output.join(""));
     expect(text).toContain("GETSUPERPOWER");
+    expect(text).toContain("GGGG  EEEEE TTTTT");
+    expect(text).toContain("PPPP   OOO  W   W");
     expect(text).toContain("Welcome to GetSuperpower.");
     expect(text).toContain("Usage: getsuperpower");
   });
