@@ -266,6 +266,15 @@ describe("workflow bundles", () => {
     );
     expect(skill).toContain("name: startup-goal");
     expect(skill).toContain("approved requirement brief");
+    expect(skill).toContain("Treat a raw user requirement as incomplete");
+    expect(skill).toContain("ask one question at a time");
+    expect(skill).toContain("without open questions or ambiguity");
+    expect(skill).toContain("If the user says `run it`, `process`, `continue`");
+    expect(skill).toContain("Only after the user explicitly approves that brief");
+    expect(skill).toContain("Lazy Routing Gate");
+    expect(skill).toContain("smallest role set");
+    expect(skill).toContain("Do not dispatch every role by default");
+    expect(skill).toContain("Prefer the cheapest safe path before implementation");
     expect(skill).toContain("Dispatch a separate role-scoped subagent");
     expect(skill).toContain("Wait for all dispatched role subagents to finish");
     expect(skill).toContain("Combine the role outputs into one owner-facing decision log");
