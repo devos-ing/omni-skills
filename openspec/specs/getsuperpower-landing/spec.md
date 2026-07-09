@@ -47,6 +47,15 @@ workflow skill running its ordered sub-skills.
 - **AND** the page exposes a source link for the local `SKILL.md` without
   implying that the browser is executing that skill
 
+#### Scenario: visitor views a workflow-run skill
+
+- **WHEN** a visitor clicks or keyboard-selects a skill in the run-calls rail
+- **THEN** the page visibly selects that skill
+- **AND** the page shows the selected skill id, owner or role, current demo
+  status, checklist lines, and returned response
+- **AND** the page exposes a source link for the local `SKILL.md` without
+  implying that the browser is executing that skill
+
 ### Requirement: Workflow Run Demo Uses Local Static Content
 
 The landing app SHALL render the workflow-run demo from local typed content.
