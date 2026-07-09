@@ -62,6 +62,22 @@ describe("skill installer", () => {
     );
   });
 
+  test("resolves the bundled workflow skill authoring helper by name", async () => {
+    const source = await resolveInstallSkillSource("writing-workflow-skills");
+
+    expect(source.name).toBe("writing-workflow-skills");
+    expect(source.kind).toBe("bundled");
+    expect(source.path.endsWith(join("bundled-skills", "writing-workflow-skills"))).toBe(true);
+
+    const skill = await readFile(join(source.path, "SKILL.md"), "utf8");
+    expect(skill).toContain("name: writing-workflow-skills");
+    expect(skill).toContain("Use when writing or reviewing GetSuperpower workflow skill files");
+    expect(skill).toContain("Use `creating-bundle-skills` for the whole bundle");
+    expect(skill).toContain("superpowers:brainstorming");
+    expect(skill).toContain("mattpocock:to-prd");
+    expect(skill).toContain("Role Output");
+  });
+
   test("defaults to the creating bundle skills authoring skill", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
@@ -77,6 +93,33 @@ describe("skill installer", () => {
         agent: "codex",
         status: "would_install",
       });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("installs the bundled workflow skill authoring helper into Codex targets", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+
+    try {
+      const result = await installAgentSkill({
+        source: "writing-workflow-skills",
+        homeDir,
+        agents: ["codex"],
+      });
+
+      expect(result.skillName).toBe("writing-workflow-skills");
+      expect(result.targets[0]).toMatchObject({
+        agent: "codex",
+        status: "installed",
+      });
+
+      await expect(
+        stat(join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md")),
+      ).resolves.toBeTruthy();
+      await expect(
+        stat(join(homeDir, ".codex", "skills", "writing-workflow-skills", "SKILL.md")),
+      ).resolves.toBeTruthy();
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }

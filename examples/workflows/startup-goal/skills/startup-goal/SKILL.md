@@ -41,38 +41,39 @@ questions or ambiguities, then present the brief and wait for explicit approval.
 
 ## Lazy Routing Gate
 
-- Prefer the cheapest safe path before implementation. Think just enough to avoid
-  dumb work, then route only the next decision or slice.
-- Do not dispatch every role by default. Choose the smallest role set that can
-  answer the current decision, remove meaningful uncertainty, or safely move the
-  goal forward.
-- Default to one or two roles for implementation-shaped goals: usually
-  `founding-engineer` for the change and `qa-lead` for verification. Add
-  `product-manager` only when user value or scope is unclear, `cto` only when
-  architecture or dependency risk is real, `engineering-manager` only when
-  sequencing or release coordination matters, and `ceo` only when company-level
-  tradeoffs are involved.
-- If a goal is tiny, obvious, and reversible, keep the visible processing but
-  use the narrow implementation path after the approved brief.
-- If a goal has company, product, architecture, delivery, implementation, and QA
-  uncertainty, use the full role bench. Otherwise, keep the bench lazy.
-- In the role plan, name the roles you are intentionally skipping and why, so the
-  owner can see that the omission is deliberate.
+- Lazy means deliberate, not role-starved. Pause before execution, inspect the
+  approved brief, and think through the company, product, architecture,
+  delivery, implementation, and QA uncertainties before routing.
+- Default to broad startup-operating coverage after the approved brief. Most
+  meaningful startup goals should include `product-manager`, `cto`,
+  `engineering-manager`, `founding-engineer`, and `qa-lead`; add `ceo` when
+  strategy, positioning, pricing, fundraising, or go/no-go tradeoffs are real.
+- Do not default to one or two roles for implementation-shaped goals. A narrow
+  implementation path is allowed only when the approved brief proves the work is
+  tiny, reversible, free of product or architecture uncertainty, free of
+  sequencing risk, and already has an explicit verification bar.
+- Use the full role bench whenever uncertainty spans company, product,
+  architecture, delivery, implementation, and QA, or when skipping a role could
+  hide customer value, technical risk, sequencing risk, or verification risk.
+- Skipped roles are exceptions, not savings targets. In the role plan, name any
+  skipped role, cite the evidence from the approved brief that makes it
+  unnecessary for this slice, and say what new evidence would bring it back in.
 
 ## Visible Processing Contract
 
-Never make the lazy path invisible. Lazy routing controls how many roles are
-needed; it does not remove the visible workflow. Even for a one-role or two-role
-slice, show the processing trace before, during, and after execution.
+Never make the lazy path invisible. Lazy routing controls pacing and role
+justification; it does not remove role coverage or the visible workflow. Even
+when a role is skipped, show the processing trace before, during, and after
+execution.
 
 Every processed goal must include:
 
 - Processing plan: the approved brief status, selected roles, skipped roles, and
-  the reason this route is the smallest safe route.
+  the reason this route is broad enough for the current uncertainty.
 - Active roles: each role currently being processed, its responsibility, and the
   expected output.
-- Skipped roles: each omitted bundled role and the reason it is unnecessary for
-  this slice.
+- Skipped roles: each omitted bundled role, the brief evidence that makes it
+  unnecessary for this slice, and the condition that would bring it back.
 - Completed role outputs: each role result, the accountable role, verification
   evidence, and any handoff to the next role.
 - Unavailable dispatch: if subagent dispatch is unavailable, still show the
@@ -95,10 +96,10 @@ Every processed goal must include:
    requirement intake loop until no material question or unclear point remains.
 3. Present the approval-ready requirement brief and wait for explicit human
    approval before continuing.
-4. Run the lazy routing gate and decide the smallest role set needed for the
-   approved brief.
-5. Present the role plan, including skipped roles and why they are unnecessary
-   for this slice, then wait at any human approval gate.
+4. Run the lazy routing gate: pause, think through the approved brief, and decide
+   a role set broad enough for the current uncertainty.
+5. Present the role plan, including any skipped roles, the evidence for skipping
+   them, and what would bring them back, then wait at any human approval gate.
 6. Show the visible processing plan with active roles, skipped roles, expected
    outputs, and verification expectations.
 7. Dispatch a separate role-scoped subagent for each needed role.
