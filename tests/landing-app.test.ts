@@ -80,7 +80,15 @@ describe("landing app source contract", () => {
     expect(page).toContain("many-skill bank");
     expect(page).toContain("3x your ability");
     expect(page).toContain("npx getsuperpower@latest install startup-goal");
-    expect(page).toContain("One entry skill. Many specialist skills.");
+    expect(page).toContain("Agent run demo");
+    expect(page).toContain("Watch the roles answer.");
+    expect(page).not.toContain("How it works + Agent run demo");
+    expect(page).not.toContain("One entry skill. Many specialist skills.");
+    expect(page).not.toContain('href="#how-it-works"');
+    expect(page).not.toContain('id="how-it-works"');
+    expect(page).not.toContain("<FlowDiagram");
+    expect(page).not.toContain("lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]");
+    expect(page).not.toContain("xl:grid-cols-[22rem_minmax(0,1fr)]");
     expect(content).toContain("Install a many-skill bank");
     expect(content).toContain("Call one entry skill with a goal");
     expect(content).toContain("Compound specialist judgment");
@@ -225,13 +233,13 @@ describe("landing app source contract", () => {
 
   test("describes loop-enabled workflows as CLI-controlled and action-only", () => {
     const content = readLandingFile("lib/landing-content.ts");
-    const demo = readLandingFile("components/workflow-run-demo.tsx");
+    const page = readLandingFile("components/landing-page.tsx");
 
     expect(content).toContain(
       "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
     );
     expect(content).toContain("resumable, action-only workflow state");
-    expect(demo).toContain("Simulate calling");
+    expect(page).toContain("Simulate calling");
     expect(content).not.toContain("executes tools");
     expect(content).not.toContain("runs live workflows in the browser");
   });
@@ -294,28 +302,42 @@ describe("landing app source contract", () => {
 
   test("renders an interactive simulated workflow run section", () => {
     const demo = readLandingFile("components/workflow-run-demo.tsx");
-    const flow = readLandingFile("components/flow-diagram.tsx");
     const page = readLandingFile("components/landing-page.tsx");
 
     expect(demo).toContain("export function WorkflowRunDemo");
     expect(demo).toContain("const STEPS: SkillStep[]");
-    expect(flow).toContain("$startup-goal");
-    expect(flow).toContain("startup-goal entry skill");
-    expect(flow).toContain("Role skills combine");
     expect(demo).toContain("Route Goal");
     expect(demo).toContain("Strategy");
     expect(demo).toContain("Product Scope");
     expect(demo).toContain("Architecture");
+    expect(demo).toContain("Delivery");
     expect(demo).toContain("Implementation");
     expect(demo).toContain("QA Review");
-    expect(demo).toContain("Try it live");
-    expect(demo).toContain("Watch the workflow run");
-    expect(demo).toContain("> $startup-goal help me launch this product from idea to shipped v1");
-    expect(page).toContain("$startup-goal help me launch this product from idea to shipped v1");
+    expect(page).toContain("Agent run demo");
+    expect(page).toContain("Watch the roles answer.");
+    expect(page).toContain("Simulate calling");
+    expect(demo).toContain("/startup-goal help me launch this product from idea to shipped v1");
+    expect(page).toContain("/startup-goal help me launch this product from idea to shipped v1");
+    expect(demo).toContain("Run calls");
+    expect(demo).not.toContain("Role calls");
+    expect(demo).toContain("Combined answer");
+    expect(demo).toContain("h-[44rem]");
+    expect(demo).toContain("lg:h-[34rem]");
+    expect(demo).toContain("grid h-full overflow-y-auto");
+    expect(demo).toContain("lg:grid-cols-[15rem_minmax(0,1fr)]");
+    expect(demo).not.toContain("lg:grid-cols-[16rem_minmax(0,1fr)_18rem]");
+    expect(demo).toContain("min-h-0 flex-1 space-y-3 overflow-y-auto");
+    expect(demo).toContain("font-mono text-xs leading-5");
+    expect(demo).toContain("text-[11px]");
+    expect(page).toContain("Landing simulation only");
+    expect(page).toContain("No browser-side agent execution or fake telemetry");
+    expect(demo).toContain("prefers-reduced-motion: reduce");
+    expect(demo).toContain("motion-safe:animate-[agent-message_360ms_ease-out_both]");
     expect(page).toContain("[ok] CEO");
     expect(page).toContain("[ok] QA");
     expect(demo).not.toContain("$openspec-delivery");
-    expect(flow).not.toContain("$openspec-delivery");
+    expect(demo).not.toContain("installCount");
+    expect(demo).not.toContain("displayMetrics");
     expect(demo).toContain("setCompletedSteps");
     expect(demo).toContain("scrollRef.current?.scrollTo");
     expect(demo).toContain("Replay");
@@ -326,6 +348,7 @@ describe("landing app source contract", () => {
     const workflowsIndex = page.indexOf('id="workflows"');
 
     expect(page).toContain("import { WorkflowRunDemo }");
+    expect(page).not.toContain("import { FlowDiagram }");
     expect(page).not.toContain("workflowRun");
     expect(demoIndex).toBeGreaterThan(-1);
     expect(workflowsIndex).toBeGreaterThan(-1);

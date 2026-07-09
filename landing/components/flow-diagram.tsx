@@ -3,7 +3,7 @@ import { ArrowDown } from "lucide-react";
 const steps = [
   {
     label: "User invokes",
-    value: "$startup-goal",
+    value: "/startup-goal",
     classes: "border-violet-400/25 bg-violet-400/10 text-violet-200",
   },
   {

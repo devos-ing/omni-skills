@@ -14,10 +14,10 @@ workflow skill running its ordered sub-skills.
 #### Scenario: visitor watches the workflow run
 
 - **WHEN** a visitor opens the landing page
-- **THEN** the page shows a section titled "Watch the workflow run"
-- **AND** the section shows the `$openspec-delivery` invocation
-- **AND** the section shows proposal, design, plan, TDD build, verification, and
-  archive phases in that order
+- **THEN** the page shows a workflow run demo section for an agent workbench
+- **AND** the section shows the `/startup-goal` invocation
+- **AND** the section shows startup-goal, CEO, product manager, CTO,
+  engineering manager, founding engineer, and QA lead role calls
 - **AND** the section appears after the "How it works" explanation and before
   the workflow-card list
 

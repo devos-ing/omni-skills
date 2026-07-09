@@ -1,26 +1,14 @@
 "use client";
 
-import {
-  ArrowRight,
-  ChevronRight,
-  Github,
-  Layers,
-  Package,
-  Search,
-  Workflow,
-  X,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, ChevronRight, Github, Search, Workflow, X, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   type AgentBadgeContent,
   agents,
   commands,
   githubUrl,
-  howItWorks,
   workflows,
 } from "../lib/landing-content";
-import { FlowDiagram } from "./flow-diagram";
 import { TerminalBlock } from "./terminal-block";
 import { WorkflowCard } from "./workflow-card";
 import { WorkflowRunDemo } from "./workflow-run-demo";
@@ -74,9 +62,6 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         <div className="flex items-center gap-5 text-sm text-white/50">
           <a href="#workflows" className="transition hover:text-white/80">
             Workflows
-          </a>
-          <a href="#how-it-works" className="hidden transition hover:text-white/80 sm:inline">
-            How it works
           </a>
           <a href="#install" className="transition hover:text-white/80">
             Install
@@ -147,36 +132,24 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </section>
 
-      <section id="how-it-works" className="relative z-10 mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-12 text-center">
-          <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">How it works</p>
-          <h2 className="text-3xl font-medium text-white/90">
-            One entry skill. Many specialist skills.
-          </h2>
-        </div>
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <FlowDiagram />
-          <div className="space-y-6">
-            {howItWorks.map((item, index) => {
-              const icons = [Package, Zap, Layers];
-              const Icon = icons[index] ?? Package;
-              return (
-                <div key={item.title} className="flex gap-4">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/55">
-                    <Icon size={16} />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-white/82">{item.title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-white/42">{item.body}</p>
-                  </div>
-                </div>
-              );
-            })}
+      <section className="relative z-10 mx-auto max-w-6xl px-5 py-20">
+        <div className="mb-10 grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
+          <div>
+            <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">Agent run demo</p>
+            <h2 className="text-3xl font-medium text-white/90">Watch the roles answer.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/42">
+              Simulate calling <code className="text-white/60">/startup-goal</code> in an agent
+              workbench. The entry skill routes your goal, specialist roles respond, and the system
+              combines the handoff into one owner-facing answer.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/38">
+            <Zap size={14} className="shrink-0 text-violet-200/70" />
+            <span>Landing simulation only. No browser-side agent execution or fake telemetry.</span>
           </div>
         </div>
+        <WorkflowRunDemo />
       </section>
-
-      <WorkflowRunDemo />
 
       <section id="workflows" className="relative z-10 mx-auto max-w-6xl px-5 py-20">
         <div className="mb-8">
@@ -298,7 +271,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
                 lines={[
                   {
                     prefix: ">",
-                    text: "$startup-goal help me launch this product from idea to shipped v1",
+                    text: "/startup-goal help me launch this product from idea to shipped v1",
                   },
                   { text: "", dim: true },
                   { text: "[ok] CEO        framed strategy and tradeoffs", dim: true },

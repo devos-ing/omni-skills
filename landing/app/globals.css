@@ -25,3 +25,15 @@ body {
 ::selection {
   background: rgb(139 92 246 / 0.3);
 }
+
+@keyframes agent-message {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
