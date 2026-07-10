@@ -331,33 +331,15 @@ describe("landing app source contract", () => {
     expect(landingPage).toContain("aria-label={`Open GitHub repository,");
   });
 
-  test("renders an interactive simulated workflow run section", () => {
+  test("renders a parallel startup-goal chat with case and checkpoint rails", () => {
     const demo = readLandingFile("components/workflow-run-demo.tsx");
     const page = readLandingFile("components/landing-page.tsx");
 
     expect(demo).toContain("export function WorkflowRunDemo");
-    expect(demo).toContain("const WORKFLOW_CASES: WorkflowCase[]");
+    expect(demo).toContain("const WORKFLOW_CASES");
     expect(demo).toContain("Idea to v1");
     expect(demo).toContain("Pivot or focus");
     expect(demo).toContain("Customer request");
-    expect(demo).toContain("Case categories");
-    expect(demo).toContain('className="space-y-3"');
-    expect(demo).toContain("Processing");
-    expect(demo).toContain("Case");
-    expect(demo).toContain("Intake");
-    expect(demo).toContain("Approval");
-    expect(demo).toContain("Routing");
-    expect(demo).toContain("Handoff");
-    expect(demo).toContain("Route Goal");
-    expect(demo).toContain("Strategy");
-    expect(demo).toContain("Product Scope");
-    expect(demo).toContain("Architecture");
-    expect(demo).toContain("Delivery");
-    expect(demo).toContain("Implementation");
-    expect(demo).toContain("QA Review");
-    expect(page).toContain("Agent run demo");
-    expect(page).toContain("See where startup-goal fits.");
-    expect(page).toContain("Pick a real startup situation");
     expect(demo).toContain(
       "/startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
     );
@@ -367,56 +349,57 @@ describe("landing app source contract", () => {
     expect(demo).toContain(
       "/startup-goal customers keep asking for team seats; turn that into a safe release plan",
     );
-    expect(page).toContain(
-      "/startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
-    );
-    expect(demo).toContain("Run calls");
-    expect(demo).toContain("selectedCaseIndex");
-    expect(demo).toContain("selectCase");
-    expect(demo).toContain("selectedStepIndex");
-    expect(demo).toContain("Selected skill");
-    expect(demo).toContain("View skill source");
-    expect(demo).toContain("aria-label={`View $" + "{step.skill} skill`}");
+    expect(demo).toContain("interface WorkflowCase");
+    expect(demo).toContain("coordinator: SkillStep");
+    expect(demo).toContain("roles: SkillStep[]");
+    expect(demo).toContain("roles: readonly [SkillStep, ...SkillStep[]]");
+    expect(demo).toContain("type RunPhase =");
+    expect(demo).toContain('kind: "collecting"; returnedRoleCount: number');
+    expect(demo).toContain("const renderedPhase = prefersReducedMotion ? COMPLETE_PHASE : phase");
+    expect(demo).toContain("phase.returnedRoleCount >= roleCount");
+    expect(demo).toContain("const CHECKPOINTS");
+    expect(demo).toContain("Brief approval");
+    expect(demo).toContain("Route agents");
+    expect(demo).toContain("Collect outputs");
+    expect(demo).toContain("Combined answer");
+    expect(demo).toContain("CaseRail");
+    expect(demo).toContain("ChatTranscript");
+    expect(demo).toContain("CheckpointRail");
+    expect(demo).toContain("started working");
+    expect(demo).toContain("SkillSourceLink");
+    expect(demo).toContain("getCheckpointStatus");
+    expect(demo).toContain("getRoleStatus");
+    expect(demo).toContain('aria-live="polite"');
     expect(demo).toContain("aria-pressed={isSelected}");
-    expect(demo).toContain('aria-controls="selected-skill-preview"');
-    expect(demo).toContain("owner: {selectedStep.owner}");
-    expect(demo).toContain("const selectedStepStatus = getStepStatus");
-    expect(demo).toContain("status: {selectedStepStatus}");
     expect(demo).toContain(
       "https://github.com/0xroylee/getsuperpower/blob/main/examples/workflows/startup-goal/skills",
     );
-    expect(demo).not.toContain("Role calls");
-    expect(demo).toContain("Combined answer");
-    expect(demo).toContain("h-[44rem]");
-    expect(demo).toContain("lg:h-[34rem]");
-    expect(demo).toContain("grid h-full overflow-y-auto");
-    expect(demo).toContain("lg:grid-cols-[18rem_minmax(0,1fr)]");
-    expect(demo).not.toContain("lg:grid-cols-[16rem_minmax(0,1fr)_18rem]");
-    expect(demo).toContain("min-h-0 flex-1 space-y-3 overflow-y-auto");
-    expect(demo).toContain("font-mono text-xs leading-5");
-    expect(demo).toContain("text-[11px]");
-    expect(demo).toContain("const ACTIVE_ACCENT");
-    expect(demo).toContain("showChecklist: !complete");
-    expect(demo).not.toContain("text-sky-200");
-    expect(demo).not.toContain("text-amber-200");
-    expect(demo).not.toContain("text-cyan-200");
-    expect(demo).not.toContain("text-lime-200");
-    expect(demo).not.toContain("text-emerald-200");
-    expect(demo).not.toContain("text-rose-200");
-    expect(page).toContain("Landing simulation only");
-    expect(page).toContain("No browser-side agent execution or fake telemetry");
-    expect(demo).toContain("prefers-reduced-motion: reduce");
-    expect(demo).toContain("motion-safe:animate-[agent-message_360ms_ease-out_both]");
-    expect(page).toContain("[ok] CEO");
-    expect(page).toContain("[ok] QA");
-    expect(demo).not.toContain("$openspec-delivery");
-    expect(demo).not.toContain("installCount");
-    expect(demo).not.toContain("displayMetrics");
-    expect(demo).toContain("setCompletedSteps");
-    expect(demo).toContain("scrollRef.current?.scrollTo");
+    expect(demo).toContain('target="_blank"');
+    expect(demo).toContain('rel="noreferrer"');
+    expect(demo).toContain("lg:grid-cols-[13rem_minmax(0,1fr)_13rem]");
+    expect(demo).toContain("sm:grid-cols-3");
+    expect(demo).toContain('prefersReducedMotion ? "auto" : "smooth"');
     expect(demo).toContain("Replay");
     expect(demo).toContain("setTimeout");
     expect(demo).toContain("clearTimeout");
+    expect(demo).not.toContain("Run calls");
+    expect(demo).not.toContain("Selected skill");
+    expect(demo).not.toContain("selectedStepIndex");
+    expect(demo).not.toContain("const [coordinator, ...roles] = input.steps");
+    expect(demo).not.toContain("completedSteps");
+    expect(demo).not.toContain("processPoints");
+    expect(demo).not.toContain("selected-skill-preview");
+    expect(demo).not.toContain("$openspec-delivery");
+    expect(demo).not.toContain("installCount");
+    expect(demo).not.toContain("displayMetrics");
+
+    expect(page).toContain("Agent run demo");
+    expect(page).toContain("See where startup-goal fits.");
+    expect(page).toContain("Pick a real startup situation");
+    expect(page).toContain("Landing simulation only");
+    expect(page).toContain("No browser-side agent execution or fake telemetry");
+    expect(page).toContain("[ok] CEO");
+    expect(page).toContain("[ok] QA");
 
     const demoIndex = page.indexOf("<WorkflowRunDemo");
     const workflowsIndex = page.indexOf('id="workflows"');

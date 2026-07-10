@@ -8,53 +8,48 @@ bundles, callable entry skills, and local simulated workflow-run demos.
 ## Requirements
 ### Requirement: Landing Page Shows A Workflow Run Demo
 
-The landing page SHALL include a section that demonstrates a single callable
-workflow skill running its ordered sub-skills.
+The landing page SHALL include a deterministic simulated workbench that shows
+one startup-goal coordinator dispatching a parallel set of role agents.
 
 #### Scenario: visitor watches the workflow run
 
 - **WHEN** a visitor opens the landing page
-- **THEN** the page shows a workflow run demo section for an agent workbench
-- **AND** the section shows selectable real startup cases for `/startup-goal`
-  as category controls outside the simulated agent-workbench frame
-- **AND** at least one case shows an idea-to-v1 startup prompt
-- **AND** at least one case shows a pivot or focus decision prompt
-- **AND** at least one case shows a customer-request release prompt
-- **AND** the section shows startup-goal, CEO, product manager, CTO,
-  engineering manager, founding engineer, and QA lead role calls
-- **AND** the section shows visible processing points such as intake,
-  approval, routing, handoff, risk, or release gates
+- **THEN** the workbench shows selectable real startup cases in its left rail
+- **AND** it keeps the Idea to v1, Pivot or focus, and Customer request cases
+- **AND** the center chat completes intake, brief approval, and routing before
+  showing every selected role agent as started working together
+- **AND** role outputs return in deterministic order before a combined answer
+- **AND** the right rail shows Intake, Brief approval, Route agents, Collect
+  outputs, and Combined answer as read-only queued, active, or complete
+  checkpoints
 - **AND** the simulated workbench uses restrained neutral role styling with a
-  single active accent instead of assigning separate colors to every role
-- **AND** completed transcript entries summarize returned role responses
-  instead of repeating every checklist line
+  single active accent
 - **AND** the section appears before the workflow-card list
+
+#### Scenario: visitor opens a role skill source
+
+- **WHEN** a visitor clicks or keyboard-selects a coordinator or role badge in
+  the chat
+- **THEN** the badge opens the matching local `SKILL.md` source on GitHub
+- **AND** the source link has a descriptive accessible name and safe external
+  link attributes
+- **AND** no case or checkpoint control duplicates the role agents
 
 #### Scenario: visitor interprets the run demo
 
 - **WHEN** a visitor reads the workflow-run section
-- **THEN** the section indicates that the displayed run is simulated
+- **THEN** the section identifies the displayed run as a simulation
 - **AND** it does not imply the browser is executing a live agent workflow
-- **AND** it reinforces that the entry skill records intake, approval,
-  routing, role handoffs, and a combined next action
+- **AND** it reinforces intake, approval, parallel dispatch, output collection,
+  and a combined next action
 
-#### Scenario: visitor views a workflow-run skill
+#### Scenario: visitor uses a narrow or reduced-motion display
 
-- **WHEN** a visitor clicks or keyboard-selects a skill in the run-calls rail
-- **THEN** the page visibly selects that skill
-- **AND** the page shows the selected skill id, owner or role, current demo
-  status, checklist lines, and returned response
-- **AND** the page exposes a source link for the local `SKILL.md` without
-  implying that the browser is executing that skill
-
-#### Scenario: visitor views a workflow-run skill
-
-- **WHEN** a visitor clicks or keyboard-selects a skill in the run-calls rail
-- **THEN** the page visibly selects that skill
-- **AND** the page shows the selected skill id, owner or role, current demo
-  status, checklist lines, and returned response
-- **AND** the page exposes a source link for the local `SKILL.md` without
-  implying that the browser is executing that skill
+- **WHEN** the viewport is below the desktop breakpoint
+- **THEN** cases, chat, and checkpoints stack without horizontal scrolling
+- **AND WHEN** reduced motion is preferred
+- **THEN** the selected case renders directly in its completed state without
+  timer-driven typewriter or entry animation
 
 ### Requirement: Workflow Run Demo Uses Local Static Content
 
