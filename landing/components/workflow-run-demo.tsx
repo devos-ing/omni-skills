@@ -589,7 +589,7 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
   const returnedRoles = workflowCase.roles.slice(0, returnedRoleCount);
 
   return (
-    <section className="flex h-[34rem] min-w-0 flex-col border-y border-white/[0.06] lg:h-full lg:border-x lg:border-y-0">
+    <section className="flex h-[34rem] min-w-0 flex-col border-y border-white/[0.06] lg:h-full lg:border-x lg:border-y-0 overflow-y-scroll">
       <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
         <span className="font-mono text-[11px] text-white/28">agent-workbench/startup-goal</span>
         <button
@@ -612,7 +612,7 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
         ref={scrollRef}
         aria-live="polite"
         aria-atomic="false"
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:p-4"
+        className="min-h-0 flex-1 space-y-3 p-3 sm:p-4 overflow-y-auto"
       >
         <div className="flex gap-2.5">
           <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-white/50">
