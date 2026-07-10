@@ -743,11 +743,16 @@ Expected: Biome formats only the three named files.
 
 - [ ] **Step 9: Run the focused test and landing typecheck**
 
-Run:
+Run from the repository root:
 
 ~~~~bash
 rtk bun test tests/landing-app.test.ts
-rtk bun --cwd landing run typecheck
+~~~~
+
+Then run from the landing directory:
+
+~~~~bash
+rtk bun run typecheck
 ~~~~
 
 Expected: the focused test passes with 0 failures; Next type generation and
@@ -786,11 +791,16 @@ errors, and the commit succeeds.
 
 - [ ] **Step 1: Run the focused and landing package gates**
 
-Run:
+Run from the repository root:
 
 ~~~~bash
 rtk bun test tests/landing-app.test.ts
-rtk bun --cwd landing run check
+~~~~
+
+Then run from the landing directory:
+
+~~~~bash
+rtk bun run check
 ~~~~
 
 Expected: the focused test passes; landing tests, typecheck, and production
@@ -809,10 +819,10 @@ coverage gate all pass.
 
 - [ ] **Step 3: Start the landing app for browser acceptance**
 
-Run in a persistent terminal:
+Run in a persistent terminal from the landing directory:
 
 ~~~~bash
-rtk bun --cwd landing run dev
+rtk bun run dev
 ~~~~
 
 Expected: Next reports a local URL and the landing page returns HTTP 200.

@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  Bot,
   Brain,
   Check,
-  ChevronRight,
   CircleDot,
   Code2,
   ExternalLink,
@@ -17,9 +15,18 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type StepStatus = "queued" | "active" | "complete";
+
+type SkillId =
+  | "startup-goal"
+  | "ceo"
+  | "product-manager"
+  | "cto"
+  | "engineering-manager"
+  | "founding-engineer"
+  | "qa-lead";
 
 interface SkillStep {
   skill: SkillId;
@@ -31,43 +38,52 @@ interface SkillStep {
   sourceUrl: string;
 }
 
-type SkillId =
-  | "startup-goal"
-  | "ceo"
-  | "product-manager"
-  | "cto"
-  | "engineering-manager"
-  | "founding-engineer"
-  | "qa-lead";
-
-interface ProcessPoint {
-  label: string;
-  value: string;
-}
-
 interface WorkflowCase {
   id: string;
   title: string;
   subtitle: string;
   prompt: string;
   outcome: string;
-  processPoints: ProcessPoint[];
-  steps: SkillStep[];
+  coordinator: SkillStep;
+  roles: SkillStep[];
 }
 
-interface TranscriptEntry {
-  step: SkillStep;
-  lines: string[];
-  complete: boolean;
-  showChecklist: boolean;
+interface WorkflowCaseInput {
+  id: string;
+  title: string;
+  subtitle: string;
+  prompt: string;
+  outcome: string;
+  coordinator: SkillStep;
+  roles: readonly [SkillStep, ...SkillStep[]];
 }
+
+type RunPhase =
+  | { kind: "typing"; charIndex: number }
+  | { kind: "intake" }
+  | { kind: "approval" }
+  | { kind: "dispatch" }
+  | { kind: "collecting"; returnedRoleCount: number }
+  | { kind: "synthesizing" }
+  | { kind: "complete" };
+
+type CheckpointId = "intake" | "approval" | "dispatch" | "collecting" | "complete";
+
+interface Checkpoint {
+  id: CheckpointId;
+  label: string;
+}
+
+const CHECKPOINTS: readonly Checkpoint[] = [
+  { id: "intake", label: "Intake" },
+  { id: "approval", label: "Brief approval" },
+  { id: "dispatch", label: "Route agents" },
+  { id: "collecting", label: "Collect outputs" },
+  { id: "complete", label: "Combined answer" },
+];
 
 const STARTUP_GOAL_SKILL_SOURCE_ROOT =
   "https://github.com/0xroylee/getsuperpower/blob/main/examples/workflows/startup-goal/skills";
-
-function skillSourceUrl(skill: string) {
-  return `${STARTUP_GOAL_SKILL_SOURCE_ROOT}/${skill}/SKILL.md`;
-}
 
 const ROLE_PRESENTATION: Record<
   SkillId,
@@ -110,12 +126,9 @@ const ROLE_PRESENTATION: Record<
   },
 };
 
-const ACTIVE_ACCENT = {
-  border: "border-violet-300/30",
-  bg: "bg-violet-400/[0.08]",
-  color: "text-violet-100/82",
-  shadow: "shadow-violet-500/10",
-};
+function skillSourceUrl(skill: string) {
+  return `${STARTUP_GOAL_SKILL_SOURCE_ROOT}/${skill}/SKILL.md`;
+}
 
 function makeStep(skill: SkillId, lines: string[], response: string): SkillStep {
   return {
@@ -127,8 +140,20 @@ function makeStep(skill: SkillId, lines: string[], response: string): SkillStep 
   };
 }
 
-const WORKFLOW_CASES: WorkflowCase[] = [
-  {
+function defineWorkflowCase(input: WorkflowCaseInput): WorkflowCase {
+  return {
+    id: input.id,
+    title: input.title,
+    subtitle: input.subtitle,
+    prompt: input.prompt,
+    outcome: input.outcome,
+    coordinator: input.coordinator,
+    roles: [...input.roles],
+  };
+}
+
+const WORKFLOW_CASES = [
+  defineWorkflowCase({
     id: "idea-to-v1",
     title: "Idea to v1",
     subtitle: "Turn a fuzzy product idea into a shippable first slice.",
@@ -136,22 +161,16 @@ const WORKFLOW_CASES: WorkflowCase[] = [
       "/startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
     outcome:
       "V1 plan ready: target solo founders first, prove receipt capture plus month-end summary, ship one onboarding path, and verify with five hands-on pilots.",
-    processPoints: [
-      { label: "Intake", value: "clarify customer and deadline" },
-      { label: "Approval", value: "lock a narrow v1 brief" },
-      { label: "Routing", value: "use full operating bench" },
-      { label: "Handoff", value: "merge role outputs" },
-    ],
-    steps: [
-      makeStep(
-        "startup-goal",
-        [
-          "Ask which customer feels the bookkeeping pain weekly",
-          "Draft approval brief with deadline and non-goals",
-          "Route after the owner accepts the v1 scope",
-        ],
-        "Approved route: broad startup bench because customer, scope, architecture, delivery, and QA are all uncertain.",
-      ),
+    coordinator: makeStep(
+      "startup-goal",
+      [
+        "Ask which customer feels the bookkeeping pain weekly",
+        "Draft approval brief with deadline and non-goals",
+        "Route after the owner accepts the v1 scope",
+      ],
+      "Approved route: broad startup bench because customer, scope, architecture, delivery, and QA are all uncertain.",
+    ),
+    roles: [
       makeStep(
         "ceo",
         [
@@ -207,8 +226,8 @@ const WORKFLOW_CASES: WorkflowCase[] = [
         "QA gate: release to pilots only after export totals, privacy copy, and recovery paths pass.",
       ),
     ],
-  },
-  {
+  }),
+  defineWorkflowCase({
     id: "pivot-or-focus",
     title: "Pivot or focus",
     subtitle: "Decide whether weak activation needs strategy, product, or delivery change.",
@@ -216,22 +235,16 @@ const WORKFLOW_CASES: WorkflowCase[] = [
       "/startup-goal activation is weak; should we rebuild onboarding, narrow ICP, or add concierge setup?",
     outcome:
       "Decision log ready: pause the rebuild, narrow ICP to teams with urgent setup pain, run concierge onboarding for ten accounts, and measure time-to-first-value.",
-    processPoints: [
-      { label: "Intake", value: "separate symptoms from causes" },
-      { label: "Decision", value: "compare three strategic paths" },
-      { label: "Roles", value: "CEO, PM, CTO, EM, QA pressure-test" },
-      { label: "Gate", value: "ship after evidence improves" },
-    ],
-    steps: [
-      makeStep(
-        "startup-goal",
-        [
-          "Frame the goal as a go/no-go decision",
-          "Ask for activation evidence and current ICP",
-          "Route strategy, product, tech, delivery, and QA risk",
-        ],
-        "Approved route: decision-heavy goal, so CEO stays active and implementation waits for evidence.",
-      ),
+    coordinator: makeStep(
+      "startup-goal",
+      [
+        "Frame the goal as a go/no-go decision",
+        "Ask for activation evidence and current ICP",
+        "Route strategy, product, tech, delivery, and QA risk",
+      ],
+      "Approved route: decision-heavy goal, so CEO stays active and implementation waits for evidence.",
+    ),
+    roles: [
       makeStep(
         "ceo",
         [
@@ -287,8 +300,8 @@ const WORKFLOW_CASES: WorkflowCase[] = [
         "QA gate: ten accounts, clear activation metric, and no privacy regression.",
       ),
     ],
-  },
-  {
+  }),
+  defineWorkflowCase({
     id: "customer-request",
     title: "Customer request",
     subtitle: "Turn repeated user demand into a release without bloating scope.",
@@ -296,22 +309,16 @@ const WORKFLOW_CASES: WorkflowCase[] = [
       "/startup-goal customers keep asking for team seats; turn that into a safe release plan",
     outcome:
       "Release plan ready: ship invite-only team seats for existing customers, defer billing changes, protect ownership transfer, and verify collaboration permissions.",
-    processPoints: [
-      { label: "Intake", value: "confirm demand and non-goals" },
-      { label: "Scope", value: "seat invites before billing" },
-      { label: "Risk", value: "permissions and ownership" },
-      { label: "Release", value: "acceptance plus rollback" },
-    ],
-    steps: [
-      makeStep(
-        "startup-goal",
-        [
-          "Clarify who requested team seats and why",
-          "Name billing, permissions, and rollout gates",
-          "Route because release safety spans every role",
-        ],
-        "Approved route: customer demand is real, but scope and permission risk need the full bench.",
-      ),
+    coordinator: makeStep(
+      "startup-goal",
+      [
+        "Clarify who requested team seats and why",
+        "Name billing, permissions, and rollout gates",
+        "Route because release safety spans every role",
+      ],
+      "Approved route: customer demand is real, but scope and permission risk need the full bench.",
+    ),
+    roles: [
       makeStep(
         "ceo",
         [
@@ -367,45 +374,108 @@ const WORKFLOW_CASES: WorkflowCase[] = [
         "QA gate: permission matrix, invite lifecycle, and rollback smoke pass.",
       ),
     ],
-  },
-];
+  }),
+] satisfies readonly WorkflowCase[];
+
 const TYPE_DELAY = 18;
-const LINE_DELAY = 360;
-const BETWEEN_STEPS = 720;
+const COORDINATOR_DELAY = 620;
+const DISPATCH_DELAY = 720;
+const ROLE_RETURN_DELAY = 720;
+const SYNTHESIS_DELAY = 560;
+const COMPLETE_PHASE: RunPhase = { kind: "complete" };
 
-type Phase =
-  | { kind: "typing"; charIndex: number }
-  | { kind: "running"; stepIndex: number; lineIndex: number; done: boolean };
-
-function getDonePhase(steps: SkillStep[]): Phase {
-  const lastStep = steps.at(-1);
-  return {
-    kind: "running",
-    stepIndex: Math.max(steps.length - 1, 0),
-    lineIndex: lastStep?.lines.length ?? 0,
-    done: true,
-  };
+function getInitialPhase(reducedMotion: boolean): RunPhase {
+  return reducedMotion ? COMPLETE_PHASE : { kind: "typing", charIndex: 0 };
 }
 
-function getStepStatus(phase: Phase, index: number, completedSteps: number[]): StepStatus {
-  if (completedSteps.includes(index)) return "complete";
-  if (phase.kind === "running" && phase.stepIndex === index && !phase.done) return "active";
+function getActiveCheckpointIndex(phase: RunPhase): number {
+  switch (phase.kind) {
+    case "typing":
+      return -1;
+    case "intake":
+      return 0;
+    case "approval":
+      return 1;
+    case "dispatch":
+      return 2;
+    case "collecting":
+      return 3;
+    case "synthesizing":
+      return 4;
+    case "complete":
+      return CHECKPOINTS.length;
+  }
+}
+
+function getCheckpointStatus(
+  phase: RunPhase,
+  checkpointIndex: number,
+  roleCount: number,
+): StepStatus {
+  if (phase.kind === "collecting" && phase.returnedRoleCount >= roleCount) {
+    return checkpointIndex <= 3 ? "complete" : "queued";
+  }
+
+  const activeIndex = getActiveCheckpointIndex(phase);
+  if (checkpointIndex < activeIndex) return "complete";
+  if (checkpointIndex === activeIndex) return "active";
   return "queued";
 }
 
-function makeTranscriptEntry(step: SkillStep, lines: string[], complete: boolean): TranscriptEntry {
-  return {
-    step,
-    lines,
-    complete,
-    showChecklist: !complete,
-  };
+function showRoleBatch(phase: RunPhase): boolean {
+  return (
+    phase.kind === "dispatch" ||
+    phase.kind === "collecting" ||
+    phase.kind === "synthesizing" ||
+    phase.kind === "complete"
+  );
+}
+
+function getReturnedRoleCount(phase: RunPhase, roleCount: number): number {
+  if (phase.kind === "collecting") {
+    return Math.min(phase.returnedRoleCount, roleCount);
+  }
+  if (phase.kind === "synthesizing" || phase.kind === "complete") {
+    return roleCount;
+  }
+  return 0;
+}
+
+function getRoleStatus(phase: RunPhase, roleIndex: number): StepStatus {
+  if (!showRoleBatch(phase)) return "queued";
+  if (phase.kind === "dispatch") return "active";
+  if (phase.kind === "collecting") {
+    return roleIndex < phase.returnedRoleCount ? "complete" : "active";
+  }
+  return "complete";
+}
+
+function getCoordinatorLineCount(phase: RunPhase): number {
+  switch (phase.kind) {
+    case "typing":
+      return 0;
+    case "intake":
+      return 1;
+    case "approval":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
+function isCoordinatorComplete(phase: RunPhase): boolean {
+  return (
+    phase.kind === "dispatch" ||
+    phase.kind === "collecting" ||
+    phase.kind === "synthesizing" ||
+    phase.kind === "complete"
+  );
 }
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReduced(media.matches);
     update();
@@ -416,454 +486,350 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function SkillSourceLink({ role }: { role: SkillStep }) {
+  return (
+    <a
+      href={role.sourceUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Open ${role.skill} skill source`}
+      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] text-white/48 transition hover:border-white/20 hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+    >
+      {role.skill}
+      <ExternalLink size={9} aria-hidden />
+    </a>
+  );
+}
+
+interface CaseRailProps {
+  cases: readonly WorkflowCase[];
+  selectedCaseIndex: number;
+  onSelect: (caseIndex: number) => void;
+}
+
+function CaseRail({ cases, selectedCaseIndex, onSelect }: CaseRailProps) {
+  return (
+    <aside className="border-b border-white/[0.06] bg-white/[0.018] p-3 lg:overflow-y-auto lg:border-b-0">
+      <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-white/25">Cases</p>
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+        {cases.map((workflowCase, index) => {
+          const isSelected = selectedCaseIndex === index;
+          return (
+            <button
+              key={workflowCase.id}
+              type="button"
+              onClick={() => onSelect(index)}
+              aria-pressed={isSelected}
+              className={
+                isSelected
+                  ? "rounded-lg border border-violet-300/35 bg-violet-400/10 px-3 py-2.5 text-left text-white/86 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+                  : "rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-left text-white/45 transition hover:border-white/16 hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+              }
+            >
+              <span className="block text-xs font-medium">{workflowCase.title}</span>
+              <span className="mt-1 block text-[11px] leading-4 text-white/38">
+                {workflowCase.subtitle}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function CheckpointRail({ phase, roleCount }: { phase: RunPhase; roleCount: number }) {
+  return (
+    <aside className="border-t border-white/[0.06] bg-white/[0.018] p-3 lg:overflow-y-auto lg:border-t-0">
+      <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-white/25">Checkpoints</p>
+      <ol className="grid gap-2 sm:grid-cols-5 lg:grid-cols-1">
+        {CHECKPOINTS.map((checkpoint, index) => {
+          const status = getCheckpointStatus(phase, index, roleCount);
+          return (
+            <li
+              key={checkpoint.id}
+              data-status={status}
+              className={
+                status === "active"
+                  ? "rounded-lg border border-violet-300/30 bg-violet-400/[0.08] px-2.5 py-2"
+                  : "rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2"
+              }
+            >
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-white/68">
+                {status === "complete" ? <Check size={11} aria-hidden /> : null}
+                {checkpoint.label}
+              </span>
+              <span className="mt-1 block text-[9px] uppercase tracking-[0.12em] text-white/34">
+                {status}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
+  );
+}
+
+interface ChatTranscriptProps {
+  workflowCase: WorkflowCase;
+  phase: RunPhase;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  onReplay: () => void;
+}
+
+function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTranscriptProps) {
+  const isTyping = phase.kind === "typing";
+  const isDone = phase.kind === "complete";
+  const typedPrompt = isTyping
+    ? workflowCase.prompt.slice(0, phase.charIndex)
+    : workflowCase.prompt;
+  const coordinatorLineCount = getCoordinatorLineCount(phase);
+  const coordinatorComplete = isCoordinatorComplete(phase);
+  const returnedRoleCount = getReturnedRoleCount(phase, workflowCase.roles.length);
+  const returnedRoles = workflowCase.roles.slice(0, returnedRoleCount);
+
+  return (
+    <section className="flex h-[34rem] min-w-0 flex-col border-y border-white/[0.06] lg:h-full lg:border-x lg:border-y-0">
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+        <span className="font-mono text-[11px] text-white/28">agent-workbench/startup-goal</span>
+        <button
+          type="button"
+          onClick={onReplay}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/35 transition hover:border-white/20 hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+          aria-label="Replay startup goal demo"
+          title="Replay"
+        >
+          <RotateCcw size={13} />
+        </button>
+      </div>
+
+      <div className="border-b border-white/[0.06] bg-white/[0.015] px-3 py-2.5">
+        <span className="text-xs font-medium text-white/76">{workflowCase.title}</span>
+        <span className="ml-2 text-xs text-white/38">{workflowCase.subtitle}</span>
+      </div>
+
+      <div
+        ref={scrollRef}
+        aria-live="polite"
+        aria-atomic="false"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:p-4"
+      >
+        <div className="flex gap-2.5">
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-white/50">
+            <User size={13} />
+          </span>
+          <div className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
+            <p className="mb-1 text-[11px] text-white/28">You</p>
+            <p className="break-words font-mono text-xs leading-5 text-white/76">
+              {typedPrompt}
+              {isTyping ? (
+                <span className="ml-0.5 inline-block h-3.5 w-1 bg-white/65 align-middle motion-safe:animate-pulse" />
+              ) : null}
+            </p>
+          </div>
+        </div>
+
+        {phase.kind !== "typing" ? (
+          <div className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/20 bg-violet-400/10 text-violet-200">
+              <Split size={13} />
+            </span>
+            <div className="min-w-0 flex-1 rounded-lg border border-violet-300/15 bg-violet-400/[0.07] px-2.5 py-2">
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-violet-100/45">
+                  {workflowCase.coordinator.owner}
+                </span>
+                <SkillSourceLink role={workflowCase.coordinator} />
+              </div>
+              <div className="space-y-1">
+                {workflowCase.coordinator.lines.slice(0, coordinatorLineCount).map((line) => (
+                  <p key={line} className="text-xs leading-5 text-white/52">
+                    {line}
+                  </p>
+                ))}
+              </div>
+              {coordinatorComplete ? (
+                <p className="mt-1.5 border-t border-white/[0.06] pt-1.5 text-xs leading-5 text-white/66">
+                  {workflowCase.coordinator.response}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {showRoleBatch(phase) ? (
+          <div className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2 motion-safe:animate-[agent-message_360ms_ease-out_both]">
+            <p className="mb-2 text-xs text-white/58">Role agents started working together</p>
+            <div className="flex flex-wrap gap-1.5">
+              {workflowCase.roles.map((role, index) => (
+                <span
+                  key={role.skill}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-black/20 px-1.5 py-1"
+                >
+                  <SkillSourceLink role={role} />
+                  <span className="text-[9px] uppercase tracking-[0.12em] text-white/34">
+                    {getRoleStatus(phase, index)}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {returnedRoles.map((role) => {
+          const Icon = role.icon;
+          return (
+            <div
+              key={`returned-${role.skill}`}
+              className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]"
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.035] text-white/48">
+                <Icon size={13} />
+              </span>
+              <div className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2">
+                <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-white/64">{role.owner}</span>
+                  <SkillSourceLink role={role} />
+                  <span className="text-[10px] text-white/42">returned</span>
+                </div>
+                <p className="text-xs leading-5 text-white/66">{role.response}</p>
+              </div>
+            </div>
+          );
+        })}
+
+        {phase.kind === "synthesizing" ? (
+          <div className="rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-2.5 py-2 text-xs text-white/58">
+            Combining role outputs into one owner-facing answer
+          </div>
+        ) : null}
+
+        {isDone ? (
+          <div className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/24 bg-violet-400/10 text-violet-100/82">
+              <Sparkles size={13} />
+            </span>
+            <div className="min-w-0 flex-1 rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-2.5 py-2">
+              <p className="mb-1 text-[11px] text-violet-100/45">Combined answer</p>
+              <p className="text-xs leading-5 text-white/72">{workflowCase.outcome}</p>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="border-t border-white/[0.06] bg-white/[0.018] p-2.5">
+        <div className="rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-1.5 font-mono text-[11px] text-white/34">
+          {isDone ? "approve next action or ask a role to revise" : "sub-agents streaming"}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function WorkflowRunDemo() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0);
   const activeCase = WORKFLOW_CASES[selectedCaseIndex] ?? WORKFLOW_CASES[0];
-  const steps = activeCase.steps;
-  const [phase, setPhase] = useState<Phase>(() =>
-    prefersReducedMotion ? getDonePhase(WORKFLOW_CASES[0].steps) : { kind: "typing", charIndex: 0 },
-  );
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [selectedStepIndex, setSelectedStepIndex] = useState(0);
+  const [phase, setPhase] = useState<RunPhase>(() => getInitialPhase(prefersReducedMotion));
+  const renderedPhase = prefersReducedMotion ? COMPLETE_PHASE : phase;
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const reset = useCallback(
-    (caseIndex = selectedCaseIndex) => {
-      const demoCase = WORKFLOW_CASES[caseIndex] ?? WORKFLOW_CASES[0];
-      const nextSteps = demoCase.steps;
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
 
-      setSelectedStepIndex(0);
+  const reset = useCallback(() => {
+    clearTimer();
+    setPhase(getInitialPhase(prefersReducedMotion));
+  }, [clearTimer, prefersReducedMotion]);
 
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (prefersReducedMotion) {
-        setCompletedSteps(nextSteps.map((_, index) => index));
-        setPhase(getDonePhase(nextSteps));
-        return;
-      }
-
-      setCompletedSteps([]);
-      setPhase({ kind: "typing", charIndex: 0 });
+  const selectCase = useCallback(
+    (caseIndex: number) => {
+      clearTimer();
+      setSelectedCaseIndex(caseIndex);
+      setPhase(getInitialPhase(prefersReducedMotion));
     },
-    [prefersReducedMotion, selectedCaseIndex],
+    [clearTimer, prefersReducedMotion],
   );
-
-  const selectCase = (caseIndex: number) => {
-    setSelectedCaseIndex(caseIndex);
-    reset(caseIndex);
-  };
 
   useEffect(() => {
     if (!prefersReducedMotion) return;
-    setCompletedSteps(steps.map((_, index) => index));
-    setPhase(getDonePhase(steps));
-  }, [prefersReducedMotion, steps]);
+    clearTimer();
+    setPhase(COMPLETE_PHASE);
+  }, [clearTimer, prefersReducedMotion]);
 
   useEffect(() => {
-    if (prefersReducedMotion || phase.kind !== "typing") return undefined;
+    if (prefersReducedMotion || phase.kind === "complete") return undefined;
 
-    if (phase.charIndex < activeCase.prompt.length) {
-      timerRef.current = setTimeout(
-        () => setPhase({ kind: "typing", charIndex: phase.charIndex + 1 }),
-        TYPE_DELAY,
-      );
-    } else {
-      timerRef.current = setTimeout(
-        () => setPhase({ kind: "running", stepIndex: 0, lineIndex: 0, done: false }),
-        420,
-      );
+    const schedule = (nextPhase: RunPhase, delay: number) => {
+      clearTimer();
+      timerRef.current = setTimeout(() => setPhase(nextPhase), delay);
+    };
+
+    switch (phase.kind) {
+      case "typing":
+        if (phase.charIndex < activeCase.prompt.length) {
+          schedule({ kind: "typing", charIndex: phase.charIndex + 1 }, TYPE_DELAY);
+        } else {
+          schedule({ kind: "intake" }, COORDINATOR_DELAY);
+        }
+        break;
+      case "intake":
+        schedule({ kind: "approval" }, COORDINATOR_DELAY);
+        break;
+      case "approval":
+        schedule({ kind: "dispatch" }, COORDINATOR_DELAY);
+        break;
+      case "dispatch":
+        schedule({ kind: "collecting", returnedRoleCount: 0 }, DISPATCH_DELAY);
+        break;
+      case "collecting":
+        if (phase.returnedRoleCount < activeCase.roles.length) {
+          schedule(
+            { kind: "collecting", returnedRoleCount: phase.returnedRoleCount + 1 },
+            ROLE_RETURN_DELAY,
+          );
+        } else {
+          schedule({ kind: "synthesizing" }, SYNTHESIS_DELAY);
+        }
+        break;
+      case "synthesizing":
+        schedule({ kind: "complete" }, SYNTHESIS_DELAY);
+        break;
     }
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimer();
     };
-  }, [activeCase.prompt, phase, prefersReducedMotion]);
+  }, [activeCase.prompt, activeCase.roles.length, clearTimer, phase, prefersReducedMotion]);
 
+  // The transcript content changes on every run phase even though phase is not read in the body.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll after each phase transition
   useEffect(() => {
-    if (prefersReducedMotion || phase.kind !== "running" || phase.done) return undefined;
-
-    const step = steps[phase.stepIndex];
-    if (!step) return undefined;
-
-    if (phase.lineIndex < step.lines.length) {
-      timerRef.current = setTimeout(
-        () => setPhase({ ...phase, lineIndex: phase.lineIndex + 1 }),
-        LINE_DELAY,
-      );
-    } else {
-      setCompletedSteps((current) =>
-        current.includes(phase.stepIndex) ? current : [...current, phase.stepIndex],
-      );
-      const next = phase.stepIndex + 1;
-      if (next < steps.length) {
-        timerRef.current = setTimeout(
-          () => setPhase({ kind: "running", stepIndex: next, lineIndex: 0, done: false }),
-          BETWEEN_STEPS,
-        );
-      } else {
-        setPhase({ ...phase, done: true });
-      }
-    }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [phase, prefersReducedMotion, steps]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  });
-
-  const isDone = phase.kind === "running" && phase.done;
-  const isTyping = phase.kind === "typing";
-  const typedPrompt =
-    phase.kind === "typing" ? activeCase.prompt.slice(0, phase.charIndex) : activeCase.prompt;
-  const selectedStep = steps[selectedStepIndex] ?? steps[0];
-  const SelectedIcon = selectedStep.icon;
-  const selectedStepStatus = getStepStatus(phase, selectedStepIndex, completedSteps);
-
-  const visibleTranscript = useMemo(() => {
-    if (phase.kind === "typing") return [];
-
-    const transcript = completedSteps.flatMap((stepIndex) => {
-      const step = steps[stepIndex];
-      return step ? [makeTranscriptEntry(step, step.lines, true)] : [];
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
     });
-
-    const activeStep = steps[phase.stepIndex];
-    if (!phase.done && activeStep && !completedSteps.includes(phase.stepIndex)) {
-      transcript.push(
-        makeTranscriptEntry(activeStep, activeStep.lines.slice(0, phase.lineIndex), false),
-      );
-    }
-
-    return transcript;
-  }, [completedSteps, phase, steps]);
+  }, [phase, prefersReducedMotion]);
 
   return (
-    <div id="workflow-run" className="space-y-3">
-      <div>
-        <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-white/32">
-          Case categories
-        </p>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {WORKFLOW_CASES.map((workflowCase, index) => {
-            const isSelected = selectedCaseIndex === index;
-            return (
-              <button
-                key={workflowCase.id}
-                type="button"
-                onClick={() => selectCase(index)}
-                aria-pressed={isSelected}
-                className={`rounded-lg border px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45 ${
-                  isSelected
-                    ? "border-violet-300/35 bg-violet-400/10 text-white/86"
-                    : "border-white/[0.08] bg-white/[0.025] text-white/45 hover:border-white/16 hover:bg-white/[0.04]"
-                }`}
-              >
-                <span className="block text-xs font-medium">{workflowCase.title}</span>
-                <span className="mt-1 block text-[11px] leading-4 text-white/38">
-                  {workflowCase.subtitle}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="h-[44rem] overflow-hidden rounded-lg border border-white/[0.08] bg-[#090909] shadow-2xl shadow-black/40 lg:h-[34rem]">
-        <div className="grid h-full overflow-y-auto lg:grid-cols-[18rem_minmax(0,1fr)] lg:overflow-hidden">
-          <aside className="overflow-y-auto border-b border-white/[0.06] bg-white/[0.018] p-4 lg:border-b-0 lg:border-r">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/25">Processing</p>
-                <h3 className="mt-1 text-xs font-medium text-white/80">Run calls</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => reset()}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/35 transition hover:border-white/20 hover:text-white/70"
-                aria-label="Replay startup goal demo"
-                title="Replay"
-              >
-                <RotateCcw size={13} />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {steps.map((step, index) => {
-                const status = getStepStatus(phase, index, completedSteps);
-                const Icon = step.icon;
-                const isSelected = selectedStepIndex === index;
-                return (
-                  <button
-                    key={step.skill}
-                    type="button"
-                    onClick={() => setSelectedStepIndex(index)}
-                    aria-label={`View ${step.skill} skill`}
-                    aria-pressed={isSelected}
-                    aria-controls="selected-skill-preview"
-                    className={`group relative w-full overflow-hidden rounded-lg border px-3 py-2.5 text-left transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45 ${
-                      status === "active"
-                        ? `${ACTIVE_ACCENT.border} ${ACTIVE_ACCENT.bg} shadow-lg ${ACTIVE_ACCENT.shadow}`
-                        : status === "complete"
-                          ? "border-white/[0.10] bg-white/[0.035]"
-                          : "border-white/[0.06] bg-transparent"
-                    } ${isSelected ? "ring-1 ring-violet-200/28" : ""} ${
-                      isSelected && status === "queued" ? "bg-white/[0.025]" : ""
-                    }`}
-                  >
-                    <div className="relative z-10 flex items-center gap-2">
-                      <span
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
-                          status === "queued"
-                            ? "border-white/[0.06] text-white/18"
-                            : status === "active"
-                              ? `${ACTIVE_ACCENT.border} ${ACTIVE_ACCENT.color}`
-                              : "border-white/[0.10] text-white/48"
-                        }`}
-                      >
-                        {status === "complete" ? <Check size={13} /> : <Icon size={13} />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="truncate text-[11px] font-medium text-white/74">
-                            {step.label}
-                          </span>
-                          <span
-                            className={`shrink-0 text-[9px] uppercase tracking-[0.12em] ${
-                              status === "active"
-                                ? ACTIVE_ACCENT.color
-                                : status === "complete"
-                                  ? "text-white/42"
-                                  : "text-white/18"
-                            }`}
-                          >
-                            {status}
-                          </span>
-                        </span>
-                        <span className="mt-0.5 flex items-center justify-between gap-2">
-                          <code className="truncate font-mono text-[10px] text-white/32">
-                            {step.skill}
-                          </code>
-                          <span className="shrink-0 text-[10px] text-white/26">{step.owner}</span>
-                        </span>
-                      </span>
-                    </div>
-                    {status === "active" ? (
-                      <span className="absolute inset-x-0 bottom-0 h-px bg-current opacity-60 motion-safe:animate-pulse" />
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div
-              id="selected-skill-preview"
-              className="mt-4 rounded-lg border border-white/[0.08] bg-white/[0.025] p-3.5"
-            >
-              <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-white/30">
-                Selected skill
-              </p>
-              <div className="mb-2 flex items-center gap-2">
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
-                    selectedStepStatus === "active"
-                      ? `${ACTIVE_ACCENT.border} ${ACTIVE_ACCENT.color}`
-                      : "border-white/[0.08] text-white/54"
-                  }`}
-                >
-                  <SelectedIcon size={13} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[11px] font-medium text-white/78">
-                    {selectedStep.label}
-                  </span>
-                  <code className="block truncate font-mono text-[10px] text-white/42">
-                    {selectedStep.skill}
-                  </code>
-                </span>
-              </div>
-              <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px]">
-                <span className="rounded bg-black/25 px-1.5 py-0.5 text-white/42">
-                  owner: {selectedStep.owner}
-                </span>
-                <span className="rounded bg-black/25 px-1.5 py-0.5 text-white/42">
-                  status: {selectedStepStatus}
-                </span>
-              </div>
-              <div className="mb-2 space-y-1">
-                {selectedStep.lines.map((line) => (
-                  <div key={line} className="flex gap-1.5 text-[11px] leading-5 text-white/48">
-                    <ChevronRight size={11} className="mt-1 shrink-0 text-white/22" />
-                    <span>{line}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[11px] leading-5 text-white/52">{selectedStep.response}</p>
-              <a
-                href={selectedStep.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2 py-1 text-[10px] text-violet-100/68 transition hover:border-white/20 hover:text-white/82"
-              >
-                View skill source
-                <ExternalLink size={11} />
-              </a>
-            </div>
-          </aside>
-
-          <div className="flex min-h-[28rem] flex-col border-b border-white/[0.06] lg:min-h-0 lg:border-b-0">
-            <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-white/28" />
-                <span className="h-2 w-2 rounded-full bg-white/18" />
-                <span className="h-2 w-2 rounded-full bg-white/12" />
-              </div>
-              <span className="font-mono text-[11px] text-white/28">
-                agent-workbench/startup-goal
-              </span>
-              <span className="text-[10px] text-white/20">{isDone ? "done" : "running"}</span>
-            </div>
-
-            <div className="border-b border-white/[0.06] bg-white/[0.015] px-3 py-2.5 sm:px-4">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="text-[10px] uppercase tracking-[0.16em] text-white/24">Case</span>
-                <span className="text-xs font-medium text-white/76">{activeCase.title}</span>
-                <span className="text-xs leading-5 text-white/38">{activeCase.subtitle}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {activeCase.processPoints.map((point) => (
-                  <span
-                    key={`${point.label}-${point.value}`}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/[0.08] bg-black/25 px-2 py-1 text-[10px]"
-                  >
-                    <span className="shrink-0 uppercase tracking-[0.12em] text-violet-100/45">
-                      {point.label}
-                    </span>
-                    <span className="truncate text-white/45">{point.value}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
-              <div className="flex gap-2.5">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-white/50">
-                  <User size={13} />
-                </span>
-                <div className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
-                  <p className="mb-1 text-[11px] text-white/28">You</p>
-                  <p className="break-words font-mono text-xs leading-5 text-white/76">
-                    {typedPrompt}
-                    {isTyping ? (
-                      <span className="ml-0.5 inline-block h-3.5 w-1 animate-pulse bg-white/65 align-middle" />
-                    ) : null}
-                  </p>
-                </div>
-              </div>
-
-              {phase.kind !== "typing" ? (
-                <div className="flex gap-2.5">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/20 bg-violet-400/10 text-violet-200">
-                    <Bot size={13} />
-                  </span>
-                  <div className="min-w-0 rounded-lg border border-violet-300/15 bg-violet-400/[0.07] px-2.5 py-2">
-                    <p className="mb-1 text-[11px] text-violet-100/40">System</p>
-                    <p className="text-xs leading-5 text-white/62">
-                      Recognized <code className="text-violet-100/75">startup-goal</code>. Starting
-                      requirement intake, approval brief, lazy routing, and role handoffs.
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-
-              {visibleTranscript.map(({ step, lines, complete, showChecklist }) => {
-                const Icon = step.icon;
-                return (
-                  <div
-                    key={step.skill}
-                    className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]"
-                  >
-                    <span
-                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
-                        showChecklist
-                          ? `${ACTIVE_ACCENT.border} ${ACTIVE_ACCENT.bg} ${ACTIVE_ACCENT.color}`
-                          : "border-white/[0.08] bg-white/[0.035] text-white/48"
-                      }`}
-                    >
-                      <Icon size={13} />
-                    </span>
-                    <div className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2">
-                      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11px] font-medium text-white/64">{step.owner}</span>
-                        <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-[10px] text-white/32">
-                          {step.skill}
-                        </code>
-                        {complete ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-white/42">
-                            <Check size={10} />
-                            returned
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded bg-violet-400/10 px-1.5 py-0.5 text-[10px] text-violet-100/62">
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-                            thinking
-                          </span>
-                        )}
-                      </div>
-                      {showChecklist ? (
-                        <div className="space-y-1">
-                          {lines.map((line) => (
-                            <div
-                              key={line}
-                              className="flex gap-1.5 text-xs leading-5 text-white/46"
-                            >
-                              <ChevronRight size={12} className="mt-1 shrink-0 text-white/20" />
-                              <span>{line}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                      {complete ? (
-                        <p
-                          className={`text-xs leading-5 text-white/66 ${
-                            showChecklist ? "mt-1.5 border-t border-white/[0.06] pt-1.5" : ""
-                          }`}
-                        >
-                          {step.response}
-                        </p>
-                      ) : (
-                        <span className="mt-2 inline-block h-3 w-1.5 animate-pulse bg-white/25 align-middle" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {isDone ? (
-                <div className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/24 bg-violet-400/10 text-violet-100/82">
-                    <Sparkles size={13} />
-                  </span>
-                  <div className="min-w-0 flex-1 rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-2.5 py-2">
-                    <p className="mb-1 text-[11px] text-violet-100/45">Combined answer</p>
-                    <p className="text-xs leading-5 text-white/72">{activeCase.outcome}</p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="border-t border-white/[0.06] bg-white/[0.018] p-2.5">
-              <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-1.5 font-mono text-[11px] text-white/34">
-                <span className="text-violet-200/70">&gt;</span>
-                <span className="truncate">
-                  {isDone ? "approve next action or ask a role to revise" : "sub-agents streaming"}
-                </span>
-              </div>
-            </div>
-          </div>
+    <div id="workflow-run">
+      <div className="overflow-hidden rounded-lg border border-white/[0.08] bg-[#090909] shadow-2xl shadow-black/40 lg:h-[36rem]">
+        <div className="grid lg:h-full lg:grid-cols-[13rem_minmax(0,1fr)_13rem] lg:overflow-hidden">
+          <CaseRail
+            cases={WORKFLOW_CASES}
+            selectedCaseIndex={selectedCaseIndex}
+            onSelect={selectCase}
+          />
+          <ChatTranscript
+            workflowCase={activeCase}
+            phase={renderedPhase}
+            scrollRef={scrollRef}
+            onReplay={reset}
+          />
+          <CheckpointRail phase={renderedPhase} roleCount={activeCase.roles.length} />
         </div>
       </div>
     </div>
