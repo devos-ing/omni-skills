@@ -1,16 +1,15 @@
 import pc from "picocolors";
 
-export const GETSUPERPOWER_ASCII_LOGO = [
-  "GETSUPERPOWER",
-  "Skill trees for serious agent work.",
-].join("\n");
+export const GETSUPERPOWER_ASCII_LOGO = ["OMNISKILLS", "Skill trees for serious agent work."].join(
+  "\n",
+);
 
 const GETSUPERPOWER_WORDMARK_LINES = [
-  "GGGG  EEEEE TTTTT  SSSS  U   U PPPP  EEEEE RRRR  PPPP   OOO  W   W EEEEE RRRR ",
-  "G     E       T   S      U   U P   P E     R   R P   P O   O W   W E     R   R",
-  "G GGG EEEE    T    SSS   U   U PPPP  EEEE  RRRR  PPPP  O   O W W W EEEE  RRRR ",
-  "G   G E       T       S  U   U P     E     R  R  P     O   O WW WW E     R  R ",
-  "GGGG  EEEEE   T   SSSS    UUU  P     EEEEE R   R P      OOO  W   W EEEEE R   R",
+  " OOO  M   M N   N I SSSS K   K I L     L    SSS ",
+  "O   O MM MM NN  N I S    K  K  I L     L   S    ",
+  "O   O M M M N N N I  SSS KKK   I L     L    SSS ",
+  "O   O M   M N  NN I     S K  K  I L     L       S",
+  " OOO  M   M N   N I SSSS K   K I LLLLL LLLLL SSS ",
 ];
 
 const WORDMARK_MIN_COLUMNS = 78;
@@ -30,7 +29,7 @@ export function getSuperpowerWordmarkLogo(): string {
     pc.dim(low),
     pc.dim(bottom),
     pc.magenta("____"),
-    brand("GETSUPERPOWER"),
+    brand("OMNISKILLS"),
     muted("Skill trees for serious agent work."),
   ].join("\n");
 }
@@ -88,10 +87,10 @@ export function getSuperpowerInstallResultBox(input: {
     borderBox([
       GETSUPERPOWER_ASCII_LOGO,
       "",
-      `GetSuperpower installed: ${input.workflowName}`,
+      `Omniskills installed: ${input.workflowName}`,
       `Version: ${input.workflowVersion}`,
       `Skills installed: ${input.skillCount}`,
-      `GetSuperpower file: ${input.workflowFile}`,
+      `Omniskills file: ${input.workflowFile}`,
     ]),
   );
 }
@@ -100,18 +99,18 @@ export function rootHelpBanner(): string {
   return [
     getSuperpowerWordmarkLogo(),
     "",
-    success("Welcome to GetSuperpower."),
+    success("Welcome to Omniskills."),
     "Install and author workflow skill trees for agent work.",
     "",
     label("Start:"),
-    `  ${commandText("getsuperpower init release-review")}`,
-    `  ${commandText("getsuperpower validate ./release-review")}`,
-    `  ${commandText("getsuperpower install openspec-superpowers")}`,
-    `  ${commandText("getsuperpower install ./release-review")}`,
+    `  ${commandText("omniskills init release-review")}`,
+    `  ${commandText("omniskills validate ./release-review")}`,
+    `  ${commandText("omniskills install openspec-superpowers")}`,
+    `  ${commandText("omniskills install ./release-review")}`,
     "",
     label("Inspect:"),
-    `  ${commandText("getsuperpower list")}`,
-    `  ${commandText("getsuperpower deps ./release-review")}`,
+    `  ${commandText("omniskills list")}`,
+    `  ${commandText("omniskills deps ./release-review")}`,
     "",
   ].join("\n");
 }

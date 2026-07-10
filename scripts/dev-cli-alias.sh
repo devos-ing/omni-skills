@@ -2,7 +2,7 @@
 set -euo pipefail
 
 command_name="${1:-install}"
-alias_name="${GETSUPERPOWER_DEV_ALIAS:-getsuperpower-dev}"
+alias_name="${GETSUPERPOWER_DEV_ALIAS:-omniskills-dev}"
 bin_dir="${GETSUPERPOWER_DEV_BIN_DIR:-${HOME}/.local/bin}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
@@ -13,7 +13,7 @@ usage() {
 Usage: scripts/dev-cli-alias.sh <install|uninstall|status>
 
 Environment:
-  GETSUPERPOWER_DEV_ALIAS    Command name to create. Default: getsuperpower-dev
+  GETSUPERPOWER_DEV_ALIAS    Command name to create. Default: omniskills-dev
   GETSUPERPOWER_DEV_BIN_DIR  Bin directory to write into. Default: ~/.local/bin
 USAGE
 }

@@ -76,7 +76,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Goal",
     accent: "text-violet-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/startup-goal`,
-    installCommand: "npx getsuperpower@latest install startup-goal",
+    installCommand: "npx omniskills@latest install startup-goal",
     skills: [
       { name: "startup-goal", description: "Coordinate role subagents around one goal" },
       { name: "ceo", description: "Company direction and tradeoffs" },
@@ -151,7 +151,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Strategy",
     accent: "text-rose-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/ceo`,
-    installCommand: "npx getsuperpower@latest install ceo",
+    installCommand: "npx omniskills@latest install ceo",
     skills: [
       { name: "ceo", description: "Set the executive frame" },
       { name: "mattpocock:decision-mapping", description: "Map strategic uncertainty" },
@@ -186,7 +186,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Architecture",
     accent: "text-sky-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/cto`,
-    installCommand: "npx getsuperpower@latest install cto",
+    installCommand: "npx omniskills@latest install cto",
     skills: [
       { name: "cto", description: "Set the technical frame" },
       { name: "mattpocock:codebase-design", description: "Review module boundaries" },
@@ -233,7 +233,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Product",
     accent: "text-emerald-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/product-manager`,
-    installCommand: "npx getsuperpower@latest install product-manager",
+    installCommand: "npx omniskills@latest install product-manager",
     skills: [
       { name: "product-manager", description: "Frame the product problem" },
       { name: "superpowers:brainstorming", description: "Explore product options" },
@@ -280,7 +280,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Delivery",
     accent: "text-amber-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/engineering-manager`,
-    installCommand: "npx getsuperpower@latest install engineering-manager",
+    installCommand: "npx omniskills@latest install engineering-manager",
     skills: [
       { name: "engineering-manager", description: "Set the delivery frame" },
       { name: "superpowers:writing-plans", description: "Write the execution plan" },
@@ -327,7 +327,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Build",
     accent: "text-fuchsia-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/founding-engineer`,
-    installCommand: "npx getsuperpower@latest install founding-engineer",
+    installCommand: "npx omniskills@latest install founding-engineer",
     skills: [
       { name: "founding-engineer", description: "Set the implementation frame" },
       { name: "implement", description: "Implement the planned change" },
@@ -380,7 +380,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Quality",
     accent: "text-cyan-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/qa-lead`,
-    installCommand: "npx getsuperpower@latest install qa-lead",
+    installCommand: "npx omniskills@latest install qa-lead",
     skills: [
       { name: "qa-lead", description: "Set the release-risk frame" },
       { name: "mattpocock:review", description: "Review acceptance and risk" },
@@ -421,7 +421,7 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Meme",
     accent: "text-lime-300",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/haaland`,
-    installCommand: "npx getsuperpower@latest install haaland",
+    installCommand: "npx omniskills@latest install haaland",
     skills: [{ name: "haaland", description: "Create one profile-icon meme concept" }],
     diagramSteps: [
       {
@@ -436,35 +436,35 @@ export const workflows: WorkflowCardContent[] = [
 export const commands: CommandExample[] = [
   {
     label: "Install Startup Goal",
-    command: "npx getsuperpower@latest install startup-goal",
+    command: "npx omniskills@latest install startup-goal",
   },
   {
     label: "Inspect Startup Goal deps",
-    command: "npx getsuperpower@latest deps startup-goal",
+    command: "npx omniskills@latest deps startup-goal",
   },
   {
     label: "Lock skill fingerprints",
-    command: "npx getsuperpower@latest lock examples/workflows/startup-goal",
+    command: "npx omniskills@latest lock examples/workflows/startup-goal",
   },
   {
     label: "Check loop status",
-    command: "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
+    command: "npx omniskills@latest loop status grilled-product-dev --latest --json",
   },
   {
     label: "Create your own workflow",
-    command: "npx getsuperpower@latest init my-workflow",
+    command: "npx omniskills@latest init my-workflow",
   },
   {
     label: "Validate before sharing",
-    command: "npx getsuperpower@latest validate my-workflow",
+    command: "npx omniskills@latest validate my-workflow",
   },
   {
-    label: "List installed GetSuperpowers",
-    command: "npx getsuperpower@latest list",
+    label: "List installed Omniskills workflows",
+    command: "npx omniskills@latest list",
   },
   {
     label: "Remove installed workflow",
-    command: "npx getsuperpower@latest remove startup-goal",
+    command: "npx omniskills@latest remove startup-goal",
   },
 ];
 

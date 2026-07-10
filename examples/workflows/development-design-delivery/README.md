@@ -1,4 +1,4 @@
-# Development Design Delivery GetSuperpower
+# Development Design Delivery Omniskills Workflow
 
 This example combines product/design shaping with implementation discipline.
 Use it when a change needs more than a quick patch: clarify the request, explore
@@ -33,7 +33,7 @@ $development-design-delivery build this product feature
 
 ## Dependencies
 
-This GetSuperpower combines reusable agent skills:
+This Omniskills workflow combines reusable agent skills:
 
 - `./skills/development-design-delivery`
 - `superpowers:brainstorming`
@@ -46,7 +46,7 @@ This GetSuperpower combines reusable agent skills:
 - `mattpocock:review`
 - `pony-trail`
 
-`getsuperpower install` automatically uses the Skills CLI to fetch missing
+`omniskills install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
 package install through the CLI and retry:
 
@@ -56,7 +56,7 @@ bun run dev -- skills install mattpocock/skills
 
 ## Try It
 
-Validate this GetSuperpower from the repo root:
+Validate this Omniskills workflow from the repo root:
 
 ```bash
 bun run dev -- validate examples/workflows/development-design-delivery

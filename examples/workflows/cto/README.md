@@ -1,4 +1,4 @@
-# CTO GetSuperpower
+# CTO Omniskills Workflow
 
 Use this workflow when an agent should act as a startup CTO: inspect architecture,
 surface technical risk, and turn product direction into engineering strategy.

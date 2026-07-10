@@ -1,4 +1,4 @@
-# CEO GetSuperpower
+# CEO Omniskills Workflow
 
 Use this workflow when an agent should act as a startup CEO: clarify direction,
 make hard tradeoffs, and turn ambiguous founder intent into a decision-ready

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="528" viewBox="0 0 720 528" role="img" aria-label="GetSuperpower Workflow — install or clone a skill-tree bundle, then call the entry skill (workflow diagram)">
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="528" viewBox="0 0 720 528" role="img" aria-label="Omniskills Workflow — install or clone a skill-tree bundle, then call the entry skill (workflow diagram)">
   <style><![CDATA[
 @font-face { font-family: 'JetBrains Mono'; font-weight: 400; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
 @font-face { font-family: 'JetBrains Mono'; font-weight: 500; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
@@ -611,7 +611,7 @@ rect.c-bg-rect { fill: var(--bg); }
         <text x="54" y="74" class="t-dim" font-size="10" font-weight="600">01 / User command</text>
 
         <rect x="40" y="176" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / GetSuperpower install runtime</text>
+        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / Omniskills install runtime</text>
 
         <rect x="40" y="300" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
         <text x="54" y="322" class="t-dim" font-size="10" font-weight="600">03 / Agent runtime</text>

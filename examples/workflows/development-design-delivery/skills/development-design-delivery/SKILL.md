@@ -3,9 +3,9 @@ name: development-design-delivery
 description: Use when running a product-minded engineering workflow from request shaping through interface design, implementation, review, and evidence capture.
 ---
 
-# Development Design Delivery GetSuperpower
+# Development Design Delivery Omniskills Workflow
 
-This is the entry skill for the development-design-delivery GetSuperpower.
+This is the entry skill for the development-design-delivery Omniskills workflow.
 
 When this skill is used, run the workflow below in order. Load/use every
 required sub-skill before doing the work for its phase.
@@ -28,7 +28,7 @@ If any required sub-skill is unavailable, stop and tell the user which
 dependency is missing. For missing `mattpocock:*` skills, tell the user to run:
 
 ```bash
-getsuperpower skills install mattpocock/skills
+omniskills skills install mattpocock/skills
 ```
 
 ## Flow
@@ -58,5 +58,5 @@ getsuperpower skills install mattpocock/skills
 ## Author Notes
 
 - Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
-- This skill orchestrates through required instructions; GetSuperpower installs and validates the dependency skills.
+- This skill orchestrates through required instructions; Omniskills installs and validates the dependency skills.
 - Do not silently skip approval gates, interface exploration, implementation planning, TDD, review, or evidence capture.

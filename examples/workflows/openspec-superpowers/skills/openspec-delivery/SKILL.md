@@ -3,9 +3,9 @@ name: openspec-delivery
 description: Use when running a professional OpenSpec delivery workflow from proposal through design, plan, TDD implementation, verification, and archive.
 ---
 
-# OpenSpec Delivery GetSuperpower
+# OpenSpec Delivery Omniskills Workflow
 
-This is the entry skill for the openspec-delivery GetSuperpower.
+This is the entry skill for the openspec-delivery Omniskills workflow.
 
 When this skill is used, run the delivery workflow below in order. Load/use
 every required sub-skill before doing the work for its phase.
@@ -45,5 +45,5 @@ If any required sub-skill is unavailable, stop and tell the user which dependenc
 ## Author Notes
 
 - Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
-- This skill orchestrates through required instructions; GetSuperpower installs and validates the dependency skills.
+- This skill orchestrates through required instructions; Omniskills installs and validates the dependency skills.
 - Do not silently skip OpenSpec review, human approval gates, TDD, verification, or archive.

@@ -1,4 +1,4 @@
-# Startup Goal GetSuperpower
+# Startup Goal Omniskills Workflow
 
 Use this workflow when one agent session needs a realistic startup operating
 bench organized around a goal. It installs role entry skills for CEO, CTO,

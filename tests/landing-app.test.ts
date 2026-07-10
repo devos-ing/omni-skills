@@ -39,12 +39,12 @@ describe("landing app source contract", () => {
     expect(gitignore).toContain("next-env.d.ts");
   });
 
-  test("presents GetSuperpower workflow bundles and root-first commands", () => {
+  test("presents Omniskills workflow bundles and root-first commands", () => {
     const page = readLandingFile("app/page.tsx");
     const content = readLandingFile("lib/landing-content.ts");
 
     expect(page).toContain("LandingPage");
-    expect(content).toContain("GetSuperpower");
+    expect(content).toContain("Omniskills");
     expect(content).toContain("Startup Goal");
     expect(content).toContain("CEO");
     expect(content).toContain("CTO");
@@ -53,22 +53,22 @@ describe("landing app source contract", () => {
     expect(content).toContain("Founding Engineer");
     expect(content).toContain("QA Lead");
     expect(content).toContain("avatarSeed");
-    expect(content).toContain("npx getsuperpower@latest install startup-goal");
-    expect(content).toContain("npx getsuperpower@latest install ceo");
-    expect(content).toContain("npx getsuperpower@latest install cto");
-    expect(content).toContain("npx getsuperpower@latest install product-manager");
-    expect(content).toContain("npx getsuperpower@latest install engineering-manager");
-    expect(content).toContain("npx getsuperpower@latest install founding-engineer");
-    expect(content).toContain("npx getsuperpower@latest install qa-lead");
-    expect(content).toContain("npx getsuperpower@latest deps startup-goal");
-    expect(content).toContain("npx getsuperpower@latest lock examples/workflows/startup-goal");
-    expect(content).toContain("npx getsuperpower@latest remove startup-goal");
-    expect(content).not.toContain("npx getsuperpower@latest install startup-team");
+    expect(content).toContain("npx omniskills@latest install startup-goal");
+    expect(content).toContain("npx omniskills@latest install ceo");
+    expect(content).toContain("npx omniskills@latest install cto");
+    expect(content).toContain("npx omniskills@latest install product-manager");
+    expect(content).toContain("npx omniskills@latest install engineering-manager");
+    expect(content).toContain("npx omniskills@latest install founding-engineer");
+    expect(content).toContain("npx omniskills@latest install qa-lead");
+    expect(content).toContain("npx omniskills@latest deps startup-goal");
+    expect(content).toContain("npx omniskills@latest lock examples/workflows/startup-goal");
+    expect(content).toContain("npx omniskills@latest remove startup-goal");
+    expect(content).not.toContain("npx omniskills@latest install startup-team");
     expect(content).toContain(
-      "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
+      "npx omniskills@latest loop status grilled-product-dev --latest --json",
     );
-    expect(content).toContain("npx getsuperpower@latest validate");
-    expect(content).not.toContain("npx getsuperpower@latest getsuperpower");
+    expect(content).toContain("npx omniskills@latest validate");
+    expect(content).not.toContain("npx omniskills@latest omniskills");
   });
 
   test("leads with the power-your-ability positioning", () => {
@@ -79,7 +79,7 @@ describe("landing app source contract", () => {
     expect(page).toContain("Install the workflow.");
     expect(page).toContain("many-skill bank");
     expect(page).toContain("3x your ability");
-    expect(page).toContain("npx getsuperpower@latest install startup-goal");
+    expect(page).toContain("npx omniskills@latest install startup-goal");
     expect(page).toContain("Agent run demo");
     expect(page).toContain("See where startup-goal fits.");
     expect(page).not.toContain("How it works + Agent run demo");
@@ -157,8 +157,8 @@ describe("landing app source contract", () => {
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/startup-goal`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/haaland`);
-    expect(content).toContain("npx getsuperpower@latest install startup-goal");
-    expect(content).toContain("npx getsuperpower@latest install haaland");
+    expect(content).toContain("npx omniskills@latest install startup-goal");
+    expect(content).toContain("npx omniskills@latest install haaland");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
     expect(content).toContain('label: "Implementation"');
@@ -228,7 +228,7 @@ describe("landing app source contract", () => {
     expect(page).toContain("manifest");
     expect(page).toContain("bootstraps missing external skills");
     expect(page).toContain("~/.getsuperpower/workflows/");
-    expect(page).toContain("getsuperpower loop");
+    expect(page).toContain("omniskills loop");
     expect(page).toContain("action-only");
     expect(page).not.toContain("browser executes live agent workflows");
     expect(page).not.toContain("generated .getsuperpower run state");
@@ -239,7 +239,7 @@ describe("landing app source contract", () => {
     const page = readLandingFile("components/landing-page.tsx");
 
     expect(content).toContain(
-      "npx getsuperpower@latest loop status grilled-product-dev --latest --json",
+      "npx omniskills@latest loop status grilled-product-dev --latest --json",
     );
     expect(content).toContain("resumable, action-only workflow state");
     expect(page).toContain("Pick a real startup situation");

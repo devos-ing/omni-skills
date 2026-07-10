@@ -1,6 +1,6 @@
-# Release Review GetSuperpower
+# Release Review Omniskills Workflow
 
-This is an example GetSuperpower for teams that want an agent to shape, review,
+This is an example Omniskills workflow for teams that want an agent to shape, review,
 plan, and preserve evidence for release-related changes.
 
 Install it from the repo root:
@@ -16,5 +16,5 @@ bun run dev -- validate examples/workflows/release-review
 ```
 
 The local `release-risk-review` skill is included to demonstrate how
-GetSuperpower authors can add workflow-specific guidance without changing the
-GetSuperpower runtime.
+Omniskills authors can add workflow-specific guidance without changing the
+Omniskills runtime.

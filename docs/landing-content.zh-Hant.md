@@ -1,6 +1,6 @@
-# GetSuperpower 登陸頁內容
+# Omniskills 登陸頁內容
 
-這是 GetSuperpower landing page 的 agent-readable 繁體中文 Markdown 鏡像。
+這是 Omniskills landing page 的 agent-readable 繁體中文 Markdown 鏡像。
 
 Runtime source of truth：`landing/lib/landing-content.ts`。
 
@@ -18,13 +18,13 @@ Power your ability.
 Install the workflow.
 ```
 
-Body：GetSuperpower 是給 AI agents 使用的 many-skill bank。安裝一個 workflow skill
+Body：Omniskills 是給 AI agents 使用的 many-skill bank。安裝一個 workflow skill
 tree，帶著 goal 呼叫一個 entry skill，讓 agent 取得能 3x your ability 的 roles、playbooks、verification habits。
 
 Primary command preview：
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Primary action：Browse workflows。
@@ -102,7 +102,7 @@ Completion copy：Workflow complete - all 6 role steps returned. Startup answer 
 
 Section label：Workflow Registry。
 
-Heading：Pick a GetSuperpower。
+Heading：Pick an Omniskills workflow。
 
 Body：瀏覽可安裝的 workflow bundles，然後打開 detail route 查看 role map、skill tree、copyable install command。
 
@@ -119,7 +119,7 @@ Search placeholder：Search workflows, skills, tags...
 - install:
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、EM、founding engineer、QA lead。
@@ -139,7 +139,7 @@ Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `p
 - install:
 
 ```bash
-npx getsuperpower@latest install ceo
+npx omniskills@latest install ceo
 ```
 
 Description：Founder-level strategy，處理 direction、hard tradeoffs、fundraising/customer framing、company decisions。
@@ -159,7 +159,7 @@ Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:decision-mappi
 - install:
 
 ```bash
-npx getsuperpower@latest install cto
+npx omniskills@latest install cto
 ```
 
 Description：Technical leadership，處理 architecture、domain model、platform direction、engineering risk。
@@ -179,7 +179,7 @@ Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；A
 - install:
 
 ```bash
-npx getsuperpower@latest install product-manager
+npx omniskills@latest install product-manager
 ```
 
 Description：Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。
@@ -199,7 +199,7 @@ Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:bra
 - install:
 
 ```bash
-npx getsuperpower@latest install engineering-manager
+npx omniskills@latest install engineering-manager
 ```
 
 Description：Delivery sequencing、execution risk、quality gates、blocker triage、engineering process。
@@ -219,7 +219,7 @@ Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writi
 - install:
 
 ```bash
-npx getsuperpower@latest install founding-engineer
+npx omniskills@latest install founding-engineer
 ```
 
 Description：Implementation lane，聚焦 smallest correct change：tests、debugging、review、verification。
@@ -239,7 +239,7 @@ Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；T
 - install:
 
 ```bash
-npx getsuperpower@latest install qa-lead
+npx omniskills@latest install qa-lead
 ```
 
 Description：Release-risk lens，處理 acceptance checks、regression focus、reproduction gaps、verification evidence。
@@ -259,7 +259,7 @@ Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:review`；Debug 
 - install:
 
 ```bash
-npx getsuperpower@latest install haaland
+npx omniskills@latest install haaland
 ```
 
 Description：一個 one-shot JTS meme workflow，用於 football-finisher caption、parody post concept、original Haaland profile icon asset。
@@ -275,18 +275,18 @@ Section label：Common commands。
 Heading：Get up and running fast。
 
 Body：可透過 alias、public git URL 或 local path 安裝。CLI 會 validate workflow manifest、從 workflow
-metadata bootstrap missing external skills，並預設把 installed GetSuperpowers 記錄在
-`~/.getsuperpower/workflows/`。Loop-enabled workflows 使用 `getsuperpower loop` 管理 resumable、action-only state。
+metadata bootstrap missing external skills，並預設把 installed Omniskills workflows 記錄在
+`~/.getsuperpower/workflows/`。Loop-enabled workflows 使用 `omniskills loop` 管理 resumable、action-only state。
 
 ```bash
-npx getsuperpower@latest install startup-goal
-npx getsuperpower@latest deps startup-goal
-npx getsuperpower@latest lock examples/workflows/startup-goal
-npx getsuperpower@latest loop status grilled-product-dev --latest --json
-npx getsuperpower@latest init my-workflow
-npx getsuperpower@latest validate my-workflow
-npx getsuperpower@latest list
-npx getsuperpower@latest remove startup-goal
+npx omniskills@latest install startup-goal
+npx omniskills@latest deps startup-goal
+npx omniskills@latest lock examples/workflows/startup-goal
+npx omniskills@latest loop status grilled-product-dev --latest --json
+npx omniskills@latest init my-workflow
+npx omniskills@latest validate my-workflow
+npx omniskills@latest list
+npx omniskills@latest remove startup-goal
 ```
 
 Then invoke in your agent：
@@ -306,14 +306,14 @@ Then invoke in your agent：
 
 Badge：Author your own workflow。
 
-Heading：Package your workflow as a GetSuperpower。
+Heading：Package your workflow as an Omniskills workflow。
 
 Body：scaffold a bundle、define the entry skill、在 workflow.json 中列出 sub-skills、validate、share。Authoring guide 會讓 skill tree 保持對齊。
 
 Command：
 
 ```bash
-npx getsuperpower@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 Author guide：

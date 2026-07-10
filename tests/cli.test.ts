@@ -120,10 +120,10 @@ describe("cli", () => {
     "release-review",
   );
 
-  test("registers GetSuperpower and skill commands only", () => {
+  test("registers Omniskills and skill commands only", () => {
     const program = buildProgram();
 
-    expect(program.name()).toBe("getsuperpower");
+    expect(program.name()).toBe("omniskills");
     expect(program.commands.map((command) => command.name())).toEqual([
       "init",
       "validate",
@@ -183,7 +183,7 @@ describe("cli", () => {
     ).not.toContain("--prehook");
   });
 
-  test("root help presents the GetSuperpower welcome", () => {
+  test("root help presents the Omniskills welcome", () => {
     const program = buildProgram();
     const output: string[] = [];
 
@@ -196,18 +196,16 @@ describe("cli", () => {
     const help = stripAnsi(output.join(""));
     const normalizedHelp = help.replace(/\s+/g, " ");
 
-    expect(help).toContain("GETSUPERPOWER");
-    expect(help).toContain("GGGG  EEEEE TTTTT");
-    expect(help).toContain("PPPP   OOO  W   W");
+    expect(help).toContain("OMNISKILLS");
     expect(help).toContain("____");
-    expect(help).toContain("Welcome to GetSuperpower.");
+    expect(help).toContain("Welcome to Omniskills.");
     expect(help).toContain("Install and author workflow skill trees for agent work.");
-    expect(help).toContain("getsuperpower init release-review");
-    expect(help).toContain("getsuperpower validate ./release-review");
-    expect(help).toContain("getsuperpower install ./release-review");
-    expect(help).toContain("getsuperpower deps ./release-review");
+    expect(help).toContain("omniskills init release-review");
+    expect(help).toContain("omniskills validate ./release-review");
+    expect(help).toContain("omniskills install ./release-review");
+    expect(help).toContain("omniskills deps ./release-review");
     expect(help).toContain("bundle");
-    expect(normalizedHelp).toContain("Compatibility alias for GetSuperpower authoring.");
+    expect(normalizedHelp).toContain("Compatibility alias for Omniskills authoring.");
     expect(help).not.toContain("ponyrace");
     expect(help).not.toContain("getsuperpower clone");
     expect(help).not.toContain("history");
@@ -230,11 +228,9 @@ describe("cli", () => {
     });
 
     const text = stripAnsi(output.join(""));
-    expect(text).toContain("GETSUPERPOWER");
-    expect(text).toContain("GGGG  EEEEE TTTTT");
-    expect(text).toContain("PPPP   OOO  W   W");
-    expect(text).toContain("Welcome to GetSuperpower.");
-    expect(text).toContain("Usage: getsuperpower");
+    expect(text).toContain("OMNISKILLS");
+    expect(text).toContain("Welcome to Omniskills.");
+    expect(text).toContain("Usage: omniskills");
   });
 
   test("prints the CLI version with -v", async () => {
@@ -296,10 +292,10 @@ describe("cli", () => {
         stat(join(rootDir, "bundles", "release-review", "workflow.lock.json")),
       ).resolves.toBeTruthy();
       expect(stripAnsiLines(logs)).toContain(
-        `GetSuperpower created: ${join(rootDir, "bundles", "release-review")}`,
+        `Omniskills created: ${join(rootDir, "bundles", "release-review")}`,
       );
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower valid: release-review@0.1.0");
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower lock written: release-review");
+      expect(stripAnsiLines(logs)).toContain("Omniskills valid: release-review@0.1.0");
+      expect(stripAnsiLines(logs)).toContain("Omniskills lock written: release-review");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -340,7 +336,7 @@ describe("cli", () => {
           stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
         ).resolves.toBeTruthy();
       }
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: release-review");
+      expect(stripAnsiLines(logs)).toContain("Omniskills installed: release-review");
       expect(stripAnsiLines(logs)).toContain("release-review 0.1.0");
     } finally {
       console.log = originalLog;
@@ -375,7 +371,7 @@ describe("cli", () => {
       );
       const generatedRunner = await readFile(join(installedSkillDir, "loop.mjs"), "utf8");
       expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
-      expect(generatedRunner).toContain("getsuperpower");
+      expect(generatedRunner).toContain("omniskills");
       expect(generatedRunner).toContain("workflow.json");
       await expect(stat(join(installedSkillDir, "loop-runtime.mjs"))).rejects.toThrow();
       const metadata = JSON.parse(
@@ -393,7 +389,7 @@ describe("cli", () => {
       await expect(
         stat(join(homeDir, ".getsuperpower", "workflows", "looped-cli.json")),
       ).resolves.toBeTruthy();
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: looped-cli");
+      expect(stripAnsiLines(logs)).toContain("Omniskills installed: looped-cli");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -444,10 +440,10 @@ describe("cli", () => {
       });
       const startCommands = startPayload.actions.map((action) => action.command).filter(Boolean);
       expect(startCommands).toContain(
-        `getsuperpower loop log ${workflowSource} --home ${homeDir} --run cli-smoke --type phase_result --message "..."`,
+        `omniskills loop log ${workflowSource} --home ${homeDir} --run cli-smoke --type phase_result --message "..."`,
       );
       expect(startCommands).toContain(
-        `getsuperpower loop advance ${workflowSource} --home ${homeDir} --run cli-smoke`,
+        `omniskills loop advance ${workflowSource} --home ${homeDir} --run cli-smoke`,
       );
       expect(startCommands.join("\n")).not.toContain("node loop.mjs");
 
@@ -536,7 +532,7 @@ describe("cli", () => {
             { from: "user" },
           ),
         ),
-      ).rejects.toThrow("GetSuperpower is not loop-enabled: release-review");
+      ).rejects.toThrow("Omniskills is not loop-enabled: release-review");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -555,7 +551,7 @@ describe("cli", () => {
         from: "user",
       });
 
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower dependencies: real-engineering");
+      expect(stripAnsiLines(logs)).toContain("Omniskills dependencies: real-engineering");
       expect(stripAnsiLines(logs)).toContain("- ./skills/rtk-command-discipline");
       expect(stripAnsiLines(logs)).toContain("- pony-trail");
       expect(stripAnsiLines(logs)).toContain("- superpowers:brainstorming");

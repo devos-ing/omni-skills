@@ -32,10 +32,10 @@ describe("workflow bundles", () => {
 
   test("rejects bare sources that are not valid workflow aliases", async () => {
     await expect(loadWorkflowBundle("ProductDev")).rejects.toThrow(
-      "Unsupported GetSuperpower source: ProductDev",
+      "Unsupported Omniskills source: ProductDev",
     );
     await expect(loadWorkflowBundle("product_dev")).rejects.toThrow(
-      "Unsupported GetSuperpower source: product_dev",
+      "Unsupported Omniskills source: product_dev",
     );
   });
 
@@ -752,14 +752,14 @@ describe("workflow bundles", () => {
     );
     expect(bundle.manifest.skills.map((skill) => skill.source)).toContain("./skills/custom-review");
     await expect(readFile(scaffold.readmePath, "utf8")).resolves.toContain(
-      "A GetSuperpower that composes reusable agent skills.",
+      "An Omniskills workflow that composes reusable agent skills.",
     );
     await expect(
       readFile(join(scaffold.bundleDir, "skills", "release-review", "SKILL.md"), "utf8"),
-    ).resolves.toContain("This is the entry skill for the release-review GetSuperpower.");
+    ).resolves.toContain("This is the entry skill for the release-review Omniskills workflow.");
     await expect(
       readFile(join(scaffold.bundleDir, "skills", "custom-review", "SKILL.md"), "utf8"),
-    ).resolves.toContain("Review this GetSuperpower from the author perspective.");
+    ).resolves.toContain("Review this Omniskills workflow from the author perspective.");
   });
 
   test("stores workflow install artifact metadata in installed records", async () => {
@@ -886,7 +886,7 @@ describe("workflow bundles", () => {
           homeDir: rootDir,
           workflowName: "missing-workflow",
         }),
-      ).rejects.toThrow("GetSuperpower is not installed: missing-workflow");
+      ).rejects.toThrow("Omniskills workflow is not installed: missing-workflow");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
@@ -1066,7 +1066,7 @@ describe("workflow bundles", () => {
         "utf8",
       ),
     ).resolves.toContain(
-      "This is the entry skill for the development-design-delivery GetSuperpower.",
+      "This is the entry skill for the development-design-delivery Omniskills workflow.",
     );
   });
 
@@ -1114,7 +1114,7 @@ describe("workflow bundles", () => {
         ),
         "utf8",
       ),
-    ).resolves.toContain("This is the entry skill for the openspec-delivery GetSuperpower.");
+    ).resolves.toContain("This is the entry skill for the openspec-delivery Omniskills workflow.");
   });
 
   test("loads a workflow bundle from a public git URL", async () => {
@@ -1420,7 +1420,7 @@ describe("workflow bundles", () => {
           return { stdout: "abc123\n", stderr: "", exitCode: 0 };
         },
       }),
-    ).rejects.toThrow("No GetSuperpower workflow manifest was found");
+    ).rejects.toThrow("No Omniskills workflow manifest was found");
 
     await expect(stat(checkoutDir)).rejects.toThrow();
     await rm(tempDir, { recursive: true, force: true });
@@ -1443,7 +1443,7 @@ describe("workflow bundles", () => {
         },
       }),
     ).rejects.toThrow(
-      "GetSuperpower workflow alias not found: missing-workflow\nChecked: https://github.com/0xroylee/getsuperpower.git#examples/workflows/missing-workflow",
+      "Omniskills workflow alias not found: missing-workflow\nChecked: https://github.com/0xroylee/getsuperpower.git#examples/workflows/missing-workflow",
     );
 
     await expect(stat(checkoutDir)).rejects.toThrow();
@@ -1518,7 +1518,7 @@ describe("workflow bundles", () => {
       ).resolves.toContain('"name": "looped-workflow"');
       const generatedRunner = await readFile(join(preparedEntry?.source ?? "", "loop.mjs"), "utf8");
       expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
-      expect(generatedRunner).toContain("getsuperpower");
+      expect(generatedRunner).toContain("omniskills");
       expect(generatedRunner).toContain("workflow.json");
       await expect(
         readFile(join(preparedEntry?.source ?? "", "loop.metadata.json"), "utf8"),

@@ -2,7 +2,7 @@
   "schemaVersion": "0.1",
   "name": "startup-goal",
   "version": "0.1.2",
-  "description": "Install the core startup operating roles as one goal-oriented GetSuperpower: CEO, CTO, product manager, engineering manager, founding engineer, and QA lead.",
+  "description": "Install the core startup operating roles as one goal-oriented Omniskills workflow: CEO, CTO, product manager, engineering manager, founding engineer, and QA lead.",
   "skills": [
     {
       "source": "./skills/startup-goal",

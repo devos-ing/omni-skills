@@ -233,7 +233,7 @@ describe("getsuperpower command module", () => {
         );
         const generatedRunner = await readFile(join(input.source, "loop.mjs"), "utf8");
         expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
-        expect(generatedRunner).toContain("getsuperpower");
+        expect(generatedRunner).toContain("omniskills");
         expect(generatedRunner).toContain("workflow.json");
         await expect(readFile(join(input.source, "loop.metadata.json"), "utf8")).resolves.toContain(
           '"workflow": "git-workflow"',
@@ -512,7 +512,7 @@ describe("getsuperpower command module", () => {
         from: "user",
       });
 
-      expect(stripAnsiLines(logs).join("\n")).toContain("GetSuperpower remove plan: git-workflow");
+      expect(stripAnsiLines(logs).join("\n")).toContain("Omniskills remove plan: git-workflow");
       expect(stripAnsiLines(logs).join("\n")).toContain("Artifacts that would be removed:");
       await expect(stat(artifactPath)).resolves.toBeTruthy();
       await expect(
@@ -563,7 +563,7 @@ describe("getsuperpower command module", () => {
         from: "user",
       });
 
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower removed: git-workflow");
+      expect(stripAnsiLines(logs)).toContain("Omniskills removed: git-workflow");
       await expect(stat(artifactPath)).rejects.toThrow();
       await expect(
         stat(join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")),
@@ -630,7 +630,7 @@ describe("getsuperpower command module", () => {
 
       await expect(
         program.parseAsync(["remove", "missing-workflow", "--home", homeDir], { from: "user" }),
-      ).rejects.toThrow("GetSuperpower is not installed: missing-workflow");
+      ).rejects.toThrow("Omniskills workflow is not installed: missing-workflow");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });
@@ -754,7 +754,7 @@ describe("getsuperpower command module", () => {
       expect(prompts[0]?.skills.map((skill) => skill.source)).toEqual(["./skills/git-entry"]);
       expect(stripAnsiLines(logs)).toContain("Skills to install:");
       expect(stripAnsiLines(logs)).toContain("- ./skills/git-entry");
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower install cancelled.");
+      expect(stripAnsiLines(logs)).toContain("Omniskills install cancelled.");
       expect(skillInstalls).toEqual([]);
       await expect(
         stat(join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")),
@@ -805,10 +805,10 @@ describe("getsuperpower command module", () => {
       expect(output).toContain("Processing 1/1: ./skills/git-entry");
       expect(output).toContain("Installed skill: git-entry");
       expect(output).toContain("+");
-      expect(output).toContain("GETSUPERPOWER");
-      expect(output).toContain("GetSuperpower installed: git-workflow");
+      expect(output).toContain("OMNISKILLS");
+      expect(output).toContain("Omniskills installed: git-workflow");
       expect(output).toContain(
-        `GetSuperpower file: ${join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")}`,
+        `Omniskills file: ${join(homeDir, ".getsuperpower", "workflows", "git-workflow.json")}`,
       );
     } finally {
       console.log = originalLog;
@@ -880,7 +880,7 @@ describe("getsuperpower command module", () => {
         join(checkoutDir, "examples", "workflows", "openspec-superpowers", "skills", "git-entry"),
       ]);
       expect(printedSkills).toEqual(["git-entry"]);
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower installed: git-workflow");
+      expect(stripAnsiLines(logs)).toContain("Omniskills installed: git-workflow");
       expect(stripAnsiLines(logs).join("\n")).not.toContain(canonicalUrl);
       const installed = JSON.parse(
         await readFile(join(rootDir, ".getsuperpower", "workflows", "git-workflow.json"), "utf8"),
@@ -931,7 +931,7 @@ describe("getsuperpower command module", () => {
       await program.parseAsync(["validate", source], { from: "user" });
 
       expect(stripAnsiLines(logs)).toEqual([
-        "GetSuperpower valid: git-workflow@0.1.0",
+        "Omniskills valid: git-workflow@0.1.0",
         "Steps: 1",
         "Skills: 1",
       ]);
@@ -975,7 +975,7 @@ describe("getsuperpower command module", () => {
       await program.parseAsync(["validate", "openspec-superpowers"], { from: "user" });
 
       expect(stripAnsiLines(logs)).toEqual([
-        "GetSuperpower valid: git-workflow@0.1.0",
+        "Omniskills valid: git-workflow@0.1.0",
         "Steps: 1",
         "Skills: 1",
       ]);
@@ -1018,7 +1018,7 @@ describe("getsuperpower command module", () => {
       await program.parseAsync(["deps", source], { from: "user" });
 
       expect(stripAnsiLines(logs)).toEqual([
-        "GetSuperpower dependencies: git-workflow",
+        "Omniskills dependencies: git-workflow",
         "- ./skills/git-entry",
       ]);
       await expect(stat(checkoutDir)).rejects.toThrow();
@@ -1061,7 +1061,7 @@ describe("getsuperpower command module", () => {
       await program.parseAsync(["deps", "openspec-superpowers"], { from: "user" });
 
       expect(stripAnsiLines(logs)).toEqual([
-        "GetSuperpower dependencies: git-workflow",
+        "Omniskills dependencies: git-workflow",
         "- ./skills/git-entry",
       ]);
       await expect(stat(checkoutDir)).rejects.toThrow();
@@ -1112,7 +1112,7 @@ describe("getsuperpower command module", () => {
           env: expect.objectContaining({}),
         },
       ]);
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower onboard");
+      expect(stripAnsiLines(logs)).toContain("Omniskills onboard");
       expect(stripAnsiLines(logs)).toContain(`Workspace: ${rootDir}`);
       expect(prompts).toEqual([
         "RTK is not available. Show RTK setup guidance to reduce Codex token usage?",
@@ -1159,7 +1159,7 @@ describe("getsuperpower command module", () => {
       expect(stripAnsiLines(logs)).toContain("RTK setup guidance");
       expect(stripAnsiLines(logs)).toContain("Install or enable RTK, then verify it with:");
       expect(stripAnsiLines(logs)).toContain("rtk --version");
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower onboard complete");
+      expect(stripAnsiLines(logs)).toContain("Omniskills onboard complete");
       expect(stripAnsiLines(logs)).toContain("CodeGraph setup skipped");
     } finally {
       console.log = originalLog;
@@ -1231,11 +1231,11 @@ describe("getsuperpower command module", () => {
         },
       ]);
       expect(prompts).toEqual([]);
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower onboard");
+      expect(stripAnsiLines(logs)).toContain("Omniskills onboard");
       expect(stripAnsiLines(logs)).toContain(`Workspace: ${rootDir}`);
       expect(stripAnsiLines(logs)).toContain("RTK ready");
       expect(stripAnsiLines(logs)).toContain("CodeGraph ready");
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower onboard complete");
+      expect(stripAnsiLines(logs)).toContain("Omniskills onboard complete");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -1296,7 +1296,7 @@ describe("getsuperpower command module", () => {
       expect(prompts).toHaveLength(2);
       expect(stripAnsiLines(logs)).toContain("RTK setup skipped");
       expect(stripAnsiLines(logs)).toContain("CodeGraph indexed");
-      expect(stripAnsiLines(logs)).toContain("GetSuperpower onboard complete");
+      expect(stripAnsiLines(logs)).toContain("Omniskills onboard complete");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

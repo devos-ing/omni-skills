@@ -5,7 +5,7 @@ description: Use when an OpenSpec proposal, tasks.md handoff, or archive checkpo
 
 # OpenSpec Handoff Review
 
-Use this skill to keep the OpenSpec side of a GetSuperpower explicit while
+Use this skill to keep the OpenSpec side of an Omniskills workflow explicit while
 Superpowers owns design, build, and verification.
 
 ## Quick Reference

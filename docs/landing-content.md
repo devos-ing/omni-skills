@@ -1,6 +1,6 @@
-# GetSuperpower Landing Content
+# Omniskills Landing Content
 
-Agent-readable Markdown mirror for the GetSuperpower landing page.
+Agent-readable Markdown mirror for the Omniskills landing page.
 
 Runtime source of truth: `landing/lib/landing-content.ts`.
 
@@ -19,14 +19,14 @@ Power your ability.
 Install the workflow.
 ```
 
-Body: GetSuperpower is a many-skill bank for AI agents. Install one workflow
+Body: Omniskills is a many-skill bank for AI agents. Install one workflow
 skill tree, call one entry skill with a goal, and give your agent the roles,
 playbooks, and verification habits that 3x your ability.
 
 Primary command preview:
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Primary action: Browse workflows.
@@ -138,7 +138,7 @@ ready.
 
 Section label: Workflow Registry.
 
-Heading: Pick a GetSuperpower.
+Heading: Pick an Omniskills workflow.
 
 Body: Browse installable workflow bundles, then open a detail route for the
 role map, skill tree, and copyable install command.
@@ -156,7 +156,7 @@ Search placeholder: Search workflows, skills, tags...
 - install:
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Description: Move a startup goal through the core operating roles: CEO, CTO,
@@ -213,7 +213,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install ceo
+npx omniskills@latest install ceo
 ```
 
 Description: Founder-level strategy for direction, hard tradeoffs,
@@ -245,7 +245,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install cto
+npx omniskills@latest install cto
 ```
 
 Description: Technical leadership for architecture, domain model, platform
@@ -283,7 +283,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install product-manager
+npx omniskills@latest install product-manager
 ```
 
 Description: Product discovery, PRDs, acceptance criteria, roadmap tradeoffs,
@@ -321,7 +321,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install engineering-manager
+npx omniskills@latest install engineering-manager
 ```
 
 Description: Delivery sequencing, execution risk, quality gates, blocker
@@ -359,7 +359,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install founding-engineer
+npx omniskills@latest install founding-engineer
 ```
 
 Description: Implementation lane for the smallest correct change: tests,
@@ -400,7 +400,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install qa-lead
+npx omniskills@latest install qa-lead
 ```
 
 Description: Release-risk lens for acceptance checks, regression focus,
@@ -435,7 +435,7 @@ Ordered skill path:
 - install:
 
 ```bash
-npx getsuperpower@latest install haaland
+npx omniskills@latest install haaland
 ```
 
 Description: A one-shot JTS meme workflow for a football-finisher caption,
@@ -458,56 +458,56 @@ Heading: Get up and running fast.
 
 Body: Install by alias, public git URL, or local path. The CLI validates the
 workflow manifest, bootstraps missing external skills from workflow metadata,
-and records installed GetSuperpowers under `~/.getsuperpower/workflows/` by
-default. Loop-enabled workflows use `getsuperpower loop` for resumable,
+and records installed Omniskills workflows under `~/.getsuperpower/workflows/` by
+default. Loop-enabled workflows use `omniskills loop` for resumable,
 action-only state.
 
 ### Install Startup Goal
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 ### Inspect Startup Goal deps
 
 ```bash
-npx getsuperpower@latest deps startup-goal
+npx omniskills@latest deps startup-goal
 ```
 
 ### Lock skill fingerprints
 
 ```bash
-npx getsuperpower@latest lock examples/workflows/startup-goal
+npx omniskills@latest lock examples/workflows/startup-goal
 ```
 
 ### Check loop status
 
 ```bash
-npx getsuperpower@latest loop status grilled-product-dev --latest --json
+npx omniskills@latest loop status grilled-product-dev --latest --json
 ```
 
 ### Create your own workflow
 
 ```bash
-npx getsuperpower@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 ### Validate before sharing
 
 ```bash
-npx getsuperpower@latest validate my-workflow
+npx omniskills@latest validate my-workflow
 ```
 
-### List installed GetSuperpowers
+### List installed Omniskills workflows
 
 ```bash
-npx getsuperpower@latest list
+npx omniskills@latest list
 ```
 
 ### Remove installed workflow
 
 ```bash
-npx getsuperpower@latest remove startup-goal
+npx omniskills@latest remove startup-goal
 ```
 
 Then invoke in your agent:
@@ -527,7 +527,7 @@ Then invoke in your agent:
 
 Badge: Author your own workflow.
 
-Heading: Package your workflow as a GetSuperpower.
+Heading: Package your workflow as an Omniskills workflow.
 
 Body: Scaffold a bundle, define the entry skill, list sub-skills in
 workflow.json, validate, and share. The authoring guide keeps the skill tree
@@ -536,7 +536,7 @@ aligned.
 Command:
 
 ```bash
-npx getsuperpower@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 Author guide:

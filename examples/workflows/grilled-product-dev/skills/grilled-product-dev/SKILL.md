@@ -3,28 +3,28 @@ name: grilled-product-dev
 description: Use when shaping a product-development request that should be grilled before Superpowers design and planning.
 ---
 
-# Grilled Product Dev GetSuperpower
+# Grilled Product Dev Omniskills Workflow
 
-This is the entry skill for the grilled-product-dev GetSuperpower.
+This is the entry skill for the grilled-product-dev Omniskills workflow.
 
 When this skill is used, run the workflow below in order. Load/use every
 required sub-skill before doing the work for its phase.
 
 ## Loop Runtime
 
-Use the GetSuperpower CLI to track the workflow run. The runtime only prints
+Use the Omniskills CLI to track the workflow run. The runtime only prints
 actions; you still decide and perform the actual work. Use the `workflow.json`
 file copied next to this skill as the loop `<source>` when running from an
 installed skill directory.
 
 1. Start or resume a run:
-   - New run: `getsuperpower loop start <source> --json`
-   - Existing run: `getsuperpower loop status <source> --latest --json`
-2. Before every phase, run `getsuperpower loop status <source> --run <run-id> --json`.
+   - New run: `omniskills loop start <source> --json`
+   - Existing run: `omniskills loop status <source> --latest --json`
+2. Before every phase, run `omniskills loop status <source> --run <run-id> --json`.
 3. Follow the returned `actions` and the exact phase `instruction`.
 4. After phase work, log a structured event, for example:
-   `getsuperpower loop log <source> --run <run-id> --type phase_result --message "..."`
-5. When the human gate is satisfied, run `getsuperpower loop advance <source> --run <run-id> --json`.
+   `omniskills loop log <source> --run <run-id> --type phase_result --message "..."`
+5. When the human gate is satisfied, run `omniskills loop advance <source> --run <run-id> --json`.
 6. Repeat status, phase work, log, and advance until the workflow is complete.
 
 The installed entry skill also gets a generated `loop.mjs` compatibility
@@ -59,4 +59,4 @@ dependency is missing.
 
 - Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
 - `superpowers:brainstorming` expects `superpowers:writing-plans` to be the next implementation skill, so grilling runs before brainstorming in this workflow.
-- This skill orchestrates required instructions; GetSuperpower installs and validates the dependency skills.
+- This skill orchestrates required instructions; Omniskills installs and validates the dependency skills.
