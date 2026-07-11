@@ -1,4 +1,4 @@
-# QA Lead GetSuperpower
+# QA Lead Omniskills Workflow
 
 Use this workflow when an agent should act as a startup QA lead: identify release
 risk, sharpen acceptance checks, and verify the work before completion.

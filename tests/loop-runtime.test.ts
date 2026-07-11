@@ -93,7 +93,7 @@ function parseRunIdFromTextOutput(stdout: string): string {
 }
 
 describe("loop runtime", () => {
-  test("generated loop.mjs bridge forwards to the GetSuperpower CLI", async () => {
+  test("generated loop.mjs bridge forwards to the Omniskills CLI", async () => {
     const tempDir = await mkdtemp(join(tmpdir(), "loop-runtime-generated-"));
     const bundle = await loadWorkflowBundle(
       join(repoRoot, "examples", "workflows", "grilled-product-dev"),
@@ -105,7 +105,7 @@ describe("loop runtime", () => {
       const generatedRunnerPath = join(preparedEntry, "loop.mjs");
       const generatedRunner = await readFile(generatedRunnerPath, "utf8");
       expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
-      expect(generatedRunner).toContain("getsuperpower");
+      expect(generatedRunner).toContain("omniskills");
       expect(generatedRunner).toContain("workflow.json");
       expect(generatedRunner).not.toContain("function parseArgs");
       await expect(stat(join(preparedEntry, "loop-runtime.mjs"))).rejects.toThrow();
@@ -143,7 +143,7 @@ describe("loop runtime", () => {
       });
       expect(missingCli.exitCode).toBe(1);
       expect(missingCli.stderr).toContain(
-        "GetSuperpower CLI is required to run loop.mjs. Install or expose getsuperpower on PATH.",
+        "Omniskills CLI is required to run loop.mjs. Install or expose omniskills on PATH.",
       );
     } finally {
       await prepared.cleanup?.();
@@ -208,7 +208,7 @@ describe("loop runtime", () => {
     try {
       const payload = parseJsonOutput(
         await runRuntime(["start", "--run", "prefix", "--json"], homeDir, workflowJson, {
-          commandPrefix: (command: string) => `getsuperpower loop ${command} ${workflowSource}`,
+          commandPrefix: (command: string) => `omniskills loop ${command} ${workflowSource}`,
         }),
       ) as {
         actions: Array<{ type: string; command?: string }>;
@@ -216,9 +216,9 @@ describe("loop runtime", () => {
 
       const commands = payload.actions.map((action) => action.command).filter(Boolean);
       expect(commands).toContain(
-        `getsuperpower loop log ${workflowSource} --run prefix --type phase_result --message "..."`,
+        `omniskills loop log ${workflowSource} --run prefix --type phase_result --message "..."`,
       );
-      expect(commands).toContain(`getsuperpower loop advance ${workflowSource} --run prefix`);
+      expect(commands).toContain(`omniskills loop advance ${workflowSource} --run prefix`);
       expect(commands.join("\n")).not.toContain("node loop.mjs");
     } finally {
       await rm(homeDir, { recursive: true, force: true });

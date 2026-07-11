@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 const canonicalUrl = "https://github.com/0xroylee/getsuperpower";
-const title = "GetSuperpower - Install AI Agent Workflows as Callable Skills";
+const title = "Omniskills - Install AI Agent Workflows as Callable Skills";
 const description =
-  "Install complete AI-agent workflows as callable skills with one GetSuperpower command.";
+  "Install complete AI-agent workflows as callable skills with one Omniskills command.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(canonicalUrl),
   alternates: {
     canonical: "/",
   },
-  applicationName: "GetSuperpower",
+  applicationName: "Omniskills",
   title,
   description,
   robots: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title,
     description,
     url: canonicalUrl,
-    siteName: "GetSuperpower",
+    siteName: "Omniskills",
     type: "website",
     locale: "en_US",
   },

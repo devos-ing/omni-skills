@@ -11,10 +11,10 @@ This file gives AI agents the short operating map for this repository.
 ### Architecture
 
 Bun + TypeScript CLI runtime for authoring, installing, and validating
-GetSuperpower skill-tree bundles.
+Omniskills workflow bundles.
 
 - `src/cli.ts` - thin Commander CLI shell.
-- `src/getsuperpower.ts` - primary GetSuperpower command module.
+- `src/getsuperpower.ts` - primary Omniskills command module.
 - `src/runtimes/getsuperpower/` - internal runtime for workflow
   manifests and install records; snapshot modules are paused from the public CLI.
 - `src/plugins/` - skill installer seam for bundled, local, Superpowers,
@@ -27,7 +27,7 @@ GetSuperpower skill-tree bundles.
 
 ```text
 Author or user request
-  -> getsuperpower CLI
+  -> omniskills CLI
   -> workflow manifest validation
   -> optional workflow.lock skill fingerprint validation
   -> skill dependency resolution
@@ -40,7 +40,7 @@ Author or user request
 
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
   output, and call runtime or plugin interfaces. It must not own bundle rules.
-- `src/getsuperpower.ts` owns GetSuperpower command registration and skill
+- `src/getsuperpower.ts` owns Omniskills command registration and skill
   dependency bootstrap for install/deps/init/validate/lock/list/remove/onboard/loop.
 - `src/runtimes/getsuperpower/` owns workflow manifest schemas, scaffolding,
   lock files, install records, removal plans, and loop metadata.
@@ -49,9 +49,9 @@ Author or user request
 - Generated `.getsuperpower/` project workspaces are local runtime state. Do not
   make source code depend on files generated during smoke tests.
 
-## GetSuperpower Rules
+## Omniskills Rules
 
-- A GetSuperpower is a deployable bundle skills set with a `workflow.json`,
+- An Omniskills workflow is a deployable bundle skills set with a `workflow.json`,
   optional `workflow.lock.json`, README, and optional local skills.
 - Role workflows such as `startup-goal`, `cto`, `product-manager`, and
   `founding-engineer` are the primary public examples. Older workflows remain
@@ -59,7 +59,7 @@ Author or user request
 - If a workflow provides one callable entry skill, that skill must be listed in
   `skills[]`; it does not need a workflow step.
 - Every `steps[].skill` value must exactly match a declared `skills[].source`.
-- `getsuperpower install` is the only public workflow install command.
+- `omniskills install` is the only public workflow install command.
 - The older `bundle` and `workflow` command surfaces exist only as
   compatibility aliases.
 - Pony Trail history, revert, and prehook features are paused. Do not expose or

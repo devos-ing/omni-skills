@@ -58,7 +58,7 @@ describe("skill installer", () => {
     expect(source.kind).toBe("bundled");
     expect(source.path.endsWith(join("bundled-skills", "creating-bundle-skills"))).toBe(true);
     expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain(
-      "Use this skill to create a GetSuperpower bundle skill",
+      "Use this skill to create an Omniskills workflow bundle",
     );
   });
 
@@ -71,7 +71,7 @@ describe("skill installer", () => {
 
     const skill = await readFile(join(source.path, "SKILL.md"), "utf8");
     expect(skill).toContain("name: writing-workflow-skills");
-    expect(skill).toContain("Use when writing or reviewing GetSuperpower workflow skill files");
+    expect(skill).toContain("Use when writing or reviewing Omniskills workflow skill files");
     expect(skill).toContain("Use `creating-bundle-skills` for the whole bundle");
     expect(skill).toContain("superpowers:brainstorming");
     expect(skill).toContain("mattpocock:to-prd");

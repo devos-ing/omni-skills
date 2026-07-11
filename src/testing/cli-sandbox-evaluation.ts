@@ -111,7 +111,7 @@ export async function runCliSandboxEvaluation(
 
 export function renderCliSandboxEvaluation(report: CliSandboxEvaluationReport): string {
   return [
-    "# GetSuperpower CLI Sandbox Evaluation",
+    "# Omniskills CLI Sandbox Evaluation",
     "",
     `Generated: ${report.generatedAt}`,
     `Workflow source: ${report.workflowSource}`,
@@ -218,7 +218,7 @@ async function runBaseline(input: {
         id: "baseline-validates-workflow",
         label: "CLI validates the workflow source",
         passed: logs.some((line) =>
-          stripAnsi(line).includes("GetSuperpower valid: openspec-delivery@0.1.0"),
+          stripAnsi(line).includes("Omniskills valid: openspec-delivery@0.1.0"),
         ),
         detail: "validate should accept the OpenSpec workflow fixture",
       },

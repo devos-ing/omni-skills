@@ -2,14 +2,14 @@
   "schema_version": 1,
   "diagram_type": "sequence",
   "meta": {
-    "title": "GetSuperpower Install And Run",
+    "title": "Omniskills Install And Run",
     "subtitle": "source resolution, skill installation, workflow record, then entry-skill execution",
     "output": "assets/diagrams/getsuperpower-install-sequence.html",
     "viewBox": [920, 850]
   },
   "participants": [
     { "id": "user", "type": "external", "label": "User", "sublabel": "terminal + agent" },
-    { "id": "cli", "type": "frontend", "label": "CLI", "sublabel": "getsuperpower" },
+    { "id": "cli", "type": "frontend", "label": "CLI", "sublabel": "omniskills" },
     { "id": "source", "type": "cloud", "label": "Source", "sublabel": "bundled / local / git" },
     { "id": "manifest", "type": "database", "label": "Manifest", "sublabel": "workflow.json" },
     { "id": "targets", "type": "messagebus", "label": "Skill Targets", "sublabel": "agent homes" },

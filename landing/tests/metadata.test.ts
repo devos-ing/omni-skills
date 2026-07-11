@@ -2,15 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { metadata } from "../app/metadata";
 
 const canonicalUrl = "https://github.com/0xroylee/getsuperpower";
-const seoTitle = "GetSuperpower - Install AI Agent Workflows as Callable Skills";
+const seoTitle = "Omniskills - Install AI Agent Workflows as Callable Skills";
 const seoDescription =
-  "Install complete AI-agent workflows as callable skills with one GetSuperpower command.";
+  "Install complete AI-agent workflows as callable skills with one Omniskills command.";
 
 describe("landing metadata", () => {
-  test("describes GetSuperpower for search and social previews", () => {
+  test("describes Omniskills for search and social previews", () => {
     expect(metadata.metadataBase?.toString()).toBe(canonicalUrl);
     expect(metadata.alternates?.canonical).toBe("/");
-    expect(metadata.applicationName).toBe("GetSuperpower");
+    expect(metadata.applicationName).toBe("Omniskills");
     expect(metadata.title).toBe(seoTitle);
     expect(metadata.description).toBe(seoDescription);
     expect(metadata.robots).toEqual({
@@ -28,7 +28,7 @@ describe("landing metadata", () => {
       title: seoTitle,
       description: seoDescription,
       url: canonicalUrl,
-      siteName: "GetSuperpower",
+      siteName: "Omniskills",
       type: "website",
       locale: "en_US",
     });

@@ -1,6 +1,6 @@
-# GetSuperpower Landing
+# Omniskills Landing
 
-This folder contains the isolated Next.js landing app for GetSuperpower.
+This folder contains the isolated Next.js landing app for Omniskills.
 
 ## Run Locally
 

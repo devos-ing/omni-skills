@@ -2,13 +2,13 @@
   "schema_version": 1,
   "diagram_type": "workflow",
   "meta": {
-    "title": "GetSuperpower Workflow",
+    "title": "Omniskills Workflow",
     "subtitle": "install or clone a skill-tree bundle, then call the entry skill",
     "output": "assets/diagrams/getsuperpower-how-it-works.html"
   },
   "lanes": [
     { "id": "command", "label": "User command" },
-    { "id": "installer", "label": "GetSuperpower install runtime" },
+    { "id": "installer", "label": "Omniskills install runtime" },
     { "id": "agent", "label": "Agent runtime" }
   ],
   "nodes": [

@@ -199,13 +199,13 @@ export function configureGetSuperpowerCommand(
 
   const bundleCommand = program
     .command("bundle")
-    .description("Compatibility alias for GetSuperpower authoring.");
+    .description("Compatibility alias for Omniskills authoring.");
   configureAuthorCommands(bundleCommand, options);
   configureLockCommand(bundleCommand, options);
 
   const workflowCommand = program
     .command("workflow")
-    .description("Compatibility alias for GetSuperpower install, list, and remove commands.");
+    .description("Compatibility alias for Omniskills install, list, and remove commands.");
   configureInstallCommand(workflowCommand, options);
   configureListCommand(workflowCommand, options.rootDir);
   configureRemoveCommand(workflowCommand, options);
@@ -233,24 +233,24 @@ function configureAuthorCommands(
 ): void {
   command
     .command("init")
-    .description("Create a local GetSuperpower scaffold.")
-    .argument("<name>", "GetSuperpower name")
-    .option("--dir <dir>", "directory that will contain the GetSuperpower", options.rootDir)
+    .description("Create a local Omniskills scaffold.")
+    .argument("<name>", "Omniskills name")
+    .option("--dir <dir>", "directory that will contain the Omniskills workflow", options.rootDir)
     .action(async (name: string, commandOptions: { dir: string }) => {
       const scaffold = await createWorkflowBundleScaffold({
         rootDir: resolvePath(options.rootDir, commandOptions.dir),
         name,
       });
 
-      console.log(success(`GetSuperpower created: ${scaffold.bundleDir}`));
+      console.log(success(`Omniskills created: ${scaffold.bundleDir}`));
       console.log(keyValue("Manifest", scaffold.manifestPath));
       console.log(keyValue("README", scaffold.readmePath));
     });
 
   command
     .command("validate")
-    .description("Validate a GetSuperpower manifest.")
-    .argument("<path>", "GetSuperpower directory or workflow.json path")
+    .description("Validate an Omniskills manifest.")
+    .argument("<path>", "Omniskills directory or workflow.json path")
     .action(async (path: string) => {
       const bundle = await loadWorkflowBundle(path, {
         cwd: options.rootDir,
@@ -260,7 +260,7 @@ function configureAuthorCommands(
       });
       try {
         console.log(
-          success(`GetSuperpower valid: ${bundle.manifest.name}@${bundle.manifest.version}`),
+          success(`Omniskills valid: ${bundle.manifest.name}@${bundle.manifest.version}`),
         );
         console.log(keyValue("Steps", String(bundle.manifest.steps.length)));
         console.log(keyValue("Skills", String(bundle.manifest.skills.length)));
@@ -276,8 +276,8 @@ function configureLockCommand(
 ): void {
   command
     .command("lock")
-    .description("Generate workflow.lock.json skill fingerprints for a local GetSuperpower.")
-    .argument("<source>", "local GetSuperpower directory or workflow.json path")
+    .description("Generate workflow.lock.json skill fingerprints for a local Omniskills workflow.")
+    .argument("<source>", "local Omniskills directory or workflow.json path")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {
         cwd: options.rootDir,
@@ -289,12 +289,12 @@ function configureLockCommand(
       try {
         if (bundle.source.kind !== "local") {
           throw new Error(
-            "GetSuperpower lock can only write local workflow sources. Clone or open the workflow source directory, then run lock there.",
+            "Omniskills lock can only write local workflow sources. Clone or open the workflow source directory, then run lock there.",
           );
         }
 
         const result = await writeWorkflowLockFile(bundle);
-        console.log(success(`GetSuperpower lock written: ${bundle.manifest.name}`));
+        console.log(success(`Omniskills lock written: ${bundle.manifest.name}`));
         console.log(keyValue("Lock file", result.path));
         console.log(keyValue("Skills", String(result.lock.skills.length)));
       } finally {
@@ -309,10 +309,10 @@ function configureInstallCommand(
 ): void {
   command
     .command("install")
-    .description("Install a GetSuperpower and its skills.")
+    .description("Install an Omniskills workflow and its skills.")
     .argument(
       "<source>",
-      "workflow alias, local GetSuperpower path, workflow.json path, or public git source",
+      "workflow alias, local Omniskills path, workflow.json path, or public git source",
     )
     .option("--dir <dir>", "override directory that receives .getsuperpower/workflows")
     .option(
@@ -322,7 +322,7 @@ function configureInstallCommand(
     )
     .option(
       "--home <dir>",
-      "home directory for global GetSuperpower records and agent config folders",
+      "home directory for global Omniskills records and agent config folders",
       homedir(),
     )
     .action((source: string, commandOptions: GetSuperpowerInstallCommandOptions) =>
@@ -370,7 +370,7 @@ async function runGetSuperpowerInstall(
     });
 
     if (!approved) {
-      console.log(warning("GetSuperpower install cancelled."));
+      console.log(warning("Omniskills install cancelled."));
       return;
     }
 
@@ -419,8 +419,8 @@ async function runGetSuperpowerInstall(
 
     const install = await installWorkflowBundle({ rootDir: targetDir, bundle, installArtifacts });
 
-    console.log(success(`GetSuperpower installed: ${install.workflow.name}`));
-    console.log(keyValue("GetSuperpower file", install.path));
+    console.log(success(`Omniskills installed: ${install.workflow.name}`));
+    console.log(keyValue("Omniskills file", install.path));
     console.log(
       getSuperpowerInstallResultBox({
         workflowName: install.workflow.name,
@@ -466,9 +466,7 @@ function printGetSuperpowerInstallPlan(input: {
   targetDir: string;
   homeDir: string;
 }): void {
-  console.log(
-    success(`GetSuperpower install plan: ${input.workflowName}@${input.workflowVersion}`),
-  );
+  console.log(success(`Omniskills install plan: ${input.workflowName}@${input.workflowVersion}`));
   console.log(keyValue("Workflow records", input.targetDir));
   console.log(keyValue("Skill home", input.homeDir));
   console.log("Skills to install:");
@@ -698,9 +696,9 @@ async function runExternalSkillCommand(
 function configureListCommand(command: Command, rootDir: string): void {
   command
     .command("list")
-    .description("List installed GetSuperpowers.")
+    .description("List installed Omniskills workflows.")
     .option("--dir <dir>", "override directory with .getsuperpower/workflows")
-    .option("--home <dir>", "home directory that contains global GetSuperpower records", homedir())
+    .option("--home <dir>", "home directory that contains global Omniskills records", homedir())
     .action(async (commandOptions: { dir?: string; home: string }) => {
       const targetDir = commandOptions.dir
         ? resolvePath(rootDir, commandOptions.dir)
@@ -710,8 +708,8 @@ function configureListCommand(command: Command, rootDir: string): void {
       });
 
       if (workflows.length === 0) {
-        console.log(muted("No GetSuperpowers installed."));
-        console.log(nextStep("getsuperpower install <path-or-git-url>"));
+        console.log(muted("No Omniskills workflows installed."));
+        console.log(nextStep("omniskills install <path-or-git-url>"));
         return;
       }
 
@@ -727,10 +725,10 @@ function configureRemoveCommand(
 ): void {
   command
     .command("remove")
-    .description("Remove an installed GetSuperpower and its recorded skill artifacts.")
-    .argument("<workflow-name>", "installed GetSuperpower workflow name")
+    .description("Remove an installed Omniskills workflow and its recorded skill artifacts.")
+    .argument("<workflow-name>", "installed Omniskills workflow name")
     .option("--dir <dir>", "override directory with .getsuperpower/workflows")
-    .option("--home <dir>", "home directory with global GetSuperpower records", homedir())
+    .option("--home <dir>", "home directory with global Omniskills records", homedir())
     .option("--dry-run", "print the removal plan without deleting files", false)
     .option("--yes", "remove without prompting for confirmation", false)
     .action((workflowName: string, commandOptions: GetSuperpowerRemoveCommandOptions) =>
@@ -765,16 +763,16 @@ async function runGetSuperpowerRemove(
       artifactsToKeep: plan.artifactsToKeep.length,
     }));
   if (!approved) {
-    console.log(warning("GetSuperpower remove cancelled."));
+    console.log(warning("Omniskills remove cancelled."));
     return;
   }
 
   await executeWorkflowRemovalPlan(plan);
-  console.log(success(`GetSuperpower removed: ${workflowName}`));
+  console.log(success(`Omniskills removed: ${workflowName}`));
 }
 
 function printGetSuperpowerRemovePlan(plan: WorkflowRemovalPlan, dryRun: boolean): void {
-  console.log(success(`GetSuperpower remove plan: ${plan.workflow.name}`));
+  console.log(success(`Omniskills remove plan: ${plan.workflow.name}`));
   console.log(keyValue("Workflow record", plan.workflowRecordPath));
   if (plan.legacy) {
     console.log(warning("Legacy workflow record detected; removal paths are inferred."));
@@ -812,8 +810,8 @@ function configureDependencyCommand(
   command
     .command("deps")
     .aliases(["dependencies", "dependence"])
-    .description("List the skill dependencies declared by a GetSuperpower.")
-    .argument("<source>", "local GetSuperpower path, workflow.json path, or public git source")
+    .description("List the skill dependencies declared by an Omniskills workflow.")
+    .argument("<source>", "local Omniskills path, workflow.json path, or public git source")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {
         cwd: options.rootDir,
@@ -822,7 +820,7 @@ function configureDependencyCommand(
           : {}),
       });
       try {
-        console.log(success(`GetSuperpower dependencies: ${bundle.manifest.name}`));
+        console.log(success(`Omniskills dependencies: ${bundle.manifest.name}`));
         for (const skill of bundle.manifest.skills) {
           const optional = skill.optional ? " (optional)" : "";
           console.log(`- ${skill.source}${optional}`);
@@ -880,9 +878,9 @@ function configureLoopSubcommand(
     .description(description)
     .argument(
       "<source>",
-      "workflow alias, local GetSuperpower path, workflow.json path, or public git source",
+      "workflow alias, local Omniskills path, workflow.json path, or public git source",
     )
-    .option("--home <dir>", "home directory for global GetSuperpower loop run state", homedir())
+    .option("--home <dir>", "home directory for global Omniskills loop run state", homedir())
     .action((source: string, commandOptions: GetSuperpowerLoopCommandOptions) =>
       runGetSuperpowerLoop(name, source, commandOptions, options),
     );
@@ -904,7 +902,7 @@ async function runGetSuperpowerLoop(
 
   try {
     if (!bundle.manifest.loop) {
-      throw new Error(`GetSuperpower is not loop-enabled: ${bundle.manifest.name}`);
+      throw new Error(`Omniskills is not loop-enabled: ${bundle.manifest.name}`);
     }
 
     const { runWorkflowLoopCli } = (await importWorkflowLoopRuntime()) as WorkflowLoopRuntimeModule;
@@ -932,7 +930,7 @@ async function importWorkflowLoopRuntime(): Promise<unknown> {
 function createLoopCommandPrefix(source: string, homeDir: string): (command: string) => string {
   const defaultHomeDir = resolveHomePath(homedir());
   const homeOption = homeDir === defaultHomeDir ? "" : ` --home ${quoteShellArg(homeDir)}`;
-  return (command) => `getsuperpower loop ${command} ${quoteShellArg(source)}${homeOption}`;
+  return (command) => `omniskills loop ${command} ${quoteShellArg(source)}${homeOption}`;
 }
 
 function buildLoopRuntimeArgs(
@@ -995,7 +993,7 @@ async function runGetSuperpowerOnboard(
   const prompt = options.onboardPrompt ?? createDefaultOnboardPrompt();
   const runCommand = options.onboardCommandRunner ?? runExternalSkillCommand;
 
-  console.log(success("GetSuperpower onboard"));
+  console.log(success("Omniskills onboard"));
   console.log(keyValue("Workspace", targetDir));
 
   const rtkResult = await runCommand({
@@ -1032,7 +1030,7 @@ async function runGetSuperpowerOnboard(
     console.log(warning("CodeGraph setup skipped"));
   }
 
-  console.log(success("GetSuperpower onboard complete"));
+  console.log(success("Omniskills onboard complete"));
 }
 
 function printRtkSetupGuidance(): void {
@@ -1069,8 +1067,8 @@ function createDefaultOnboardPrompt(): GetSuperpowerOnboardPrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("GetSuperpower onboard cancelled");
-        throw new Error("GetSuperpower onboard cancelled");
+        clackCancel("Omniskills onboard cancelled");
+        throw new Error("Omniskills onboard cancelled");
       }
 
       return result;
@@ -1092,7 +1090,7 @@ function createDefaultInstallPrompt(): GetSuperpowerInstallPrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("GetSuperpower install cancelled");
+        clackCancel("Omniskills install cancelled");
         return false;
       }
 
@@ -1115,7 +1113,7 @@ function createDefaultRemovePrompt(): GetSuperpowerRemovePrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("GetSuperpower remove cancelled");
+        clackCancel("Omniskills remove cancelled");
         return false;
       }
 

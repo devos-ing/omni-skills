@@ -1,4 +1,4 @@
-# GetSuperpower Landing Design
+# Omniskills Landing Design
 
 This file is the local design contract for the `landing/` app. It keeps visual,
 content, and interaction changes aligned with the current OpenSpec direction
@@ -26,14 +26,14 @@ without making the root CLI package depend on landing-only decisions.
 
 ## Product Story
 
-The first screen should make GetSuperpower unmistakable: one command installs a
+The first screen should make Omniskills unmistakable: one command installs a
 whole AI-agent workflow as a callable skill. Supporting copy should explain
 workflow bundles, skill-tree installation, and root-first commands, but the
 headline should stay short and product-led.
 
 Preferred message hierarchy:
 
-1. GetSuperpower is the product.
+1. Omniskills is the product.
 2. One install command gives an agent a complete workflow.
 3. Workflows are shareable bundles with one entry skill.
 4. Workflow bundles can be browsed like a registry, then inspected on detail
@@ -150,15 +150,15 @@ workflow comparison.
 
 ## Content Rules
 
-Use the current root-first GetSuperpower command surface:
+Use the current root-first Omniskills command surface:
 
-- `npx getsuperpower@latest install ...`
-- `npx getsuperpower@latest list`
-- `npx getsuperpower@latest init my-workflow`
-- `npx getsuperpower@latest validate my-workflow`
-- `npx getsuperpower@latest deps ...`
+- `npx omniskills@latest install ...`
+- `npx omniskills@latest list`
+- `npx omniskills@latest init my-workflow`
+- `npx omniskills@latest validate my-workflow`
+- `npx omniskills@latest deps ...`
 
-Do not advertise removed nested `getsuperpower` subcommands. Workflow entries
+Do not advertise removed nested Omniskills subcommands. Workflow entries
 should name the callable entry skill and important sub-skills in plain
 language.
 

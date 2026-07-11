@@ -1,12 +1,12 @@
-# GetSuperpower CLI Design
+# Omniskills CLI Design
 
 ## Purpose
 
-GetSuperpower terminal output should feel like a polished developer product:
+Omniskills terminal output should feel like a polished developer product:
 clear, friendly, compact, and oriented around the next command to run.
 
 Shopify CLI is a useful reference for command-first polish and confident
-developer onboarding. GetSuperpower should not copy Shopify branding, colors, or
+developer onboarding. Omniskills should not copy Shopify branding, colors, or
 wording. Its own style is more agentic: bright brand color, calm structure, and
 direct next steps for installing workflow skill trees.
 
@@ -35,13 +35,13 @@ primary workflow quickly.
 
 ## Logo
 
-The root help logo must visibly read `GETSUPERPOWER`. Keep it ASCII so it
+The root help logo must visibly read `OMNISKILLS`. Keep it ASCII so it
 renders reliably in common terminals and CI logs.
 
 Approved logo direction:
 
 ```text
-   GETSUPERPOWER
+   OMNISKILLS
    Skill trees for serious agent work.
 ```
 
@@ -51,7 +51,7 @@ above.
 
 Use the logo in:
 
-- root `getsuperpower --help`;
+- root `omniskills --help`;
 - no-command root invocation if it shows welcome help.
 
 Do not use the logo in:
@@ -84,7 +84,7 @@ Use short, confident copy.
 Prefer:
 
 ```text
-Welcome to GetSuperpower.
+Welcome to Omniskills.
 Install and author workflow skill trees for agent work.
 ```
 
@@ -98,7 +98,7 @@ Rules:
 
 - Start with the outcome, then show the command.
 - Keep labels one or two words.
-- Use "GetSuperpower" for the product.
+- Use "Omniskills" for the product.
 - Use "workflow skill tree" when describing what is installed.
 - Keep compatibility aliases visibly secondary.
 
@@ -107,22 +107,22 @@ Rules:
 Root help should be structured as:
 
 ```text
-GETSUPERPOWER
-Welcome to GetSuperpower.
+OMNISKILLS
+Welcome to Omniskills.
 Install and author workflow skill trees for agent work.
 
 Start:
-  getsuperpower init release-review
-  getsuperpower validate ./release-review
-  getsuperpower install openspec-superpowers
-  getsuperpower install ./release-review
+  omniskills init release-review
+  omniskills validate ./release-review
+  omniskills install openspec-superpowers
+  omniskills install ./release-review
 
 Inspect:
-  getsuperpower list
-  getsuperpower deps ./release-review
+  omniskills list
+  omniskills deps ./release-review
 
 Usage:
-  getsuperpower [options] [command]
+  omniskills [options] [command]
 
 Commands:
   init
@@ -143,7 +143,7 @@ brand, welcome, examples, usage, commands, options.
 ### Success Heading
 
 ```text
-GetSuperpower valid: release-review@0.1.0
+Omniskills valid: release-review@0.1.0
 Steps: 2
 Skills: 4
 ```
@@ -154,7 +154,7 @@ The first line should use the success helper. Labels such as `Steps:` and
 ### Install Result
 
 ```text
-GetSuperpower install plan: release-review@0.1.0
+Omniskills install plan: release-review@0.1.0
 Workflow records: ~/.getsuperpower
 Skill home: ~/.agents
 Skills to install:
@@ -166,22 +166,22 @@ Skills to install:
 Installing skills...
 Processing 1/4: superpowers:brainstorming
 Installed skill: superpowers-brainstorming
-GetSuperpower installed: release-review
-GetSuperpower file: ~/.getsuperpower/workflows/release-review.json
+Omniskills installed: release-review
+Omniskills file: ~/.getsuperpower/workflows/release-review.json
 +---------------------------------------------------------------+
-| GETSUPERPOWER                                                 |
+| OMNISKILLS                                                     |
 | Skill trees for serious agent work.                           |
 |                                                               |
-| GetSuperpower installed: release-review                       |
+| Omniskills installed: release-review                          |
 | Version: 0.1.0                                                |
 | Skills installed: 4                                           |
-| GetSuperpower file: ~/.getsuperpower/workflows/release-review.json |
+| Omniskills file: ~/.getsuperpower/workflows/release-review.json |
 +---------------------------------------------------------------+
 ```
 
 Install output should list the declared skills before mutating targets, ask for
 yes/no approval in interactive terminals, show per-skill processing, and finish
-with the bordered GETSUPERPOWER result panel. In non-interactive shells, continue
+with the bordered OMNISKILLS result panel. In non-interactive shells, continue
 without prompting after printing the plan.
 
 ### Skill Result
@@ -198,8 +198,8 @@ Keep target rows scan-friendly. Do not introduce decorative bullets.
 ### Empty State
 
 ```text
-No GetSuperpowers installed.
-Next: getsuperpower install <path-or-git-url>
+No Omniskills workflows installed.
+Next: omniskills install <path-or-git-url>
 ```
 
 Empty states should include one useful next command when it is safe and obvious.
@@ -207,11 +207,11 @@ Empty states should include one useful next command when it is safe and obvious.
 ### Onboard Checklist
 
 ```text
-GetSuperpower onboard
+Omniskills onboard
 Workspace: /path/to/project
 RTK ready
 CodeGraph ready
-GetSuperpower onboard complete
+Omniskills onboard complete
 ```
 
 Use the success helper for ready, indexed, guidance, and complete states. Use
@@ -235,7 +235,7 @@ Tests should strip ANSI before asserting content.
 
 Required coverage:
 
-- root help contains `GETSUPERPOWER`, welcome copy, examples, and current public
+- root help contains `OMNISKILLS`, welcome copy, examples, and current public
   commands;
 - removed Pony Trail commands remain absent;
 - no-command invocation prints the welcome help if the implementation enables

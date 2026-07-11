@@ -1,4 +1,4 @@
-# Product Manager GetSuperpower
+# Product Manager Omniskills Workflow
 
 Use this workflow when an agent should act as a startup product manager: discover
 the real user problem, write a PRD, and slice the work into delivery-ready

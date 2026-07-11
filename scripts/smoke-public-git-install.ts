@@ -27,7 +27,7 @@ async function main(): Promise<void> {
       "",
       "# Raw Sandbox Entry",
       "",
-      "Use this skill to prove GetSuperpower can install a workflow from git.",
+      "Use this skill to prove Omniskills can install a workflow from git.",
       "",
     ].join("\n"),
   );
@@ -55,7 +55,7 @@ async function main(): Promise<void> {
 
   await run(["git", "init"], { cwd: sourceRepo });
   await run(["git", "config", "user.email", "smoke@example.invalid"], { cwd: sourceRepo });
-  await run(["git", "config", "user.name", "GetSuperpower Smoke"], { cwd: sourceRepo });
+  await run(["git", "config", "user.name", "Omniskills Smoke"], { cwd: sourceRepo });
   await run(["git", "add", "."], { cwd: sourceRepo });
   await run(["git", "commit", "-m", "add raw sandbox workflow"], { cwd: sourceRepo });
 

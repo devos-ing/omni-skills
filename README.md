@@ -1,24 +1,24 @@
-# GetSuperpower
+# Omniskills
 
 [繁體中文](README.zh-Hant.md)
 
 Power your ability.
 
-GetSuperpower is a many-skill bank for AI agents: install one workflow skill
+Omniskills is a many-skill bank for AI agents: install one workflow skill
 tree, call one entry skill with a goal, and give your agent the right roles,
 playbooks, and verification habits for the problem in front of it. The point is
 simple: 3x your ability without manually juggling every specialist skill.
 
 Start with Startup Goal when you want to move a company-building goal through many role workflows instead of manually juggling every skill: CEO, CTO, Product Manager, Engineering Manager, Founding Engineer, and QA Lead.
 
-<img src="/assets/getsupwerpower.jpg" alt="GetSuperpower" width="640" />
+<img src="/assets/getsupwerpower.jpg" alt="Omniskills" width="640" />
 
 ## Quick Start
 
 Install the full startup goal workflow:
 
 ```bash
-npx getsuperpower@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Then ask your agent to run the entry skill with a goal:
@@ -30,32 +30,32 @@ $startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a
 The alias points to the checked-in workflow bundle:
 
 ```bash
-npx getsuperpower@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/startup-goal'
+npx omniskills@latest install 'https://github.com/0xroylee/getsuperpower.git#examples/workflows/startup-goal'
 ```
 
 Install individual startup roles when you want one specialist workflow:
 
 ```bash
-npx getsuperpower@latest install ceo
-npx getsuperpower@latest install cto
-npx getsuperpower@latest install product-manager
-npx getsuperpower@latest install engineering-manager
-npx getsuperpower@latest install founding-engineer
-npx getsuperpower@latest install qa-lead
+npx omniskills@latest install ceo
+npx omniskills@latest install cto
+npx omniskills@latest install product-manager
+npx omniskills@latest install engineering-manager
+npx omniskills@latest install founding-engineer
+npx omniskills@latest install qa-lead
 ```
 
 Restart your agent after installing skills so it reloads the new entry skills.
 
 ## Workflow Registry
 
-Use the registry view to pick a GetSuperpower, inspect its role workflow, and
+Use the registry view to pick an Omniskills workflow, inspect its role workflow, and
 copy the install command.
 
-<img src="assets/getsuperpower-startup-role-registry.png" alt="GetSuperpower startup role workflow registry" width="920" />
+<img src="assets/getsuperpower-startup-role-registry.png" alt="Omniskills startup role workflow registry" width="920" />
 
 ## Startup Role Workflows
 
-| GetSuperpower | Entry skill | What it helps with |
+| Omniskills workflow | Entry skill | What it helps with |
 | --- | --- | --- |
 | Startup Goal | `$startup-goal` | Route a company-building goal through strategy, product, architecture, delivery, implementation, and QA role subagents. |
 | CEO | `$ceo` | Direction, hard tradeoffs, fundraising/customer framing, and company decisions. |
@@ -71,7 +71,7 @@ calling the entry skill that knows which companion skills to use.
 
 ## Goal Loops
 
-Some GetSuperpowers also expose a loop runner for goals that should keep moving
+Some Omniskills workflows also expose a loop runner for goals that should keep moving
 until the goal is done. A loop is resumable workflow state: `loop start` creates
 a run, `loop status` shows where it is, and `loop advance` returns the next suggested action.
 
@@ -81,9 +81,9 @@ it does not silently execute tools or shell commands for the agent.
 Try the loop-capable product-development workflow:
 
 ```bash
-npx getsuperpower@latest loop start grilled-product-dev --json
-npx getsuperpower@latest loop status grilled-product-dev --latest --json
-npx getsuperpower@latest loop advance grilled-product-dev --run <run-id> --json
+npx omniskills@latest loop start grilled-product-dev --json
+npx omniskills@latest loop status grilled-product-dev --latest --json
+npx omniskills@latest loop advance grilled-product-dev --run <run-id> --json
 ```
 
 That shape is useful for complex work: clarify the goal, move one action
@@ -91,7 +91,7 @@ forward, verify evidence, and keep advancing until the goal is done.
 
 ## Built-In Workflow Ecosystem
 
-GetSuperpower workflows can compose local skills, bundled skills, and external
+Omniskills workflows can compose local skills, bundled skills, and external
 skill packs:
 
 - Matt Pocock skills for TDD, review, design pressure-testing, domain modeling,
@@ -101,36 +101,36 @@ skill packs:
   context in workflows that declare `pony-trail`.
 - More workflow packs are coming.
 
-`getsuperpower install` uses each workflow skill's `repo` metadata to fetch
+`omniskills install` uses each workflow skill's `repo` metadata to fetch
 missing external skills through the Skills CLI. For example,
 `{ "source": "superpowers:brainstorming", "repo": "obra/superpowers" }`
 keeps the original skill name in `source` and installs it with
 `npx skills add obra/superpowers --skill brainstorming`.
 
-If automatic bootstrap fails, run the package install through GetSuperpower and
+If automatic bootstrap fails, run the package install through Omniskills and
 retry:
 
 ```bash
-npx getsuperpower@latest skills install mattpocock/skills
+npx omniskills@latest skills install mattpocock/skills
 ```
 
 ## Command Reference
 
 ```bash
-npx getsuperpower@latest install <alias-or-path-or-git-url>
-npx getsuperpower@latest list
-npx getsuperpower@latest deps <source>
-npx getsuperpower@latest lock <source>
-npx getsuperpower@latest loop <start|status|log|advance|summary> <source>
-npx getsuperpower@latest remove <workflow-name>
-npx getsuperpower@latest init <name>
-npx getsuperpower@latest validate <source>
-npx getsuperpower@latest skills install
-npx getsuperpower@latest skills update
+npx omniskills@latest install <alias-or-path-or-git-url>
+npx omniskills@latest list
+npx omniskills@latest deps <source>
+npx omniskills@latest lock <source>
+npx omniskills@latest loop <start|status|log|advance|summary> <source>
+npx omniskills@latest remove <workflow-name>
+npx omniskills@latest init <name>
+npx omniskills@latest validate <source>
+npx omniskills@latest skills install
+npx omniskills@latest skills update
 ```
 
-Run `npx getsuperpower@latest --help` or
-`npx getsuperpower@latest <command> --help` for detailed usage.
+Run `npx omniskills@latest --help` or
+`npx omniskills@latest <command> --help` for detailed usage.
 
 The older `bundle` and `workflow` commands still work as compatibility aliases.
 
@@ -139,10 +139,10 @@ The older `bundle` and `workflow` commands still work as compatibility aliases.
 Start with the [Create Your Own Workflow guide](docs/workflow-author-guide.md)
 if you want to author and share a workflow bundle.
 
-Create a new GetSuperpower:
+Create a new Omniskills workflow:
 
 ```bash
-npx getsuperpower@latest init release-review
+npx omniskills@latest init release-review
 ```
 
 This creates:
@@ -164,20 +164,20 @@ users to call one skill that coordinates many sub-skills.
 Install the authoring helper if you want an agent to help design bundle skills:
 
 ```bash
-npx getsuperpower@latest skills install creating-bundle-skills
+npx omniskills@latest skills install creating-bundle-skills
 ```
 
 Then ask your agent to use:
 
 ```text
-$creating-bundle-skills create a GetSuperpower for release review
+$creating-bundle-skills create an Omniskills workflow for release review
 ```
 
 Validate before sharing:
 
 ```bash
-npx getsuperpower@latest validate ./release-review
-npx getsuperpower@latest deps ./release-review
+npx omniskills@latest validate ./release-review
+npx omniskills@latest deps ./release-review
 ```
 
 The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guide.md).
@@ -236,4 +236,5 @@ bun run build
 
 ## Compatibility
 
-The package and CLI binary are named `getsuperpower`.
+The canonical package and CLI binary are named `omniskills`. The legacy
+`getsuperpower` binary remains available as a compatibility alias.

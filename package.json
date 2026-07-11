@@ -1,5 +1,5 @@
 {
-  "name": "getsuperpower",
+  "name": "omniskills",
   "version": "0.4.1",
   "type": "module",
   "repository": {
@@ -7,6 +7,7 @@
     "url": "https://github.com/0xroylee/getsuperpower"
   },
   "bin": {
+    "omniskills": "dist/cli.js",
     "getsuperpower": "dist/cli.js"
   },
   "files": [

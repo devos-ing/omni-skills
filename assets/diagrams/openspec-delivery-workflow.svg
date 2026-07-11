@@ -30,7 +30,7 @@
   <rect x="0" y="0" width="960" height="540" fill="#f8fafc" />
   <rect x="36" y="34" width="888" height="472" rx="24" fill="#ffffff" stroke="#e2e8f0" />
 
-  <text x="70" y="82" class="title">OpenSpec Delivery GetSuperpower</text>
+  <text x="70" y="82" class="title">OpenSpec Delivery Omniskills Workflow</text>
   <text x="72" y="110" class="subtitle">One entry skill coordinates proposal, design, planning, TDD implementation, verification, and archive.</text>
 
   <rect x="70" y="140" width="820" height="54" rx="14" class="call" />
