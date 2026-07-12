@@ -64,7 +64,9 @@ describe("landing app source contract", () => {
     expect(content).toContain("npx omniskill@latest lock examples/workflows/startup-goal");
     expect(content).toContain("npx omniskill@latest remove startup-goal");
     expect(content).not.toContain("npx omniskill@latest install startup-team");
-    expect(content).toContain("npx omniskill@latest loop status grilled-product-dev --latest --json");
+    expect(content).toContain(
+      "npx omniskill@latest loop status grilled-product-dev --latest --json",
+    );
     expect(content).toContain("npx omniskill@latest validate");
     expect(content).not.toContain("npx omniskill@latest omniskill");
   });
@@ -297,7 +299,9 @@ describe("landing app source contract", () => {
     const content = readLandingFile("lib/landing-content.ts");
     const page = readLandingFile("components/landing-page.tsx");
 
-    expect(content).toContain("npx omniskill@latest loop status grilled-product-dev --latest --json");
+    expect(content).toContain(
+      "npx omniskill@latest loop status grilled-product-dev --latest --json",
+    );
     expect(content).toContain("resumable, action-only workflow state");
     expect(page).toContain("Watch a real startup situation");
     expect(content).not.toContain("executes tools");

@@ -39,7 +39,7 @@ describe("package metadata", () => {
     const packageMetadata = await readPackageMetadata();
 
     expect(packageMetadata.name).toBe("omniskill");
-    expect(packageMetadata.version).toBe("0.5.1");
+    expect(packageMetadata.version).toBe("0.5.2");
     expect(packageMetadata.scripts?.build).toBe(
       "bun build --target=node --outfile=dist/cli.js src/cli.ts",
     );

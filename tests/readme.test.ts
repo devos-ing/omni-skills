@@ -75,7 +75,9 @@ describe("README source contract", () => {
     expect(readme).toContain("next suggested action");
     expect(readme).toContain("until the goal is done");
     expect(readme).toContain("npx omniskill@latest loop start grilled-product-dev --json");
-    expect(readme).toContain("npx omniskill@latest loop status grilled-product-dev --latest --json");
+    expect(readme).toContain(
+      "npx omniskill@latest loop status grilled-product-dev --latest --json",
+    );
     expect(readme).toContain(
       "npx omniskill@latest loop advance grilled-product-dev --run <run-id> --json",
     );
