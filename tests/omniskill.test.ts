@@ -1609,6 +1609,48 @@ describe("omniskill command module", () => {
     ]);
   });
 
+  test("installs canonical and legacy interface craft sources from the upstream package", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-home-"));
+    const mappings = [
+      ["interface-craft:design-engineering", "emilkowalski:emil-design-eng", "emil-design-eng"],
+      [
+        "interface-craft:motion-vocabulary",
+        "emilkowalski:animation-vocabulary",
+        "animation-vocabulary",
+      ],
+      ["interface-craft:fluid-interface-design", "emilkowalski:apple-design", "apple-design"],
+      ["interface-craft:motion-review", "emilkowalski:review-animations", "review-animations"],
+    ] as const;
+
+    for (const [canonical, legacy, installedName] of mappings) {
+      for (const source of [canonical, legacy]) {
+        const commands: OmniskillExternalSkillCommand[] = [];
+        await installExternalSkillDependencyWithSkillsCli({
+          source,
+          repo: "emilkowalski/skills",
+          homeDir,
+          runCommand: async (command) => {
+            commands.push(command);
+            return { stdout: "", stderr: "", exitCode: 0 };
+          },
+        });
+
+        expect(commands[0]?.args).toEqual([
+          "--yes",
+          "skills@latest",
+          "add",
+          "emilkowalski/skills",
+          "--yes",
+          "--global",
+          "--skill",
+          installedName,
+          "--agent",
+          "codex",
+        ]);
+      }
+    }
+  });
+
   test("installs a bare skills CLI package source non-interactively", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "omniskill-home-"));
     const commands: OmniskillExternalSkillCommand[] = [];

@@ -341,6 +341,41 @@ describe("skill installer", () => {
     }
   });
 
+  test("resolves canonical and legacy interface craft sources to upstream installed skills", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const mappings = [
+      ["interface-craft:design-engineering", "emilkowalski:emil-design-eng", "emil-design-eng"],
+      [
+        "interface-craft:motion-vocabulary",
+        "emilkowalski:animation-vocabulary",
+        "animation-vocabulary",
+      ],
+      ["interface-craft:fluid-interface-design", "emilkowalski:apple-design", "apple-design"],
+      ["interface-craft:motion-review", "emilkowalski:review-animations", "review-animations"],
+    ] as const;
+
+    try {
+      for (const [, , installedName] of mappings) {
+        await writeSuperpowersSkill(join(homeDir, ".agents", "skills", installedName), {
+          name: installedName,
+          description: `Interface craft test skill: ${installedName}.`,
+        });
+      }
+
+      for (const [canonical, legacy, installedName] of mappings) {
+        const expected = {
+          kind: "path" as const,
+          name: installedName,
+          path: join(homeDir, ".agents", "skills", installedName),
+        };
+        await expect(resolveInstallSkillSource(canonical, { homeDir })).resolves.toEqual(expected);
+        await expect(resolveInstallSkillSource(legacy, { homeDir })).resolves.toEqual(expected);
+      }
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("resolves installed bare skill names from local skill folders", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
     const sourceDir = join(homeDir, ".agents", "skills", "implement");

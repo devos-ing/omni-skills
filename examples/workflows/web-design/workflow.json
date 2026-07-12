@@ -9,19 +9,19 @@
       "entry": true
     },
     {
-      "source": "emilkowalski:emil-design-eng",
+      "source": "interface-craft:design-engineering",
       "repo": "emilkowalski/skills"
     },
     {
-      "source": "emilkowalski:animation-vocabulary",
+      "source": "interface-craft:motion-vocabulary",
       "repo": "emilkowalski/skills"
     },
     {
-      "source": "emilkowalski:apple-design",
+      "source": "interface-craft:fluid-interface-design",
       "repo": "emilkowalski/skills"
     },
     {
-      "source": "emilkowalski:review-animations",
+      "source": "interface-craft:motion-review",
       "repo": "emilkowalski/skills"
     }
   ],
@@ -35,17 +35,17 @@
     {
       "id": "motion-vocabulary",
       "title": "Name the intended motion",
-      "skill": "emilkowalski:animation-vocabulary"
+      "skill": "interface-craft:motion-vocabulary"
     },
     {
       "id": "craft-review",
       "title": "Review interface craft",
-      "skill": "emilkowalski:emil-design-eng"
+      "skill": "interface-craft:design-engineering"
     },
     {
       "id": "animation-review",
       "title": "Review animations strictly",
-      "skill": "emilkowalski:review-animations"
+      "skill": "interface-craft:motion-review"
     }
   ]
 }

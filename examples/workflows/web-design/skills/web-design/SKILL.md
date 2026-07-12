@@ -10,10 +10,10 @@ direction and an independent review of visual craft and motion.
 
 ## Required Companion Skills
 
-- `emilkowalski:emil-design-eng` for interface and motion judgment.
-- `emilkowalski:animation-vocabulary` for naming the requested motion precisely.
-- `emilkowalski:apple-design` for gesture and fluid-motion principles when relevant.
-- `emilkowalski:review-animations` for the strict animation review.
+- `interface-craft:design-engineering` for interface and motion judgment.
+- `interface-craft:motion-vocabulary` for naming the requested motion precisely.
+- `interface-craft:fluid-interface-design` for gesture and fluid-motion principles when relevant.
+- `interface-craft:motion-review` for the strict animation review.
 
 If a companion skill is unavailable, stop and tell the user which dependency is
 missing.
@@ -25,11 +25,11 @@ missing.
 2. Decide whether every proposed motion has a purpose; remove frequent or
    decorative motion without a user benefit.
 3. Name the interaction and motion before asking engineering to implement it.
-4. Use `emilkowalski:emil-design-eng` to review component feedback, density,
+4. Use `interface-craft:design-engineering` to review component feedback, density,
    hierarchy, and responsive states against the approved direction.
-5. Use `emilkowalski:apple-design` when gestures or fluid physical interactions
+5. Use `interface-craft:fluid-interface-design` when gestures or fluid physical interactions
    are part of the approved direction.
-6. Review all changed animation with `emilkowalski:review-animations`. Return
+6. Review all changed animation with `interface-craft:motion-review`. Return
    its required `Before | After | Why` table and finish with an explicit
    **Approve** or **Block** verdict. A Block is a release gate for the reviewed
    motion.
