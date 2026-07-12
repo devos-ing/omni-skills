@@ -355,32 +355,54 @@ describe("workflow bundles", () => {
       ]),
     );
     expect(skill).toContain("name: startup-goal");
-    expect(skill).toContain("approved requirement brief");
-    expect(skill).toContain("Treat a raw user requirement as incomplete");
-    expect(skill).toContain("ask one question at a time");
-    expect(skill).toContain("without open questions or ambiguity");
-    expect(skill).toContain("If the user says `run it`, `process`, `continue`");
-    expect(skill).toContain("Only after the user explicitly approves that brief");
-    expect(skill).toContain("Lazy Routing Gate");
-    expect(skill).toContain("Lazy means deliberate, not role-starved");
-    expect(skill).toContain("Default to broad startup-operating coverage");
-    expect(skill).toContain("Do not default to one or two roles");
-    expect(skill).toContain("Skipped roles are exceptions, not savings targets");
-    expect(skill).toContain("Visible Processing Contract");
-    expect(skill).toContain("Never make the lazy path invisible");
-    expect(skill).toContain("controls pacing and role");
-    expect(skill).toContain("Processing plan");
-    expect(skill).toContain("Active roles");
+    for (const heading of [
+      "## 1. Clarify",
+      "## 2. Approve",
+      "## 3. Route",
+      "## 4. Dispatch",
+      "## 5. Combine",
+    ]) {
+      expect(skill).toContain(heading);
+    }
+    expect(skill).toContain("one material question at a time");
+    expect(skill).toContain("explicit approval");
+    expect(skill).toContain("smallest safe role set");
     expect(skill).toContain("Skipped roles");
-    expect(skill).toContain("Completed role outputs");
+    expect(skill).toContain("one role-scoped subagent per selected role");
     expect(skill).toContain("Unavailable dispatch");
-    expect(skill).toContain("Dispatch a separate role-scoped subagent");
-    expect(skill).toContain("Wait for all dispatched role subagents to finish");
-    expect(skill).toContain("Combine the role outputs into one owner-facing decision log");
-    expect(skill).toContain("Recommend the next action from the combined result");
+    expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");
-    expect(skill).toContain("customer-facing web interface");
-    expect(skill).toContain("backend-only");
+
+    for (const role of [
+      "ceo",
+      "product-manager",
+      "web-design",
+      "cto",
+      "engineering-manager",
+      "founding-engineer",
+      "qa-lead",
+    ]) {
+      const roleSkill = await readFile(
+        join(
+          import.meta.dir,
+          "..",
+          "examples",
+          "workflows",
+          "startup-goal",
+          "skills",
+          role,
+          "SKILL.md",
+        ),
+        "utf8",
+      );
+      for (const contract of ["## Use When", "## Companions", "## Do", "## Return"]) {
+        expect(roleSkill).toContain(contract);
+      }
+      expect(roleSkill).toMatch(/- (Decision|Change):/);
+      for (const field of ["Evidence", "Risk", "Handoff"]) {
+        expect(roleSkill).toContain(`- ${field}:`);
+      }
+    }
   });
 
   test("startup goal bundled role skills define role-specific operating modes", async () => {
