@@ -81,6 +81,16 @@ export class MissingMattPocockSkillError extends Error {
   }
 }
 
+export class MissingInterfaceCraftSkillError extends Error {
+  constructor(input: { source: string; skillName: string; homeDir?: string | undefined }) {
+    const location = input.homeDir ? ` under ${input.homeDir}` : "";
+    super(
+      `Interface Craft ${input.skillName} skill not found${location}. Install it from emilkowalski/skills, then retry this command.`,
+    );
+    this.name = "MissingInterfaceCraftSkillError";
+  }
+}
+
 const DEFAULT_BUNDLED_SKILL = "creating-bundle-skills";
 
 interface SupportedSuperpowersSkill {
@@ -110,6 +120,36 @@ const supportedSuperpowersSkills = [
     installName: "superpowers-verification-before-completion",
   },
 ] as const satisfies readonly SupportedSuperpowersSkill[];
+
+const interfaceCraftSkillMappings = [
+  {
+    canonicalSource: "interface-craft:design-engineering",
+    legacySource: "emilkowalski:emil-design-eng",
+    installedName: "emil-design-eng",
+  },
+  {
+    canonicalSource: "interface-craft:motion-vocabulary",
+    legacySource: "emilkowalski:animation-vocabulary",
+    installedName: "animation-vocabulary",
+  },
+  {
+    canonicalSource: "interface-craft:fluid-interface-design",
+    legacySource: "emilkowalski:apple-design",
+    installedName: "apple-design",
+  },
+  {
+    canonicalSource: "interface-craft:motion-review",
+    legacySource: "emilkowalski:review-animations",
+    installedName: "review-animations",
+  },
+] as const;
+
+export function getInterfaceCraftInstalledSkillName(source: string): string | null {
+  const mapping = interfaceCraftSkillMappings.find(
+    (candidate) => candidate.canonicalSource === source || candidate.legacySource === source,
+  );
+  return mapping?.installedName ?? null;
+}
 const bundledSkillAliases: Record<string, string> = {
   "record-change-evidence": "pony-trail",
   "enter-into-evidence": "pony-trail",
@@ -239,6 +279,20 @@ export async function resolveInstallSkillSource(
   sourceOrName: string,
   options: ResolveInstallSkillSourceOptions = {},
 ): Promise<ResolvedInstallSkillSource> {
+  const interfaceCraftSkillName = getInterfaceCraftInstalledSkillName(sourceOrName);
+  if (interfaceCraftSkillName) {
+    const homeDir = options.homeDir ?? process.env.HOME ?? process.cwd();
+    const skillPath = await findInstalledSkillPath(homeDir, interfaceCraftSkillName);
+    if (!skillPath) {
+      throw new MissingInterfaceCraftSkillError({
+        source: sourceOrName,
+        skillName: interfaceCraftSkillName,
+        homeDir,
+      });
+    }
+    return resolvePathSkill(skillPath);
+  }
+
   const mattPocockSkillName = parseMattPocockSkillSource(sourceOrName);
   if (mattPocockSkillName) {
     return resolveMattPocockSkill(mattPocockSkillName, options);

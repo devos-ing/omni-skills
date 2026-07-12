@@ -1,7 +1,8 @@
 # Web Design Omniskills Workflow
 
 Use this workflow when an agent should set an implementable web-interface
-direction and review visual craft and animations using Emil Kowalski's skills.
+direction and review visual craft and animations using the Interface Craft collection, derived
+from Emil Kowalski's design-engineering guidance.
 
 Install it from the repo root:
 

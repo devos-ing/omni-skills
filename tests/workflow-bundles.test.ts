@@ -294,20 +294,20 @@ describe("workflow bundles", () => {
 
     expect(bundle.manifest.skills).toEqual([
       { source: "./skills/web-design", entry: true },
-      { source: "emilkowalski:emil-design-eng", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:animation-vocabulary", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:apple-design", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:review-animations", repo: "emilkowalski/skills" },
+      { source: "interface-craft:design-engineering", repo: "emilkowalski/skills" },
+      { source: "interface-craft:motion-vocabulary", repo: "emilkowalski/skills" },
+      { source: "interface-craft:fluid-interface-design", repo: "emilkowalski/skills" },
+      { source: "interface-craft:motion-review", repo: "emilkowalski/skills" },
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["design-brief", "./skills/web-design", "human_approval"],
-      ["motion-vocabulary", "emilkowalski:animation-vocabulary", null],
-      ["craft-review", "emilkowalski:emil-design-eng", null],
-      ["animation-review", "emilkowalski:review-animations", null],
+      ["motion-vocabulary", "interface-craft:motion-vocabulary", null],
+      ["craft-review", "interface-craft:design-engineering", null],
+      ["animation-review", "interface-craft:motion-review", null],
     ]);
     expect(skill).toContain("## Required Companion Skills");
-    expect(skill).toContain("emilkowalski:emil-design-eng");
-    expect(skill).toContain("emilkowalski:review-animations");
+    expect(skill).toContain("interface-craft:design-engineering");
+    expect(skill).toContain("interface-craft:motion-review");
     expect(skill).toContain("Before | After | Why");
     expect(skill).toContain("**Approve** or **Block**");
     expect(skill).toContain("If a companion skill is unavailable");
@@ -348,10 +348,10 @@ describe("workflow bundles", () => {
     expect(bundle.manifest.skills).toEqual(
       expect.arrayContaining([
         { source: "./skills/web-design" },
-        { source: "emilkowalski:emil-design-eng", repo: "emilkowalski/skills" },
-        { source: "emilkowalski:animation-vocabulary", repo: "emilkowalski/skills" },
-        { source: "emilkowalski:apple-design", repo: "emilkowalski/skills" },
-        { source: "emilkowalski:review-animations", repo: "emilkowalski/skills" },
+        { source: "interface-craft:design-engineering", repo: "emilkowalski/skills" },
+        { source: "interface-craft:motion-vocabulary", repo: "emilkowalski/skills" },
+        { source: "interface-craft:fluid-interface-design", repo: "emilkowalski/skills" },
+        { source: "interface-craft:motion-review", repo: "emilkowalski/skills" },
       ]),
     );
     expect(skill).toContain("name: startup-goal");

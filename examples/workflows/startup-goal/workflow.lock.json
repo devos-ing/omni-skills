@@ -2,7 +2,7 @@
   "schemaVersion": "0.1",
   "workflow": "startup-goal",
   "workflowVersion": "0.1.4",
-  "generatedAt": "2026-07-11T16:12:50.581Z",
+  "generatedAt": "2026-07-12T10:25:01.486Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
@@ -32,7 +32,7 @@
       "source": "./skills/web-design",
       "resolvedName": "web-design",
       "kind": "local",
-      "hash": "sha256:e986dd11fa5ac4da3e5fb5ba6c415686d6b87cffe588347e4355e193b7ca2395"
+      "hash": "sha256:c35267b6087d05d97fc8c3f9eb95a0c743908686fec73ad77a93bdde332c2e50"
     },
     {
       "source": "./skills/engineering-manager",
@@ -53,32 +53,32 @@
       "hash": "sha256:c02b1d8eb7dd73adef8af5459c4d0d4604bac342d23a2784b17d84e7340fdf28"
     },
     {
-      "source": "emilkowalski:emil-design-eng",
-      "resolvedName": "emilkowalski:emil-design-eng",
+      "source": "interface-craft:design-engineering",
+      "resolvedName": "interface-craft:design-engineering",
       "kind": "external",
       "repo": "emilkowalski/skills",
-      "hash": "sha256:c98e0e85967f367ece5fd23f9b2bcef62c1a9d548579472bb829464c3ebdf461"
+      "hash": "sha256:109257bfe27cec096c72e6c96e60d6903fdfa06b129f97487851cf7ad93b1709"
     },
     {
-      "source": "emilkowalski:animation-vocabulary",
-      "resolvedName": "emilkowalski:animation-vocabulary",
+      "source": "interface-craft:motion-vocabulary",
+      "resolvedName": "interface-craft:motion-vocabulary",
       "kind": "external",
       "repo": "emilkowalski/skills",
-      "hash": "sha256:17043916f71310aff8b03af847f4cf1280496807113072ff9fb836e64f90f133"
+      "hash": "sha256:0e5d16e7ebb8d2402a62ed022b6759647578fd64bca29c7fe97da352485553f7"
     },
     {
-      "source": "emilkowalski:apple-design",
-      "resolvedName": "emilkowalski:apple-design",
+      "source": "interface-craft:fluid-interface-design",
+      "resolvedName": "interface-craft:fluid-interface-design",
       "kind": "external",
       "repo": "emilkowalski/skills",
-      "hash": "sha256:4f2d0e6e554a9b8d313ae3b32a66f9e4f1ba4c9f491e0f050ad077e100eeefa3"
+      "hash": "sha256:bae462b073b3b86861270523152a52ead47c788da10e7620e7bc63ee7eae2e0a"
     },
     {
-      "source": "emilkowalski:review-animations",
-      "resolvedName": "emilkowalski:review-animations",
+      "source": "interface-craft:motion-review",
+      "resolvedName": "interface-craft:motion-review",
       "kind": "external",
       "repo": "emilkowalski/skills",
-      "hash": "sha256:f9266e7cdefa9ceadc60558f201618755382f03b06d5ab37d2ac73bdb7807b98"
+      "hash": "sha256:efcbc2ab60eece374e247fd2a525c5587c55c4df454ea7727dd772209a967468"
     },
     {
       "source": "superpowers:brainstorming",

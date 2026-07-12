@@ -11,10 +11,10 @@ hierarchy, or meaningful UI motion.
 
 ## Required Companion Skills
 
-- `emilkowalski:emil-design-eng` for interface and motion judgment.
-- `emilkowalski:animation-vocabulary` for naming requested motion precisely.
-- `emilkowalski:apple-design` for gesture and fluid-motion principles when relevant.
-- `emilkowalski:review-animations` for strict animation review.
+- `interface-craft:design-engineering` for interface and motion judgment.
+- `interface-craft:motion-vocabulary` for naming requested motion precisely.
+- `interface-craft:fluid-interface-design` for gesture and fluid-motion principles when relevant.
+- `interface-craft:motion-review` for strict animation review.
 
 If a companion skill is unavailable, stop and tell the coordinator which
 dependency is missing.
@@ -26,11 +26,11 @@ dependency is missing.
 2. Keep every motion purposeful and frequency-appropriate; remove decorative
    motion without a user benefit.
 3. Name the interaction and motion before implementation begins.
-4. Use `emilkowalski:emil-design-eng` to review the interface against its
+4. Use `interface-craft:design-engineering` to review the interface against its
    hierarchy, feedback, density, responsive, and accessibility expectations.
-5. Use `emilkowalski:apple-design` when gestures or fluid physical interactions
+5. Use `interface-craft:fluid-interface-design` when gestures or fluid physical interactions
    are part of the approved direction.
-6. Review all changed animation with `emilkowalski:review-animations`. Return
+6. Review all changed animation with `interface-craft:motion-review`. Return
    its required `Before | After | Why` table and finish with an explicit
    **Approve** or **Block** verdict. A Block is a release gate for the reviewed
    motion.

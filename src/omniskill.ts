@@ -13,6 +13,8 @@ import {
   warning,
 } from "./cli-theme";
 import {
+  getInterfaceCraftInstalledSkillName,
+  MissingInterfaceCraftSkillError,
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
   parseSkillInstallAgents,
@@ -560,9 +562,14 @@ function getSkillsCliPackageForMissingDependency(
 
 function isMissingBootstrappableSkillError(
   error: unknown,
-): error is MissingMattPocockSkillError | MissingSuperpowersSkillError {
+): error is
+  | MissingInterfaceCraftSkillError
+  | MissingMattPocockSkillError
+  | MissingSuperpowersSkillError {
   return (
-    error instanceof MissingMattPocockSkillError || error instanceof MissingSuperpowersSkillError
+    error instanceof MissingInterfaceCraftSkillError ||
+    error instanceof MissingMattPocockSkillError ||
+    error instanceof MissingSuperpowersSkillError
   );
 }
 
@@ -577,6 +584,10 @@ export function getSkillsCliPackageForSource(source: string): string | null {
 
   if (source.startsWith("mattpocock:")) {
     return "mattpocock/skills";
+  }
+
+  if (getInterfaceCraftInstalledSkillName(source)) {
+    return "emilkowalski/skills";
   }
 
   const githubPrefix = "github:";
@@ -627,6 +638,11 @@ function getSkillsCliInstallKeyForSource(source: string, repo?: string): string 
 }
 
 function getSkillsCliSkillNameForSource(source: string): string | null {
+  const interfaceCraftSkillName = getInterfaceCraftInstalledSkillName(source);
+  if (interfaceCraftSkillName) {
+    return interfaceCraftSkillName;
+  }
+
   if (source.startsWith("superpowers:")) {
     return source.slice("superpowers:".length).trim() || null;
   }
