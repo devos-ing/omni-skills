@@ -74,9 +74,9 @@ export const workflows: WorkflowCardContent[] = [
     ],
     avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
     tag: "Goal",
-    accent: "text-violet-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/startup-goal`,
-    installCommand: "npx omniskill@latest install startup-goal",
+    installCommand: "npx omniskills@latest install startup-goal",
     skills: [
       { name: "startup-goal", description: "Coordinate role subagents around one goal" },
       { name: "ceo", description: "Company direction and tradeoffs" },
@@ -149,9 +149,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["ceo"],
     avatarSeed: "sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a",
     tag: "Strategy",
-    accent: "text-rose-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/ceo`,
-    installCommand: "npx omniskill@latest install ceo",
+    installCommand: "npx omniskills@latest install ceo",
     skills: [
       { name: "ceo", description: "Set the executive frame" },
       { name: "mattpocock:decision-mapping", description: "Map strategic uncertainty" },
@@ -184,9 +184,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["cto"],
     avatarSeed: "sha256:644afba52d60f4bbcf9a608c6ead98688650e9fc3f8ed0a63ac0d30ca4931156",
     tag: "Architecture",
-    accent: "text-sky-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/cto`,
-    installCommand: "npx omniskill@latest install cto",
+    installCommand: "npx omniskills@latest install cto",
     skills: [
       { name: "cto", description: "Set the technical frame" },
       { name: "mattpocock:codebase-design", description: "Review module boundaries" },
@@ -231,9 +231,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["product-manager"],
     avatarSeed: "sha256:c0c7094ce1e2d9c614bd9939d9a379f488d809b0316d568017f584263f1eab8f",
     tag: "Product",
-    accent: "text-emerald-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/product-manager`,
-    installCommand: "npx omniskill@latest install product-manager",
+    installCommand: "npx omniskills@latest install product-manager",
     skills: [
       { name: "product-manager", description: "Frame the product problem" },
       { name: "superpowers:brainstorming", description: "Explore product options" },
@@ -278,9 +278,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["engineering-manager"],
     avatarSeed: "sha256:70d97c45ac61d3774317681dc7ae318126e14a3d0b19f00183d8227ca0fb1071",
     tag: "Delivery",
-    accent: "text-amber-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/engineering-manager`,
-    installCommand: "npx omniskill@latest install engineering-manager",
+    installCommand: "npx omniskills@latest install engineering-manager",
     skills: [
       { name: "engineering-manager", description: "Set the delivery frame" },
       { name: "superpowers:writing-plans", description: "Write the execution plan" },
@@ -325,9 +325,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["founding-engineer"],
     avatarSeed: "sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078",
     tag: "Build",
-    accent: "text-fuchsia-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/founding-engineer`,
-    installCommand: "npx omniskill@latest install founding-engineer",
+    installCommand: "npx omniskills@latest install founding-engineer",
     skills: [
       { name: "founding-engineer", description: "Set the implementation frame" },
       { name: "implement", description: "Implement the planned change" },
@@ -378,9 +378,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["qa-lead"],
     avatarSeed: "sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53",
     tag: "Quality",
-    accent: "text-cyan-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/qa-lead`,
-    installCommand: "npx omniskill@latest install qa-lead",
+    installCommand: "npx omniskills@latest install qa-lead",
     skills: [
       { name: "qa-lead", description: "Set the release-risk frame" },
       { name: "mattpocock:review", description: "Review acceptance and risk" },
@@ -419,9 +419,9 @@ export const workflows: WorkflowCardContent[] = [
     localSkillNames: ["haaland"],
     avatarSeed: "sha256:d10bf16eca98054b3a23bbe0aac21ccb00e7f904c5f3b1c3480bb1009c575583",
     tag: "Meme",
-    accent: "text-lime-300",
+    accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/haaland`,
-    installCommand: "npx omniskill@latest install haaland",
+    installCommand: "npx omniskills@latest install haaland",
     skills: [{ name: "haaland", description: "Create one profile-icon meme concept" }],
     diagramSteps: [
       {
@@ -436,35 +436,35 @@ export const workflows: WorkflowCardContent[] = [
 export const commands: CommandExample[] = [
   {
     label: "Install Startup Goal",
-    command: "npx omniskill@latest install startup-goal",
+    command: "npx omniskills@latest install startup-goal",
   },
   {
     label: "Inspect Startup Goal deps",
-    command: "npx omniskill@latest deps startup-goal",
+    command: "npx omniskills@latest deps startup-goal",
   },
   {
     label: "Lock skill fingerprints",
-    command: "npx omniskill@latest lock examples/workflows/startup-goal",
+    command: "npx omniskills@latest lock examples/workflows/startup-goal",
   },
   {
     label: "Check loop status",
-    command: "npx omniskill@latest loop status grilled-product-dev --latest --json",
+    command: "npx omniskills@latest loop status grilled-product-dev --latest --json",
   },
   {
     label: "Create your own workflow",
-    command: "npx omniskill@latest init my-workflow",
+    command: "npx omniskills@latest init my-workflow",
   },
   {
     label: "Validate before sharing",
-    command: "npx omniskill@latest validate my-workflow",
+    command: "npx omniskills@latest validate my-workflow",
   },
   {
-    label: "List installed Omniskill workflows",
-    command: "npx omniskill@latest list",
+    label: "List installed Omniskills workflows",
+    command: "npx omniskills@latest list",
   },
   {
     label: "Remove installed workflow",
-    command: "npx omniskill@latest remove startup-goal",
+    command: "npx omniskills@latest remove startup-goal",
   },
 ];
 

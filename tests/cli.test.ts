@@ -120,10 +120,10 @@ describe("cli", () => {
     "release-review",
   );
 
-  test("registers Omniskill and skill commands only", () => {
+  test("registers Omniskills and skill commands only", () => {
     const program = buildProgram();
 
-    expect(program.name()).toBe("omniskill");
+    expect(program.name()).toBe("omniskills");
     expect(program.commands.map((command) => command.name())).toEqual([
       "init",
       "validate",
@@ -183,7 +183,7 @@ describe("cli", () => {
     ).not.toContain("--prehook");
   });
 
-  test("root help presents the Omniskill welcome", () => {
+  test("root help presents the Omniskills welcome", () => {
     const program = buildProgram();
     const output: string[] = [];
 
@@ -196,16 +196,16 @@ describe("cli", () => {
     const help = stripAnsi(output.join(""));
     const normalizedHelp = help.replace(/\s+/g, " ");
 
-    expect(help).toContain("OMNISKILL");
+    expect(help).toContain("OMNISKILLS");
     expect(help).toContain("____");
-    expect(help).toContain("Welcome to Omniskill.");
+    expect(help).toContain("Welcome to Omniskills.");
     expect(help).toContain("Install and author workflow skill trees for agent work.");
-    expect(help).toContain("omniskill init release-review");
-    expect(help).toContain("omniskill validate ./release-review");
-    expect(help).toContain("omniskill install ./release-review");
-    expect(help).toContain("omniskill deps ./release-review");
+    expect(help).toContain("omniskills init release-review");
+    expect(help).toContain("omniskills validate ./release-review");
+    expect(help).toContain("omniskills install ./release-review");
+    expect(help).toContain("omniskills deps ./release-review");
     expect(help).toContain("bundle");
-    expect(normalizedHelp).toContain("Compatibility alias for Omniskill authoring.");
+    expect(normalizedHelp).toContain("Compatibility alias for Omniskills authoring.");
     expect(help).not.toContain("ponyrace");
     expect(help).not.toContain("omniskill clone");
     expect(help).not.toContain("history");
@@ -228,9 +228,9 @@ describe("cli", () => {
     });
 
     const text = stripAnsi(output.join(""));
-    expect(text).toContain("OMNISKILL");
-    expect(text).toContain("Welcome to Omniskill.");
-    expect(text).toContain("Usage: omniskill");
+    expect(text).toContain("OMNISKILLS");
+    expect(text).toContain("Welcome to Omniskills.");
+    expect(text).toContain("Usage: omniskills");
   });
 
   test("prints the CLI version with -v", async () => {
@@ -254,7 +254,7 @@ describe("cli", () => {
     expect(output.join("")).toBe(`${expectedVersion}\n`);
   });
 
-  test("bundle init creates an authorable Omniskill and validate accepts it", async () => {
+  test("bundle init creates an authorable Omniskills and validate accepts it", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-bundle-cli-"));
     const logs: string[] = [];
     const originalLog = console.log;
@@ -292,17 +292,17 @@ describe("cli", () => {
         stat(join(rootDir, "bundles", "release-review", "workflow.lock.json")),
       ).resolves.toBeTruthy();
       expect(stripAnsiLines(logs)).toContain(
-        `Omniskill created: ${join(rootDir, "bundles", "release-review")}`,
+        `Omniskills created: ${join(rootDir, "bundles", "release-review")}`,
       );
-      expect(stripAnsiLines(logs)).toContain("Omniskill valid: release-review@0.1.0");
-      expect(stripAnsiLines(logs)).toContain("Omniskill lock written: release-review");
+      expect(stripAnsiLines(logs)).toContain("Omniskills valid: release-review@0.1.0");
+      expect(stripAnsiLines(logs)).toContain("Omniskills lock written: release-review");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
     }
   });
 
-  test("workflow install installs example workflow skills and lists the installed Omniskill", async () => {
+  test("workflow install installs example workflow skills and lists the installed Omniskills", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-home-"));
     const logs: string[] = [];
@@ -324,7 +324,7 @@ describe("cli", () => {
       });
 
       await expect(
-        stat(join(homeDir, ".omniskill", "workflows", "release-review.json")),
+        stat(join(homeDir, ".getsuperpower", "workflows", "release-review.json")),
       ).resolves.toBeTruthy();
       for (const skill of [
         "release-risk-review",
@@ -336,7 +336,7 @@ describe("cli", () => {
           stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
         ).resolves.toBeTruthy();
       }
-      expect(stripAnsiLines(logs)).toContain("Omniskill installed: release-review");
+      expect(stripAnsiLines(logs)).toContain("Omniskills installed: release-review");
       expect(stripAnsiLines(logs)).toContain("release-review 0.1.0");
     } finally {
       console.log = originalLog;
@@ -345,7 +345,7 @@ describe("cli", () => {
     }
   });
 
-  test("omniskill install writes generated loop runner files into the installed entry skill", async () => {
+  test("omniskills install writes generated loop runner files into the installed entry skill", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-cli-"));
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-home-"));
     const workflowDir = join(rootDir, "looped-cli");
@@ -370,8 +370,9 @@ describe("cli", () => {
         '"loop"',
       );
       const generatedRunner = await readFile(join(installedSkillDir, "loop.mjs"), "utf8");
-      expect(generatedRunner).toContain("OMNISKILL_BIN");
-      expect(generatedRunner).toContain("omniskill");
+      expect(generatedRunner).toContain("OMNISKILLS_BIN");
+      expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
+      expect(generatedRunner).toContain("omniskills");
       expect(generatedRunner).toContain("workflow.json");
       await expect(stat(join(installedSkillDir, "loop-runtime.mjs"))).rejects.toThrow();
       const metadata = JSON.parse(
@@ -387,9 +388,9 @@ describe("cli", () => {
         commands: ["start", "status", "log", "advance", "summary"],
       });
       await expect(
-        stat(join(homeDir, ".omniskill", "workflows", "looped-cli.json")),
+        stat(join(homeDir, ".getsuperpower", "workflows", "looped-cli.json")),
       ).resolves.toBeTruthy();
-      expect(stripAnsiLines(logs)).toContain("Omniskill installed: looped-cli");
+      expect(stripAnsiLines(logs)).toContain("Omniskills installed: looped-cli");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -397,7 +398,7 @@ describe("cli", () => {
     }
   });
 
-  test("omniskill loop controls looped workflows through the CLI", async () => {
+  test("omniskills loop controls looped workflows through the CLI", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-run-home-"));
     const workflowSource = "examples/workflows/grilled-product-dev";
 
@@ -440,10 +441,10 @@ describe("cli", () => {
       });
       const startCommands = startPayload.actions.map((action) => action.command).filter(Boolean);
       expect(startCommands).toContain(
-        `omniskill loop log ${workflowSource} --home ${homeDir} --run cli-smoke --type phase_result --message "..."`,
+        `omniskills loop log ${workflowSource} --home ${homeDir} --run cli-smoke --type phase_result --message "..."`,
       );
       expect(startCommands).toContain(
-        `omniskill loop advance ${workflowSource} --home ${homeDir} --run cli-smoke`,
+        `omniskills loop advance ${workflowSource} --home ${homeDir} --run cli-smoke`,
       );
       expect(startCommands.join("\n")).not.toContain("node loop.mjs");
 
@@ -521,7 +522,7 @@ describe("cli", () => {
     }
   });
 
-  test("omniskill loop fails plainly for non-loop workflows", async () => {
+  test("omniskills loop fails plainly for non-loop workflows", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-non-loop-home-"));
 
     try {
@@ -532,13 +533,13 @@ describe("cli", () => {
             { from: "user" },
           ),
         ),
-      ).rejects.toThrow("Omniskill is not loop-enabled: release-review");
+      ).rejects.toThrow("Omniskills is not loop-enabled: release-review");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
   });
 
-  test("omniskill deps prints the skill dependencies for an Omniskill", async () => {
+  test("omniskills deps prints the skill dependencies for an Omniskills", async () => {
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -551,7 +552,7 @@ describe("cli", () => {
         from: "user",
       });
 
-      expect(stripAnsiLines(logs)).toContain("Omniskill dependencies: real-engineering");
+      expect(stripAnsiLines(logs)).toContain("Omniskills dependencies: real-engineering");
       expect(stripAnsiLines(logs)).toContain("- ./skills/rtk-command-discipline");
       expect(stripAnsiLines(logs)).toContain("- pony-trail");
       expect(stripAnsiLines(logs)).toContain("- superpowers:brainstorming");
@@ -762,7 +763,7 @@ describe("cli", () => {
         }),
       ).rejects.toThrow("skills cli unavailable");
 
-      await expect(stat(join(rootDir, ".omniskill", "snapshots.jsonl"))).rejects.toThrow();
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -785,7 +786,7 @@ describe("cli", () => {
         ),
       ).rejects.toThrow("Matt Pocock tdd skill not found");
 
-      await expect(stat(join(rootDir, ".omniskill", "snapshots.jsonl"))).rejects.toThrow();
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -905,7 +906,7 @@ describe("cli", () => {
         { from: "user" },
       );
 
-      await expect(stat(join(rootDir, ".omniskill", "snapshots.jsonl"))).rejects.toThrow();
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
       expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
     } finally {
       console.log = originalLog;
@@ -944,7 +945,7 @@ describe("cli", () => {
       ).toContain("name: pony-trail");
       expect(logs.some((line) => line.includes("Skill update result"))).toBe(true);
       expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
-      await expect(stat(join(rootDir, ".omniskill", "snapshots.jsonl"))).rejects.toThrow();
+      await expect(stat(join(rootDir, ".getsuperpower", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

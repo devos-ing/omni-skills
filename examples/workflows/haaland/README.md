@@ -1,4 +1,4 @@
-# Haaland Omniskill Workflow
+# Haaland Omniskills Workflow
 
 Use this workflow when an agent should make exactly one playful Haaland/JTS meme:
 a compact football-finisher joke, social caption, or parody post concept with a

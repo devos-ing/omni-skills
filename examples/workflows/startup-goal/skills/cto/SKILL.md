@@ -14,7 +14,7 @@ codebase.
 - `mattpocock:codebase-design` for module boundaries and architecture pressure.
 - `mattpocock:domain-modeling` for naming the core business concepts.
 - `mattpocock:diagnosing-bugs` for isolating failures before proposing fixes.
-- `mattpocock:review` for reviewing code and design risks.
+- `mattpocock:code-review` for reviewing code and design risks.
 
 If a companion skill is unavailable, stop and tell the coordinator which
 dependency is missing.

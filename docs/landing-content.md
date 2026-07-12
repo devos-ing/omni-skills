@@ -1,6 +1,6 @@
-# Omniskill Landing Content
+# Omniskills Landing Content
 
-Agent-readable Markdown mirror for the Omniskill landing page.
+Agent-readable Markdown mirror for the Omniskills landing page.
 
 Runtime source of truth: `landing/lib/landing-content.ts`.
 
@@ -19,14 +19,14 @@ Power your ability.
 Install the workflow.
 ```
 
-Body: Omniskill is a many-skill bank for AI agents. Install one workflow
+Body: Omniskills is a many-skill bank for AI agents. Install one workflow
 skill tree, call one entry skill with a goal, and give your agent the roles,
 playbooks, and verification habits that 3x your ability.
 
 Primary command preview:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Primary action: Browse workflows.
@@ -138,7 +138,7 @@ ready.
 
 Section label: Workflow Registry.
 
-Heading: Pick an Omniskill workflow.
+Heading: Pick an Omniskills workflow.
 
 Body: Browse installable workflow bundles, then open a detail route for the
 role map, skill tree, and copyable install command.
@@ -151,12 +151,12 @@ Search placeholder: Search workflows, skills, tags...
 - tag: Goal
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
-- accent: `text-violet-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Description: Move a startup goal through the core operating roles: CEO, CTO,
@@ -208,12 +208,12 @@ Ordered skill path:
 - tag: Strategy
 - entry skill: `$ceo`
 - avatar seed: `sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a`
-- accent: `text-rose-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/ceo`
 - install:
 
 ```bash
-npx omniskill@latest install ceo
+npx omniskills@latest install ceo
 ```
 
 Description: Founder-level strategy for direction, hard tradeoffs,
@@ -240,12 +240,12 @@ Ordered skill path:
 - tag: Architecture
 - entry skill: `$cto`
 - avatar seed: `sha256:644afba52d60f4bbcf9a608c6ead98688650e9fc3f8ed0a63ac0d30ca4931156`
-- accent: `text-sky-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/cto`
 - install:
 
 ```bash
-npx omniskill@latest install cto
+npx omniskills@latest install cto
 ```
 
 Description: Technical leadership for architecture, domain model, platform
@@ -278,12 +278,12 @@ Ordered skill path:
 - tag: Product
 - entry skill: `$product-manager`
 - avatar seed: `sha256:c0c7094ce1e2d9c614bd9939d9a379f488d809b0316d568017f584263f1eab8f`
-- accent: `text-emerald-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/product-manager`
 - install:
 
 ```bash
-npx omniskill@latest install product-manager
+npx omniskills@latest install product-manager
 ```
 
 Description: Product discovery, PRDs, acceptance criteria, roadmap tradeoffs,
@@ -316,12 +316,12 @@ Ordered skill path:
 - tag: Delivery
 - entry skill: `$engineering-manager`
 - avatar seed: `sha256:70d97c45ac61d3774317681dc7ae318126e14a3d0b19f00183d8227ca0fb1071`
-- accent: `text-amber-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/engineering-manager`
 - install:
 
 ```bash
-npx omniskill@latest install engineering-manager
+npx omniskills@latest install engineering-manager
 ```
 
 Description: Delivery sequencing, execution risk, quality gates, blocker
@@ -354,12 +354,12 @@ Ordered skill path:
 - tag: Build
 - entry skill: `$founding-engineer`
 - avatar seed: `sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078`
-- accent: `text-fuchsia-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/founding-engineer`
 - install:
 
 ```bash
-npx omniskill@latest install founding-engineer
+npx omniskills@latest install founding-engineer
 ```
 
 Description: Implementation lane for the smallest correct change: tests,
@@ -395,12 +395,12 @@ Ordered skill path:
 - tag: Quality
 - entry skill: `$qa-lead`
 - avatar seed: `sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53`
-- accent: `text-cyan-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/qa-lead`
 - install:
 
 ```bash
-npx omniskill@latest install qa-lead
+npx omniskills@latest install qa-lead
 ```
 
 Description: Release-risk lens for acceptance checks, regression focus,
@@ -430,12 +430,12 @@ Ordered skill path:
 - tag: Meme
 - entry skill: `$haaland`
 - avatar seed: `sha256:d10bf16eca98054b3a23bbe0aac21ccb00e7f904c5f3b1c3480bb1009c575583`
-- accent: `text-lime-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/haaland`
 - install:
 
 ```bash
-npx omniskill@latest install haaland
+npx omniskills@latest install haaland
 ```
 
 Description: A one-shot JTS meme workflow for a football-finisher caption,
@@ -458,56 +458,56 @@ Heading: Get up and running fast.
 
 Body: Install by alias, public git URL, or local path. The CLI validates the
 workflow manifest, bootstraps missing external skills from workflow metadata,
-and records installed Omniskill workflows under `~/.omniskill/workflows/` by
-default. Loop-enabled workflows use `omniskill loop` for resumable,
+and records installed Omniskills workflows under `~/.getsuperpower/workflows/` by
+default. Loop-enabled workflows use `omniskills loop` for resumable,
 action-only state.
 
 ### Install Startup Goal
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 ### Inspect Startup Goal deps
 
 ```bash
-npx omniskill@latest deps startup-goal
+npx omniskills@latest deps startup-goal
 ```
 
 ### Lock skill fingerprints
 
 ```bash
-npx omniskill@latest lock examples/workflows/startup-goal
+npx omniskills@latest lock examples/workflows/startup-goal
 ```
 
 ### Check loop status
 
 ```bash
-npx omniskill@latest loop status grilled-product-dev --latest --json
+npx omniskills@latest loop status grilled-product-dev --latest --json
 ```
 
 ### Create your own workflow
 
 ```bash
-npx omniskill@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 ### Validate before sharing
 
 ```bash
-npx omniskill@latest validate my-workflow
+npx omniskills@latest validate my-workflow
 ```
 
-### List installed Omniskill workflows
+### List installed Omniskills workflows
 
 ```bash
-npx omniskill@latest list
+npx omniskills@latest list
 ```
 
 ### Remove installed workflow
 
 ```bash
-npx omniskill@latest remove startup-goal
+npx omniskills@latest remove startup-goal
 ```
 
 Then invoke in your agent:
@@ -527,7 +527,7 @@ Then invoke in your agent:
 
 Badge: Author your own workflow.
 
-Heading: Package your workflow as an Omniskill workflow.
+Heading: Package your workflow as an Omniskills workflow.
 
 Body: Scaffold a bundle, define the entry skill, list sub-skills in
 workflow.json, validate, and share. The authoring guide keeps the skill tree
@@ -536,7 +536,7 @@ aligned.
 Command:
 
 ```bash
-npx omniskill@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 Author guide:

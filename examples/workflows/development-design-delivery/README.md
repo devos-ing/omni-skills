@@ -1,8 +1,8 @@
-# Development Design Delivery Omniskill Workflow
+# Development Design Delivery Omniskills Workflow
 
 This example combines product/design shaping with implementation discipline.
-Use it when a change needs more than a quick patch: clarify the request, explore
-the interface, pressure-test the plan, implement with tests, review the result,
+Use it when a change needs more than a quick patch: clarify the request, build a
+throwaway interface prototype, pressure-test the plan, implement with tests, review the result,
 and keep rollback evidence.
 
 The callable entry skill is:
@@ -22,31 +22,31 @@ $development-design-delivery build this product feature
 | Stage | Skill | Gate |
 | --- | --- | --- |
 | Shape success criteria | `superpowers:brainstorming` | Human approval |
-| Explore interface options | `mattpocock:design-an-interface` | Human approval |
+| Build a throwaway interface prototype | `mattpocock:prototype` | Human approval |
 | Stress-test the requirement | `mattpocock:grill-with-docs` | Human approval |
 | Write implementation plan | `superpowers:writing-plans` | None |
 | Check architecture boundary | `mattpocock:codebase-design` | None |
 | Build with tests | `mattpocock:tdd` | None |
 | Debug when blocked | `mattpocock:diagnosing-bugs` | None |
-| Review the change | `mattpocock:review` | None |
+| Review the change | `mattpocock:code-review` | None |
 | Preserve evidence | `pony-trail` | None |
 
 ## Dependencies
 
-This Omniskill workflow combines reusable agent skills:
+This Omniskills workflow combines reusable agent skills:
 
 - `./skills/development-design-delivery`
 - `superpowers:brainstorming`
-- `mattpocock:design-an-interface`
+- `mattpocock:prototype`
 - `mattpocock:grill-with-docs`
 - `superpowers:writing-plans`
 - `mattpocock:codebase-design`
 - `mattpocock:tdd`
 - `mattpocock:diagnosing-bugs`
-- `mattpocock:review`
+- `mattpocock:code-review`
 - `pony-trail`
 
-`omniskill install` automatically uses the Skills CLI to fetch missing
+`omniskills install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
 package install through the CLI and retry:
 
@@ -56,7 +56,7 @@ bun run dev -- skills install mattpocock/skills
 
 ## Try It
 
-Validate this Omniskill workflow from the repo root:
+Validate this Omniskills workflow from the repo root:
 
 ```bash
 bun run dev -- validate examples/workflows/development-design-delivery

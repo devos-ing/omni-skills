@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "development-design-delivery",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shape, design, plan, implement, review, and preserve evidence for serious product engineering work.",
   "skills": [
     {
@@ -12,12 +12,12 @@
       "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:design-an-interface",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:prototype",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:grill-with-docs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "superpowers:writing-plans",
@@ -25,19 +25,19 @@
     },
     {
       "source": "mattpocock:codebase-design",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:tdd",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "mattpocock:review",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:code-review",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "pony-trail"
@@ -53,7 +53,7 @@
     {
       "id": "interface-design",
       "title": "Explore API, module, or UI interface options",
-      "skill": "mattpocock:design-an-interface",
+      "skill": "mattpocock:prototype",
       "gate": "human_approval"
     },
     {
@@ -85,7 +85,7 @@
     {
       "id": "review",
       "title": "Review against standards and spec",
-      "skill": "mattpocock:review"
+      "skill": "mattpocock:code-review"
     },
     {
       "id": "evidence",

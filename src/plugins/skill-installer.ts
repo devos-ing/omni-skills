@@ -75,7 +75,7 @@ export class MissingMattPocockSkillError extends Error {
   constructor(input: { skillName: string; homeDir?: string | undefined }) {
     const location = input.homeDir ? ` under ${input.homeDir}` : "";
     super(
-      `Matt Pocock ${input.skillName} skill not found${location}. Install or refresh Matt Pocock skills with: omniskill skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install ${input.skillName}.`,
+      `Matt Pocock ${input.skillName} skill not found${location}. Install or refresh Matt Pocock skills with: omniskills skills install mattpocock/skills. Then retry this command. /setup-matt-pocock-skills configures repo metadata after the skills are installed; it does not install ${input.skillName}.`,
     );
     this.name = "MissingMattPocockSkillError";
   }
@@ -858,7 +858,7 @@ function looksLikePath(value: string): boolean {
 }
 
 function formatSuperpowersInstallCommand(source: string): string {
-  return `omniskill skills install ${source} --agents codex,claude,cursor,copilot,opencode --home ~`;
+  return `omniskills skills install ${source} --agents codex,claude,cursor,copilot,opencode --home ~`;
 }
 
 function shellQuote(value: string): string {

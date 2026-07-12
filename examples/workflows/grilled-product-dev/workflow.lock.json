@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "grilled-product-dev",
+  "workflowVersion": "0.1.2",
+  "generatedAt": "2026-07-11T16:11:48.581Z",
+  "skills": [
+    {
+      "source": "./skills/grilled-product-dev",
+      "resolvedName": "grilled-product-dev",
+      "kind": "local",
+      "hash": "sha256:374785d718acfc9ce66d1ba379e43423c7e6d9fb516ec791448db56ee6edb687"
+    },
+    {
+      "source": "mattpocock:grilling",
+      "resolvedName": "grilling",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:aa3e5613d9b9eed882b2ea58e54d18a2476f771cde066073d524f6befeef1228"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+    }
+  ]
+}

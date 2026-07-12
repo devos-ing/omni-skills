@@ -59,7 +59,6 @@ interface WorkflowCaseInput {
 }
 
 type RunPhase =
-  | { kind: "typing"; charIndex: number }
   | { kind: "intake" }
   | { kind: "approval" }
   | { kind: "dispatch" }
@@ -377,7 +376,6 @@ const WORKFLOW_CASES = [
   }),
 ] satisfies readonly WorkflowCase[];
 
-const TYPE_DELAY = 18;
 const COORDINATOR_DELAY = 620;
 const DISPATCH_DELAY = 720;
 const ROLE_RETURN_DELAY = 720;
@@ -385,13 +383,11 @@ const SYNTHESIS_DELAY = 560;
 const COMPLETE_PHASE: RunPhase = { kind: "complete" };
 
 function getInitialPhase(reducedMotion: boolean): RunPhase {
-  return reducedMotion ? COMPLETE_PHASE : { kind: "typing", charIndex: 0 };
+  return reducedMotion ? COMPLETE_PHASE : { kind: "intake" };
 }
 
 function getActiveCheckpointIndex(phase: RunPhase): number {
   switch (phase.kind) {
-    case "typing":
-      return -1;
     case "intake":
       return 0;
     case "approval":
@@ -452,8 +448,6 @@ function getRoleStatus(phase: RunPhase, roleIndex: number): StepStatus {
 
 function getCoordinatorLineCount(phase: RunPhase): number {
   switch (phase.kind) {
-    case "typing":
-      return 0;
     case "intake":
       return 1;
     case "approval":
@@ -493,7 +487,7 @@ function SkillSourceLink({ role }: { role: SkillStep }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`Open ${role.skill} skill source`}
-      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] text-white/48 transition hover:border-white/20 hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+      className="inline-flex items-center gap-1 rounded-md border border-[var(--rule)] bg-[#f0ede6]/20 px-1.5 py-0.5 font-mono text-xs text-[var(--body)] transition hover:border-[var(--muted)] hover:text-[#191817]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e64b2e]/45"
     >
       {role.skill}
       <ExternalLink size={9} aria-hidden />
@@ -509,8 +503,8 @@ interface CaseRailProps {
 
 function CaseRail({ cases, selectedCaseIndex, onSelect }: CaseRailProps) {
   return (
-    <aside className="border-b border-white/[0.06] bg-white/[0.018] p-3 lg:overflow-y-auto lg:border-b-0">
-      <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-white/25">Cases</p>
+    <aside className="border-b border-[var(--rule)] bg-white p-3 lg:overflow-y-auto lg:border-b-0">
+      <p className="mb-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Cases</p>
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
         {cases.map((workflowCase, index) => {
           const isSelected = selectedCaseIndex === index;
@@ -522,12 +516,12 @@ function CaseRail({ cases, selectedCaseIndex, onSelect }: CaseRailProps) {
               aria-pressed={isSelected}
               className={
                 isSelected
-                  ? "rounded-lg border border-violet-300/35 bg-violet-400/10 px-3 py-2.5 text-left text-white/86 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
-                  : "rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-left text-white/45 transition hover:border-white/16 hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+                  ? "rounded-lg border border-[#e64b2e] bg-[#e64b2e]/10 px-3 py-2.5 text-left text-[#191817]/86 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e64b2e]/45"
+                  : "rounded-lg border border-[var(--rule)] bg-white px-3 py-2.5 text-left text-[var(--body)] transition hover:border-[var(--muted)] hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e64b2e]/45"
               }
             >
               <span className="block text-xs font-medium">{workflowCase.title}</span>
-              <span className="mt-1 block text-[11px] leading-4 text-white/38">
+              <span className="mt-1 block text-xs leading-4 text-[var(--muted)]">
                 {workflowCase.subtitle}
               </span>
             </button>
@@ -540,8 +534,8 @@ function CaseRail({ cases, selectedCaseIndex, onSelect }: CaseRailProps) {
 
 function CheckpointRail({ phase, roleCount }: { phase: RunPhase; roleCount: number }) {
   return (
-    <aside className="border-t border-white/[0.06] bg-white/[0.018] p-3 lg:overflow-y-auto lg:border-t-0">
-      <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-white/25">Checkpoints</p>
+    <aside className="border-t border-[var(--rule)] bg-white p-3 lg:overflow-y-auto lg:border-t-0">
+      <p className="mb-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Checkpoints</p>
       <ol className="grid gap-2 sm:grid-cols-5 lg:grid-cols-1">
         {CHECKPOINTS.map((checkpoint, index) => {
           const status = getCheckpointStatus(phase, index, roleCount);
@@ -551,15 +545,15 @@ function CheckpointRail({ phase, roleCount }: { phase: RunPhase; roleCount: numb
               data-status={status}
               className={
                 status === "active"
-                  ? "rounded-lg border border-violet-300/30 bg-violet-400/[0.08] px-2.5 py-2"
-                  : "rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2"
+                  ? "motion-active-role motion-progress relative overflow-hidden rounded-lg border border-[#e64b2e] bg-[#e64b2e]/[0.08] px-2.5 py-2"
+                  : "motion-progress relative overflow-hidden rounded-lg border border-[var(--rule)] bg-white px-2.5 py-2"
               }
             >
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-white/68">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-[#191817]/68">
                 {status === "complete" ? <Check size={11} aria-hidden /> : null}
                 {checkpoint.label}
               </span>
-              <span className="mt-1 block text-[9px] uppercase tracking-[0.12em] text-white/34">
+              <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
                 {status}
               </span>
             </li>
@@ -578,24 +572,20 @@ interface ChatTranscriptProps {
 }
 
 function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTranscriptProps) {
-  const isTyping = phase.kind === "typing";
   const isDone = phase.kind === "complete";
-  const typedPrompt = isTyping
-    ? workflowCase.prompt.slice(0, phase.charIndex)
-    : workflowCase.prompt;
   const coordinatorLineCount = getCoordinatorLineCount(phase);
   const coordinatorComplete = isCoordinatorComplete(phase);
   const returnedRoleCount = getReturnedRoleCount(phase, workflowCase.roles.length);
   const returnedRoles = workflowCase.roles.slice(0, returnedRoleCount);
 
   return (
-    <section className="flex h-[34rem] min-w-0 flex-col border-y border-white/[0.06] lg:h-full lg:border-x lg:border-y-0 overflow-y-scroll">
-      <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-        <span className="font-mono text-[11px] text-white/28">agent-workbench/startup-goal</span>
+    <section className="flex h-[34rem] min-w-0 flex-col border-y border-[var(--rule)] lg:h-full lg:border-x lg:border-y-0 overflow-y-scroll">
+      <div className="flex items-center justify-between border-b border-[var(--rule)] bg-white px-3 py-2.5">
+        <span className="font-mono text-xs text-[var(--muted)]">agent-workbench/startup-goal</span>
         <button
           type="button"
           onClick={onReplay}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/35 transition hover:border-white/20 hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--rule)] text-[var(--muted)] transition hover:border-[var(--muted)] hover:text-[#191817]/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e64b2e]/45"
           aria-label="Replay startup goal demo"
           title="Replay"
         >
@@ -603,9 +593,9 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
         </button>
       </div>
 
-      <div className="border-b border-white/[0.06] bg-white/[0.015] px-3 py-2.5">
-        <span className="text-xs font-medium text-white/76">{workflowCase.title}</span>
-        <span className="ml-2 text-xs text-white/38">{workflowCase.subtitle}</span>
+      <div className="border-b border-[var(--rule)] bg-white px-3 py-2.5">
+        <span className="text-xs font-medium text-[#191817]/76">{workflowCase.title}</span>
+        <span className="ml-2 text-xs text-[var(--muted)]">{workflowCase.subtitle}</span>
       </div>
 
       <div
@@ -615,63 +605,60 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
         className="min-h-0 flex-1 space-y-3 p-3 sm:p-4 overflow-y-auto"
       >
         <div className="flex gap-2.5">
-          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-white/50">
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white text-[var(--body)]">
             <User size={13} />
           </span>
-          <div className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
-            <p className="mb-1 text-[11px] text-white/28">You</p>
-            <p className="break-words font-mono text-xs leading-5 text-white/76">
-              {typedPrompt}
-              {isTyping ? (
-                <span className="ml-0.5 inline-block h-3.5 w-1 bg-white/65 align-middle motion-safe:animate-pulse" />
-              ) : null}
+          <div className="min-w-0 rounded-lg border border-[var(--rule)] bg-white px-2.5 py-2">
+            <p className="mb-1 text-xs text-[var(--muted)]">You</p>
+            <p className="break-words font-mono text-xs leading-5 text-[#191817]/76">
+              {workflowCase.prompt}
             </p>
           </div>
         </div>
 
-        {phase.kind !== "typing" ? (
-          <div className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/20 bg-violet-400/10 text-violet-200">
-              <Split size={13} />
-            </span>
-            <div className="min-w-0 flex-1 rounded-lg border border-violet-300/15 bg-violet-400/[0.07] px-2.5 py-2">
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] text-violet-100/45">
-                  {workflowCase.coordinator.owner}
-                </span>
-                <SkillSourceLink role={workflowCase.coordinator} />
-              </div>
-              <div className="space-y-1">
-                {workflowCase.coordinator.lines.slice(0, coordinatorLineCount).map((line) => (
-                  <p key={line} className="text-xs leading-5 text-white/52">
-                    {line}
-                  </p>
-                ))}
-              </div>
-              {coordinatorComplete ? (
-                <p className="mt-1.5 border-t border-white/[0.06] pt-1.5 text-xs leading-5 text-white/66">
-                  {workflowCase.coordinator.response}
-                </p>
-              ) : null}
+        <div className="demo-message flex gap-2.5 motion-safe:animate-[agent-message_200ms_var(--ease-out)_both]">
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#e64b2e] bg-[#e64b2e]/10 text-[#c83c24]">
+            <Split size={13} />
+          </span>
+          <div className="min-w-0 flex-1 rounded-lg border border-[#e64b2e] bg-[#e64b2e]/[0.07] px-2.5 py-2">
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-[#c83c24]">{workflowCase.coordinator.owner}</span>
+              <SkillSourceLink role={workflowCase.coordinator} />
             </div>
+            <div className="space-y-1">
+              {workflowCase.coordinator.lines.slice(0, coordinatorLineCount).map((line) => (
+                <p key={line} className="text-xs leading-5 text-[var(--body)]">
+                  {line}
+                </p>
+              ))}
+            </div>
+            {coordinatorComplete ? (
+              <p className="mt-1.5 border-t border-[var(--rule)] pt-1.5 text-xs leading-5 text-[#191817]/66">
+                {workflowCase.coordinator.response}
+              </p>
+            ) : null}
           </div>
-        ) : null}
+        </div>
 
         {showRoleBatch(phase) ? (
-          <div className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2 motion-safe:animate-[agent-message_360ms_ease-out_both]">
-            <p className="mb-2 text-xs text-white/58">Role agents started working together</p>
+          <div className="rounded-lg border border-[var(--rule)] bg-white px-2.5 py-2 demo-message motion-safe:animate-[agent-message_200ms_var(--ease-out)_both]">
+            <p className="mb-2 text-xs text-[var(--body)]">Role agents started working together</p>
             <div className="flex flex-wrap gap-1.5">
-              {workflowCase.roles.map((role, index) => (
-                <span
-                  key={role.skill}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-black/20 px-1.5 py-1"
-                >
-                  <SkillSourceLink role={role} />
-                  <span className="text-[9px] uppercase tracking-[0.12em] text-white/34">
-                    {getRoleStatus(phase, index)}
+              {workflowCase.roles.map((role, index) => {
+                const status = getRoleStatus(phase, index);
+                return (
+                  <span
+                    key={role.skill}
+                    data-status={status}
+                    className={`motion-progress relative inline-flex items-center gap-1.5 overflow-hidden rounded-md border border-[var(--rule)] bg-[#f0ede6]/20 px-1.5 py-1 ${status === "active" ? "motion-active-role" : ""}`}
+                  >
+                    <SkillSourceLink role={role} />
+                    <span className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+                      {status}
+                    </span>
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : null}
@@ -681,44 +668,44 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
           return (
             <div
               key={`returned-${role.skill}`}
-              className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]"
+              className="flex gap-2.5 demo-message motion-safe:animate-[agent-message_200ms_var(--ease-out)_both]"
             >
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.035] text-white/48">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[var(--rule)] bg-white text-[var(--body)]">
                 <Icon size={13} />
               </span>
-              <div className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2">
+              <div className="min-w-0 flex-1 rounded-lg border border-[var(--rule)] bg-white px-2.5 py-2">
                 <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-white/64">{role.owner}</span>
+                  <span className="text-xs font-medium text-[#191817]/64">{role.owner}</span>
                   <SkillSourceLink role={role} />
-                  <span className="text-[10px] text-white/42">returned</span>
+                  <span className="text-xs text-[var(--muted)]">returned</span>
                 </div>
-                <p className="text-xs leading-5 text-white/66">{role.response}</p>
+                <p className="text-xs leading-5 text-[#191817]/66">{role.response}</p>
               </div>
             </div>
           );
         })}
 
         {phase.kind === "synthesizing" ? (
-          <div className="rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-2.5 py-2 text-xs text-white/58">
+          <div className="rounded-lg border border-[#e64b2e] bg-[#e64b2e]/[0.07] px-2.5 py-2 text-xs text-[var(--body)]">
             Combining role outputs into one owner-facing answer
           </div>
         ) : null}
 
         {isDone ? (
-          <div className="flex gap-2.5 motion-safe:animate-[agent-message_360ms_ease-out_both]">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-violet-300/24 bg-violet-400/10 text-violet-100/82">
+          <div className="flex gap-2.5 demo-message motion-safe:animate-[agent-message_200ms_var(--ease-out)_both]">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#e64b2e] bg-[#e64b2e]/10 text-[#c83c24]">
               <Sparkles size={13} />
             </span>
-            <div className="min-w-0 flex-1 rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-2.5 py-2">
-              <p className="mb-1 text-[11px] text-violet-100/45">Combined answer</p>
-              <p className="text-xs leading-5 text-white/72">{workflowCase.outcome}</p>
+            <div className="min-w-0 flex-1 rounded-lg border border-[#e64b2e] bg-[#e64b2e]/[0.07] px-2.5 py-2">
+              <p className="mb-1 text-xs text-[#c83c24]">Combined answer</p>
+              <p className="text-xs leading-5 text-[#191817]/72">{workflowCase.outcome}</p>
             </div>
           </div>
         ) : null}
       </div>
 
-      <div className="border-t border-white/[0.06] bg-white/[0.018] p-2.5">
-        <div className="rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-1.5 font-mono text-[11px] text-white/34">
+      <div className="border-t border-[var(--rule)] bg-white p-2.5">
+        <div className="rounded-lg border border-[var(--rule)] bg-[#f0ede6]/30 px-2.5 py-1.5 font-mono text-xs text-[var(--muted)]">
           {isDone ? "approve next action or ask a role to revise" : "sub-agents streaming"}
         </div>
       </div>
@@ -728,11 +715,13 @@ function ChatTranscript({ workflowCase, phase, scrollRef, onReplay }: ChatTransc
 
 export function WorkflowRunDemo() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0);
   const activeCase = WORKFLOW_CASES[selectedCaseIndex] ?? WORKFLOW_CASES[0];
   const [phase, setPhase] = useState<RunPhase>(() => getInitialPhase(prefersReducedMotion));
   const renderedPhase = prefersReducedMotion ? COMPLETE_PHASE : phase;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const workbenchRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -761,7 +750,29 @@ export function WorkflowRunDemo() {
   }, [clearTimer, prefersReducedMotion]);
 
   useEffect(() => {
-    if (prefersReducedMotion || phase.kind === "complete") return undefined;
+    if (prefersReducedMotion) return;
+    const workbench = workbenchRef.current;
+
+    if (!workbench || !("IntersectionObserver" in window)) {
+      setHasEnteredViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setHasEnteredViewport(true);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -12%", threshold: 0.15 },
+    );
+
+    observer.observe(workbench);
+    return () => observer.disconnect();
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (!hasEnteredViewport || prefersReducedMotion || phase.kind === "complete") return undefined;
 
     const schedule = (nextPhase: RunPhase, delay: number) => {
       clearTimer();
@@ -769,13 +780,6 @@ export function WorkflowRunDemo() {
     };
 
     switch (phase.kind) {
-      case "typing":
-        if (phase.charIndex < activeCase.prompt.length) {
-          schedule({ kind: "typing", charIndex: phase.charIndex + 1 }, TYPE_DELAY);
-        } else {
-          schedule({ kind: "intake" }, COORDINATOR_DELAY);
-        }
-        break;
       case "intake":
         schedule({ kind: "approval" }, COORDINATOR_DELAY);
         break;
@@ -803,20 +807,20 @@ export function WorkflowRunDemo() {
     return () => {
       clearTimer();
     };
-  }, [activeCase.prompt, activeCase.roles.length, clearTimer, phase, prefersReducedMotion]);
+  }, [activeCase.roles.length, clearTimer, hasEnteredViewport, phase, prefersReducedMotion]);
 
   // The transcript content changes on every run phase even though phase is not read in the body.
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll after each phase transition
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
+      behavior: "auto",
     });
   }, [phase, prefersReducedMotion]);
 
   return (
-    <div id="workflow-run">
-      <div className="overflow-hidden rounded-lg border border-white/[0.08] bg-[#090909] shadow-2xl shadow-black/40 lg:h-[36rem]">
+    <div ref={workbenchRef} id="workflow-run" className="motion-workbench">
+      <div className="overflow-hidden rounded-lg border border-[#dedbd3] bg-white shadow-[0_20px_60px_rgb(25_24_23/0.08)] lg:h-[36rem]">
         <div className="grid lg:h-full lg:grid-cols-[13rem_minmax(0,1fr)_13rem] lg:overflow-hidden">
           <CaseRail
             cases={WORKFLOW_CASES}

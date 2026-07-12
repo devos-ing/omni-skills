@@ -14,7 +14,7 @@ before handing it back.
 - `implement` for executing a PRD, plan, or issue set.
 - `mattpocock:tdd` for test-first work where practical.
 - `mattpocock:diagnosing-bugs` for failures and regressions.
-- `mattpocock:review` for code-review posture.
+- `mattpocock:code-review` for code-review posture.
 - `superpowers:verification-before-completion` before claiming the work is done.
 
 If a companion skill is unavailable, stop and tell the user which dependency is

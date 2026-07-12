@@ -1,4 +1,4 @@
 interface:
   display_name: "Creating Bundle Skills"
-  short_description: "Create Omniskill entry skills"
-  default_prompt: "Create an Omniskill workflow bundle for this workflow."
+  short_description: "Create Omniskills entry skills"
+  default_prompt: "Create an Omniskills workflow bundle for this workflow."

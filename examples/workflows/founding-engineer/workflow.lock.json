@@ -1,48 +1,48 @@
 {
   "schemaVersion": "0.1",
   "workflow": "founding-engineer",
-  "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-07T12:15:34.156Z",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:12:50.563Z",
   "skills": [
     {
       "source": "./skills/founding-engineer",
       "resolvedName": "founding-engineer",
       "kind": "local",
-      "hash": "sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078"
+      "hash": "sha256:31849f572dc09e4df212fe66981a04cb67749364441501526d0c48ebb0175490"
     },
     {
       "source": "implement",
       "resolvedName": "implement",
       "kind": "external",
-      "hash": "sha256:6c84d6b8b3e4e2624d5009841023404b9aec0ac06134f3d2c2aff473b25f259d"
+      "hash": "sha256:16f51d5ecc0b385c98451eb9da8edc19bf16bd27d7c65321abdd26592b1df311"
     },
     {
       "source": "mattpocock:tdd",
       "resolvedName": "tdd",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:1fd1eb7a880e3e52debaa8e3b9248b7b71816e2a38f519974e22674cf37b82b9"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
       "resolvedName": "diagnosing-bugs",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
     },
     {
-      "source": "mattpocock:review",
-      "resolvedName": "review",
+      "source": "mattpocock:code-review",
+      "resolvedName": "code-review",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
     },
     {
       "source": "superpowers:verification-before-completion",
-      "resolvedName": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
       "repo": "obra/superpowers",
-      "hash": "sha256:c0cd676b75a7eed20cc419b3c5fe46abbac00fd28cd87b6617fbc3607b1d3fd8"
+      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "real-engineering",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shape, plan, implement, test, debug, and preserve evidence for serious engineering work.",
   "skills": [
     {
@@ -20,19 +20,19 @@
     },
     {
       "source": "mattpocock:grill-with-docs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:tdd",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:codebase-design",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     }
   ],
   "steps": [

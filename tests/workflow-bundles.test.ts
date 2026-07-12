@@ -23,7 +23,7 @@ import {
 } from "../src/runtimes/omniskill/workflow-bundles";
 
 describe("workflow bundles", () => {
-  test("exports workflow bundle helpers from the Omniskill runtime namespace", async () => {
+  test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
     const runtime = await import("../src/runtimes/omniskill/workflow-bundles");
 
     expect(typeof runtime.loadWorkflowBundle).toBe("function");
@@ -32,10 +32,10 @@ describe("workflow bundles", () => {
 
   test("rejects bare sources that are not valid workflow aliases", async () => {
     await expect(loadWorkflowBundle("ProductDev")).rejects.toThrow(
-      "Unsupported Omniskill source: ProductDev",
+      "Unsupported Omniskills source: ProductDev",
     );
     await expect(loadWorkflowBundle("product_dev")).rejects.toThrow(
-      "Unsupported Omniskill source: product_dev",
+      "Unsupported Omniskills source: product_dev",
     );
   });
 
@@ -232,6 +232,59 @@ describe("workflow bundles", () => {
       );
       expect(bundle.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
     }
+  });
+
+  test("pins every Matt Pocock example dependency to the v1.1.0 catalog", async () => {
+    const mattPocockWorkflowNames = [
+      "ceo",
+      "cto",
+      "development-design-delivery",
+      "engineering-manager",
+      "founding-engineer",
+      "grilled-product-dev",
+      "openspec-superpowers",
+      "product-manager",
+      "qa-lead",
+      "real-engineering",
+      "startup-goal",
+    ] as const;
+    const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
+    const retiredMattPocockSources = [
+      "mattpocock:decision-mapping",
+      "mattpocock:to-prd",
+      "mattpocock:to-issues",
+      "mattpocock:review",
+      "mattpocock:design-an-interface",
+    ];
+
+    for (const workflowName of mattPocockWorkflowNames) {
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "workflows", workflowName),
+      );
+      const mattPocockSkills = bundle.manifest.skills.filter((skill) =>
+        skill.source.startsWith("mattpocock:"),
+      );
+      const stepSources = bundle.manifest.steps.map((step) => step.skill);
+
+      expect(mattPocockSkills).not.toHaveLength(0);
+      for (const skill of mattPocockSkills) {
+        expect(skill.repo).toBe(mattPocockV1_1Repo);
+        expect(retiredMattPocockSources).not.toContain(skill.source);
+      }
+      for (const source of stepSources) {
+        expect(retiredMattPocockSources).not.toContain(source);
+      }
+    }
+
+    const developmentDesignDelivery = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "development-design-delivery"),
+    );
+    expect(developmentDesignDelivery.manifest.steps.map((step) => [step.id, step.skill])).toEqual(
+      expect.arrayContaining([
+        ["interface-design", "mattpocock:prototype"],
+        ["review", "mattpocock:code-review"],
+      ]),
+    );
   });
 
   test("web design workflow uses Emil Kowalski design and animation reviews", async () => {
@@ -796,14 +849,14 @@ describe("workflow bundles", () => {
     );
     expect(bundle.manifest.skills.map((skill) => skill.source)).toContain("./skills/custom-review");
     await expect(readFile(scaffold.readmePath, "utf8")).resolves.toContain(
-      "An Omniskill workflow that composes reusable agent skills.",
+      "An Omniskills workflow that composes reusable agent skills.",
     );
     await expect(
       readFile(join(scaffold.bundleDir, "skills", "release-review", "SKILL.md"), "utf8"),
-    ).resolves.toContain("This is the entry skill for the release-review Omniskill workflow.");
+    ).resolves.toContain("This is the entry skill for the release-review Omniskills workflow.");
     await expect(
       readFile(join(scaffold.bundleDir, "skills", "custom-review", "SKILL.md"), "utf8"),
-    ).resolves.toContain("Review this Omniskill workflow from the author perspective.");
+    ).resolves.toContain("Review this Omniskills workflow from the author perspective.");
   });
 
   test("stores workflow install artifact metadata in installed records", async () => {
@@ -930,7 +983,7 @@ describe("workflow bundles", () => {
           homeDir: rootDir,
           workflowName: "missing-workflow",
         }),
-      ).rejects.toThrow("Omniskill workflow is not installed: missing-workflow");
+      ).rejects.toThrow("Omniskills workflow is not installed: missing-workflow");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
@@ -974,7 +1027,7 @@ describe("workflow bundles", () => {
 
   test("infers legacy removal artifacts and skips unmappable legacy sources", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-legacy-"));
-    const workflowDir = join(rootDir, ".omniskill", "workflows");
+    const workflowDir = join(rootDir, ".getsuperpower", "workflows");
 
     try {
       await mkdir(workflowDir, { recursive: true });
@@ -1075,24 +1128,24 @@ describe("workflow bundles", () => {
     expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
       "./skills/development-design-delivery",
       "superpowers:brainstorming",
-      "mattpocock:design-an-interface",
+      "mattpocock:prototype",
       "mattpocock:grill-with-docs",
       "superpowers:writing-plans",
       "mattpocock:codebase-design",
       "mattpocock:tdd",
       "mattpocock:diagnosing-bugs",
-      "mattpocock:review",
+      "mattpocock:code-review",
       "pony-trail",
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["shape", "superpowers:brainstorming", "human_approval"],
-      ["interface-design", "mattpocock:design-an-interface", "human_approval"],
+      ["interface-design", "mattpocock:prototype", "human_approval"],
       ["requirement-review", "mattpocock:grill-with-docs", "human_approval"],
       ["implementation-plan", "superpowers:writing-plans", null],
       ["architecture-boundary", "mattpocock:codebase-design", null],
       ["build", "mattpocock:tdd", null],
       ["debug", "mattpocock:diagnosing-bugs", null],
-      ["review", "mattpocock:review", null],
+      ["review", "mattpocock:code-review", null],
       ["evidence", "pony-trail", null],
     ]);
     await expect(
@@ -1110,7 +1163,7 @@ describe("workflow bundles", () => {
         "utf8",
       ),
     ).resolves.toContain(
-      "This is the entry skill for the development-design-delivery Omniskill workflow.",
+      "This is the entry skill for the development-design-delivery Omniskills workflow.",
     );
   });
 
@@ -1133,7 +1186,7 @@ describe("workflow bundles", () => {
     ).toEqual([
       ["superpowers:brainstorming", "obra/superpowers"],
       ["superpowers:writing-plans", "obra/superpowers"],
-      ["mattpocock:tdd", "mattpocock/skills"],
+      ["mattpocock:tdd", "https://github.com/mattpocock/skills/tree/v1.1.0"],
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["opsx-propose", "./skills/opsx-handoff-review"],
@@ -1158,7 +1211,7 @@ describe("workflow bundles", () => {
         ),
         "utf8",
       ),
-    ).resolves.toContain("This is the entry skill for the openspec-delivery Omniskill workflow.");
+    ).resolves.toContain("This is the entry skill for the openspec-delivery Omniskills workflow.");
   });
 
   test("loads a workflow bundle from a public git URL", async () => {
@@ -1464,7 +1517,7 @@ describe("workflow bundles", () => {
           return { stdout: "abc123\n", stderr: "", exitCode: 0 };
         },
       }),
-    ).rejects.toThrow("No Omniskill workflow manifest was found");
+    ).rejects.toThrow("No Omniskills workflow manifest was found");
 
     await expect(stat(checkoutDir)).rejects.toThrow();
     await rm(tempDir, { recursive: true, force: true });
@@ -1487,7 +1540,7 @@ describe("workflow bundles", () => {
         },
       }),
     ).rejects.toThrow(
-      "Omniskill workflow alias not found: missing-workflow\nChecked: https://github.com/devos-ing/omni-skills.git#examples/workflows/missing-workflow",
+      "Omniskills workflow alias not found: missing-workflow\nChecked: https://github.com/devos-ing/omni-skills.git#examples/workflows/missing-workflow",
     );
 
     await expect(stat(checkoutDir)).rejects.toThrow();
@@ -1561,8 +1614,9 @@ describe("workflow bundles", () => {
         readFile(join(preparedEntry?.source ?? "", "workflow.json"), "utf8"),
       ).resolves.toContain('"name": "looped-workflow"');
       const generatedRunner = await readFile(join(preparedEntry?.source ?? "", "loop.mjs"), "utf8");
-      expect(generatedRunner).toContain("OMNISKILL_BIN");
-      expect(generatedRunner).toContain("omniskill");
+      expect(generatedRunner).toContain("OMNISKILLS_BIN");
+      expect(generatedRunner).toContain("GETSUPERPOWER_BIN");
+      expect(generatedRunner).toContain("omniskills");
       expect(generatedRunner).toContain("workflow.json");
       await expect(
         readFile(join(preparedEntry?.source ?? "", "loop.metadata.json"), "utf8"),
@@ -1590,7 +1644,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("installs and lists workflow bundles under .omniskill", async () => {
+  test("installs and lists workflow bundles under .getsuperpower", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-install-"));
     const bundle = await loadWorkflowBundle("examples/workflows/release-review");
 
@@ -1599,7 +1653,9 @@ describe("workflow bundles", () => {
       bundle,
     });
 
-    expect(installed.path).toBe(join(rootDir, ".omniskill", "workflows", "release-review.json"));
+    expect(installed.path).toBe(
+      join(rootDir, ".getsuperpower", "workflows", "release-review.json"),
+    );
     const installedFile = JSON.parse(await readFile(installed.path, "utf8"));
     expect(installedFile.name).toBe("release-review");
     expect(installedFile.steps).toHaveLength(4);

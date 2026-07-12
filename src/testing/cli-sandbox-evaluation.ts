@@ -110,7 +110,7 @@ export async function runCliSandboxEvaluation(
 
 export function renderCliSandboxEvaluation(report: CliSandboxEvaluationReport): string {
   return [
-    "# Omniskill CLI Sandbox Evaluation",
+    "# Omniskills CLI Sandbox Evaluation",
     "",
     `Generated: ${report.generatedAt}`,
     `Workflow source: ${report.workflowSource}`,
@@ -198,7 +198,12 @@ async function runBaseline(input: {
     ],
   });
   const logs = commands.flatMap((command) => command.logs);
-  const workflowRecord = join(input.homeDir, ".omniskill", "workflows", "openspec-delivery.json");
+  const workflowRecord = join(
+    input.homeDir,
+    ".getsuperpower",
+    "workflows",
+    "openspec-delivery.json",
+  );
 
   return buildRun({
     mode: "baseline",
@@ -212,7 +217,7 @@ async function runBaseline(input: {
         id: "baseline-validates-workflow",
         label: "CLI validates the workflow source",
         passed: logs.some((line) =>
-          stripAnsi(line).includes("Omniskill valid: openspec-delivery@0.1.0"),
+          stripAnsi(line).includes("Omniskills valid: openspec-delivery@0.1.0"),
         ),
         detail: "validate should accept the OpenSpec workflow fixture",
       },
@@ -228,7 +233,7 @@ async function runBaseline(input: {
         id: "baseline-does-not-install",
         label: "Baseline mode leaves the project uninstalled",
         passed: !(await pathExists(workflowRecord)),
-        detail: ".omniskill workflow records should not exist before install",
+        detail: ".getsuperpower workflow records should not exist before install",
       },
       {
         id: "baseline-no-external-side-effects",
@@ -258,7 +263,12 @@ async function runWorkflow(input: {
     ],
   });
   const logs = commands.flatMap((command) => command.logs);
-  const workflowRecord = join(input.homeDir, ".omniskill", "workflows", "openspec-delivery.json");
+  const workflowRecord = join(
+    input.homeDir,
+    ".getsuperpower",
+    "workflows",
+    "openspec-delivery.json",
+  );
   const installedSkillResults = await Promise.all(
     expectedInstalledSkills.map((skill) =>
       pathExists(join(input.homeDir, ".agents", "skills", skill, "SKILL.md")),
@@ -277,7 +287,7 @@ async function runWorkflow(input: {
         id: "workflow-record-written",
         label: "Workflow mode writes the installed workflow record",
         passed: await pathExists(workflowRecord),
-        detail: "global .omniskill/workflows/openspec-delivery.json should exist",
+        detail: "global .getsuperpower/workflows/openspec-delivery.json should exist",
       },
       {
         id: "workflow-installs-skills",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "grilled-product-dev",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Sharpen a product-development request with grilling before Superpowers design and planning.",
   "loop": {
     "script": "./loop.mjs",
@@ -23,7 +23,7 @@
     },
     {
       "source": "mattpocock:grilling",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "superpowers:brainstorming",

@@ -27,7 +27,7 @@ async function main(): Promise<void> {
       "",
       "# Raw Sandbox Entry",
       "",
-      "Use this skill to prove Omniskill can install a workflow from git.",
+      "Use this skill to prove Omniskills can install a workflow from git.",
       "",
     ].join("\n"),
   );
@@ -55,7 +55,7 @@ async function main(): Promise<void> {
 
   await run(["git", "init"], { cwd: sourceRepo });
   await run(["git", "config", "user.email", "smoke@example.invalid"], { cwd: sourceRepo });
-  await run(["git", "config", "user.name", "Omniskill Smoke"], { cwd: sourceRepo });
+  await run(["git", "config", "user.name", "Omniskills Smoke"], { cwd: sourceRepo });
   await run(["git", "add", "."], { cwd: sourceRepo });
   await run(["git", "commit", "-m", "add raw sandbox workflow"], { cwd: sourceRepo });
 
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
     },
   );
 
-  const workflowDir = join(projectDir, ".omniskill", "workflows");
+  const workflowDir = join(projectDir, ".getsuperpower", "workflows");
   const workflowFiles = (await readdir(workflowDir)).filter((file) => file.endsWith(".json"));
   if (workflowFiles.length === 0) {
     throw new Error(`No workflow records were written under ${workflowDir}`);

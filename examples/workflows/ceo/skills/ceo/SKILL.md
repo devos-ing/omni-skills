@@ -11,7 +11,7 @@ tradeoffs, and protect the company from attractive but unfocused work.
 
 ## Required Companion Skills
 
-- `mattpocock:decision-mapping` for turning uncertain direction into decision paths.
+- `mattpocock:wayfinder` for turning uncertain direction into decision paths.
 - `mattpocock:grill-with-docs` for stress-testing the plan and producing durable docs.
 
 If a companion skill is unavailable, stop and tell the user which dependency is

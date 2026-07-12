@@ -42,8 +42,8 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
   const program = new Command();
 
   program
-    .name("omniskill")
-    .description("Install, author, and inspect Omniskill skill trees.")
+    .name("omniskills")
+    .description("Install, author, and inspect Omniskills skill trees.")
     .version(CLI_VERSION)
     .option("-v", "output the version number");
   program.configureHelp({
@@ -332,7 +332,7 @@ function printExternalSkillsPackageInstallResult(result: InstallExternalSkillsPa
 
   if (!result.dryRun) {
     console.log("");
-    console.log(success("Welcome to Omniskill."));
+    console.log(success("Welcome to Omniskills."));
     console.log("Restart your agent IDE so it loads the latest skills.");
   }
 }
@@ -343,7 +343,7 @@ function printPostSkillChangeWelcome(result: SkillInstallResult): void {
   }
 
   console.log("");
-  console.log(success("Welcome to Omniskill."));
+  console.log(success("Welcome to Omniskills."));
   console.log("Restart your agent IDE so it loads the latest skills.");
 }
 

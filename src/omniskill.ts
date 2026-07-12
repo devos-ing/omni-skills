@@ -199,13 +199,13 @@ export function configureOmniskillCommand(
 
   const bundleCommand = program
     .command("bundle")
-    .description("Compatibility alias for Omniskill authoring.");
+    .description("Compatibility alias for Omniskills authoring.");
   configureAuthorCommands(bundleCommand, options);
   configureLockCommand(bundleCommand, options);
 
   const workflowCommand = program
     .command("workflow")
-    .description("Compatibility alias for Omniskill install, list, and remove commands.");
+    .description("Compatibility alias for Omniskills install, list, and remove commands.");
   configureInstallCommand(workflowCommand, options);
   configureListCommand(workflowCommand, options.rootDir);
   configureRemoveCommand(workflowCommand, options);
@@ -233,24 +233,24 @@ function configureAuthorCommands(
 ): void {
   command
     .command("init")
-    .description("Create a local Omniskill scaffold.")
-    .argument("<name>", "Omniskill name")
-    .option("--dir <dir>", "directory that will contain the Omniskill workflow", options.rootDir)
+    .description("Create a local Omniskills scaffold.")
+    .argument("<name>", "Omniskills name")
+    .option("--dir <dir>", "directory that will contain the Omniskills workflow", options.rootDir)
     .action(async (name: string, commandOptions: { dir: string }) => {
       const scaffold = await createWorkflowBundleScaffold({
         rootDir: resolvePath(options.rootDir, commandOptions.dir),
         name,
       });
 
-      console.log(success(`Omniskill created: ${scaffold.bundleDir}`));
+      console.log(success(`Omniskills created: ${scaffold.bundleDir}`));
       console.log(keyValue("Manifest", scaffold.manifestPath));
       console.log(keyValue("README", scaffold.readmePath));
     });
 
   command
     .command("validate")
-    .description("Validate an Omniskill manifest.")
-    .argument("<path>", "Omniskill directory or workflow.json path")
+    .description("Validate an Omniskills manifest.")
+    .argument("<path>", "Omniskills directory or workflow.json path")
     .action(async (path: string) => {
       const bundle = await loadWorkflowBundle(path, {
         cwd: options.rootDir,
@@ -259,7 +259,9 @@ function configureAuthorCommands(
           : {}),
       });
       try {
-        console.log(success(`Omniskill valid: ${bundle.manifest.name}@${bundle.manifest.version}`));
+        console.log(
+          success(`Omniskills valid: ${bundle.manifest.name}@${bundle.manifest.version}`),
+        );
         console.log(keyValue("Steps", String(bundle.manifest.steps.length)));
         console.log(keyValue("Skills", String(bundle.manifest.skills.length)));
       } finally {
@@ -271,8 +273,8 @@ function configureAuthorCommands(
 function configureLockCommand(command: Command, options: ConfigureOmniskillCommandOptions): void {
   command
     .command("lock")
-    .description("Generate workflow.lock.json skill fingerprints for a local Omniskill workflow.")
-    .argument("<source>", "local Omniskill directory or workflow.json path")
+    .description("Generate workflow.lock.json skill fingerprints for a local Omniskills workflow.")
+    .argument("<source>", "local Omniskills directory or workflow.json path")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {
         cwd: options.rootDir,
@@ -284,12 +286,12 @@ function configureLockCommand(command: Command, options: ConfigureOmniskillComma
       try {
         if (bundle.source.kind !== "local") {
           throw new Error(
-            "Omniskill lock can only write local workflow sources. Clone or open the workflow source directory, then run lock there.",
+            "Omniskills lock can only write local workflow sources. Clone or open the workflow source directory, then run lock there.",
           );
         }
 
         const result = await writeWorkflowLockFile(bundle);
-        console.log(success(`Omniskill lock written: ${bundle.manifest.name}`));
+        console.log(success(`Omniskills lock written: ${bundle.manifest.name}`));
         console.log(keyValue("Lock file", result.path));
         console.log(keyValue("Skills", String(result.lock.skills.length)));
       } finally {
@@ -304,12 +306,12 @@ function configureInstallCommand(
 ): void {
   command
     .command("install")
-    .description("Install an Omniskill workflow and its skills.")
+    .description("Install an Omniskills workflow and its skills.")
     .argument(
       "<source>",
-      "workflow alias, local Omniskill path, workflow.json path, or public git source",
+      "workflow alias, local Omniskills path, workflow.json path, or public git source",
     )
-    .option("--dir <dir>", "override directory that receives .omniskill/workflows")
+    .option("--dir <dir>", "override directory that receives .getsuperpower/workflows")
     .option(
       "--agents <agents>",
       "comma-separated skill install targets: codex,claude,cursor,copilot,opencode (aliases: github-copilot,opencodex)",
@@ -317,7 +319,7 @@ function configureInstallCommand(
     )
     .option(
       "--home <dir>",
-      "home directory for global Omniskill records and agent config folders",
+      "home directory for global Omniskills records and agent config folders",
       homedir(),
     )
     .action((source: string, commandOptions: OmniskillInstallCommandOptions) =>
@@ -365,7 +367,7 @@ async function runOmniskillInstall(
     });
 
     if (!approved) {
-      console.log(warning("Omniskill install cancelled."));
+      console.log(warning("Omniskills install cancelled."));
       return;
     }
 
@@ -414,8 +416,8 @@ async function runOmniskillInstall(
 
     const install = await installWorkflowBundle({ rootDir: targetDir, bundle, installArtifacts });
 
-    console.log(success(`Omniskill installed: ${install.workflow.name}`));
-    console.log(keyValue("Omniskill file", install.path));
+    console.log(success(`Omniskills installed: ${install.workflow.name}`));
+    console.log(keyValue("Omniskills file", install.path));
     console.log(
       getOmniskillInstallResultBox({
         workflowName: install.workflow.name,
@@ -461,7 +463,7 @@ function printOmniskillInstallPlan(input: {
   targetDir: string;
   homeDir: string;
 }): void {
-  console.log(success(`Omniskill install plan: ${input.workflowName}@${input.workflowVersion}`));
+  console.log(success(`Omniskills install plan: ${input.workflowName}@${input.workflowVersion}`));
   console.log(keyValue("Workflow records", input.targetDir));
   console.log(keyValue("Skill home", input.homeDir));
   console.log("Skills to install:");
@@ -691,9 +693,9 @@ async function runExternalSkillCommand(
 function configureListCommand(command: Command, rootDir: string): void {
   command
     .command("list")
-    .description("List installed Omniskill workflows.")
-    .option("--dir <dir>", "override directory with .omniskill/workflows")
-    .option("--home <dir>", "home directory that contains global Omniskill records", homedir())
+    .description("List installed Omniskills workflows.")
+    .option("--dir <dir>", "override directory with .getsuperpower/workflows")
+    .option("--home <dir>", "home directory that contains global Omniskills records", homedir())
     .action(async (commandOptions: { dir?: string; home: string }) => {
       const targetDir = commandOptions.dir
         ? resolvePath(rootDir, commandOptions.dir)
@@ -703,8 +705,8 @@ function configureListCommand(command: Command, rootDir: string): void {
       });
 
       if (workflows.length === 0) {
-        console.log(muted("No Omniskill workflows installed."));
-        console.log(nextStep("omniskill install <path-or-git-url>"));
+        console.log(muted("No Omniskills workflows installed."));
+        console.log(nextStep("omniskills install <path-or-git-url>"));
         return;
       }
 
@@ -717,10 +719,10 @@ function configureListCommand(command: Command, rootDir: string): void {
 function configureRemoveCommand(command: Command, options: ConfigureOmniskillCommandOptions): void {
   command
     .command("remove")
-    .description("Remove an installed Omniskill workflow and its recorded skill artifacts.")
-    .argument("<workflow-name>", "installed Omniskill workflow name")
-    .option("--dir <dir>", "override directory with .omniskill/workflows")
-    .option("--home <dir>", "home directory with global Omniskill records", homedir())
+    .description("Remove an installed Omniskills workflow and its recorded skill artifacts.")
+    .argument("<workflow-name>", "installed Omniskills workflow name")
+    .option("--dir <dir>", "override directory with .getsuperpower/workflows")
+    .option("--home <dir>", "home directory with global Omniskills records", homedir())
     .option("--dry-run", "print the removal plan without deleting files", false)
     .option("--yes", "remove without prompting for confirmation", false)
     .action((workflowName: string, commandOptions: OmniskillRemoveCommandOptions) =>
@@ -755,16 +757,16 @@ async function runOmniskillRemove(
       artifactsToKeep: plan.artifactsToKeep.length,
     }));
   if (!approved) {
-    console.log(warning("Omniskill remove cancelled."));
+    console.log(warning("Omniskills remove cancelled."));
     return;
   }
 
   await executeWorkflowRemovalPlan(plan);
-  console.log(success(`Omniskill removed: ${workflowName}`));
+  console.log(success(`Omniskills removed: ${workflowName}`));
 }
 
 function printOmniskillRemovePlan(plan: WorkflowRemovalPlan, dryRun: boolean): void {
-  console.log(success(`Omniskill remove plan: ${plan.workflow.name}`));
+  console.log(success(`Omniskills remove plan: ${plan.workflow.name}`));
   console.log(keyValue("Workflow record", plan.workflowRecordPath));
   if (plan.legacy) {
     console.log(warning("Legacy workflow record detected; removal paths are inferred."));
@@ -802,8 +804,8 @@ function configureDependencyCommand(
   command
     .command("deps")
     .aliases(["dependencies", "dependence"])
-    .description("List the skill dependencies declared by an Omniskill workflow.")
-    .argument("<source>", "local Omniskill path, workflow.json path, or public git source")
+    .description("List the skill dependencies declared by an Omniskills workflow.")
+    .argument("<source>", "local Omniskills path, workflow.json path, or public git source")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {
         cwd: options.rootDir,
@@ -812,7 +814,7 @@ function configureDependencyCommand(
           : {}),
       });
       try {
-        console.log(success(`Omniskill dependencies: ${bundle.manifest.name}`));
+        console.log(success(`Omniskills dependencies: ${bundle.manifest.name}`));
         for (const skill of bundle.manifest.skills) {
           const optional = skill.optional ? " (optional)" : "";
           console.log(`- ${skill.source}${optional}`);
@@ -867,9 +869,9 @@ function configureLoopSubcommand(
     .description(description)
     .argument(
       "<source>",
-      "workflow alias, local Omniskill path, workflow.json path, or public git source",
+      "workflow alias, local Omniskills path, workflow.json path, or public git source",
     )
-    .option("--home <dir>", "home directory for global Omniskill loop run state", homedir())
+    .option("--home <dir>", "home directory for global Omniskills loop run state", homedir())
     .action((source: string, commandOptions: OmniskillLoopCommandOptions) =>
       runOmniskillLoop(name, source, commandOptions, options),
     );
@@ -891,7 +893,7 @@ async function runOmniskillLoop(
 
   try {
     if (!bundle.manifest.loop) {
-      throw new Error(`Omniskill is not loop-enabled: ${bundle.manifest.name}`);
+      throw new Error(`Omniskills is not loop-enabled: ${bundle.manifest.name}`);
     }
 
     const { runWorkflowLoopCli } = (await importWorkflowLoopRuntime()) as WorkflowLoopRuntimeModule;
@@ -919,7 +921,7 @@ async function importWorkflowLoopRuntime(): Promise<unknown> {
 function createLoopCommandPrefix(source: string, homeDir: string): (command: string) => string {
   const defaultHomeDir = resolveHomePath(homedir());
   const homeOption = homeDir === defaultHomeDir ? "" : ` --home ${quoteShellArg(homeDir)}`;
-  return (command) => `omniskill loop ${command} ${quoteShellArg(source)}${homeOption}`;
+  return (command) => `omniskills loop ${command} ${quoteShellArg(source)}${homeOption}`;
 }
 
 function buildLoopRuntimeArgs(
@@ -982,7 +984,7 @@ async function runOmniskillOnboard(
   const prompt = options.onboardPrompt ?? createDefaultOnboardPrompt();
   const runCommand = options.onboardCommandRunner ?? runExternalSkillCommand;
 
-  console.log(success("Omniskill onboard"));
+  console.log(success("Omniskills onboard"));
   console.log(keyValue("Workspace", targetDir));
 
   const rtkResult = await runCommand({
@@ -1019,7 +1021,7 @@ async function runOmniskillOnboard(
     console.log(warning("CodeGraph setup skipped"));
   }
 
-  console.log(success("Omniskill onboard complete"));
+  console.log(success("Omniskills onboard complete"));
 }
 
 function printRtkSetupGuidance(): void {
@@ -1056,8 +1058,8 @@ function createDefaultOnboardPrompt(): OmniskillOnboardPrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("Omniskill onboard cancelled");
-        throw new Error("Omniskill onboard cancelled");
+        clackCancel("Omniskills onboard cancelled");
+        throw new Error("Omniskills onboard cancelled");
       }
 
       return result;
@@ -1079,7 +1081,7 @@ function createDefaultInstallPrompt(): OmniskillInstallPrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("Omniskill install cancelled");
+        clackCancel("Omniskills install cancelled");
         return false;
       }
 
@@ -1102,7 +1104,7 @@ function createDefaultRemovePrompt(): OmniskillRemovePrompt {
       });
 
       if (isCancel(result)) {
-        clackCancel("Omniskill remove cancelled");
+        clackCancel("Omniskills remove cancelled");
         return false;
       }
 

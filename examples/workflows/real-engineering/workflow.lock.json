@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "real-engineering",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:11:48.481Z",
+  "skills": [
+    {
+      "source": "./skills/rtk-command-discipline",
+      "resolvedName": "rtk-command-discipline",
+      "kind": "local",
+      "hash": "sha256:1d594fc71793332753cd0a63fe3f98a1ec42f2f67f477175ca9310cf5e3c3def"
+    },
+    {
+      "source": "pony-trail",
+      "resolvedName": "pony-trail",
+      "kind": "external",
+      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "resolvedName": "grill-with-docs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:a7e2ffc2e216483f140c486c5e1b5e3e66d6ca7cf47980357069b21887645069"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:452bfb044551a8177528b7df68e204e6a77b8a7f89daa741ef659f652c441376"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+    }
+  ]
+}

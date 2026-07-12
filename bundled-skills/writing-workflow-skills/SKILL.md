@@ -1,13 +1,13 @@
 ---
 name: writing-workflow-skills
-description: Use when writing or reviewing Omniskill workflow skill files, entry skills, local role skills, step instructions, approval gates, handoffs, or Superpowers/Matt Pocock dependency choices.
+description: Use when writing or reviewing Omniskills workflow skill files, entry skills, local role skills, step instructions, approval gates, handoffs, or Superpowers/Matt Pocock dependency choices.
 ---
 
 # Writing Workflow Skills
 
 ## Overview
 
-Use this skill to write the `SKILL.md` files inside an Omniskill workflow.
+Use this skill to write the `SKILL.md` files inside an Omniskills workflow.
 Use `creating-bundle-skills` for the whole bundle; use this skill for the entry
 skill and local skills that make the workflow behave well after install.
 
@@ -45,7 +45,7 @@ the missing skill instead of silently continuing.
 
 An entry skill should:
 
-1. Say it is the entry skill for the Omniskill workflow.
+1. Say it is the entry skill for the Omniskills workflow.
 2. Name the approved input it needs before routing.
 3. List required sub-skills in the same order as `workflow.json` steps.
 4. Explain each `human_approval` gate and stop condition.

@@ -11,7 +11,7 @@ behavior.
 
 ## Required Companion Skills
 
-- `mattpocock:review` for review posture and risk ordering.
+- `mattpocock:code-review` for review posture and risk ordering.
 - `mattpocock:diagnosing-bugs` for reproducible failure analysis.
 - `superpowers:verification-before-completion` before claiming acceptance.
 

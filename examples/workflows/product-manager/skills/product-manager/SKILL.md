@@ -11,8 +11,8 @@ job is to connect customer pain, product scope, and delivery sequence.
 ## Required Companion Skills
 
 - `superpowers:brainstorming` for exploring options before locking scope.
-- `mattpocock:to-prd` for producing a PRD.
-- `mattpocock:to-issues` for slicing the PRD into issues.
+- `mattpocock:to-spec` for producing a product spec.
+- `mattpocock:to-tickets` for slicing the product spec into tickets.
 - `superpowers:writing-plans` for executable delivery planning.
 
 If a companion skill is unavailable, stop and tell the user which dependency is
