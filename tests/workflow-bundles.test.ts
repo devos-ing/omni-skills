@@ -22,6 +22,44 @@ import {
   writeWorkflowLockFile,
 } from "../src/runtimes/omniskill/workflow-bundles";
 
+const startupRoleContracts = [
+  { role: "ceo", phrases: ["State the company decision", "smallest evidence-gathering move"] },
+  { role: "product-manager", phrases: ["Write acceptance criteria", "visible product progress"] },
+  { role: "cto", phrases: ["technical trajectory", "verification gate"] },
+  {
+    role: "engineering-manager",
+    phrases: ["smallest shippable result", "verifiable repository state"],
+  },
+  {
+    role: "founding-engineer",
+    phrases: ["Read the plan", "superpowers:verification-before-completion"],
+  },
+  { role: "qa-lead", phrases: ["Restate the user-visible behavior", "Separate verified facts"] },
+  {
+    role: "web-design",
+    phrases: [
+      "interface-craft:motion-review` on every changed animation",
+      "Before | After | Why",
+      "**Approve** or **Block**",
+    ],
+  },
+] as const;
+
+const readStartupRoleSkill = (role: string) =>
+  readFile(
+    join(
+      import.meta.dir,
+      "..",
+      "examples",
+      "workflows",
+      "startup-goal",
+      "skills",
+      role,
+      "SKILL.md",
+    ),
+    "utf8",
+  );
+
 describe("workflow bundles", () => {
   test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
     const runtime = await import("../src/runtimes/omniskill/workflow-bundles");
@@ -367,34 +405,16 @@ describe("workflow bundles", () => {
     expect(skill).toContain("one material question at a time");
     expect(skill).toContain("explicit approval");
     expect(skill).toContain("smallest safe role set");
-    expect(skill).toContain("Skipped roles");
+    expect(skill).toContain("Present the route plan and wait for explicit approval");
+    expect(skill).toContain("Every run must show");
+    expect(skill).toContain("Skipped roles, including `none`");
     expect(skill).toContain("one role-scoped subagent per selected role");
     expect(skill).toContain("Unavailable dispatch");
     expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");
 
-    for (const role of [
-      "ceo",
-      "product-manager",
-      "web-design",
-      "cto",
-      "engineering-manager",
-      "founding-engineer",
-      "qa-lead",
-    ]) {
-      const roleSkill = await readFile(
-        join(
-          import.meta.dir,
-          "..",
-          "examples",
-          "workflows",
-          "startup-goal",
-          "skills",
-          role,
-          "SKILL.md",
-        ),
-        "utf8",
-      );
+    for (const { role } of startupRoleContracts) {
+      const roleSkill = await readStartupRoleSkill(role);
       for (const contract of ["## Use When", "## Companions", "## Do", "## Return"]) {
         expect(roleSkill).toContain(contract);
       }
@@ -406,47 +426,8 @@ describe("workflow bundles", () => {
   });
 
   test("startup goal bundled role skills define role-specific operating modes", async () => {
-    const skillsDir = join(
-      import.meta.dir,
-      "..",
-      "examples",
-      "workflows",
-      "startup-goal",
-      "skills",
-    );
-    const roleContracts = [
-      {
-        role: "ceo",
-        phrases: ["State the company decision", "smallest evidence-gathering move"],
-      },
-      {
-        role: "product-manager",
-        phrases: ["Write acceptance criteria", "visible product progress"],
-      },
-      {
-        role: "cto",
-        phrases: ["technical trajectory", "verification gate"],
-      },
-      {
-        role: "engineering-manager",
-        phrases: ["smallest shippable result", "verifiable repository state"],
-      },
-      {
-        role: "founding-engineer",
-        phrases: ["Read the plan", "superpowers:verification-before-completion"],
-      },
-      {
-        role: "qa-lead",
-        phrases: ["Restate the user-visible behavior", "Separate verified facts"],
-      },
-      {
-        role: "web-design",
-        phrases: ["Before | After | Why", "**Approve** or **Block**"],
-      },
-    ];
-
-    for (const contract of roleContracts) {
-      const skill = await readFile(join(skillsDir, contract.role, "SKILL.md"), "utf8");
+    for (const contract of startupRoleContracts) {
+      const skill = await readStartupRoleSkill(contract.role);
 
       expect(skill).toContain(`name: ${contract.role}`);
       expect(skill).toContain("## Companions");
