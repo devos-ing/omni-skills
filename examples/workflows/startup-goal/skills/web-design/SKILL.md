@@ -5,43 +5,29 @@ description: "Startup-team web-design role for interface direction, responsive i
 
 # Web Design
 
-Use this role when the approved startup goal creates or materially changes a
-customer-facing web interface, responsive layout, critical interaction, visual
-hierarchy, or meaningful UI motion.
+## Use When
 
-## Required Companion Skills
+Use for customer-facing hierarchy, responsive interaction, accessibility, or motion.
 
-- `interface-craft:design-engineering` for interface and motion judgment.
-- `interface-craft:motion-vocabulary` for naming requested motion precisely.
-- `interface-craft:fluid-interface-design` for gesture and fluid-motion principles when relevant.
-- `interface-craft:motion-review` for strict animation review.
+## Companions
 
-If a companion skill is unavailable, stop and tell the coordinator which
-dependency is missing.
+- `interface-craft:design-engineering`
+- `interface-craft:motion-vocabulary`
+- `interface-craft:fluid-interface-design` when gestures are in scope.
+- `interface-craft:motion-review`
 
-## Operating Mode
+If one is unavailable, stop and name it.
 
-1. Turn the approved product-manager handoff into target user, job,
-   information hierarchy, interaction states, and responsive constraints.
-2. Keep every motion purposeful and frequency-appropriate; remove decorative
-   motion without a user benefit.
-3. Name the interaction and motion before implementation begins.
-4. Use `interface-craft:design-engineering` to review the interface against its
-   hierarchy, feedback, density, responsive, and accessibility expectations.
-5. Use `interface-craft:fluid-interface-design` when gestures or fluid physical interactions
-   are part of the approved direction.
-6. Review all changed animation with `interface-craft:motion-review`. Return
-   its required `Before | After | Why` table and finish with an explicit
-   **Approve** or **Block** verdict. A Block is a release gate for the reviewed
-   motion.
+## Do
 
-## Role Output
+1. Define the target user, job, hierarchy, states, responsive behavior, and accessibility constraints.
+2. Require a user benefit, frequency, and reduced-motion behavior for every motion.
+3. Name interactions before implementation and use the relevant interface-craft review.
+4. Run `interface-craft:motion-review` on every changed animation; return `Before | After | Why` and an explicit **Approve** or **Block** verdict.
 
-- Direction: target user, job, information hierarchy, interaction states, and
-  responsive constraints from the approved brief.
-- Motion: each approved motion's purpose, frequency, easing/interaction intent,
-  and reduced-motion behavior.
-- Handoff: implementation-ready requirements for the founding engineer and
-  acceptance criteria for QA.
-- Review: `Before | After | Why` findings and an explicit **Approve** or
-  **Block** animation verdict.
+## Return
+
+- Decision: implementable interface and motion direction.
+- Evidence: hierarchy, state, responsive, accessibility, and review findings.
+- Risk: unresolved usability or motion issue; **Block** is a release gate.
+- Handoff: implementation requirements and QA acceptance checks.

@@ -2,55 +2,55 @@
   "schemaVersion": "0.1",
   "workflow": "startup-goal",
   "workflowVersion": "0.1.4",
-  "generatedAt": "2026-07-12T10:25:01.486Z",
+  "generatedAt": "2026-07-12T16:32:53.114Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
       "resolvedName": "startup-goal",
       "kind": "local",
-      "hash": "sha256:4cc69ebe4e70f1ee29b198dda272e8edcfd9fd46cc74e86e1e61aaca18e3293e"
+      "hash": "sha256:5cbf638c4e58dba787682c73510390457bb254b6616550f47c3c60669f7e9365"
     },
     {
       "source": "./skills/ceo",
       "resolvedName": "ceo",
       "kind": "local",
-      "hash": "sha256:49ffde5b78be3cc6f90ed074de3039cdcacb4f71532b8be1b23f1a6d7e107dce"
+      "hash": "sha256:1061ba4bcbd4c75660ab08c6f22cac59c3b0a671cf17d4d829c0211300555b64"
     },
     {
       "source": "./skills/cto",
       "resolvedName": "cto",
       "kind": "local",
-      "hash": "sha256:74694215ea6d64cf090cb5dd73ad16b8b9a8f15206b9ec6ad727fd33c5689023"
+      "hash": "sha256:25cc20e161d81e8a7589a933dcf720ddcc74469b0fea8726dfe659e31405b848"
     },
     {
       "source": "./skills/product-manager",
       "resolvedName": "product-manager",
       "kind": "local",
-      "hash": "sha256:337f31e1f1e6e4b1dad32c00a52d7aae72d1120587d16c4f29b63c8df652084b"
+      "hash": "sha256:f1660fd825b3975c844229f70020ab6dc2e0957b1305befc20ce97c10a5b7207"
     },
     {
       "source": "./skills/web-design",
       "resolvedName": "web-design",
       "kind": "local",
-      "hash": "sha256:c35267b6087d05d97fc8c3f9eb95a0c743908686fec73ad77a93bdde332c2e50"
+      "hash": "sha256:67261d9b6ee94a368d85adea8113c5ddc65009fb6a120a2da6e44376e95aa21f"
     },
     {
       "source": "./skills/engineering-manager",
       "resolvedName": "engineering-manager",
       "kind": "local",
-      "hash": "sha256:67c721bfd95f3298ce5443b842b793220fab3137138dc6e3d06be31d399af112"
+      "hash": "sha256:04212171f62b217d8a2a375b6df5a322ad9368b3133521d51c803f74e712ae2b"
     },
     {
       "source": "./skills/founding-engineer",
       "resolvedName": "founding-engineer",
       "kind": "local",
-      "hash": "sha256:f52cbb52a6072ba0ee36dc925500fdcc1c618d9419bdf33701a3f6d622c1a1ac"
+      "hash": "sha256:785d5614b12fd0a23d951b21cd28cbaaced51b348aaedb316670c202366219f3"
     },
     {
       "source": "./skills/qa-lead",
       "resolvedName": "qa-lead",
       "kind": "local",
-      "hash": "sha256:c02b1d8eb7dd73adef8af5459c4d0d4604bac342d23a2784b17d84e7340fdf28"
+      "hash": "sha256:c6d13166af6a97fd2ef859d3414fa1e9211da153cab426cf46408fa6aa6d4af3"
     },
     {
       "source": "interface-craft:design-engineering",

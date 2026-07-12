@@ -22,6 +22,44 @@ import {
   writeWorkflowLockFile,
 } from "../src/runtimes/omniskill/workflow-bundles";
 
+const startupRoleContracts = [
+  { role: "ceo", phrases: ["State the company decision", "smallest evidence-gathering move"] },
+  { role: "product-manager", phrases: ["Write acceptance criteria", "visible product progress"] },
+  { role: "cto", phrases: ["technical trajectory", "verification gate"] },
+  {
+    role: "engineering-manager",
+    phrases: ["smallest shippable result", "verifiable repository state"],
+  },
+  {
+    role: "founding-engineer",
+    phrases: ["Read the plan", "superpowers:verification-before-completion"],
+  },
+  { role: "qa-lead", phrases: ["Restate the user-visible behavior", "Separate verified facts"] },
+  {
+    role: "web-design",
+    phrases: [
+      "interface-craft:motion-review` on every changed animation",
+      "Before | After | Why",
+      "**Approve** or **Block**",
+    ],
+  },
+] as const;
+
+const readStartupRoleSkill = (role: string) =>
+  readFile(
+    join(
+      import.meta.dir,
+      "..",
+      "examples",
+      "workflows",
+      "startup-goal",
+      "skills",
+      role,
+      "SKILL.md",
+    ),
+    "utf8",
+  );
+
 describe("workflow bundles", () => {
   test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
     const runtime = await import("../src/runtimes/omniskill/workflow-bundles");
@@ -355,81 +393,46 @@ describe("workflow bundles", () => {
       ]),
     );
     expect(skill).toContain("name: startup-goal");
-    expect(skill).toContain("approved requirement brief");
-    expect(skill).toContain("Treat a raw user requirement as incomplete");
-    expect(skill).toContain("ask one question at a time");
-    expect(skill).toContain("without open questions or ambiguity");
-    expect(skill).toContain("If the user says `run it`, `process`, `continue`");
-    expect(skill).toContain("Only after the user explicitly approves that brief");
-    expect(skill).toContain("Lazy Routing Gate");
-    expect(skill).toContain("Lazy means deliberate, not role-starved");
-    expect(skill).toContain("Default to broad startup-operating coverage");
-    expect(skill).toContain("Do not default to one or two roles");
-    expect(skill).toContain("Skipped roles are exceptions, not savings targets");
-    expect(skill).toContain("Visible Processing Contract");
-    expect(skill).toContain("Never make the lazy path invisible");
-    expect(skill).toContain("controls pacing and role");
-    expect(skill).toContain("Processing plan");
-    expect(skill).toContain("Active roles");
-    expect(skill).toContain("Skipped roles");
-    expect(skill).toContain("Completed role outputs");
+    for (const heading of [
+      "## 1. Clarify",
+      "## 2. Approve",
+      "## 3. Route",
+      "## 4. Dispatch",
+      "## 5. Combine",
+    ]) {
+      expect(skill).toContain(heading);
+    }
+    expect(skill).toContain("one material question at a time");
+    expect(skill).toContain("explicit approval");
+    expect(skill).toContain("smallest safe role set");
+    expect(skill).toContain("Present the route plan and wait for explicit approval");
+    expect(skill).toContain("Every run must show");
+    expect(skill).toContain("Skipped roles, including `none`");
+    expect(skill).toContain("one role-scoped subagent per selected role");
     expect(skill).toContain("Unavailable dispatch");
-    expect(skill).toContain("Dispatch a separate role-scoped subagent");
-    expect(skill).toContain("Wait for all dispatched role subagents to finish");
-    expect(skill).toContain("Combine the role outputs into one owner-facing decision log");
-    expect(skill).toContain("Recommend the next action from the combined result");
+    expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");
-    expect(skill).toContain("customer-facing web interface");
-    expect(skill).toContain("backend-only");
+
+    for (const { role } of startupRoleContracts) {
+      const roleSkill = await readStartupRoleSkill(role);
+      for (const contract of ["## Use When", "## Companions", "## Do", "## Return"]) {
+        expect(roleSkill).toContain(contract);
+      }
+      expect(roleSkill).toMatch(/- (Decision|Change):/);
+      for (const field of ["Evidence", "Risk", "Handoff"]) {
+        expect(roleSkill).toContain(`- ${field}:`);
+      }
+    }
   });
 
   test("startup goal bundled role skills define role-specific operating modes", async () => {
-    const skillsDir = join(
-      import.meta.dir,
-      "..",
-      "examples",
-      "workflows",
-      "startup-goal",
-      "skills",
-    );
-    const roleContracts = [
-      {
-        role: "ceo",
-        phrases: ["State the company-level decision", "smallest evidence-gathering step"],
-      },
-      {
-        role: "product-manager",
-        phrases: ["Write acceptance criteria", "visible product progress"],
-      },
-      {
-        role: "cto",
-        phrases: ["technical trajectory", "verification gate"],
-      },
-      {
-        role: "engineering-manager",
-        phrases: ["smallest shippable outcome", "verifiable state"],
-      },
-      {
-        role: "founding-engineer",
-        phrases: ["Read the plan", "commands run, files changed, and any residual risk"],
-      },
-      {
-        role: "qa-lead",
-        phrases: ["Restate the user-facing behavior", "Separate verified facts"],
-      },
-      {
-        role: "web-design",
-        phrases: ["Before | After | Why", "**Approve** or **Block**"],
-      },
-    ];
-
-    for (const contract of roleContracts) {
-      const skill = await readFile(join(skillsDir, contract.role, "SKILL.md"), "utf8");
+    for (const contract of startupRoleContracts) {
+      const skill = await readStartupRoleSkill(contract.role);
 
       expect(skill).toContain(`name: ${contract.role}`);
-      expect(skill).toContain("## Required Companion Skills");
-      expect(skill).toContain("If a companion skill is unavailable");
-      expect(skill).toContain("## Operating Mode");
+      expect(skill).toContain("## Companions");
+      expect(skill).toContain("If one is unavailable, stop and name it.");
+      expect(skill).toContain("## Do");
       for (const phrase of contract.phrases) {
         expect(skill).toContain(phrase);
       }
