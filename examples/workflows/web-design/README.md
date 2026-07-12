@@ -1,4 +1,4 @@
-# Web Design Omniskill Workflow
+# Web Design Omniskills Workflow
 
 Use this workflow when an agent should set an implementable web-interface
 direction and review visual craft and animations using Emil Kowalski's skills.

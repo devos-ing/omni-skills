@@ -1,6 +1,6 @@
-# Omniskill 登陸頁內容
+# Omniskills 登陸頁內容
 
-這是 Omniskill landing page 的 agent-readable 繁體中文 Markdown 鏡像。
+這是 Omniskills landing page 的 agent-readable 繁體中文 Markdown 鏡像。
 
 Runtime source of truth：`landing/lib/landing-content.ts`。
 
@@ -18,13 +18,13 @@ Power your ability.
 Install the workflow.
 ```
 
-Body：Omniskill 是給 AI agents 使用的 many-skill bank。安裝一個 workflow skill
+Body：Omniskills 是給 AI agents 使用的 many-skill bank。安裝一個 workflow skill
 tree，帶著 goal 呼叫一個 entry skill，讓 agent 取得能 3x your ability 的 roles、playbooks、verification habits。
 
 Primary command preview：
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Primary action：Browse workflows。
@@ -102,7 +102,7 @@ Completion copy：Workflow complete - all 6 role steps returned. Startup answer 
 
 Section label：Workflow Registry。
 
-Heading：Pick an Omniskill workflow。
+Heading：Pick an Omniskills workflow。
 
 Body：瀏覽可安裝的 workflow bundles，然後打開 detail route 查看 role map、skill tree、copyable install command。
 
@@ -114,12 +114,12 @@ Search placeholder：Search workflows, skills, tags...
 - tag: Goal
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
-- accent: `text-violet-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskills@latest install startup-goal
 ```
 
 Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、EM、founding engineer、QA lead。
@@ -134,12 +134,12 @@ Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `p
 - tag: Strategy
 - entry skill: `$ceo`
 - avatar seed: `sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a`
-- accent: `text-rose-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/ceo`
 - install:
 
 ```bash
-npx omniskill@latest install ceo
+npx omniskills@latest install ceo
 ```
 
 Description：Founder-level strategy，處理 direction、hard tradeoffs、fundraising/customer framing、company decisions。
@@ -154,12 +154,12 @@ Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:decision-mappi
 - tag: Architecture
 - entry skill: `$cto`
 - avatar seed: `sha256:644afba52d60f4bbcf9a608c6ead98688650e9fc3f8ed0a63ac0d30ca4931156`
-- accent: `text-sky-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/cto`
 - install:
 
 ```bash
-npx omniskill@latest install cto
+npx omniskills@latest install cto
 ```
 
 Description：Technical leadership，處理 architecture、domain model、platform direction、engineering risk。
@@ -174,12 +174,12 @@ Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；A
 - tag: Product
 - entry skill: `$product-manager`
 - avatar seed: `sha256:c0c7094ce1e2d9c614bd9939d9a379f488d809b0316d568017f584263f1eab8f`
-- accent: `text-emerald-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/product-manager`
 - install:
 
 ```bash
-npx omniskill@latest install product-manager
+npx omniskills@latest install product-manager
 ```
 
 Description：Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。
@@ -194,12 +194,12 @@ Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:bra
 - tag: Delivery
 - entry skill: `$engineering-manager`
 - avatar seed: `sha256:70d97c45ac61d3774317681dc7ae318126e14a3d0b19f00183d8227ca0fb1071`
-- accent: `text-amber-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/engineering-manager`
 - install:
 
 ```bash
-npx omniskill@latest install engineering-manager
+npx omniskills@latest install engineering-manager
 ```
 
 Description：Delivery sequencing、execution risk、quality gates、blocker triage、engineering process。
@@ -214,12 +214,12 @@ Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writi
 - tag: Build
 - entry skill: `$founding-engineer`
 - avatar seed: `sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078`
-- accent: `text-fuchsia-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/founding-engineer`
 - install:
 
 ```bash
-npx omniskill@latest install founding-engineer
+npx omniskills@latest install founding-engineer
 ```
 
 Description：Implementation lane，聚焦 smallest correct change：tests、debugging、review、verification。
@@ -234,12 +234,12 @@ Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；T
 - tag: Quality
 - entry skill: `$qa-lead`
 - avatar seed: `sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53`
-- accent: `text-cyan-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/qa-lead`
 - install:
 
 ```bash
-npx omniskill@latest install qa-lead
+npx omniskills@latest install qa-lead
 ```
 
 Description：Release-risk lens，處理 acceptance checks、regression focus、reproduction gaps、verification evidence。
@@ -254,12 +254,12 @@ Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:review`；Debug 
 - tag: Meme
 - entry skill: `$haaland`
 - avatar seed: `sha256:d10bf16eca98054b3a23bbe0aac21ccb00e7f904c5f3b1c3480bb1009c575583`
-- accent: `text-lime-300`
+- accent: `text-[#c83c24]`
 - source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/haaland`
 - install:
 
 ```bash
-npx omniskill@latest install haaland
+npx omniskills@latest install haaland
 ```
 
 Description：一個 one-shot JTS meme workflow，用於 football-finisher caption、parody post concept、original Haaland profile icon asset。
@@ -275,18 +275,18 @@ Section label：Common commands。
 Heading：Get up and running fast。
 
 Body：可透過 alias、public git URL 或 local path 安裝。CLI 會 validate workflow manifest、從 workflow
-metadata bootstrap missing external skills，並預設把 installed Omniskill workflows 記錄在
-`~/.omniskill/workflows/`。Loop-enabled workflows 使用 `omniskill loop` 管理 resumable、action-only state。
+metadata bootstrap missing external skills，並預設把 installed Omniskills workflows 記錄在
+`~/.getsuperpower/workflows/`。Loop-enabled workflows 使用 `omniskills loop` 管理 resumable、action-only state。
 
 ```bash
-npx omniskill@latest install startup-goal
-npx omniskill@latest deps startup-goal
-npx omniskill@latest lock examples/workflows/startup-goal
-npx omniskill@latest loop status grilled-product-dev --latest --json
-npx omniskill@latest init my-workflow
-npx omniskill@latest validate my-workflow
-npx omniskill@latest list
-npx omniskill@latest remove startup-goal
+npx omniskills@latest install startup-goal
+npx omniskills@latest deps startup-goal
+npx omniskills@latest lock examples/workflows/startup-goal
+npx omniskills@latest loop status grilled-product-dev --latest --json
+npx omniskills@latest init my-workflow
+npx omniskills@latest validate my-workflow
+npx omniskills@latest list
+npx omniskills@latest remove startup-goal
 ```
 
 Then invoke in your agent：
@@ -306,14 +306,14 @@ Then invoke in your agent：
 
 Badge：Author your own workflow。
 
-Heading：Package your workflow as an Omniskill workflow。
+Heading：Package your workflow as an Omniskills workflow。
 
 Body：scaffold a bundle、define the entry skill、在 workflow.json 中列出 sub-skills、validate、share。Authoring guide 會讓 skill tree 保持對齊。
 
 Command：
 
 ```bash
-npx omniskill@latest init my-workflow
+npx omniskills@latest init my-workflow
 ```
 
 Author guide：

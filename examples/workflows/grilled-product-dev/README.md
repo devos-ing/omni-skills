@@ -1,6 +1,6 @@
-# Grilled Product Dev Omniskill Workflow
+# Grilled Product Dev Omniskills Workflow
 
-This example Omniskill workflow is for product-development requests that are still a
+This example Omniskills workflow is for product-development requests that are still a
 little soft. It uses Matt Pocock's `grilling` skill first to pressure-test the
 idea, then hands the approved direction to Superpowers for design and planning.
 
@@ -31,8 +31,8 @@ the agent still performs the work and decides whether the evidence is good
 enough to advance.
 
 The generated runner is written into the installed entry skill during
-`omniskill install`. Loop state lives under
-`~/.omniskill/runs/grilled-product-dev/<run-id>/`, and the runtime only
+`omniskills install`. Loop state lives under
+`~/.getsuperpower/runs/grilled-product-dev/<run-id>/`, and the runtime only
 returns suggested actions. It never executes tools or shell commands for the
 agent.
 
@@ -44,14 +44,14 @@ $grilled-product-dev help me shape this product change
 
 ## Dependencies
 
-This Omniskill workflow combines one Matt Pocock skill with two Superpowers skills:
+This Omniskills workflow combines one Matt Pocock skill with two Superpowers skills:
 
 - `./skills/grilled-product-dev`
 - `mattpocock:grilling`
 - `superpowers:brainstorming`
 - `superpowers:writing-plans`
 
-`omniskill install` automatically uses the Skills CLI to fetch missing
+`omniskills install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, install the
 Matt Pocock skills package and retry:
 
@@ -61,7 +61,7 @@ bun run dev -- skills install mattpocock/skills
 
 ## Try It
 
-Validate this Omniskill workflow from the repo root:
+Validate this Omniskills workflow from the repo root:
 
 ```bash
 bun run dev -- validate examples/workflows/grilled-product-dev
@@ -79,7 +79,7 @@ Install it into a project:
 bun run dev -- install examples/workflows/grilled-product-dev
 ```
 
-Try the loop runtime through the Omniskill CLI:
+Try the loop runtime through the Omniskills CLI:
 
 ```bash
 bun run dev -- loop start examples/workflows/grilled-product-dev --json
@@ -87,7 +87,7 @@ bun run dev -- loop status examples/workflows/grilled-product-dev --latest --jso
 ```
 
 The installed `loop.mjs` remains runnable with plain Node for compatibility, but
-agents should use `omniskill loop ...`.
+agents should use `omniskills loop ...`.
 
 Restart the agent app after install so the `$grilled-product-dev` entry skill
 and its sub-skills are available.

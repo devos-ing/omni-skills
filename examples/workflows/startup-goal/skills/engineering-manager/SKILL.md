@@ -14,7 +14,7 @@ execute.
 - `superpowers:writing-plans` for concrete implementation plans.
 - `mattpocock:tdd` for test-first implementation strategy.
 - `mattpocock:diagnosing-bugs` for blocker triage.
-- `mattpocock:review` for delivery and code-review risk.
+- `mattpocock:code-review` for delivery and code-review risk.
 
 If a companion skill is unavailable, stop and tell the coordinator which
 dependency is missing.

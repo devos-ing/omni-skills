@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "development-design-delivery",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:11:48.570Z",
+  "skills": [
+    {
+      "source": "./skills/development-design-delivery",
+      "resolvedName": "development-design-delivery",
+      "kind": "local",
+      "hash": "sha256:3c0a3e6c489bd165e0faed390ba79bf781219b2ef6df2efbe7971288683a4267"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+    },
+    {
+      "source": "mattpocock:prototype",
+      "resolvedName": "prototype",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:9d6395e1df1bbdc6887f7253174d379c7841cfd0e85538bda69ed2dbadccf489"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "resolvedName": "grill-with-docs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:a7e2ffc2e216483f140c486c5e1b5e3e66d6ca7cf47980357069b21887645069"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:452bfb044551a8177528b7df68e204e6a77b8a7f89daa741ef659f652c441376"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+    },
+    {
+      "source": "mattpocock:code-review",
+      "resolvedName": "code-review",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
+    },
+    {
+      "source": "pony-trail",
+      "resolvedName": "pony-trail",
+      "kind": "external",
+      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
+    }
+  ]
+}

@@ -1,42 +1,42 @@
 {
   "schemaVersion": "0.1",
   "workflow": "product-manager",
-  "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-07T12:15:33.921Z",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:12:50.569Z",
   "skills": [
     {
       "source": "./skills/product-manager",
       "resolvedName": "product-manager",
       "kind": "local",
-      "hash": "sha256:c0c7094ce1e2d9c614bd9939d9a379f488d809b0316d568017f584263f1eab8f"
+      "hash": "sha256:4d0db8b9f5e72b0b8708685ad2d4998373454719efea402f60f81fc1ca877970"
     },
     {
       "source": "superpowers:brainstorming",
       "resolvedName": "superpowers-brainstorming",
       "kind": "external",
       "repo": "obra/superpowers",
-      "hash": "sha256:9d82390ff4b859cc1c9a3a4bcc9a548dc60587ebebbf44a1df8b48fff5d5020f"
+      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
     },
     {
-      "source": "mattpocock:to-prd",
-      "resolvedName": "to-prd",
+      "source": "mattpocock:to-spec",
+      "resolvedName": "to-spec",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:f5a4c297fd4a5fa0370a1ec2a92acd55f1c8f2647982cedf5b359ecdcc61d0f4"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:1cf05443c48f01b135983e7382cbb1cfed1b54b0caf5bd400067632355f15726"
     },
     {
-      "source": "mattpocock:to-issues",
-      "resolvedName": "to-issues",
+      "source": "mattpocock:to-tickets",
+      "resolvedName": "to-tickets",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:a8f15faddfb49ce73ae581ed91447285037de158bcc1911e02c5a7b9c1d004e3"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:49679c184e8970591136c431ba4fa00a4890aff23a2701c194465f79007a23c9"
     },
     {
       "source": "superpowers:writing-plans",
       "resolvedName": "superpowers-writing-plans",
       "kind": "external",
       "repo": "obra/superpowers",
-      "hash": "sha256:8a8ea7693023742a048a23a7da0255031bc13ee03c80c1f01d400cab99fbbd84"
+      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
     }
   ]
 }

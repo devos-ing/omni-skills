@@ -2,8 +2,8 @@
 set -euo pipefail
 
 command_name="${1:-install}"
-alias_name="${OMNISKILL_DEV_ALIAS:-omniskill-dev}"
-bin_dir="${OMNISKILL_DEV_BIN_DIR:-${HOME}/.local/bin}"
+alias_name="${OMNISKILLS_DEV_ALIAS:-${OMNISKILL_DEV_ALIAS:-omniskills-dev}}"
+bin_dir="${OMNISKILLS_DEV_BIN_DIR:-${OMNISKILL_DEV_BIN_DIR:-${HOME}/.local/bin}}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
 target="${bin_dir}/${alias_name}"
@@ -13,8 +13,9 @@ usage() {
 Usage: scripts/dev-cli-alias.sh <install|uninstall|status>
 
 Environment:
-  OMNISKILL_DEV_ALIAS    Command name to create. Default: omniskill-dev
-  OMNISKILL_DEV_BIN_DIR  Bin directory to write into. Default: ~/.local/bin
+  OMNISKILLS_DEV_ALIAS    Command name to create. Default: omniskills-dev
+  OMNISKILLS_DEV_BIN_DIR  Bin directory to write into. Default: ~/.local/bin
+  OMNISKILL_DEV_ALIAS and OMNISKILL_DEV_BIN_DIR remain supported as legacy aliases.
 USAGE
 }
 

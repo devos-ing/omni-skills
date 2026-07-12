@@ -1,8 +1,8 @@
 {
   "schemaVersion": "0.1",
   "name": "startup-goal",
-  "version": "0.1.3",
-  "description": "Install the core startup operating roles as one goal-oriented Omniskill workflow: CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
+  "version": "0.1.4",
+  "description": "Install the core startup operating roles as one goal-oriented Omniskills workflow: CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
   "skills": [
     {
       "source": "./skills/startup-goal",
@@ -58,40 +58,40 @@
       "repo": "obra/superpowers"
     },
     {
-      "source": "mattpocock:decision-mapping",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:wayfinder",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:grill-with-docs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "mattpocock:to-prd",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:to-spec",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "mattpocock:to-issues",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:to-tickets",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:codebase-design",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:domain-modeling",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:tdd",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "mattpocock:review",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:code-review",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "implement"

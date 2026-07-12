@@ -1,25 +1,12 @@
 "use client";
 
-import { ArrowRight, Check, Copy, Github, Search, Workflow, X, Zap } from "lucide-react";
+import { ArrowRight, Check, Copy, Github, Search, X, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  type AgentBadgeContent,
-  agents,
-  commands,
-  githubUrl,
-  workflows,
-} from "../lib/landing-content";
+import { commands, githubUrl, workflows } from "../lib/landing-content";
+import { Reveal } from "./reveal";
 import { TerminalBlock } from "./terminal-block";
 import { WorkflowCard } from "./workflow-card";
 import { WorkflowRunDemo } from "./workflow-run-demo";
-
-const agentLogoStyles: Record<AgentBadgeContent["id"], string> = {
-  claude: "border-orange-200/15 bg-orange-300/10 text-orange-200",
-  codex: "border-emerald-200/15 bg-emerald-300/10 text-emerald-200",
-  cursor: "border-white/15 bg-white/[0.06] text-white/80",
-  opencode: "border-sky-200/15 bg-sky-300/10 text-sky-200",
-  "github-copilot": "border-violet-200/15 bg-violet-300/10 text-violet-200",
-};
 
 interface LandingPageProps {
   githubStarsLabel?: string;
@@ -50,7 +37,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   }, [query]);
 
   const active = commands[activeCommand] ?? commands[0];
-  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-goal";
+  const heroInstallCommand = commands[0]?.command ?? "npx omniskills@latest install startup-goal";
 
   function copyCommand(command: (typeof commands)[number], index: number) {
     setActiveCommand(index);
@@ -62,25 +49,25 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#080808] text-white">
-      <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+    <main className="min-h-screen overflow-hidden bg-[#f6f4ef] text-[var(--ink)]">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <a href="#top" className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent)] text-white">
             <Zap size={14} />
           </span>
-          <span className="text-sm font-medium text-white/90">Omniskill</span>
+          <span className="text-sm font-semibold text-[var(--ink)]">Omniskills</span>
         </a>
-        <div className="flex items-center gap-5 text-sm text-white/50">
-          <a href="#workflows" className="transition hover:text-white/80">
+        <div className="flex items-center gap-4 text-sm text-[var(--body)] sm:gap-6">
+          <a href="#workflows" className="transition-colors hover:text-[var(--ink)]">
             Workflows
           </a>
-          <a href="#install" className="transition hover:text-white/80">
+          <a href="#install" className="transition-colors hover:text-[var(--ink)]">
             Install
           </a>
           <a
             href={githubUrl}
             aria-label={`Open GitHub repository, ${githubStarsLabel}`}
-            className="inline-flex items-center gap-1.5 transition hover:text-white/80"
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--ink)]"
           >
             <Github size={15} />
             <span className="hidden sm:inline">{githubStarsLabel}</span>
@@ -88,147 +75,117 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </nav>
 
-      <section id="top" className="relative z-10 mx-auto max-w-4xl px-5 pb-20 pt-20 text-center">
-        <div className="mb-8 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/55">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-          <span className="truncate">
-            Works with Claude, Codex, Cursor, opencode, and GitHub Copilot
-          </span>
-        </div>
-        <h1 className="text-5xl font-semibold leading-[1.05] text-white sm:text-6xl lg:text-7xl">
-          Power your ability.
-          <br />
-          Install the workflow.
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/48">
-          Omniskill is a many-skill bank for AI agents. Install one workflow skill tree, call one
-          entry skill with a goal, and give your agent the roles, playbooks, and verification habits
-          that 3x your ability.
-        </p>
-        <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-          <div className="min-w-0 sm:min-w-[24rem]">
+      <section id="top" className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pb-20 sm:pt-20">
+        <Reveal className="motion-masthead" index={0}>
+          <p className="mb-5 max-w-xl text-sm font-medium text-[var(--muted)]">
+            Workflow skill trees for Claude, Codex, Cursor, opencode, and GitHub Copilot.
+          </p>
+        </Reveal>
+        <Reveal className="motion-masthead" index={1}>
+          <h1 className="max-w-[13ch] text-[clamp(2.75rem,7vw,5.75rem)] font-semibold leading-[0.98] tracking-[-0.04em] text-[var(--ink)]">
+            Power your ability. Install the workflow.
+          </h1>
+        </Reveal>
+        <Reveal className="motion-masthead" index={2}>
+          <p className="mt-7 max-w-[62ch] text-base leading-7 text-[var(--body)] sm:text-lg sm:leading-8">
+            Omniskills is a many-skill bank for AI agents. Install one workflow skill tree, call one
+            entry skill with a goal, and give your agent the roles, playbooks, and verification
+            habits that 3x your ability.
+          </p>
+        </Reveal>
+        <Reveal className="motion-masthead" index={3}>
+          <div className="mt-9 grid max-w-3xl gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <TerminalBlock
               compact
               copyText={heroInstallCommand}
               copyLabel="Copy startup-goal install command"
               lines={[{ prefix: "$", text: heroInstallCommand }]}
             />
-          </div>
-          <a
-            href="#workflows"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-400"
-          >
-            Browse workflows
-            <ArrowRight size={14} />
-          </a>
-        </div>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
-          {agents.map((agent) => (
-            <span
-              key={agent.id}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] py-1 pl-1 pr-2.5 text-xs text-white/52"
+            <a
+              href="#workflows"
+              className="editorial-control inline-flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white hover:bg-[var(--accent-pressed)]"
             >
-              {agent.logoSrc ? (
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${agentLogoStyles[agent.id]}`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-3.5 w-3.5 bg-current"
-                    style={{
-                      WebkitMask: `url(${agent.logoSrc}) center / contain no-repeat`,
-                      mask: `url(${agent.logoSrc}) center / contain no-repeat`,
-                    }}
-                  />
-                </span>
-              ) : null}
-              <span>{agent.name}</span>
-            </span>
-          ))}
-        </div>
+              Browse workflows
+              <ArrowRight size={14} />
+            </a>
+          </div>
+        </Reveal>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-10 grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
-          <div>
-            <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">Agent run demo</p>
-            <h2 className="text-3xl font-medium text-white/90">See where startup-goal fits.</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/42">
-              Pick a real startup situation, then simulate calling{" "}
-              <code className="text-white/60">/startup-goal</code> in an agent workbench. The entry
-              skill records the intake, approval gate, role routing, handoffs, and combined next
-              action.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/38">
-            <Zap size={14} className="shrink-0 text-violet-200/70" />
-            <span>Landing simulation only. No browser-side agent execution or fake telemetry.</span>
-          </div>
-        </div>
+      <section
+        id="workflow-example"
+        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+          Workflow in motion
+        </p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)]">
+          See startup-goal coordinate the work.
+        </h2>
+        <p className="mb-8 mt-4 max-w-2xl text-sm leading-6 text-[var(--body)]">
+          Watch a real startup situation move through{" "}
+          <code className="font-medium text-[var(--ink)]">/startup-goal</code>: intake, approval,
+          role routing, handoffs, and one combined next action.
+        </p>
         <WorkflowRunDemo />
       </section>
 
-      <section id="workflows" className="relative z-10 mx-auto max-w-6xl px-5 py-20">
-        <div className="mb-8">
-          <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">
-            Workflow Registry
-          </p>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-end">
-            <div>
-              <h2 className="text-3xl font-medium text-white/90">Pick an Omniskill workflow</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/42">
-                Browse installable workflow bundles, then open a detail route for the role map,
-                skill tree, and copyable install command.
-              </p>
-            </div>
-            <div className="relative">
-              <Search
-                size={15}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30"
-              />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search workflows, skills, tags..."
-                className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-sm text-white/80 outline-none transition placeholder:text-white/25 focus:border-violet-400/50"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 transition hover:text-white/70"
-                >
-                  <X size={14} />
-                </button>
-              ) : null}
-            </div>
+      <section
+        id="workflows"
+        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
+      >
+        <div className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+              Workflow Registry
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)] sm:text-4xl">
+              Pick an Omniskills workflow
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--body)]">
+              Browse installable workflow bundles, then open a detail route for the role map, skill
+              tree, and copyable install command.
+            </p>
+          </div>
+          <div className="relative">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]"
+            />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search workflows, skills, tags..."
+              className="w-full rounded-md border border-[var(--rule)] bg-white py-3 pl-9 pr-9 text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear workflow search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
           </div>
         </div>
-
-        <div className="overflow-hidden rounded-lg border border-white/10">
-          <div className="hidden grid-cols-[minmax(0,1fr)_auto] gap-4 border-b border-white/10 bg-white/[0.02] px-4 py-2.5 md:grid">
-            <span className="text-xs uppercase tracking-[0.18em] text-white/25">Workflow</span>
-            <span className="text-right text-xs uppercase tracking-[0.18em] text-white/25">
-              Detail
-            </span>
-          </div>
-
-          <div className="divide-y divide-white/10">
-            {filteredWorkflows.map((workflow) => (
-              <WorkflowCard key={workflow.slug} {...workflow} />
-            ))}
-          </div>
-
+        <div className="border-t border-[var(--rule)]">
+          {filteredWorkflows.map((workflow, index) => (
+            <Reveal key={workflow.slug} className="motion-registry-row" index={Math.min(index, 5)}>
+              <WorkflowCard {...workflow} />
+            </Reveal>
+          ))}
           {filteredWorkflows.length === 0 ? (
-            <div className="px-5 py-14 text-center text-white/35">
-              <Search size={26} className="mx-auto mb-3 opacity-45" />
+            <div className="border-b border-[var(--rule)] px-5 py-14 text-center text-[var(--body)]">
+              <Search size={26} className="mx-auto mb-3 text-[var(--faint)]" />
               <p className="text-sm">
-                No workflows match <span className="text-white/55">"{query}"</span>
+                No workflows match <span className="font-medium text-[var(--ink)]">"{query}"</span>
               </p>
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="mt-3 text-xs text-violet-300 transition hover:text-violet-200"
+                className="editorial-control mt-3 text-sm font-medium text-[var(--accent-pressed)]"
               >
                 Clear search
               </button>
@@ -237,56 +194,48 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </section>
 
-      <section id="install" className="relative z-10 mx-auto max-w-6xl px-5 py-20">
+      <section
+        id="install"
+        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
+      >
         <div className="grid items-start gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/32">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               Common commands
             </p>
-            <h2 className="mb-4 text-3xl font-medium text-white/90">Get up and running fast</h2>
-            <p className="mb-8 text-sm leading-6 text-white/45">
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)]">
+              Get up and running fast
+            </h2>
+            <p className="mb-8 mt-4 text-sm leading-6 text-[var(--body)]">
               Install by alias, public git URL, or local path. The CLI validates the workflow
               manifest, bootstraps missing external skills from workflow metadata, and records
-              installed Omniskill workflows under{" "}
-              <code className="text-white/65">~/.omniskill/workflows/</code> by default.
-              Loop-enabled workflows use <code className="text-white/65">omniskill loop</code> for
-              resumable, action-only state.
+              installed Omniskills workflows under{" "}
+              <code className="font-medium text-[var(--ink)]">~/.getsuperpower/workflows/</code> by
+              default. Loop-enabled workflows use{" "}
+              <code className="font-medium text-[var(--ink)]">omniskills loop</code> for resumable,
+              action-only state.
             </p>
-            <div className="space-y-2">
+            <div className="border-t border-[var(--rule)]">
               {commands.map((command, index) => (
                 <button
                   key={command.label}
                   type="button"
                   onClick={() => copyCommand(command, index)}
                   aria-label={`Copy command: ${command.command}`}
-                  className={`group w-full cursor-copy rounded-lg border px-4 py-3 text-left text-sm transition ${
-                    activeCommand === index
-                      ? "border-violet-400/45 bg-violet-400/10 text-white/85"
-                      : "border-white/10 bg-white/[0.025] text-white/45 hover:border-white/20 hover:text-white/70"
-                  }`}
+                  className={`editorial-control group w-full cursor-copy border-b border-[var(--rule)] px-3 py-4 text-left ${activeCommand === index ? "bg-white" : "bg-transparent"}`}
                 >
                   <span className="flex items-start justify-between gap-3">
                     <span className="min-w-0">
-                      <span className="block">{command.label}</span>
-                      <code
-                        className={`mt-1 block break-words font-mono text-xs ${
-                          activeCommand === index
-                            ? "text-white/55"
-                            : "text-white/30 group-hover:text-white/50"
-                        }`}
-                      >
+                      <span className="block text-sm font-medium text-[var(--ink)]">
+                        {command.label}
+                      </span>
+                      <code className="mt-1 block break-words font-mono text-xs leading-5 text-[var(--muted)]">
                         {command.command}
                       </code>
                     </span>
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition ${
-                        activeCommand === index
-                          ? "border-violet-300/25 text-violet-100/70"
-                          : "border-white/10 text-white/35 group-hover:border-white/20 group-hover:text-white/65"
-                      }`}
-                    >
+                    <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-[var(--body)]">
                       {copiedCommandIndex === index ? (
-                        <Check size={12} className="text-emerald-300" />
+                        <Check size={12} className="text-emerald-700" />
                       ) : (
                         <Copy size={12} />
                       )}
@@ -297,13 +246,13 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
               ))}
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             <TerminalBlock
               copyText={active.command}
               lines={[{ prefix: "$", text: active.command }]}
             />
-            <div className="rounded-lg border border-white/10 bg-white/[0.025] p-5">
-              <p className="mb-3 text-xs uppercase tracking-[0.18em] text-white/35">
+            <div className="border-t border-[var(--rule)] pt-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Then invoke in your agent
               </p>
               <TerminalBlock
@@ -339,58 +288,56 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-5 py-16">
-        <div className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.025] p-8 text-center sm:p-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-400/10 px-3 py-1.5 text-xs text-violet-200">
-            <Workflow size={12} />
-            Author your own workflow
+      <section className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.8fr)] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+              Author your own workflow
+            </p>
+            <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)]">
+              Package your workflow as an Omniskills workflow
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--body)]">
+              Scaffold a bundle, define the entry skill, list sub-skills in workflow.json, validate,
+              and share.
+            </p>
           </div>
-          <h2 className="mb-3 text-3xl font-medium text-white/90">
-            Package your workflow as an Omniskill workflow
-          </h2>
-          <p className="mx-auto mb-8 max-w-xl text-sm leading-6 text-white/45">
-            Scaffold a bundle, define the entry skill, list sub-skills in workflow.json, validate,
-            and share. The authoring guide keeps the skill tree aligned.
-          </p>
-          <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="space-y-3">
             <TerminalBlock
-              copyText="npx omniskill@latest init my-workflow"
-              lines={[
-                {
-                  prefix: "$",
-                  text: "npx omniskill@latest init my-workflow",
-                },
-              ]}
+              copyText="npx omniskills@latest init my-workflow"
+              lines={[{ prefix: "$", text: "npx omniskills@latest init my-workflow" }]}
             />
             <a
               href={`${githubUrl}/blob/main/docs/workflow-author-guide.md`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-5 py-3 text-sm text-white/62 transition hover:border-white/20 hover:text-white/85"
+              className="editorial-control inline-flex items-center gap-2 text-sm font-medium text-[var(--body)] hover:text-[var(--ink)]"
             >
-              Author guide
-              <ArrowRight size={14} />
+              Author guide <ArrowRight size={14} />
             </a>
           </div>
         </div>
       </section>
 
-      <footer className="relative z-10 mx-auto max-w-6xl border-t border-white/10 px-5 py-8">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-2 text-sm text-white/35">
-            <span className="flex h-5 w-5 items-center justify-center rounded bg-violet-500">
+      <footer className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--body)]">
+            <span className="flex h-5 w-5 items-center justify-center rounded bg-[var(--accent)]">
               <Zap size={10} className="text-white" />
             </span>
-            Omniskill
+            Omniskills
           </div>
-          <div className="flex items-center gap-6 text-xs text-white/30">
-            <a href={githubUrl} className="transition hover:text-white/60">
+          <div className="flex items-center gap-6 text-xs font-medium text-[var(--muted)]">
+            <a href={githubUrl} className="transition-colors hover:text-[var(--ink)]">
               GitHub
             </a>
-            <a href={`${githubUrl}/blob/main/README.md`} className="transition hover:text-white/60">
+            <a
+              href={`${githubUrl}/blob/main/README.md`}
+              className="transition-colors hover:text-[var(--ink)]"
+            >
               Docs
             </a>
             <a
               href={`${githubUrl}/blob/main/docs/workflow-author-guide.md`}
-              className="transition hover:text-white/60"
+              className="transition-colors hover:text-[var(--ink)]"
             >
               Author Guide
             </a>

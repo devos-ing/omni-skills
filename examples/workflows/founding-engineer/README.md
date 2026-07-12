@@ -1,4 +1,4 @@
-# Founding Engineer Omniskill Workflow
+# Founding Engineer Omniskills Workflow
 
 Use this workflow when an agent should act as a startup founding engineer:
 implement the plan, keep tests close to the change, debug failures, and verify

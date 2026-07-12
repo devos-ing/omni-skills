@@ -38,14 +38,15 @@ describe("package metadata", () => {
   test("builds and publishes a bundled CLI binary", async () => {
     const packageMetadata = await readPackageMetadata();
 
-    expect(packageMetadata.name).toBe("omniskill");
+    expect(packageMetadata.name).toBe("omniskills");
     expect(packageMetadata.version).toBe("0.5.0");
     expect(packageMetadata.scripts?.build).toBe(
       "bun build --target=node --outfile=dist/cli.js src/cli.ts",
     );
     expect(packageMetadata.scripts?.prepack).toBe("bun run build");
-    expect(Object.keys(packageMetadata.bin ?? {})).toEqual(["omniskill"]);
-    expect(packageMetadata.bin?.omniskill).toBe("dist/cli.js");
+    expect(Object.keys(packageMetadata.bin ?? {})).toEqual(["omniskills", "getsuperpower"]);
+    expect(packageMetadata.bin?.omniskills).toBe("dist/cli.js");
+    expect(packageMetadata.bin?.getsuperpower).toBe("dist/cli.js");
     expect(packageMetadata.files).toContain("dist");
     expect(packageMetadata.files).toContain("bundled-skills");
     expect(packageMetadata.files).toContain("examples");

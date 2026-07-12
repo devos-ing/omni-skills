@@ -1,6 +1,8 @@
 import pc from "picocolors";
 
-export const OMNISKILL_ASCII_LOGO = ["OMNISKILL", "Skill trees for serious agent work."].join("\n");
+export const OMNISKILLS_ASCII_LOGO = ["OMNISKILLS", "Skill trees for serious agent work."].join(
+  "\n",
+);
 
 const OMNISKILL_WORDMARK_LINES = [
   " OOO  M   M N   N I SSSS K   K I L     L    SSS ",
@@ -17,7 +19,7 @@ function supportsWordmarkLogo(): boolean {
 }
 
 export function getOmniskillWordmarkLogo(): string {
-  if (!supportsWordmarkLogo()) return OMNISKILL_ASCII_LOGO;
+  if (!supportsWordmarkLogo()) return OMNISKILLS_ASCII_LOGO;
 
   const [top, high, mid, low, bottom] = OMNISKILL_WORDMARK_LINES;
   return [
@@ -27,7 +29,7 @@ export function getOmniskillWordmarkLogo(): string {
     pc.dim(low),
     pc.dim(bottom),
     pc.magenta("____"),
-    brand("OMNISKILL"),
+    brand("OMNISKILLS"),
     muted("Skill trees for serious agent work."),
   ].join("\n");
 }
@@ -83,12 +85,12 @@ export function getOmniskillInstallResultBox(input: {
 }): string {
   return brand(
     borderBox([
-      OMNISKILL_ASCII_LOGO,
+      OMNISKILLS_ASCII_LOGO,
       "",
-      `Omniskill installed: ${input.workflowName}`,
+      `Omniskills installed: ${input.workflowName}`,
       `Version: ${input.workflowVersion}`,
       `Skills installed: ${input.skillCount}`,
-      `Omniskill file: ${input.workflowFile}`,
+      `Omniskills file: ${input.workflowFile}`,
     ]),
   );
 }
@@ -97,18 +99,18 @@ export function rootHelpBanner(): string {
   return [
     getOmniskillWordmarkLogo(),
     "",
-    success("Welcome to Omniskill."),
+    success("Welcome to Omniskills."),
     "Install and author workflow skill trees for agent work.",
     "",
     label("Start:"),
-    `  ${commandText("omniskill init release-review")}`,
-    `  ${commandText("omniskill validate ./release-review")}`,
-    `  ${commandText("omniskill install openspec-superpowers")}`,
-    `  ${commandText("omniskill install ./release-review")}`,
+    `  ${commandText("omniskills init release-review")}`,
+    `  ${commandText("omniskills validate ./release-review")}`,
+    `  ${commandText("omniskills install openspec-superpowers")}`,
+    `  ${commandText("omniskills install ./release-review")}`,
     "",
     label("Inspect:"),
-    `  ${commandText("omniskill list")}`,
-    `  ${commandText("omniskill deps ./release-review")}`,
+    `  ${commandText("omniskills list")}`,
+    `  ${commandText("omniskills deps ./release-review")}`,
     "",
   ].join("\n");
 }

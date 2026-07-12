@@ -82,7 +82,7 @@ describe("CLI sandbox evaluation", () => {
       });
       const markdown = renderCliSandboxEvaluation(report);
 
-      expect(markdown).toContain("# Omniskill CLI Sandbox Evaluation");
+      expect(markdown).toContain("# Omniskills CLI Sandbox Evaluation");
       expect(markdown).toContain("## Performance Matrix");
       expect(markdown).toContain("## Accuracy Matrix");
       expect(markdown).toContain("## Token Spend Matrix");

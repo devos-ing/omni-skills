@@ -11,10 +11,10 @@ This file gives AI agents the short operating map for this repository.
 ### Architecture
 
 Bun + TypeScript CLI runtime for authoring, installing, and validating
-Omniskill workflow bundles.
+Omniskills workflow bundles.
 
 - `src/cli.ts` - thin Commander CLI shell.
-- `src/omniskill.ts` - primary Omniskill command module.
+- `src/omniskill.ts` - primary Omniskills command module.
 - `src/runtimes/omniskill/` - internal runtime for workflow
   manifests and install records; snapshot modules are paused from the public CLI.
 - `src/plugins/` - skill installer seam for bundled, local, Superpowers,
@@ -27,31 +27,31 @@ Omniskill workflow bundles.
 
 ```text
 Author or user request
-  -> omniskill CLI
+  -> omniskills CLI
   -> workflow manifest validation
   -> optional workflow.lock skill fingerprint validation
   -> skill dependency resolution
   -> Skills CLI bootstrap when needed
   -> agent skill target installs
-  -> .omniskill workflow records
+  -> .getsuperpower workflow records
 ```
 
 ## Module Boundaries
 
 - `src/cli.ts` must stay thin. It may parse commands, prompt users, print
   output, and call runtime or plugin interfaces. It must not own bundle rules.
-- `src/omniskill.ts` owns Omniskill command registration and skill
+- `src/omniskill.ts` owns Omniskills command registration and skill
   dependency bootstrap for install/deps/init/validate/lock/list/remove/onboard/loop.
 - `src/runtimes/omniskill/` owns workflow manifest schemas, scaffolding,
   lock files, install records, removal plans, and loop metadata.
 - `src/plugins/` is for skill resolution and target writes. Keep
   environment-specific behavior behind small interfaces.
-- Generated `.omniskill/` project workspaces are local runtime state. Do not
+- Generated `.getsuperpower/` project workspaces are local runtime state. Do not
   make source code depend on files generated during smoke tests.
 
-## Omniskill Rules
+## Omniskills Rules
 
-- An Omniskill workflow is a deployable bundle skills set with a `workflow.json`,
+- An Omniskills workflow is a deployable bundle skills set with a `workflow.json`,
   optional `workflow.lock.json`, README, and optional local skills.
 - Role workflows such as `startup-goal`, `cto`, `product-manager`, and
   `founding-engineer` are the primary public examples. Older workflows remain
@@ -59,7 +59,7 @@ Author or user request
 - If a workflow provides one callable entry skill, that skill must be listed in
   `skills[]`; it does not need a workflow step.
 - Every `steps[].skill` value must exactly match a declared `skills[].source`.
-- `omniskill install` is the only public workflow install command.
+- `omniskills install` is the only public workflow install command.
 - The older `bundle` and `workflow` command surfaces exist only as
   compatibility aliases.
 - Pony Trail history, revert, and prehook features are paused. Do not expose or

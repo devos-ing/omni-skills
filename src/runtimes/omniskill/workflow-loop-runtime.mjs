@@ -38,7 +38,7 @@ export async function runWorkflowLoopCli(input = {}) {
       manifestPath,
       workflowDir: dirname(manifestPath),
       workflowName: manifest.name,
-      runsRoot: join(input.homeDir ?? homedir(), ".omniskill", "runs", manifest.name),
+      runsRoot: join(input.homeDir ?? homedir(), ".getsuperpower", "runs", manifest.name),
       json: parsed.options.json === true,
       cwd: input.cwd ?? process.cwd(),
       stdout,

@@ -1,19 +1,19 @@
-# Create Your Own Omniskill Workflow
+# Create Your Own Omniskills Workflow
 
-This guide shows the shortest path from an idea to an Omniskill workflow that other
+This guide shows the shortest path from an idea to an Omniskills workflow that other
 users can install.
 
 Vocabulary:
 
-- **Omniskill workflow / 工作流包**: the folder users create, share, and install.
-- **Skill Tree / 技能树**: the ordered flow inside the Omniskill workflow.
+- **Omniskills workflow / 工作流包**: the folder users create, share, and install.
+- **Skill Tree / 技能树**: the ordered flow inside the Omniskills workflow.
 - **Step / 步骤**: one node in the skill tree.
 - **Skill / 技能**: one reusable capability used by a step.
 
 Command note:
 
-- In a cloned Omniskill repo, use `bun run dev -- <command>`.
-- In another project, use `npx omniskill@latest <command>`.
+- In a cloned Omniskills repo, use `bun run dev -- <command>`.
+- In another project, use `npx omniskills@latest <command>`.
 
 ## Recommended: Call The Authoring Skill
 
@@ -21,13 +21,13 @@ Start here when you want an agent to help create the workflow and skills set.
 Install the bundled authoring skill:
 
 ```bash
-npx omniskill@latest skills install creating-bundle-skills
+npx omniskills@latest skills install creating-bundle-skills
 ```
 
 Restart your agent app so it reloads the skill, then call it directly:
 
 ```text
-$creating-bundle-skills create an Omniskill workflow named support-triage that classifies support issues, plans the fix, and records evidence
+$creating-bundle-skills create an Omniskills workflow named support-triage that classifies support issues, plans the fix, and records evidence
 ```
 
 The authoring skill should help you produce or review:
@@ -35,10 +35,10 @@ The authoring skill should help you produce or review:
 - `workflow.json`: the installable workflow manifest
 - `workflow.lock.json`: generated skill fingerprints for the workflow's local
   and external skill sources
-- `README.md`: when to use the Omniskill workflow and how to install it
+- `README.md`: when to use the Omniskills workflow and how to install it
 - `skills/<workflow-name>/SKILL.md`: the entry skill users call
 - `skills/<local-skill>/SKILL.md`: any local skills used by the workflow
-- validation commands: `omniskill validate`, `omniskill deps`, and a
+- validation commands: `omniskills validate`, `omniskills deps`, and a
   local `install` smoke test
 
 When the workflow shape is already clear and you only need help writing the
@@ -46,7 +46,7 @@ entry skill, local role skills, dependency choices, gates, or handoff contracts,
 install and invoke the narrower prompt-writing helper:
 
 ```bash
-npx omniskill@latest skills install writing-workflow-skills
+npx omniskills@latest skills install writing-workflow-skills
 ```
 
 Use the rest of this guide as the checklist for what that skill should create.
@@ -69,7 +69,7 @@ Use a lowercase name with hyphens:
 support-triage
 ```
 
-## 2. Create The Omniskill Workflow
+## 2. Create The Omniskills Workflow
 
 From the repo root:
 
@@ -187,28 +187,28 @@ generated loop runner path in `workflow.json`:
 ```
 
 Looped workflows must mark exactly one local skill as `entry: true`. Put the
-exact phase prompt in `steps[].instruction`; `omniskill loop status
+exact phase prompt in `steps[].instruction`; `omniskills loop status
 <source> --json` returns that instruction.
 
 `loop.script` is an install output path, not a required source file. During
-install, Omniskill copies `workflow.json`, writes generated
+install, Omniskills copies `workflow.json`, writes generated
 `loop.metadata.json`, and writes a generated `loop.mjs` bridge into the
 installed entry skill folder only. The bridge delegates back to the
-Omniskill CLI, where the generic loop runtime lives.
+Omniskills CLI, where the generic loop runtime lives.
 
 Agents should operate looped workflows with:
 
 ```bash
-omniskill loop start <source> --json
-omniskill loop status <source> --latest --json
-omniskill loop log <source> --run <id> --type phase_result --message "..."
-omniskill loop advance <source> --run <id> --json
-omniskill loop summary <source> --run <id> --json
+omniskills loop start <source> --json
+omniskills loop status <source> --latest --json
+omniskills loop log <source> --run <id> --type phase_result --message "..."
+omniskills loop advance <source> --run <id> --json
+omniskills loop summary <source> --run <id> --json
 ```
 
 The generated `loop.mjs` wrapper remains a Node compatibility fallback after
-install. It requires the `omniskill` CLI on `PATH` or a `OMNISKILL_BIN`
-environment override.
+install. It requires the `omniskills` CLI on `PATH` or an `OMNISKILLS_BIN`
+environment override. `GETSUPERPOWER_BIN` remains available for legacy callers.
 
 ## 4. Edit The Entry Skill
 
@@ -226,7 +226,7 @@ stop, name the missing skill, and tell the user which install command to run.
 
 Use this checklist when reviewing the entry skill:
 
-- It says it is the entry skill for this Omniskill workflow.
+- It says it is the entry skill for this Omniskills workflow.
 - It lists every required sub-skill in step order.
 - It tells the agent to stop if a required sub-skill is missing.
 - It keeps human approval gates explicit when a workflow phase needs approval.
@@ -268,7 +268,7 @@ Then update `workflow.json` to use:
 { "source": "./skills/support-review" }
 ```
 
-## 6. Validate The Omniskill Workflow
+## 6. Validate The Omniskills Workflow
 
 Run:
 
@@ -280,7 +280,7 @@ bun run dev -- validate examples/workflows/support-triage
 Expected output:
 
 ```text
-Omniskill valid: support-triage@0.1.0
+Omniskills valid: support-triage@0.1.0
 Steps: 4
 Skills: 5
 ```
@@ -299,7 +299,7 @@ Install it into a project:
 bun run dev -- install examples/workflows/support-triage
 ```
 
-Then list installed Omniskill workflows:
+Then list installed Omniskills workflows:
 
 ```bash
 bun run dev -- list
@@ -322,7 +322,7 @@ $support-triage fix this support issue
 
 ## 8. Share It On GitHub
 
-The Omniskill workflow lives at:
+The Omniskills workflow lives at:
 
 ```text
 git@github.com:devos-ing/omni-skills.git
@@ -331,13 +331,13 @@ git@github.com:devos-ing/omni-skills.git
 Checked-in examples under `examples/workflows` can be installed by folder alias:
 
 ```bash
-npx omniskill@latest install support-triage
+npx omniskills@latest install support-triage
 ```
 
 That alias resolves to:
 
 ```bash
-npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/workflows/support-triage'
+npx omniskills@latest install 'https://github.com/devos-ing/omni-skills.git#examples/workflows/support-triage'
 ```
 
 If you have write access:
@@ -356,14 +356,14 @@ Users can also install a workflow directly from a public git repository when
 the repository root contains `workflow.json`:
 
 ```bash
-npx omniskill@latest install https://github.com/acme/support-triage.git
+npx omniskills@latest install https://github.com/acme/support-triage.git
 ```
 
 If the workflow lives in a subdirectory, add the workflow path as a URL
 fragment:
 
 ```bash
-npx omniskill@latest install 'https://github.com/acme/workflows.git#examples/workflows/support-triage'
+npx omniskills@latest install 'https://github.com/acme/workflows.git#examples/workflows/support-triage'
 ```
 
 Before opening the pull request, run:
@@ -379,13 +379,13 @@ In the pull request, include:
 - the command you ran to validate it
 - whether it includes local skills
 
-## 9. Omniskill Review Checklist
+## 9. Omniskills Review Checklist
 
 Before sharing, check:
 
 - The workflow name is lowercase and hyphenated.
 - `workflow.lock.json` exists and was regenerated after the latest skill edit.
-- `workflow.json` passes `omniskill validate`.
+- `workflow.json` passes `omniskills validate`.
 - The entry skill exists at `skills/<workflow-name>/SKILL.md`.
 - The entry skill lists required sub-skills in step order.
 - Every step references a declared skill source.
@@ -438,9 +438,9 @@ It uses:
 - `mattpocock:codebase-design`
 - `mattpocock:diagnosing-bugs`
 
-When installing that workflow, Omniskill automatically uses the Skills CLI
+When installing that workflow, Omniskills automatically uses the Skills CLI
 to fetch missing `mattpocock:*` dependencies. If that automatic bootstrap fails,
-run the same package install through Omniskill and retry:
+run the same package install through Omniskills and retry:
 
 ```bash
 bun run dev -- skills install mattpocock/skills

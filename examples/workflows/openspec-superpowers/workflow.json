@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "openspec-delivery",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Professional OpenSpec delivery workflow from proposal through design, plan, TDD implementation, verification, and archive.",
   "skills": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "source": "mattpocock:tdd",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "pony-trail"

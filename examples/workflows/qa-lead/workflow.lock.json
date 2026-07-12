@@ -1,35 +1,35 @@
 {
   "schemaVersion": "0.1",
   "workflow": "qa-lead",
-  "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-07T12:15:34.149Z",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:12:50.622Z",
   "skills": [
     {
       "source": "./skills/qa-lead",
       "resolvedName": "qa-lead",
       "kind": "local",
-      "hash": "sha256:17b5f20fa744bdbc0791717b5705e8be940b7cbdfaf4d5604e9d6a6a19124a53"
+      "hash": "sha256:a9c4e9f241b612ab0c4302bb847b5c0232c32210b599b616c6c388f3b899b647"
     },
     {
-      "source": "mattpocock:review",
-      "resolvedName": "review",
+      "source": "mattpocock:code-review",
+      "resolvedName": "code-review",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:f31dad85ccfc89efe4ccc5353d3b67aad00f87700c1d709eba8c758ef64757dd"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
       "resolvedName": "diagnosing-bugs",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:0fe0adf2995715573a8efc68d47e9fd6f5c56230aaad6f148821feb883a34083"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
     },
     {
       "source": "superpowers:verification-before-completion",
-      "resolvedName": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
       "repo": "obra/superpowers",
-      "hash": "sha256:c0cd676b75a7eed20cc419b3c5fe46abbac00fd28cd87b6617fbc3607b1d3fd8"
+      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
     }
   ]
 }

@@ -1,31 +1,31 @@
 ---
 name: creating-bundle-skills
-description: Use when creating or editing an Omniskill workflow bundle, bundle skill, entry skill, orchestrator skill, skill tree, or workflow that composes multiple agent skills into one callable skill.
+description: Use when creating or editing an Omniskills workflow bundle, bundle skill, entry skill, orchestrator skill, skill tree, or workflow that composes multiple agent skills into one callable skill.
 ---
 
 # Creating Bundle Skills
 
 ## Overview
 
-Use this skill to create an Omniskill workflow bundle: one entry skill users call, plus a `workflow.json` that installs and validates the required sub-skills.
+Use this skill to create an Omniskills workflow bundle: one entry skill users call, plus a `workflow.json` that installs and validates the required sub-skills.
 
 Core distinction:
 
-- **Omniskill workflow**: the installable workflow bundle folder.
+- **Omniskills workflow**: the installable workflow bundle folder.
 - **Entry skill**: the callable `SKILL.md` that tells the agent to use N sub-skills in order.
 - **Sub-skill**: one dependency such as `superpowers:brainstorming`, `pony-trail`, or `mattpocock:tdd`.
 
-An entry skill cannot guarantee tool-level function calls in every agent runtime. It can require skill use through instructions. Omniskill makes that reliable by installing dependencies, validating the manifest, and recording the workflow.
+An entry skill cannot guarantee tool-level function calls in every agent runtime. It can require skill use through instructions. Omniskills makes that reliable by installing dependencies, validating the manifest, and recording the workflow.
 
 ## Workflow
 
 1. Choose one repeatable job and name it with lowercase hyphen-case.
-2. Create or update the Omniskill workflow folder with `workflow.json`, `README.md`, and `skills/`.
+2. Create or update the Omniskills workflow folder with `workflow.json`, `README.md`, and `skills/`.
 3. Create one entry skill under `skills/<workflow-name>/SKILL.md`.
 4. Add every required sub-skill to `workflow.json` `skills[]`.
 5. Add ordered workflow phases to `workflow.json` `steps[]`; each `steps[].skill` must exactly match a declared `skills[].source`.
 6. Keep the entry skill's required sub-skill list in the same order as `workflow.json` steps.
-7. Run `omniskill validate`, then `omniskill deps`, then a local install smoke test.
+7. Run `omniskills validate`, then `omniskills deps`, then a local install smoke test.
 
 ## Entry Skill Template
 
@@ -34,12 +34,12 @@ Use this shape for `skills/<workflow-name>/SKILL.md`:
 ```markdown
 ---
 name: workflow-name
-description: Use when running the workflow-name Omniskill workflow or skill tree.
+description: Use when running the workflow-name Omniskills workflow or skill tree.
 ---
 
-# workflow-name Omniskill Workflow
+# workflow-name Omniskills Workflow
 
-This is the entry skill for the workflow-name Omniskill workflow.
+This is the entry skill for the workflow-name Omniskills workflow.
 
 ## Required Sub-Skills
 
@@ -85,7 +85,7 @@ Do not add a step for the entry skill. Steps describe the workflow the entry ski
 - Make missing dependencies explicit instead of silently skipping them.
 - Prefer exact skill source names over prose labels.
 - Keep `README.md`, `workflow.json`, and the entry skill aligned.
-- Validate with `omniskill validate <path>` before sharing.
+- Validate with `omniskills validate <path>` before sharing.
 
 ## Common Mistakes
 

@@ -34,9 +34,11 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
           className="flex min-w-0 gap-2"
         >
           {line.prefix ? (
-            <span className="shrink-0 select-none text-white/25">{line.prefix}</span>
+            <span className="shrink-0 select-none text-[var(--muted)]">{line.prefix}</span>
           ) : null}
-          <span className={`min-w-0 break-words ${line.dim ? "text-white/35" : "text-white/80"}`}>
+          <span
+            className={`min-w-0 break-words ${line.dim ? "text-[var(--muted)]" : "text-[var(--ink)]"}`}
+          >
             {line.text || "\u00a0"}
           </span>
         </div>
@@ -47,14 +49,14 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
   const content = (
     <>
       {compact ? null : (
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+        <div className="flex items-center justify-between border-b border-[var(--rule)] px-4 py-2.5">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
             <span className="h-2.5 w-2.5 rounded-full bg-amber-300/60" />
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/60" />
           </div>
           {copyText ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-white/35 transition group-hover:text-white/70">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--body)] transition-colors group-hover:text-[var(--ink)]">
               {copied ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
               {copied ? "Copied" : "Copy"}
             </span>
@@ -65,7 +67,7 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
         <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 font-mono text-sm">
           {linesContent}
           {copyText ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 px-2 py-1 font-sans text-xs text-white/42 transition group-hover:border-white/20 group-hover:text-white/72">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--rule)] px-2 py-1 font-sans text-xs font-medium text-[var(--body)] transition-colors group-hover:text-[var(--ink)]">
               {copied ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
               {copied ? "Copied" : "Copy"}
             </span>
@@ -77,10 +79,8 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
     </>
   );
 
-  const className = `relative overflow-hidden rounded-lg border border-white/10 bg-[#0d0d0d] ${
-    copyText
-      ? "group w-full cursor-copy text-left transition hover:border-white/20 hover:bg-white/[0.025]"
-      : ""
+  const className = `editorial-control relative overflow-hidden rounded-md border border-[var(--rule)] bg-[var(--paper)] ${
+    copyText ? "group w-full cursor-copy text-left hover:bg-white" : ""
   }`;
 
   if (copyText) {

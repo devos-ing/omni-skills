@@ -8,7 +8,7 @@ import { runSubprocess } from "../../process";
 
 export const workflowFileName = "workflow.json";
 export const workflowLockFileName = "workflow.lock.json";
-const workflowStoreDir = ".omniskill/workflows";
+const workflowStoreDir = ".getsuperpower/workflows";
 const canonicalExamplesGitUrl = "https://github.com/devos-ing/omni-skills.git";
 const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -310,12 +310,12 @@ export async function loadWorkflowBundle(
     await resolvedSource.cleanup?.();
     if (resolvedSource.alias && resolvedSource.source.kind === "git" && isMissingFileError(error)) {
       throw new Error(
-        `Omniskill workflow alias not found: ${resolvedSource.alias}\nChecked: ${resolvedSource.source.url}`,
+        `Omniskills workflow alias not found: ${resolvedSource.alias}\nChecked: ${resolvedSource.source.url}`,
       );
     }
     if (resolvedSource.source.kind === "git" && isMissingFileError(error)) {
       throw new Error(
-        `No Omniskill workflow manifest was found at ${manifestPath} from public git source: ${resolvedSource.source.url}`,
+        `No Omniskills workflow manifest was found at ${manifestPath} from public git source: ${resolvedSource.source.url}`,
       );
     }
     throw error;
@@ -395,7 +395,7 @@ export async function createWorkflowBundleScaffold(input: {
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   await writeFile(
     readmePath,
-    `# ${input.name}\n\nAn Omniskill workflow that composes reusable agent skills.\n`,
+    `# ${input.name}\n\nAn Omniskills workflow that composes reusable agent skills.\n`,
   );
   await writeFile(entrySkillPath, createScaffoldEntrySkill(input.name, manifest));
   await writeFile(
@@ -403,12 +403,12 @@ export async function createWorkflowBundleScaffold(input: {
     [
       "---",
       "name: custom-review",
-      'description: "Review this Omniskill workflow from the author perspective."',
+      'description: "Review this Omniskills workflow from the author perspective."',
       "---",
       "",
       "# Custom Review",
       "",
-      "Check whether the workflow output matches the Omniskill author's stated outcome.",
+      "Check whether the workflow output matches the Omniskills author's stated outcome.",
       "",
     ].join("\n"),
   );
@@ -469,7 +469,7 @@ export async function loadInstalledWorkflowBundle(input: {
     return { workflow: JSON.parse(raw) as InstalledWorkflowBundle, path };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(`Omniskill workflow is not installed: ${input.workflowName}`);
+      throw new Error(`Omniskills workflow is not installed: ${input.workflowName}`);
     }
     throw error;
   }
@@ -631,7 +631,7 @@ function renderGeneratedWorkflowLoopRunner(): string {
     'import { fileURLToPath } from "node:url";',
     "",
     'const workflowJson = fileURLToPath(new URL("./workflow.json", import.meta.url));',
-    'const cliCommand = process.env.OMNISKILL_BIN ?? "omniskill";',
+    'const cliCommand = process.env.OMNISKILLS_BIN ?? process.env.GETSUPERPOWER_BIN ?? "omniskills";',
     "const [command, ...args] = process.argv.slice(2);",
     "",
     "if (!command) {",
@@ -644,7 +644,7 @@ function renderGeneratedWorkflowLoopRunner(): string {
     "",
     "  if (result.error) {",
     '    if (result.error.code === "ENOENT") {',
-    '      console.error("Omniskill CLI is required to run loop.mjs. Install or expose omniskill on PATH.");',
+    '      console.error("Omniskills CLI is required to run loop.mjs. Install or expose omniskills on PATH.");',
     "      process.exitCode = 1;",
     "    } else {",
     "      console.error(result.error.message);",
@@ -654,7 +654,7 @@ function renderGeneratedWorkflowLoopRunner(): string {
     "    process.exitCode = result.status;",
     "  } else {",
     "    if (result.signal) {",
-    '      console.error("omniskill terminated by signal " + result.signal);',
+    '      console.error("omniskills terminated by signal " + result.signal);',
     "    }",
     "    process.exitCode = 1;",
     "  }",
@@ -951,7 +951,7 @@ function createScaffoldManifest(name: string): WorkflowBundleManifest {
     schemaVersion: "0.1",
     name,
     version: "0.1.0",
-    description: `Omniskill workflow for ${name}.`,
+    description: `Omniskills workflow for ${name}.`,
     skills: [
       { source: `./skills/${name}` },
       { source: "superpowers:brainstorming", repo: "obra/superpowers" },
@@ -984,12 +984,12 @@ function createScaffoldEntrySkill(name: string, manifest: WorkflowBundleManifest
   return [
     "---",
     `name: ${name}`,
-    `description: "Use when running the ${name} Omniskill workflow, bundle skill, skill tree, or orchestrated multi-skill workflow."`,
+    `description: "Use when running the ${name} Omniskills workflow, bundle skill, skill tree, or orchestrated multi-skill workflow."`,
     "---",
     "",
-    `# ${name} Omniskill`,
+    `# ${name} Omniskills`,
     "",
-    `This is the entry skill for the ${name} Omniskill workflow.`,
+    `This is the entry skill for the ${name} Omniskills workflow.`,
     "",
     "When this skill is used, run the workflow below in order. Load/use every required sub-skill before doing the work for its phase.",
     "",
@@ -1012,7 +1012,7 @@ function createScaffoldEntrySkill(name: string, manifest: WorkflowBundleManifest
     "## Author Notes",
     "",
     "- Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.",
-    "- The entry skill orchestrates through required instructions; Omniskill installs and validates the dependency skills.",
+    "- The entry skill orchestrates through required instructions; Omniskills installs and validates the dependency skills.",
     "- Do not silently skip a missing sub-skill.",
     "",
   ].join("\n");
@@ -1062,7 +1062,7 @@ async function resolveWorkflowBundleSource(
   }
 
   throw new Error(
-    `Unsupported Omniskill source: ${source}. Use a local path, workflow.json path, public git URL, or lowercase workflow alias.`,
+    `Unsupported Omniskills source: ${source}. Use a local path, workflow.json path, public git URL, or lowercase workflow alias.`,
   );
 }
 
@@ -1074,7 +1074,7 @@ function parseWorkflowAliasSource(source: string): GitWorkflowSource | null {
   const url = `${canonicalExamplesGitUrl}#${canonicalExamplesWorkflowPath}/${source}`;
   const gitSource = parseGitWorkflowSource(url);
   if (!gitSource) {
-    throw new Error(`Could not build canonical Omniskill workflow alias URL: ${source}`);
+    throw new Error(`Could not build canonical Omniskills workflow alias URL: ${source}`);
   }
 
   return { ...gitSource, alias: source };

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "ceo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Act as the startup CEO for direction, tradeoffs, investor/customer framing, and company-level decisions.",
   "skills": [
     {
@@ -9,12 +9,12 @@
       "entry": true
     },
     {
-      "source": "mattpocock:decision-mapping",
-      "repo": "mattpocock/skills"
+      "source": "mattpocock:wayfinder",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:grill-with-docs",
-      "repo": "mattpocock/skills"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     }
   ],
   "steps": [
@@ -27,7 +27,7 @@
     {
       "id": "decision-map",
       "title": "Map the decision and uncertainties",
-      "skill": "mattpocock:decision-mapping"
+      "skill": "mattpocock:wayfinder"
     },
     {
       "id": "grill-direction",

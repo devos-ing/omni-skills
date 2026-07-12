@@ -1,28 +1,28 @@
 {
   "schemaVersion": "0.1",
   "workflow": "ceo",
-  "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-07T12:15:26.289Z",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:12:50.593Z",
   "skills": [
     {
       "source": "./skills/ceo",
       "resolvedName": "ceo",
       "kind": "local",
-      "hash": "sha256:e28e960ca32f944aad4353c9248e43ca7526a5f4451d1293cd79590878f2b25a"
+      "hash": "sha256:b0e1abf139bef48618da9e1727ecc4ec35d427b949771f959c4569fdaafefd19"
     },
     {
-      "source": "mattpocock:decision-mapping",
-      "resolvedName": "decision-mapping",
+      "source": "mattpocock:wayfinder",
+      "resolvedName": "wayfinder",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:4f85dd52dfcf4b6a11c404fbcb461cf454a734ceb084084e4272020c7a66962e"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:296041b6482c9c100620f2216c9e41ac31d304a70179f4307462294563c806ff"
     },
     {
       "source": "mattpocock:grill-with-docs",
       "resolvedName": "grill-with-docs",
       "kind": "external",
-      "repo": "mattpocock/skills",
-      "hash": "sha256:69d15d68b241680fbccaccd86cb986bd4da2589428d5e11b1fc97e84b2956bf4"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:a7e2ffc2e216483f140c486c5e1b5e3e66d6ca7cf47980357069b21887645069"
     }
   ]
 }

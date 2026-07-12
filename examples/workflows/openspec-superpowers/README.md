@@ -1,6 +1,6 @@
-# OpenSpec Delivery Omniskill Workflow
+# OpenSpec Delivery Omniskills Workflow
 
-This example turns an OpenSpec delivery loop into an installable Omniskill workflow
+This example turns an OpenSpec delivery loop into an installable Omniskills workflow
 reference. The user calls one professional entry skill, and that skill
 coordinates proposal, design, planning, implementation, verification, and
 archive work.
@@ -44,7 +44,7 @@ $openspec-delivery implement this OpenSpec change
 
 ## Dependencies
 
-This Omniskill workflow combines local OpenSpec handoff guidance with reusable agent
+This Omniskills workflow combines local OpenSpec handoff guidance with reusable agent
 skills:
 
 - `./skills/openspec-delivery`
@@ -54,7 +54,7 @@ skills:
 - `mattpocock:tdd`
 - `pony-trail`
 
-`omniskill install` automatically uses the Skills CLI to fetch missing
+`omniskills install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same
 package install through the CLI and retry:
 
@@ -64,7 +64,7 @@ bun run dev -- skills install mattpocock/skills
 
 ## Try It
 
-Validate this Omniskill workflow from the repo root:
+Validate this Omniskills workflow from the repo root:
 
 ```bash
 bun run dev -- validate examples/workflows/openspec-superpowers

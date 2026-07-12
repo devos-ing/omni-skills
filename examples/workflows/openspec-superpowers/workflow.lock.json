@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "0.1",
+  "workflow": "openspec-delivery",
+  "workflowVersion": "0.1.1",
+  "generatedAt": "2026-07-11T16:11:48.553Z",
+  "skills": [
+    {
+      "source": "./skills/openspec-delivery",
+      "resolvedName": "openspec-delivery",
+      "kind": "local",
+      "hash": "sha256:5308133e101191939e82f9a24ef7f3d826f572b0630a5a0a56230e0ed56e7c96"
+    },
+    {
+      "source": "./skills/opsx-handoff-review",
+      "resolvedName": "opsx-handoff-review",
+      "kind": "local",
+      "hash": "sha256:f6d6a47da2c696bf5935b7e3e13f2c18b3edff7ef92f019682e615fdfbf54f24"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
+    },
+    {
+      "source": "pony-trail",
+      "resolvedName": "pony-trail",
+      "kind": "external",
+      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
+    }
+  ]
+}
