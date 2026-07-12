@@ -1,0 +1,66 @@
+name: Deploy Landing to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Check and Deploy Landing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install landing dependencies
+        working-directory: landing
+        run: bun install --frozen-lockfile
+
+      - name: Run landing checks
+        working-directory: landing
+        run: bun run check
+
+      - name: Pull Vercel production environment
+        working-directory: landing
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: bunx vercel@48.10.0 pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build production artifact
+        working-directory: landing
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: bunx vercel@48.10.0 build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy production artifact
+        working-directory: landing
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: bunx vercel@48.10.0 deploy --prebuilt --prod --token="$VERCEL_TOKEN"

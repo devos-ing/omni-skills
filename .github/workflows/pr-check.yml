@@ -53,11 +53,3 @@ jobs:
 
       - name: Smoke built CLI
         run: node dist/cli.js --help
-
-      - name: Install landing dependencies
-        working-directory: landing
-        run: bun install --frozen-lockfile
-
-      - name: Run landing checks
-        working-directory: landing
-        run: bun run check
