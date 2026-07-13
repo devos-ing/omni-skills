@@ -126,7 +126,7 @@ Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、P
 
 Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`engineering-manager`、`founding-engineer`、`qa-lead`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:decision-mapping`、`mattpocock:grill-with-docs`、`mattpocock:to-prd`、`mattpocock:to-issues`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`、`implement`。
 
-Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation -> `founding-engineer`；QA -> `qa-lead`。
+Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation frame -> `founding-engineer`；Implement -> `implement`；QA -> `qa-lead`。
 
 ### CEO
 

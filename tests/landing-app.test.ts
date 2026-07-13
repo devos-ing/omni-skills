@@ -224,8 +224,9 @@ describe("landing app source contract", () => {
     expect(content).toContain("npx omniskill@latest install haaland");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
-    expect(content).toContain('label: "Implementation"');
+    expect(content).toContain('label: "Implementation frame"');
     expect(content).toContain('skill: "founding-engineer"');
+    expect(content).toContain("Execute the planned change with tests and review.");
   });
 
   test("renders workflow cards as route links with hash-seeded avatars", () => {

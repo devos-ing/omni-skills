@@ -169,7 +169,7 @@ Skills:
 - `cto`: Architecture and technical risk
 - `product-manager`: Discovery, PRDs, and issue slicing
 - `engineering-manager`: Delivery sequencing and quality gates
-- `founding-engineer`: Implementation and verification
+- `founding-engineer`: Implementation framing and handoff
 - `qa-lead`: Acceptance checks and release risk
 - `superpowers:brainstorming`: Explore options before scope locks
 - `superpowers:writing-plans`: Create executable plans
@@ -197,9 +197,11 @@ Ordered skill path:
    - Set architecture and technical risk boundaries.
 5. Delivery -> `engineering-manager`
    - Sequence execution and quality gates.
-6. Implementation -> `founding-engineer`
-   - Build the smallest verified slice.
-7. QA -> `qa-lead`
+6. Implementation frame -> `founding-engineer`
+   - Prepare the smallest correct implementation slice.
+7. Implement -> `implement`
+   - Execute the planned change with tests and review.
+8. QA -> `qa-lead`
    - Check release readiness and residual risk.
 
 ### CEO

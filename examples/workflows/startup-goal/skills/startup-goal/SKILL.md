@@ -34,7 +34,7 @@ Choose the smallest safe role set:
   accessibility, or motion.
 - `cto`: architecture, domain boundaries, or technical risk.
 - `engineering-manager`: sequencing, ownership, or quality gates.
-- `founding-engineer`: implementation.
+- `founding-engineer`: implementation framing and execution handoff.
 - `qa-lead`: acceptance, regression, or release verification.
 
 Use broad coverage when uncertainty spans several areas. A narrow route is valid
@@ -55,6 +55,10 @@ Show active roles, responsibilities, expected outputs, and verification before
 execution. Dispatch one role-scoped subagent per selected role and give it the
 matching role skill plus: goal, current task, prior handoff, expected output,
 approval gate, and verification bar.
+
+When `founding-engineer` is selected, it must not edit files. After it returns
+the implementation frame, dispatch `implement` with that handoff as the only
+execution phase, then hand the result to `qa-lead`.
 
 Wait for all selected roles. Show each completed output with its accountable
 role, evidence, risk, and next handoff. If dispatch is unavailable, show the

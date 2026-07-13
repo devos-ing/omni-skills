@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "startup-goal",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Install the core startup operating roles as one goal-oriented Omniskills workflow: CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
   "skills": [
     {
@@ -140,8 +140,13 @@
     },
     {
       "id": "implementation",
-      "title": "Implement the slice",
+      "title": "Frame the implementation slice",
       "skill": "./skills/founding-engineer"
+    },
+    {
+      "id": "implement",
+      "title": "Implement the planned change",
+      "skill": "implement"
     },
     {
       "id": "qa",
