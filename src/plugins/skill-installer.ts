@@ -123,23 +123,23 @@ const supportedSuperpowersSkills = [
 
 const interfaceCraftSkillMappings = [
   {
-    canonicalSource: "interface-craft:design-engineering",
-    legacySource: "emilkowalski:emil-design-eng",
+    canonicalSource: "emilkowalski:emil-design-eng",
+    legacySource: "interface-craft:design-engineering",
     installedName: "emil-design-eng",
   },
   {
-    canonicalSource: "interface-craft:motion-vocabulary",
-    legacySource: "emilkowalski:animation-vocabulary",
+    canonicalSource: "emilkowalski:animation-vocabulary",
+    legacySource: "interface-craft:motion-vocabulary",
     installedName: "animation-vocabulary",
   },
   {
-    canonicalSource: "interface-craft:fluid-interface-design",
-    legacySource: "emilkowalski:apple-design",
+    canonicalSource: "emilkowalski:apple-design",
+    legacySource: "interface-craft:fluid-interface-design",
     installedName: "apple-design",
   },
   {
-    canonicalSource: "interface-craft:motion-review",
-    legacySource: "emilkowalski:review-animations",
+    canonicalSource: "emilkowalski:review-animations",
+    legacySource: "interface-craft:motion-review",
     installedName: "review-animations",
   },
 ] as const;
