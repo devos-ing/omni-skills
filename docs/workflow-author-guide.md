@@ -399,8 +399,8 @@ The checked-in startup role workflows show the preferred public example style:
 real job roles with one callable entry skill and explicit companion skills.
 
 ```bash
-bun run dev -- validate examples/workflows/startup-goal
-bun run dev -- deps examples/workflows/startup-goal
+bun run dev -- validate examples/teams/startup-team
+bun run dev -- deps examples/teams/startup-team
 ```
 
 Install individual roles when you want one job lane:
@@ -411,10 +411,11 @@ bun run dev -- install examples/workflows/product-manager
 bun run dev -- install examples/workflows/founding-engineer
 ```
 
-Install `startup-goal` when you want the full role bench:
+Install `startup-team` when you want the full role bench. Invoke its
+`$startup-goal` coordinator to clarify, route, dispatch, and combine the work:
 
 ```bash
-bun run dev -- install examples/workflows/startup-goal
+bun run dev -- install examples/teams/startup-team
 ```
 
 ## Compatibility Example: Combine RTK, Ponytrail, Superpowers, And Matt Pocock Skills

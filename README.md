@@ -9,17 +9,17 @@ tree, call one entry skill with a goal, and give your agent the right roles,
 playbooks, and verification habits for the problem in front of it. The point is
 simple: 3x your ability without manually juggling every specialist skill.
 
-Start with Startup Goal when you want to move a company-building goal through many role workflows instead of manually juggling every skill: CEO, CTO, Product Manager, Web Design, Engineering Manager, Founding Engineer, and QA Lead.
+Start with Startup Team when you want to move a company-building goal through a coordinated role bench instead of manually juggling every skill: CEO, CTO, Product Manager, Web Design, Engineering Manager, Founding Engineer, and QA Lead.
 
 ## Quick Start
 
-Install the full startup goal workflow:
+Install the full Startup Team:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-Then ask your agent to run the entry skill with a goal:
+Then ask your agent to run its `$startup-goal` coordinator with a goal:
 
 ```text
 $startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks
@@ -28,7 +28,7 @@ $startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a
 The alias points to the checked-in workflow bundle:
 
 ```bash
-npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/workflows/startup-goal'
+npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/teams/startup-team'
 ```
 
 Install individual startup roles when you want one specialist workflow:
@@ -56,7 +56,7 @@ copy the install command.
 
 | Omniskills workflow | Entry skill | What it helps with |
 | --- | --- | --- |
-| Startup Goal | `$startup-goal` | Route a company-building goal through strategy, product, interface design, architecture, delivery, implementation, and QA role subagents. |
+| Startup Team | `$startup-goal` | Coordinate a company-building goal across strategy, product, interface design, architecture, delivery, implementation, and QA role subagents. |
 | CEO | `$ceo` | Direction, hard tradeoffs, fundraising/customer framing, and company decisions. |
 | CTO | `$cto` | Architecture, domain model, platform direction, and engineering risk. |
 | Product Manager | `$product-manager` | Product discovery, PRDs, acceptance criteria, roadmap tradeoffs, and issue slicing. |
@@ -198,7 +198,7 @@ The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guid
 
 | Example | Use it for | Notes |
 | --- | --- | --- |
-| `examples/workflows/startup-goal` | Install a realistic startup operating bench around one goal. | Includes `$startup-goal`, `$ceo`, `$cto`, `$product-manager`, `$web-design`, `$engineering-manager`, `$founding-engineer`, and `$qa-lead`. |
+| `examples/teams/startup-team` | Install a realistic startup operating team around one goal. | Includes the `$startup-goal` coordinator plus `$ceo`, `$cto`, `$product-manager`, `$web-design`, `$engineering-manager`, `$founding-engineer`, and `$qa-lead`. |
 | `examples/workflows/ceo` | Company direction, strategy, tradeoffs, and decision mapping. | Uses Matt Pocock decision and grilling skills. |
 | `examples/workflows/cto` | Architecture, domain model, technical risk, and review. | Uses Matt Pocock architecture/review skills. |
 | `examples/workflows/product-manager` | Discovery, PRD, issue slicing, and product planning. | Uses Superpowers plus Matt Pocock PRD/issue skills. |

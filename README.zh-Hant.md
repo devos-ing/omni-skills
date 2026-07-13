@@ -11,19 +11,19 @@ tree，帶著目標呼叫一個 entry skill，就能把適合當前問題的 rol
 habits 交給你的 agent。核心很簡單：3x your ability，而不用手動切換每個 specialist skill。
 
 當你想把 company-building goal 交給多個 role workflows 推進，而不是手動 juggling 每個 skill
-時，先從 Startup Goal 開始：CEO、CTO、Product Manager、Web Design、Engineering Manager、Founding
+時，先從 Startup Team 開始：CEO、CTO、Product Manager、Web Design、Engineering Manager、Founding
 Engineer、QA Lead。
 
 
 ## 快速開始
 
-安裝完整的 startup goal workflow：
+安裝完整的 Startup Team：
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-然後請你的 agent 帶著目標執行 entry skill：
+然後請你的 agent 帶著目標執行 `$startup-goal` coordinator：
 
 ```text
 $startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks
@@ -32,7 +32,7 @@ $startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a
 這個 alias 會指向 repo 內已提交的 workflow bundle：
 
 ```bash
-npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/workflows/startup-goal'
+npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/teams/startup-team'
 ```
 
 如果你只需要單一 specialist workflow，也可以安裝個別 startup roles：
@@ -59,7 +59,7 @@ npx omniskill@latest install qa-lead
 
 | Omniskills workflow | Entry skill | 用途 |
 | --- | --- | --- |
-| Startup Goal | `$startup-goal` | 讓 company-building goal 依序經過 strategy、product、interface design、architecture、delivery、implementation、QA role subagents。 |
+| Startup Team | `$startup-goal` | 由 coordinator 將 company-building goal 分派給 strategy、product、interface design、architecture、delivery、implementation、QA role subagents。 |
 | CEO | `$ceo` | Direction、hard tradeoffs、fundraising/customer framing、company decisions。 |
 | CTO | `$cto` | Architecture、domain model、platform direction、engineering risk。 |
 | Product Manager | `$product-manager` | Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。 |
@@ -187,7 +187,7 @@ npx omniskill@latest deps ./release-review
 
 | Example | 適合用途 | Notes |
 | --- | --- | --- |
-| `examples/workflows/startup-goal` | 圍繞一個 goal 安裝 realistic startup operating bench。 | 包含 `$startup-goal`、`$ceo`、`$cto`、`$product-manager`、`$web-design`、`$engineering-manager`、`$founding-engineer`、`$qa-lead`。 |
+| `examples/teams/startup-team` | 圍繞一個 goal 安裝 realistic startup operating team。 | 包含 `$startup-goal` coordinator，以及 `$ceo`、`$cto`、`$product-manager`、`$web-design`、`$engineering-manager`、`$founding-engineer`、`$qa-lead`。 |
 | `examples/workflows/ceo` | Company direction、strategy、tradeoffs、decision mapping。 | Uses Matt Pocock decision and grilling skills. |
 | `examples/workflows/cto` | Architecture、domain model、technical risk、review。 | Uses Matt Pocock architecture/review skills. |
 | `examples/workflows/product-manager` | Discovery、PRD、issue slicing、product planning。 | Uses Superpowers plus Matt Pocock PRD/issue skills. |
