@@ -696,16 +696,20 @@ describe("cli", () => {
 
       expect(externalInstalls).toEqual([{ source: "mattpocock/skills", homeDir }]);
       expect(stripAnsiLines(logs)).toContain("Skills package install result");
-      expect(logs.some((line) => line.includes("Package: mattpocock/skills"))).toBe(true);
+      expect(stripAnsiLines(logs).some((line) => line.includes("Package: mattpocock/skills"))).toBe(
+        true,
+      );
       expect(
-        logs.some((line) =>
+        stripAnsiLines(logs).some((line) =>
           line.includes(
             "Internal command: npx --yes skills@latest add mattpocock/skills --yes --global",
           ),
         ),
       ).toBe(true);
-      expect(logs.some((line) => line.includes(homeDir))).toBe(true);
-      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(true);
+      expect(stripAnsiLines(logs).some((line) => line.includes(homeDir))).toBe(true);
+      expect(stripAnsiLines(logs).some((line) => line.includes("Restart your agent IDE"))).toBe(
+        true,
+      );
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -736,8 +740,12 @@ describe("cli", () => {
 
       expect(externalInstalls).toEqual([]);
       expect(stripAnsiLines(logs)).toContain("Skills package install plan");
-      expect(logs.some((line) => line.includes("Package: mattpocock/skills"))).toBe(true);
-      expect(logs.some((line) => line.includes("Restart your agent IDE"))).toBe(false);
+      expect(stripAnsiLines(logs).some((line) => line.includes("Package: mattpocock/skills"))).toBe(
+        true,
+      );
+      expect(stripAnsiLines(logs).some((line) => line.includes("Restart your agent IDE"))).toBe(
+        false,
+      );
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

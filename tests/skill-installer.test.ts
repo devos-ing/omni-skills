@@ -341,17 +341,17 @@ describe("skill installer", () => {
     }
   });
 
-  test("resolves canonical and legacy interface craft sources to upstream installed skills", async () => {
+  test("resolves upstream canonical and interface craft compatibility sources", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
     const mappings = [
-      ["interface-craft:design-engineering", "emilkowalski:emil-design-eng", "emil-design-eng"],
+      ["emilkowalski:emil-design-eng", "interface-craft:design-engineering", "emil-design-eng"],
       [
-        "interface-craft:motion-vocabulary",
         "emilkowalski:animation-vocabulary",
+        "interface-craft:motion-vocabulary",
         "animation-vocabulary",
       ],
-      ["interface-craft:fluid-interface-design", "emilkowalski:apple-design", "apple-design"],
-      ["interface-craft:motion-review", "emilkowalski:review-animations", "review-animations"],
+      ["emilkowalski:apple-design", "interface-craft:fluid-interface-design", "apple-design"],
+      ["emilkowalski:review-animations", "interface-craft:motion-review", "review-animations"],
     ] as const;
 
     try {
