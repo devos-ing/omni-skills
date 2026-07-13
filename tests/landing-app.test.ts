@@ -45,7 +45,7 @@ describe("landing app source contract", () => {
 
     expect(page).toContain("LandingPage");
     expect(content).toContain("Omniskills");
-    expect(content).toContain("Startup Goal");
+    expect(content).toContain("Startup Team");
     expect(content).toContain("CEO");
     expect(content).toContain("CTO");
     expect(content).toContain("Product Manager");
@@ -53,17 +53,18 @@ describe("landing app source contract", () => {
     expect(content).toContain("Founding Engineer");
     expect(content).toContain("QA Lead");
     expect(content).toContain("avatarSeed");
-    expect(content).toContain("npx omniskill@latest install startup-goal");
+    expect(content).toContain("npx omniskill@latest install startup-team");
     expect(content).toContain("npx omniskill@latest install ceo");
     expect(content).toContain("npx omniskill@latest install cto");
     expect(content).toContain("npx omniskill@latest install product-manager");
     expect(content).toContain("npx omniskill@latest install engineering-manager");
     expect(content).toContain("npx omniskill@latest install founding-engineer");
     expect(content).toContain("npx omniskill@latest install qa-lead");
-    expect(content).toContain("npx omniskill@latest deps startup-goal");
-    expect(content).toContain("npx omniskill@latest lock examples/workflows/startup-goal");
-    expect(content).toContain("npx omniskill@latest remove startup-goal");
-    expect(content).not.toContain("npx omniskill@latest install startup-team");
+    expect(content).toContain("npx omniskill@latest deps startup-team");
+    expect(content).toContain("npx omniskill@latest lock examples/teams/startup-team");
+    expect(content).toContain("npx omniskill@latest remove startup-team");
+    expect(content).not.toContain("npx omniskill@latest install startup-goal");
+    expect(content).not.toContain("examples/workflows/startup-goal");
     expect(content).toContain(
       "npx omniskill@latest loop status grilled-product-dev --latest --json",
     );
@@ -79,7 +80,7 @@ describe("landing app source contract", () => {
     expect(page).toContain("Install the workflow.");
     expect(page).toContain("many-skill bank");
     expect(page).toContain("3x your ability");
-    expect(page).toContain("npx omniskill@latest install startup-goal");
+    expect(page).toContain("npx omniskill@latest install startup-team");
     expect(page).toContain("Workflow in motion");
     expect(page).toContain("See startup-goal coordinate the work.");
     expect(page).not.toContain("How it works + Agent run demo");
@@ -214,13 +215,14 @@ describe("landing app source contract", () => {
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
     expect(content).toContain("getLocalSkillSourceUrl");
     expect(content).toContain('localSkillNames: ["haaland"]');
-    expect(content).toContain('slug: "startup-goal"');
+    expect(content).toContain('slug: "startup-team"');
     expect(content).toContain('slug: "founding-engineer"');
     expect(content).toContain('slug: "haaland"');
-    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/startup-goal`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/teams/startup-team`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/haaland`);
-    expect(content).toContain("npx omniskill@latest install startup-goal");
+    expect(content).toContain("npx omniskill@latest install startup-team");
+    expect(content).not.toContain("npx omniskill@latest install startup-goal");
     expect(content).toContain("npx omniskill@latest install haaland");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
@@ -360,7 +362,7 @@ describe("landing app source contract", () => {
 
     expect(landingPage).toContain("const heroInstallCommand =");
     expect(landingPage).toContain("copyText={heroInstallCommand}");
-    expect(landingPage).toContain('copyLabel="Copy startup-goal install command"');
+    expect(landingPage).toContain('copyLabel="Copy startup-team install command"');
     expect(landingPage).toContain("copiedCommandIndex");
     expect(landingPage).toContain("navigator.clipboard.writeText(command.command)");
     expect(landingPage).toContain("aria-label={`Copy command:");
@@ -434,7 +436,7 @@ describe("landing app source contract", () => {
     expect(demo).toContain('aria-live="polite"');
     expect(demo).toContain("aria-pressed={isSelected}");
     expect(demo).toContain(
-      "https://github.com/devos-ing/omni-skills/blob/main/examples/workflows/startup-goal/skills",
+      "https://github.com/devos-ing/omni-skills/blob/main/examples/teams/startup-team/skills",
     );
     expect(demo).toContain('target="_blank"');
     expect(demo).toContain('rel="noreferrer"');

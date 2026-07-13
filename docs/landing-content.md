@@ -26,7 +26,7 @@ playbooks, and verification habits that 3x your ability.
 Primary command preview:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
 Primary action: Browse workflows.
@@ -145,18 +145,18 @@ role map, skill tree, and copyable install command.
 
 Search placeholder: Search workflows, skills, tags...
 
-### Startup Goal
+### Startup Team
 
-- slug: `startup-goal`
-- tag: Goal
+- slug: `startup-team`
+- tag: Team
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
 - accent: `text-[#c83c24]`
-- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
 Description: Move a startup goal through the core operating roles: CEO, CTO,
@@ -464,22 +464,22 @@ and records installed Omniskills workflows under `~/.omniskills/workflows/` by
 default. Loop-enabled workflows use `omniskill loop` for resumable,
 action-only state.
 
-### Install Startup Goal
+### Install Startup Team
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-### Inspect Startup Goal deps
+### Inspect Startup Team deps
 
 ```bash
-npx omniskill@latest deps startup-goal
+npx omniskill@latest deps startup-team
 ```
 
 ### Lock skill fingerprints
 
 ```bash
-npx omniskill@latest lock examples/workflows/startup-goal
+npx omniskill@latest lock examples/teams/startup-team
 ```
 
 ### Check loop status
@@ -509,7 +509,7 @@ npx omniskill@latest list
 ### Remove installed workflow
 
 ```bash
-npx omniskill@latest remove startup-goal
+npx omniskill@latest remove startup-team
 ```
 
 Then invoke in your agent:

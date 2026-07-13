@@ -24,7 +24,7 @@ tree，帶著 goal 呼叫一個 entry skill，讓 agent 取得能 3x your abilit
 Primary command preview：
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
 Primary action：Browse workflows。
@@ -108,18 +108,18 @@ Body：瀏覽可安裝的 workflow bundles，然後打開 detail route 查看 ro
 
 Search placeholder：Search workflows, skills, tags...
 
-### Startup Goal
+### Startup Team
 
-- slug: `startup-goal`
-- tag: Goal
+- slug: `startup-team`
+- tag: Team
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
 - accent: `text-[#c83c24]`
-- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
 Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、EM、founding engineer、QA lead。
@@ -279,14 +279,14 @@ metadata bootstrap missing external skills，並預設把 installed Omniskills w
 `~/.omniskills/workflows/`。Loop-enabled workflows 使用 `omniskill loop` 管理 resumable、action-only state。
 
 ```bash
-npx omniskill@latest install startup-goal
-npx omniskill@latest deps startup-goal
-npx omniskill@latest lock examples/workflows/startup-goal
+npx omniskill@latest install startup-team
+npx omniskill@latest deps startup-team
+npx omniskill@latest lock examples/teams/startup-team
 npx omniskill@latest loop status grilled-product-dev --latest --json
 npx omniskill@latest init my-workflow
 npx omniskill@latest validate my-workflow
 npx omniskill@latest list
-npx omniskill@latest remove startup-goal
+npx omniskill@latest remove startup-team
 ```
 
 Then invoke in your agent：

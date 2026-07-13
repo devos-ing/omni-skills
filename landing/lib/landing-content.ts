@@ -58,8 +58,8 @@ export const agents: AgentBadgeContent[] = [
 
 export const workflows: WorkflowCardContent[] = [
   {
-    slug: "startup-goal",
-    name: "Startup Goal",
+    slug: "startup-team",
+    name: "Startup Team",
     description:
       "Move a startup goal through the core operating roles: CEO, CTO, PM, EM, founding engineer, and QA lead.",
     entrySkill: "startup-goal",
@@ -73,10 +73,10 @@ export const workflows: WorkflowCardContent[] = [
       "qa-lead",
     ],
     avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
-    tag: "Goal",
+    tag: "Team",
     accent: "text-[#c83c24]",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/startup-goal`,
-    installCommand: "npx omniskill@latest install startup-goal",
+    sourceUrl: `${githubUrl}/tree/main/examples/teams/startup-team`,
+    installCommand: "npx omniskill@latest install startup-team",
     skills: [
       { name: "startup-goal", description: "Coordinate role subagents around one goal" },
       { name: "ceo", description: "Company direction and tradeoffs" },
@@ -440,16 +440,16 @@ export const workflows: WorkflowCardContent[] = [
 
 export const commands: CommandExample[] = [
   {
-    label: "Install Startup Goal",
-    command: "npx omniskill@latest install startup-goal",
+    label: "Install Startup Team",
+    command: "npx omniskill@latest install startup-team",
   },
   {
-    label: "Inspect Startup Goal deps",
-    command: "npx omniskill@latest deps startup-goal",
+    label: "Inspect Startup Team deps",
+    command: "npx omniskill@latest deps startup-team",
   },
   {
     label: "Lock skill fingerprints",
-    command: "npx omniskill@latest lock examples/workflows/startup-goal",
+    command: "npx omniskill@latest lock examples/teams/startup-team",
   },
   {
     label: "Check loop status",
@@ -469,7 +469,7 @@ export const commands: CommandExample[] = [
   },
   {
     label: "Remove installed workflow",
-    command: "npx omniskill@latest remove startup-goal",
+    command: "npx omniskill@latest remove startup-team",
   },
 ];
 

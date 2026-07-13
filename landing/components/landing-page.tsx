@@ -37,7 +37,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   }, [query]);
 
   const active = commands[activeCommand] ?? commands[0];
-  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-goal";
+  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-team";
 
   function copyCommand(command: (typeof commands)[number], index: number) {
     setActiveCommand(index);
@@ -98,7 +98,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
             <TerminalBlock
               compact
               copyText={heroInstallCommand}
-              copyLabel="Copy startup-goal install command"
+              copyLabel="Copy startup-team install command"
               lines={[{ prefix: "$", text: heroInstallCommand }]}
             />
             <a
