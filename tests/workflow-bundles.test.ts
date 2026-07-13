@@ -32,7 +32,7 @@ const startupRoleContracts = [
   },
   {
     role: "founding-engineer",
-    phrases: ["Read the plan", "superpowers:verification-before-completion"],
+    phrases: ["smallest correct implementation slice", "implementation frame and handoff"],
   },
   { role: "qa-lead", phrases: ["Restate the user-visible behavior", "Separate verified facts"] },
   {
@@ -378,6 +378,7 @@ describe("workflow bundles", () => {
       ["technology", "./skills/cto", null],
       ["delivery", "./skills/engineering-manager", null],
       ["implementation", "./skills/founding-engineer", null],
+      ["implement", "implement", null],
       ["qa", "./skills/qa-lead", null],
     ]);
     expect(bundle.manifest.steps[0]?.instruction).toContain(
@@ -412,6 +413,10 @@ describe("workflow bundles", () => {
     expect(skill).toContain("Unavailable dispatch");
     expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");
+    expect(skill).toContain("`founding-engineer`: implementation framing and execution handoff");
+    expect(skill).toContain("When `founding-engineer` is selected, it must not edit files");
+    expect(skill).toContain("dispatch `implement` with that handoff as the only");
+    expect(skill).toContain("then hand the result to `qa-lead`");
 
     for (const { role } of startupRoleContracts) {
       const roleSkill = await readStartupRoleSkill(role);
@@ -437,6 +442,23 @@ describe("workflow bundles", () => {
         expect(skill).toContain(phrase);
       }
     }
+  });
+
+  test("startup goal separates implementation framing from execution", async () => {
+    const skill = await readStartupRoleSkill("founding-engineer");
+
+    for (const phrase of [
+      "smallest correct implementation slice",
+      "affected boundaries",
+      "test seam",
+      "risks",
+      "completion checks",
+      "implementation frame and handoff",
+    ]) {
+      expect(skill).toContain(phrase);
+    }
+    expect(skill).toContain("Do not edit files or run implementation commands");
+    expect(skill).not.toContain("Implement the smallest correct change");
   });
 
   test("haaland workflow stays one-step and unconditional", async () => {

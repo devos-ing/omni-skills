@@ -83,7 +83,7 @@ export const workflows: WorkflowCardContent[] = [
       { name: "cto", description: "Architecture and technical risk" },
       { name: "product-manager", description: "Discovery, PRDs, and issue slicing" },
       { name: "engineering-manager", description: "Delivery sequencing and quality gates" },
-      { name: "founding-engineer", description: "Implementation and verification" },
+      { name: "founding-engineer", description: "Implementation framing and handoff" },
       { name: "qa-lead", description: "Acceptance checks and release risk" },
       { name: "superpowers:brainstorming", description: "Explore options before scope locks" },
       { name: "superpowers:writing-plans", description: "Create executable plans" },
@@ -129,9 +129,14 @@ export const workflows: WorkflowCardContent[] = [
         description: "Sequence execution and quality gates.",
       },
       {
-        label: "Implementation",
+        label: "Implementation frame",
         skill: "founding-engineer",
-        description: "Build the smallest verified slice.",
+        description: "Prepare the smallest correct implementation slice.",
+      },
+      {
+        label: "Implement",
+        skill: "implement",
+        description: "Execute the planned change with tests and review.",
       },
       {
         label: "QA",

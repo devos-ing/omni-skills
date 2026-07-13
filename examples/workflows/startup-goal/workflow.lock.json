@@ -1,14 +1,14 @@
 {
   "schemaVersion": "0.1",
   "workflow": "startup-goal",
-  "workflowVersion": "0.1.4",
-  "generatedAt": "2026-07-13T08:13:33.840Z",
+  "workflowVersion": "0.1.5",
+  "generatedAt": "2026-07-13T11:02:38.419Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
       "resolvedName": "startup-goal",
       "kind": "local",
-      "hash": "sha256:5cbf638c4e58dba787682c73510390457bb254b6616550f47c3c60669f7e9365"
+      "hash": "sha256:77c4e62583ebac9854618464495338793fdc604034e2824f2dc7b997d77a62c2"
     },
     {
       "source": "./skills/ceo",
@@ -44,7 +44,7 @@
       "source": "./skills/founding-engineer",
       "resolvedName": "founding-engineer",
       "kind": "local",
-      "hash": "sha256:785d5614b12fd0a23d951b21cd28cbaaced51b348aaedb316670c202366219f3"
+      "hash": "sha256:e14da40516ae72766e406371473f2c2e7e46589deef0c19bb23d92808d5ceb07"
     },
     {
       "source": "./skills/qa-lead",
