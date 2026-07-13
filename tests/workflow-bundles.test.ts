@@ -49,16 +49,7 @@ const startupRoleContracts = [
 
 const readStartupRoleSkill = (role: string) =>
   readFile(
-    join(
-      import.meta.dir,
-      "..",
-      "examples",
-      "workflows",
-      "startup-goal",
-      "skills",
-      role,
-      "SKILL.md",
-    ),
+    join(import.meta.dir, "..", "examples", "teams", "startup-team", "skills", role, "SKILL.md"),
     "utf8",
   );
 
@@ -375,7 +366,6 @@ describe("workflow bundles", () => {
       "founding-engineer",
       "qa-lead",
       "web-design",
-      "startup-goal",
       "haaland",
     ];
 
@@ -391,6 +381,16 @@ describe("workflow bundles", () => {
       );
       expect(bundle.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
     }
+
+    const startupTeam = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
+    );
+    expect(startupTeam.manifest.name).toBe("startup-team");
+    expect(startupTeam.lock?.workflow).toBe("startup-team");
+    expect(startupTeam.lock?.skills.map((skill) => skill.source)).toEqual(
+      startupTeam.manifest.skills.map((skill) => skill.source),
+    );
+    expect(startupTeam.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
   });
 
   test("pins every Matt Pocock example dependency to the v1.1.0 catalog", async () => {
@@ -405,7 +405,6 @@ describe("workflow bundles", () => {
       "product-manager",
       "qa-lead",
       "real-engineering",
-      "startup-goal",
     ] as const;
     const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
     const retiredMattPocockSources = [
@@ -433,6 +432,21 @@ describe("workflow bundles", () => {
       for (const source of stepSources) {
         expect(retiredMattPocockSources).not.toContain(source);
       }
+    }
+
+    const startupTeam = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
+    );
+    const startupTeamMattPocockSkills = startupTeam.manifest.skills.filter((skill) =>
+      skill.source.startsWith("mattpocock:"),
+    );
+    expect(startupTeamMattPocockSkills).not.toHaveLength(0);
+    for (const skill of startupTeamMattPocockSkills) {
+      expect(skill.repo).toBe(mattPocockV1_1Repo);
+      expect(retiredMattPocockSources).not.toContain(skill.source);
+    }
+    for (const source of startupTeam.manifest.steps.map((step) => step.skill)) {
+      expect(retiredMattPocockSources).not.toContain(source);
     }
 
     const developmentDesignDelivery = await loadWorkflowBundle(
@@ -472,23 +486,44 @@ describe("workflow bundles", () => {
     expect(skill).toContain("If a companion skill is unavailable");
   });
 
-  test("startup goal entry skill dispatches role subagents and combines results", async () => {
+  test("startup team entry skill dispatches role subagents and combines results", async () => {
     const bundle = await loadWorkflowBundle(
-      join(import.meta.dir, "..", "examples", "workflows", "startup-goal"),
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
     );
     const skill = await readFile(
       join(
         import.meta.dir,
         "..",
         "examples",
-        "workflows",
-        "startup-goal",
+        "teams",
+        "startup-team",
         "skills",
         "startup-goal",
         "SKILL.md",
       ),
       "utf8",
     );
+
+    expect(bundle.manifest).toMatchObject({
+      kind: "team",
+      name: "startup-team",
+      version: "0.2.0",
+      coordinator: "./skills/startup-goal",
+      members: [
+        "./skills/ceo",
+        "./skills/cto",
+        "./skills/product-manager",
+        "./skills/web-design",
+        "./skills/engineering-manager",
+        "./skills/founding-engineer",
+        "./skills/qa-lead",
+      ],
+    });
+    expect(
+      bundle.manifest.skills.find((candidate) => candidate.source === bundle.manifest.coordinator),
+    ).toEqual({ source: "./skills/startup-goal", entry: true });
+    expect(bundle.lock?.workflow).toBe("startup-team");
+    expect(bundle.lock?.workflowVersion).toBe("0.2.0");
 
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["requirements", "superpowers:brainstorming", "human_approval"],
@@ -551,7 +586,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("startup goal bundled role skills define role-specific operating modes", async () => {
+  test("startup team bundled role skills define role-specific operating modes", async () => {
     for (const contract of startupRoleContracts) {
       const skill = await readStartupRoleSkill(contract.role);
 
@@ -565,7 +600,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("startup goal separates implementation framing from execution", async () => {
+  test("startup team separates implementation framing from execution", async () => {
     const skill = await readStartupRoleSkill("founding-engineer");
 
     for (const phrase of [

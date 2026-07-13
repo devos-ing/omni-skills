@@ -1,8 +1,8 @@
 {
   "schemaVersion": "0.1",
-  "workflow": "startup-goal",
-  "workflowVersion": "0.1.5",
-  "generatedAt": "2026-07-13T11:02:38.419Z",
+  "workflow": "startup-team",
+  "workflowVersion": "0.2.0",
+  "generatedAt": "2026-07-13T17:41:16.963Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
