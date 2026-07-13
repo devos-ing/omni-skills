@@ -46,8 +46,9 @@ function fakeSkillInstallResult(input: {
 
 async function writeGitWorkflowFixtureAt(
   workflowDir: string,
-  options: { loop?: boolean; version?: string; extraSkill?: boolean } = {},
+  options: { loop?: boolean; version?: string; extraSkill?: boolean; team?: boolean } = {},
 ): Promise<void> {
+  const includeExtraSkill = options.extraSkill === true || options.team === true;
   await mkdir(join(workflowDir, "skills", "git-entry"), { recursive: true });
   await writeFile(
     join(workflowDir, "skills", "git-entry", "SKILL.md"),
@@ -60,7 +61,7 @@ async function writeGitWorkflowFixtureAt(
       "# git-entry",
     ].join("\n"),
   );
-  if (options.extraSkill) {
+  if (includeExtraSkill) {
     await mkdir(join(workflowDir, "skills", "git-extra"), { recursive: true });
     await writeFile(
       join(workflowDir, "skills", "git-extra", "SKILL.md"),
@@ -79,15 +80,25 @@ async function writeGitWorkflowFixtureAt(
     JSON.stringify(
       {
         schemaVersion: "0.1",
-        name: "git-workflow",
+        ...(options.team
+          ? {
+              kind: "team",
+              name: "git-team",
+              coordinator: "./skills/git-entry",
+              members: ["./skills/git-extra"],
+            }
+          : { name: "git-workflow" }),
         version: options.version ?? "0.1.0",
         description: "Uses one local skill from git.",
         ...(options.loop
           ? { loop: { script: "./loop.mjs", state: "global", execution: "action-only" } }
           : {}),
         skills: [
-          { source: "./skills/git-entry", ...(options.loop ? { entry: true } : {}) },
-          ...(options.extraSkill ? [{ source: "./skills/git-extra" }] : []),
+          {
+            source: "./skills/git-entry",
+            ...(options.loop || options.team ? { entry: true } : {}),
+          },
+          ...(includeExtraSkill ? [{ source: "./skills/git-extra" }] : []),
         ],
         steps: [
           {
@@ -96,7 +107,7 @@ async function writeGitWorkflowFixtureAt(
             skill: "./skills/git-entry",
             ...(options.loop ? { instruction: "Check loop status." } : {}),
           },
-          ...(options.extraSkill
+          ...(includeExtraSkill
             ? [
                 {
                   id: "extra",
@@ -161,6 +172,32 @@ describe("omniskill command module", () => {
         .find((command) => command.name() === "bundle")
         ?.commands.map((command) => command.name()),
     ).toEqual(["init", "validate", "lock"]);
+  });
+
+  test("describes bundle commands as supporting workflows and teams", () => {
+    const program = new Command();
+
+    configureOmniskillCommand(program, {
+      rootDir: process.cwd(),
+      installSkill: async () => {
+        throw new Error("install is not exercised by command-description tests");
+      },
+      printSkillInstallResult: () => {},
+    });
+
+    const descriptions = new Map(
+      program.commands.map((command) => [command.name(), command.description()]),
+    );
+    expect(descriptions.get("install")).toBe(
+      "Install an Omniskills workflow or team and its skills.",
+    );
+    expect(descriptions.get("list")).toBe("List installed Omniskills workflows and teams.");
+    expect(descriptions.get("remove")).toBe(
+      "Remove an installed Omniskills workflow or team and its recorded skill artifacts.",
+    );
+    expect(descriptions.get("deps")).toBe(
+      "List the skill dependencies declared by an Omniskills workflow or team.",
+    );
   });
 
   test("install supports a public git workflow source", async () => {
@@ -812,6 +849,54 @@ describe("omniskill command module", () => {
       expect(output).toContain(
         `Omniskills file: ${join(homeDir, ".omniskills", "workflows", "git-workflow.json")}`,
       );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("install tells team users to invoke the declared coordinator", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-team-progress-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-team-progress-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, { team: true });
+
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: {
+          confirmInstall: async () => true,
+        },
+        installSkill: async (input) => {
+          const skillName = input.source.endsWith("git-extra") ? "git-extra" : "git-entry";
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName,
+              destination: join(homeDir, ".agents", "skills", skillName),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      const output = stripAnsiLines(logs).join("\n");
+      expect(output).toContain("Omniskills installed: git-team");
+      expect(output).toContain("Next: $git-entry");
+      expect(output).not.toContain("$startup-goal");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
