@@ -321,3 +321,17 @@ restore the old public content, and regenerate the original lock file.
 3. Implementation-plan approval: required before role dispatch or code changes.
 4. Startup-team route approval: required before selected role subagents execute.
 5. Completion: requires verification evidence from the full repository gate.
+
+## Clean-install amendment
+
+The approved design originally retained the bare `implement` dependency and
+step exactly. An isolated install into a clean home later proved that a fresh
+user could install the first 24 dependencies but could not resolve bare
+`implement`.
+
+The implemented team therefore declares `mattpocock:implement` with the pinned
+`https://github.com/mattpocock/skills/tree/v1.1.0` repository and uses that
+exact source in the implementation step. The installed skill name and behavior
+remain `implement`; the amendment only makes its package source explicit. All
+coordinator, member, approval-gate, and execution-order contracts remain
+unchanged.

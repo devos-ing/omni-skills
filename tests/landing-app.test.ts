@@ -236,6 +236,34 @@ describe("landing app source contract", () => {
     expect(content).toContain("Execute the planned change with tests and review.");
   });
 
+  test("mirrors the exact startup-team manifest skill roster", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+    const startupCardStart = content.indexOf('slug: "startup-team"');
+    const nextCardStart = content.indexOf('slug: "ceo"', startupCardStart);
+    const startupCard = content.slice(startupCardStart, nextCardStart);
+    const manifest = JSON.parse(
+      readFileSync(join(repoRoot, "examples", "teams", "startup-team", "workflow.json"), "utf8"),
+    ) as { skills: Array<{ source: string }> };
+    const expectedNames = manifest.skills.map(({ source }) =>
+      source.startsWith("./skills/") ? source.slice("./skills/".length) : source,
+    );
+
+    expect(startupCardStart).toBeGreaterThan(-1);
+    expect(nextCardStart).toBeGreaterThan(startupCardStart);
+    expect(expectedNames).toHaveLength(25);
+    for (const name of expectedNames) {
+      expect(startupCard).toContain(`name: "${name}"`);
+    }
+    for (const staleName of [
+      "mattpocock:decision-mapping",
+      "mattpocock:to-prd",
+      "mattpocock:to-issues",
+      "mattpocock:review",
+    ]) {
+      expect(startupCard).not.toContain(`{ name: "${staleName}"`);
+    }
+  });
+
   test("renders workflow cards as route links with hash-seeded avatars", () => {
     const card = readLandingFile("components/workflow-card.tsx");
     const avatar = readLandingFile("components/workflow-avatar.tsx");

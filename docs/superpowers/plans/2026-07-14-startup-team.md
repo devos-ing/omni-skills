@@ -981,3 +981,14 @@ rtk git log --oneline --decorate -8
 ```
 
 Expected: `codex/startup-team-manifest` has no uncommitted implementation files and contains the design, schema, catalog, bundle, CLI, documentation, and landing commits in order.
+
+## Clean-install amendment
+
+Post-implementation smoke testing in a clean home found that the planned bare
+`implement` source could not bootstrap for a fresh user. The verified fix is to
+change the retained dependency and its step reference to
+`mattpocock:implement`, pin its repository to
+`https://github.com/mattpocock/skills/tree/v1.1.0`, regenerate the lock, and
+assert that the real startup-team manifest contains no bare `implement`
+dependency. This is the only intentional deviation from the plan's exact
+skills/steps retention; the installed skill remains named `implement`.

@@ -172,18 +172,22 @@ Skills:
 - `engineering-manager`: Delivery sequencing and quality gates
 - `founding-engineer`: Implementation framing and handoff
 - `qa-lead`: Acceptance checks and release risk
+- `emilkowalski:emil-design-eng`: Polish interface implementation
+- `emilkowalski:animation-vocabulary`: Name and select motion patterns
+- `emilkowalski:apple-design`: Apply Apple design principles
+- `emilkowalski:review-animations`: Review motion quality
 - `superpowers:brainstorming`: Explore options before scope locks
 - `superpowers:writing-plans`: Create executable plans
 - `superpowers:verification-before-completion`: Verify before claiming done
-- `mattpocock:decision-mapping`: Map decisions and uncertainty
+- `mattpocock:wayfinder`: Map decisions and uncertainty
 - `mattpocock:grill-with-docs`: Stress-test direction
-- `mattpocock:to-prd`: Write product requirements
-- `mattpocock:to-issues`: Slice work into issues
+- `mattpocock:to-spec`: Write product requirements
+- `mattpocock:to-tickets`: Slice work into issues
 - `mattpocock:codebase-design`: Review codebase boundaries
 - `mattpocock:domain-modeling`: Name domain concepts
 - `mattpocock:tdd`: Build with tests where practical
 - `mattpocock:diagnosing-bugs`: Diagnose failures from evidence
-- `mattpocock:review`: Review behavior and risk
+- `mattpocock:code-review`: Review behavior and risk
 - `mattpocock:implement`: Execute the implementation slice
 
 Ordered skill path:

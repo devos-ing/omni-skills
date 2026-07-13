@@ -124,7 +124,7 @@ npx omniskill@latest install startup-team
 
 Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、web design、EM、founding engineer、QA lead。
 
-Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`web-design`、`engineering-manager`、`founding-engineer`、`qa-lead`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:decision-mapping`、`mattpocock:grill-with-docs`、`mattpocock:to-prd`、`mattpocock:to-issues`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`、`mattpocock:implement`。
+Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`web-design`、`engineering-manager`、`founding-engineer`、`qa-lead`、`emilkowalski:emil-design-eng`、`emilkowalski:animation-vocabulary`、`emilkowalski:apple-design`、`emilkowalski:review-animations`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:wayfinder`、`mattpocock:grill-with-docs`、`mattpocock:to-spec`、`mattpocock:to-tickets`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`mattpocock:implement`。
 
 Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Design -> `web-design`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation frame -> `founding-engineer`；Implement -> `mattpocock:implement`；QA -> `qa-lead`。
 

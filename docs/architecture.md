@@ -134,8 +134,8 @@ should stay aligned with `workflow.json`.
 A first-class team uses the same file layout under `examples/teams/<name>` and
 declares `kind: "team"`, `coordinator`, and `members` in `workflow.json`.
 `coordinator` and every `members[]` value must match a declared local
-`skills[].source`; the coordinator must also be the callable entry skill. In
-`startup-team`, startup-goal remains the callable coordinator while the seven
+`skills[].source`. For `startup-team`, the coordinator is marked as the callable
+entry skill: startup-goal remains the callable coordinator while the seven
 startup role skills are members. The public bundle installs as `startup-team`;
 users invoke `$startup-goal` after installation.
 

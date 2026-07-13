@@ -105,6 +105,21 @@ describe("README source contract", () => {
     expect(architecture).toContain("`members`");
     expect(architecture).toContain("examples/teams/<name>");
     expect(architecture).toContain("startup-goal remains the callable coordinator");
+    expect(architecture).toMatch(
+      /For `startup-team`, the coordinator is marked as the callable\s+entry skill/,
+    );
+    expect(architecture).not.toContain("the coordinator must also be the callable entry skill");
+  });
+
+  test("records the clean-install amendment to the approved startup-team plan", () => {
+    const design = readRepoFile("docs/superpowers/specs/2026-07-14-startup-team-design.md");
+    const plan = readRepoFile("docs/superpowers/plans/2026-07-14-startup-team.md");
+
+    for (const document of [design, plan]) {
+      expect(document).toContain("Clean-install amendment");
+      expect(document).toContain("mattpocock:implement");
+      expect(document).toContain("clean home");
+    }
   });
 
   test("names the built-in skill ecosystem", () => {
