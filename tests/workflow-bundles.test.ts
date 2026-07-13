@@ -81,6 +81,38 @@ const validTeamManifest = {
   ],
 } as const;
 
+async function writeTeamBundleFixtureAt(bundleDir: string, kind: "team" | "workflow" = "team") {
+  await mkdir(join(bundleDir, "skills", "coordinator"), { recursive: true });
+  await mkdir(join(bundleDir, "skills", "member"), { recursive: true });
+  await writeFile(
+    join(bundleDir, "skills", "coordinator", "SKILL.md"),
+    '---\nname: coordinator\ndescription: "Coordinate the team."\n---\n',
+  );
+  await writeFile(
+    join(bundleDir, "skills", "member", "SKILL.md"),
+    '---\nname: member\ndescription: "Act as a team member."\n---\n',
+  );
+  await writeFile(
+    join(bundleDir, "workflow.json"),
+    `${JSON.stringify(
+      {
+        schemaVersion: "0.1",
+        kind,
+        name: "fixture-team",
+        version: "0.1.0",
+        description: "Team alias fixture.",
+        ...(kind === "team"
+          ? { coordinator: "./skills/coordinator", members: ["./skills/member"] }
+          : {}),
+        skills: [{ source: "./skills/coordinator", entry: true }, { source: "./skills/member" }],
+        steps: [{ id: "route", title: "Route", skill: "./skills/coordinator" }],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
 describe("workflow bundles", () => {
   test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
     const runtime = await import("../src/runtimes/omniskill/workflow-bundles");
@@ -1472,6 +1504,90 @@ describe("workflow bundles", () => {
 
     await bundle.cleanup?.();
     await expect(stat(checkoutDir)).rejects.toThrow();
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("resolves team aliases from examples/teams and retains team metadata", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-team-alias-"));
+    const installRoot = await mkdtemp(join(tmpdir(), "workflow-team-install-"));
+    let checkoutDir = "";
+
+    const bundle = await loadWorkflowBundle("startup-team", {
+      tempDir,
+      runGitCommand: async (command) => {
+        if (command.args[0] === "clone") {
+          checkoutDir = command.args.at(-1) ?? "";
+          await writeTeamBundleFixtureAt(join(checkoutDir, "examples", "teams", "startup-team"));
+          return { stdout: "", stderr: "", exitCode: 0 };
+        }
+        return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+      },
+    });
+
+    expect(bundle.manifest.kind).toBe("team");
+    expect(bundle.manifest.coordinator).toBe("./skills/coordinator");
+    expect(bundle.manifest.members).toEqual(["./skills/member"]);
+    expect(bundle.source).toEqual({
+      kind: "git",
+      url: "https://github.com/devos-ing/omni-skills.git#examples/teams/startup-team",
+      commit: "abc123",
+      subdirectory: "examples/teams/startup-team",
+    });
+
+    const install = await installWorkflowBundle({ rootDir: installRoot, bundle });
+    expect(install.workflow.kind).toBe("team");
+    expect(install.workflow.coordinator).toBe("./skills/coordinator");
+    expect(install.workflow.members).toEqual(["./skills/member"]);
+
+    await bundle.cleanup?.();
+    await expect(stat(checkoutDir)).rejects.toThrow();
+    await rm(installRoot, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("rejects a workflow manifest resolved through a team alias", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-team-kind-mismatch-"));
+
+    await expect(
+      loadWorkflowBundle("startup-team", {
+        tempDir,
+        runGitCommand: async (command) => {
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await writeTeamBundleFixtureAt(
+              join(checkoutDir, "examples", "teams", "startup-team"),
+              "workflow",
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      }),
+    ).rejects.toThrow('Omniskills team alias "startup-team" must resolve to kind: "team"');
+
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("does not redirect the startup-goal alias to startup-team", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-startup-goal-alias-"));
+
+    await expect(
+      loadWorkflowBundle("startup-goal", {
+        tempDir,
+        runGitCommand: async (command) => {
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await mkdir(join(checkoutDir, "examples", "workflows"), { recursive: true });
+            await writeTeamBundleFixtureAt(join(checkoutDir, "examples", "teams", "startup-team"));
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      }),
+    ).rejects.toThrow(
+      "Omniskills workflow alias not found: startup-goal\nChecked: https://github.com/devos-ing/omni-skills.git#examples/workflows/startup-goal",
+    );
+
     await rm(tempDir, { recursive: true, force: true });
   });
 

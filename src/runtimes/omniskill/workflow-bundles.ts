@@ -10,6 +10,7 @@ export const workflowFileName = "workflow.json";
 export const workflowLockFileName = "workflow.lock.json";
 const workflowStoreDir = ".omniskills/workflows";
 const canonicalExamplesGitUrl = "https://github.com/devos-ing/omni-skills.git";
+const canonicalExamplesTeamPath = "examples/teams";
 const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -379,6 +380,11 @@ export async function loadWorkflowBundle(
   try {
     const rawManifest = await readFile(manifestPath, "utf8");
     const manifest = WorkflowBundleManifestSchema.parse(JSON.parse(rawManifest));
+    if (resolvedSource.alias?.endsWith("-team") && manifest.kind !== "team") {
+      throw new Error(
+        `Omniskills team alias "${resolvedSource.alias}" must resolve to kind: "team"`,
+      );
+    }
     validateWorkflowBundleFiles({ manifest, sourceDir: manifestDir });
     const loadedLock = await loadWorkflowLockFileForManifest({ manifest, sourceDir: manifestDir });
 
@@ -1155,10 +1161,13 @@ function parseWorkflowAliasSource(source: string): GitWorkflowSource | null {
     return null;
   }
 
-  const url = `${canonicalExamplesGitUrl}#${canonicalExamplesWorkflowPath}/${source}`;
+  const catalogPath = source.endsWith("-team")
+    ? canonicalExamplesTeamPath
+    : canonicalExamplesWorkflowPath;
+  const url = `${canonicalExamplesGitUrl}#${catalogPath}/${source}`;
   const gitSource = parseGitWorkflowSource(url);
   if (!gitSource) {
-    throw new Error(`Could not build canonical Omniskills workflow alias URL: ${source}`);
+    throw new Error(`Could not build canonical Omniskills alias URL: ${source}`);
   }
 
   return { ...gitSource, alias: source };
