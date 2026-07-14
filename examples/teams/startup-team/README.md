@@ -27,3 +27,24 @@ Refresh the checked skill fingerprints after editing the bundled role skills:
 ```bash
 bun run dev -- lock examples/teams/startup-team
 ```
+
+## Model orchestration
+
+The default install compiles the team's vendor-neutral `deep`, `standard`, and
+`fast` assignments into global Codex and Claude profiles. Override model
+candidates in `~/.omniskills/orchestration.json`.
+
+Preview every skill and profile destination without writing:
+
+```bash
+bun run dev -- install examples/teams/startup-team --dry-run
+```
+
+Profiles are namespaced with `omniskills-startup-team-`. Reinstall updates only
+unchanged managed profiles; removal keeps user-modified profiles and always
+preserves the shared orchestration configuration.
+
+The skill cannot change the model of an already-running root session. Fallback
+and consultation are visible orchestration protocols, not provider-level
+guarantees. Codex receives a live smoke check in this repository; Claude output
+is statically validated unless Claude Code is installed separately.

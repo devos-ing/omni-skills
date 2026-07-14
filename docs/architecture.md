@@ -9,10 +9,12 @@ older Ponyrace requirement-review runtime has been removed from source.
 src/
   cli.ts
   plugins/
+    agent-profile-installer.ts
     skill-installer.ts
   runtimes/
     omniskill/
       instruction-context.ts
+      orchestration.ts
       snapshots.ts
       workflow-bundles.ts
       workflow-loop-runtime.mjs
@@ -72,6 +74,10 @@ Compatibility aliases:
   generated `loop.mjs`, and generated `loop.metadata.json`
 - install normalized global records under `~/.omniskills/workflows/` with
   exact skill artifact metadata for later removal
+- validate vendor-neutral team orchestration assignments and compile them into
+  deterministic Codex TOML and Claude Markdown profile plans
+- preserve managed agent-profile ownership hashes in workflow records so
+  removal deletes unchanged generated profiles and keeps user-modified files
 - list installed Omniskills workflows and teams
 - plan and execute removal of installed bundle skill artifacts while
   preserving artifacts referenced by other install records
@@ -96,6 +102,11 @@ agent homes:
 Repeated shared destinations are handled once per install/update operation, so
 requesting Codex, opencode, and Copilot together does not copy the same skill
 directory multiple times.
+
+`src/plugins/agent-profile-installer.ts` owns the native orchestration profile
+filesystem boundary. It plans the shared `~/.omniskills/orchestration.json`
+configuration, classifies create/update/conflict states, writes profile batches
+with rollback, and leaves team routing rules in the Omniskills runtime.
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed

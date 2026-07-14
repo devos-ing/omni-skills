@@ -1493,6 +1493,50 @@ describe("workflow bundles", () => {
       join(import.meta.dir, "..", "examples", "teams", "startup-team"),
     );
     expect(startupTeam.manifest.name).toBe("startup-team");
+    expect(startupTeam.manifest.orchestration).toEqual({
+      roles: {
+        "./skills/startup-goal": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "receive",
+        },
+        "catalog:ceo": { tier: "deep", access: "read-only", consultation: "request" },
+        "catalog:cto": { tier: "deep", access: "read-only", consultation: "request" },
+        "catalog:product-manager": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "request",
+        },
+        "catalog:web-design": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "request",
+        },
+        "catalog:engineering-manager": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "request",
+        },
+        "catalog:founding-engineer": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "request",
+        },
+        "catalog:qa-lead": {
+          tier: "deep",
+          access: "read-only",
+          consultation: "request",
+        },
+        "mattpocock:implement": {
+          tier: "standard",
+          access: "workspace-write",
+          consultation: "request",
+        },
+      },
+      support: {
+        explorer: { tier: "fast", access: "read-only", consultation: "request" },
+      },
+    });
     expect(startupTeam.lock?.workflow).toBe("startup-team");
     expect(startupTeam.lock?.schemaVersion).toBe("0.2");
     if (startupTeam.lock?.schemaVersion === "0.2") {
@@ -1637,7 +1681,7 @@ describe("workflow bundles", () => {
     expect(bundle.manifest).toMatchObject({
       kind: "team",
       name: "startup-team",
-      version: "0.2.0",
+      version: "0.3.0",
       coordinator: "./skills/startup-goal",
       members: canonicalMembers,
     });
@@ -1645,7 +1689,7 @@ describe("workflow bundles", () => {
       bundle.manifest.skills.find((candidate) => candidate.source === bundle.manifest.coordinator),
     ).toEqual({ source: "./skills/startup-goal", entry: true });
     expect(bundle.lock?.workflow).toBe("startup-team");
-    expect(bundle.lock?.workflowVersion).toBe("0.2.0");
+    expect(bundle.lock?.workflowVersion).toBe("0.3.0");
 
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["requirements", "superpowers:brainstorming", "human_approval"],

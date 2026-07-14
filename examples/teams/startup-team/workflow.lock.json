@@ -1,13 +1,13 @@
 {
   "schemaVersion": "0.2",
   "workflow": "startup-team",
-  "workflowVersion": "0.2.0",
-  "generatedAt": "2026-07-14T09:18:54.936Z",
+  "workflowVersion": "0.3.0",
+  "generatedAt": "2026-07-14T13:45:55.570Z",
   "workflows": [
     {
-      "id": "workflow:startup-team@0.2.0",
+      "id": "workflow:startup-team@0.3.0",
       "name": "startup-team",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "source": {
         "kind": "root"
       }
@@ -19,7 +19,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/ceo",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/ceo"
       }
     },
@@ -30,7 +30,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/cto",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/cto"
       }
     },
@@ -41,7 +41,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/product-manager",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/product-manager"
       }
     },
@@ -52,7 +52,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/web-design",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/web-design"
       }
     },
@@ -63,7 +63,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/engineering-manager",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/engineering-manager"
       }
     },
@@ -74,7 +74,7 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/founding-engineer",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/founding-engineer"
       }
     },
@@ -85,38 +85,38 @@
       "source": {
         "kind": "git",
         "url": "https://github.com/devos-ing/omni-skills.git#examples/workflows/qa-lead",
-        "commit": "45e8b05fcce1140b9ed06559bb27430d99761407",
+        "commit": "ec993f8a149941a6f0f5a249f46287db35affa6f",
         "subdirectory": "examples/workflows/qa-lead"
       }
     }
   ],
   "edges": [
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:ceo@0.1.1"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:cto@0.1.1"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:product-manager@0.1.1"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:web-design@0.1.0"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:engineering-manager@0.1.1"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:founding-engineer@0.1.1"
     },
     {
-      "from": "workflow:startup-team@0.2.0",
+      "from": "workflow:startup-team@0.3.0",
       "to": "workflow:qa-lead@0.1.1"
     }
   ],
@@ -125,7 +125,7 @@
       "source": "./skills/startup-goal",
       "resolvedName": "startup-goal",
       "kind": "local",
-      "hash": "sha256:77c4e62583ebac9854618464495338793fdc604034e2824f2dc7b997d77a62c2"
+      "hash": "sha256:8f4fddb8f794c3be19de75d3614ca5e7918cb13466c76a5f0ff24a44b1f80468"
     },
     {
       "source": "workflow:ceo@0.1.1#./skills/ceo",
@@ -269,6 +269,13 @@
       "hash": "sha256:31849f572dc09e4df212fe66981a04cb67749364441501526d0c48ebb0175490"
     },
     {
+      "source": "mattpocock:implement",
+      "resolvedName": "implement",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:1ad478cef4ccf1cde4cfff91cd551cb781e21da4e6d4940ef4df64c209db35cc"
+    },
+    {
       "source": "superpowers:verification-before-completion",
       "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
@@ -280,13 +287,6 @@
       "resolvedName": "qa-lead",
       "kind": "local",
       "hash": "sha256:a9c4e9f241b612ab0c4302bb847b5c0232c32210b599b616c6c388f3b899b647"
-    },
-    {
-      "source": "mattpocock:implement",
-      "resolvedName": "implement",
-      "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:1ad478cef4ccf1cde4cfff91cd551cb781e21da4e6d4940ef4df64c209db35cc"
     }
   ]
 }

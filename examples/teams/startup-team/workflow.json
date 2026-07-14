@@ -2,7 +2,7 @@
   "schemaVersion": "0.1",
   "kind": "team",
   "name": "startup-team",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Install a startup team as one goal-oriented Omniskills bundle: a startup-goal coordinator plus CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
   "coordinator": "./skills/startup-goal",
   "members": [
@@ -14,6 +14,62 @@
     "catalog:founding-engineer",
     "catalog:qa-lead"
   ],
+  "orchestration": {
+    "roles": {
+      "./skills/startup-goal": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "receive"
+      },
+      "catalog:ceo": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:cto": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:product-manager": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:web-design": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:engineering-manager": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:founding-engineer": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "catalog:qa-lead": {
+        "tier": "deep",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "mattpocock:implement": {
+        "tier": "standard",
+        "access": "workspace-write",
+        "consultation": "request"
+      }
+    },
+    "support": {
+      "explorer": {
+        "tier": "fast",
+        "access": "read-only",
+        "consultation": "request"
+      }
+    }
+  },
   "skills": [
     {
       "source": "./skills/startup-goal",
