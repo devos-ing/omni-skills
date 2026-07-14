@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "startup-team",
   "workflowVersion": "0.3.0",
-  "generatedAt": "2026-07-14T14:02:18.321Z",
+  "generatedAt": "2026-07-14T17:47:34.101Z",
   "workflows": [
     {
       "id": "workflow:startup-team@0.3.0",
@@ -125,7 +125,7 @@
       "source": "./skills/startup-goal",
       "resolvedName": "startup-goal",
       "kind": "local",
-      "hash": "sha256:075d7011c5000a7e7c39714425dbe9f833a3b72e8803f8fe3c15d84bee10317b"
+      "hash": "sha256:32659c821419a6c1f7b6047b59a0cec8d8bcb445f6d06bc5d4dda648eb2c91e8"
     },
     {
       "source": "workflow:ceo@0.1.1#./skills/ceo",

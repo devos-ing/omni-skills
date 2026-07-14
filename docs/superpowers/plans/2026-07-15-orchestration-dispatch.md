@@ -426,7 +426,6 @@ test("launches Codex with explicit model, effort, sandbox, and bounded stdin", a
       args: [
         "exec",
         "--json",
-        "--ephemeral",
         "--skip-git-repo-check",
         "-C",
         "/tmp/project",

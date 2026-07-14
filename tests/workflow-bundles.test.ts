@@ -1841,6 +1841,9 @@ describe("workflow bundles", () => {
     expect(skill).toContain("Every run must show");
     expect(skill).toContain("Skipped roles, including `none`");
     expect(skill).toContain("one role-scoped subagent per selected role");
+    expect(skill).toContain("omniskill dispatch");
+    expect(skill).toContain("launch_configured");
+    expect(skill).toContain("Generic `spawn_agent` is unverified");
     expect(skill).toContain("Unavailable dispatch");
     expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");

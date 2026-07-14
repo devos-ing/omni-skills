@@ -52,17 +52,25 @@ Present the route plan and wait for explicit approval before dispatch. Every run
 ## 4. Dispatch
 
 Show active roles, responsibilities, expected outputs, and verification before
-execution. Dispatch one role-scoped subagent per selected role and give it the
-matching role skill plus: goal, current task, prior handoff, expected output,
-approval gate, and verification bar.
+execution. Before disclosing model or effort, run an `omniskill dispatch`
+preflight for each selected role with `--dry-run --json`. Use only the returned
+profile, tier, runtime, model, effort, access, adapter, and evidence level.
+Generic `spawn_agent` is unverified and cannot satisfy a startup-team tier
+assignment. If preflight cannot produce at least `launch_configured` evidence,
+show the prepared role brief under `Unavailable dispatch` and stop.
+
+After preflight and any required approval, dispatch one role-scoped subagent per selected role.
+Give it the matching role skill plus: goal, current task, prior handoff,
+expected output, approval gate, and verification bar. A `workspace-write` role
+requires the explicit `--approve-workspace-write` gate. Persist and disclose
+the run id so consultation can continue through `omniskill dispatch resume`.
 
 When `founding-engineer` is selected, it must not edit files. After it returns
 the implementation frame, dispatch `implement` with that handoff as the only
 execution phase, then hand the result to `qa-lead`.
 
 Wait for all selected roles. Show each completed output with its accountable
-role, evidence, risk, and next handoff. If dispatch is unavailable, show the
-prepared briefs under `Unavailable dispatch` and stop.
+role, receipt evidence, risk, and next handoff.
 
 ## Orchestration policy
 

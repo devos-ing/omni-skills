@@ -10,9 +10,12 @@ src/
   cli.ts
   plugins/
     agent-profile-installer.ts
+    orchestration-dispatcher.ts
+    orchestration-run-store.ts
     skill-installer.ts
   runtimes/
     omniskill/
+      orchestration-dispatch.ts
       orchestration.ts
       workflow-bundles.ts
       workflow-loop-runtime.mjs
@@ -33,6 +36,8 @@ Primary commands:
 - `omniskill install <source>`
 - `omniskill list`
 - `omniskill remove <workflow-name>`
+- `omniskill dispatch <workflow-name> --role <source> --task <text>`
+- `omniskill dispatch resume <run-id> --decision <decision> --message <text>`
 - `omniskill loop <start|status|log|advance|summary> <source>`
 - `skills install [source]`
 - `skills update [source]`
@@ -106,6 +111,15 @@ filesystem boundary. It plans the shared `~/.omniskills/orchestration.json`
 configuration, classifies create/update/conflict states, writes profile batches
 with rollback, and leaves team routing rules in the Omniskills runtime.
 
+`src/runtimes/omniskill/orchestration-dispatch.ts` owns verified installed-profile
+selection, approval checks, candidate schedules, consultation contracts, and
+dispatch receipts. `src/plugins/orchestration-dispatcher.ts` owns Codex CLI
+capability checks, argument construction, JSONL classification, and session
+resume. `src/plugins/orchestration-run-store.ts` atomically persists request,
+plan, attempt, and receipt state. `src/omniskill.ts` remains the thin command
+orchestrator across those boundaries. Generic native subagent creation is not
+treated as verified model-selection evidence.
+
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed
 through the Skills CLI by `src/omniskill.ts`. Workflow manifests can keep
@@ -120,8 +134,9 @@ target name. Once the skill exists, installer metadata must match that value.
 Installed workflow records live under
 `~/.omniskills/workflows/`; project-local records are only written when a
 caller passes `--dir`. Optional looped workflows may write per-run state under
-`~/.omniskills/runs/<workflow>/<run-id>/` through `omniskill loop` or the
-compatibility `loop.mjs` wrapper.
+`~/.omniskills/runs/<workflow>/<run-id>/` through `omniskill loop`, the
+compatibility `loop.mjs` wrapper, or verified orchestration dispatch. Dispatch
+runs contain `request.json`, `plan.json`, `attempts.jsonl`, and `receipt.json`.
 
 ## Bundle Layout
 

@@ -40,9 +40,37 @@ Preview every skill and profile destination without writing:
 bun run dev -- install examples/teams/startup-team --dry-run
 ```
 
+After installation, preflight a read-only role without creating run state:
+
+```bash
+omniskill dispatch startup-team --role catalog:cto --task "Review the architecture" --runtime codex --home ~ --dry-run --json
+```
+
+Remove `--dry-run` to execute. An implementation role with `workspace-write`
+access also requires `--approve-workspace-write`. Dispatch receipts are stored
+under `~/.omniskills/runs/<workflow>/<run-id>/` with the request, full candidate
+plan, append-only attempts, and final receipt. `launch_configured` proves the
+requested model and effort were passed to the runtime; `runtime_reported` is
+stronger evidence emitted by a runtime event.
+
+Resume a structured consultation without changing the verified profile:
+
+```bash
+omniskill dispatch resume <run-id> --decision continue --message "Keep the compatibility adapter" --home ~
+```
+
+Codex CLI execution is supported. Claude profiles are generated and validated,
+but Claude dispatch execution is currently unsupported and fails closed.
+
 Profiles are namespaced with `omniskills-startup-team-`. Reinstall updates only
 unchanged managed profiles; removal keeps user-modified profiles and always
 preserves the shared orchestration configuration.
+
+The existing removal contract is unchanged:
+
+```bash
+omniskill remove startup-team --home ~ --dry-run
+```
 
 The skill cannot change the model of an already-running root session. Fallback
 and consultation are visible orchestration protocols, not provider-level
