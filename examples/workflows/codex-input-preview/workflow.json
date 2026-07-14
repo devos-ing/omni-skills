@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1",
+  "name": "codex-input-preview",
+  "version": "0.1.0",
+  "description": "Render a faithful Codex-style input composer as a shareable 1200 x 675 PNG.",
+  "skills": [
+    {
+      "source": "./skills/codex-input-preview",
+      "entry": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "render",
+      "title": "Render one Codex input preview",
+      "skill": "./skills/codex-input-preview"
+    }
+  ]
+}

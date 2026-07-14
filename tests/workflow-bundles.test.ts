@@ -1934,6 +1934,34 @@ describe("workflow bundles", () => {
     ).rejects.toThrow();
   });
 
+  test("codex input preview stays a one-step local rendering workflow", async () => {
+    const bundleDir = join(import.meta.dir, "..", "examples", "workflows", "codex-input-preview");
+
+    const bundle = await loadWorkflowBundle(bundleDir);
+    const skillDir = join(bundleDir, "skills", "codex-input-preview");
+    const skill = await readFile(join(skillDir, "SKILL.md"), "utf8");
+    const metadata = await readFile(join(skillDir, "agents", "openai.yaml"), "utf8");
+
+    expect(bundle.manifest).toMatchObject({
+      schemaVersion: "0.1",
+      name: "codex-input-preview",
+      version: "0.1.0",
+      skills: [{ source: "./skills/codex-input-preview", entry: true }],
+      steps: [
+        {
+          id: "render",
+          title: "Render one Codex input preview",
+          skill: "./skills/codex-input-preview",
+        },
+      ],
+    });
+    expect(skill).toContain("prompt, model, and reasoning effort");
+    expect(skill).toContain("scripts/render-preview.mjs");
+    expect(skill).toContain("Return only after the PNG has been verified");
+    expect(metadata).toContain('display_name: "Codex Input Preview"');
+    expect(metadata).toContain("$codex-input-preview");
+  });
+
   test("rejects looped workflows without exactly one entry skill", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-bundle-loop-entry-"));
     const bundleDir = join(rootDir, "bad-loop");

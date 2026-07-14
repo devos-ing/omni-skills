@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Input Preview"
+  short_description: "Render a Codex-style prompt preview PNG"
+  default_prompt: "Use $codex-input-preview to render my prompt, model, and effort as a 1200 x 675 PNG."
