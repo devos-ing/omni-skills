@@ -165,7 +165,6 @@ export const startupTeam: TeamCardContent = {
     { name: "mattpocock:tdd", description: "Build with tests where practical" },
     { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures from evidence" },
     { name: "mattpocock:code-review", description: "Review behavior and risk" },
-    { name: "implement", description: "Execute an approved implementation plan" },
     { name: "mattpocock:implement", description: "Execute the implementation slice" },
   ],
   diagramSteps: [
@@ -453,7 +452,7 @@ export const workflows: WorkflowCardContent[] = [
     installCommand: "npx omniskill@latest install founding-engineer",
     skills: [
       { name: "founding-engineer", description: "Set the implementation frame" },
-      { name: "implement", description: "Implement the planned change" },
+      { name: "mattpocock:implement", description: "Implement the planned change" },
       { name: "mattpocock:tdd", description: "Use test-first development" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
       { name: "mattpocock:code-review", description: "Review behavior and risk" },
@@ -467,7 +466,7 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Implement",
-        skill: "implement",
+        skill: "mattpocock:implement",
         description: "Ship the smallest correct slice.",
       },
       {

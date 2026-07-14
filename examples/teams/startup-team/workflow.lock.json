@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "startup-team",
   "workflowVersion": "0.2.0",
-  "generatedAt": "2026-07-14T08:56:16.104Z",
+  "generatedAt": "2026-07-14T09:18:54.936Z",
   "workflows": [
     {
       "id": "workflow:startup-team@0.2.0",
@@ -267,12 +267,6 @@
       "resolvedName": "founding-engineer",
       "kind": "local",
       "hash": "sha256:31849f572dc09e4df212fe66981a04cb67749364441501526d0c48ebb0175490"
-    },
-    {
-      "source": "implement",
-      "resolvedName": "implement",
-      "kind": "external",
-      "hash": "sha256:16f51d5ecc0b385c98451eb9da8edc19bf16bd27d7c65321abdd26592b1df311"
     },
     {
       "source": "superpowers:verification-before-completion",

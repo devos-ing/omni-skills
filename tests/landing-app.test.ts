@@ -293,7 +293,7 @@ describe("landing app source contract", () => {
         `${githubUrl}/blob/main/examples/workflows/${skill}/skills/${skill}/SKILL.md`,
       );
     }
-    expect(expectedNames).toHaveLength(26);
+    expect(expectedNames).toHaveLength(25);
     for (const name of expectedNames) {
       expect(startupCard).toContain(`name: "${name}"`);
     }
