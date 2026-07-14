@@ -180,7 +180,11 @@ describe("landing app source contract", () => {
     const design = readLandingFile("design.md");
 
     expect(design).toContain("https://www.context.store");
-    expect(design).toContain("Workflow Registry");
+    expect(design).toContain("Omniskills Teams");
+    expect(design).toContain("Skill Hub");
+    expect(design).toContain("landing/components/featured-team-section.tsx");
+    expect(design).toContain("landing/components/skill-hub.tsx");
+    expect(design).toContain("landing/components/skill-row.tsx");
     expect(design).toContain("hide activity, rank, and install counts");
     expect(design).toContain("copyable");
     expect(design).toContain("landing/components/workflow-card.tsx");
@@ -189,6 +193,26 @@ describe("landing app source contract", () => {
     expect(design).not.toContain("Trending");
     expect(design).not.toContain("Hot");
     expect(design).not.toContain("dependency-free mini bar/sparkline");
+  });
+
+  test("documents the featured team and Skill Hub in both content mirrors", () => {
+    const design = readLandingFile("design.md");
+    const english = readFileSync(join(repoRoot, "docs", "landing-content.md"), "utf8");
+    const traditionalChinese = readFileSync(
+      join(repoRoot, "docs", "landing-content.zh-Hant.md"),
+      "utf8",
+    );
+
+    for (const document of [design, english, traditionalChinese]) {
+      expect(document).toContain("Pick an Omniskills team");
+      expect(document).toContain("Explore the Skill Hub");
+      expect(document).toContain("Workflows");
+      expect(document).toContain("Skills");
+      expect(document).toContain("View skill source");
+      expect(document).not.toContain("Heading: Pick an Omniskills workflow");
+    }
+    expect(english).toContain("npx omniskill@latest install startup-team");
+    expect(traditionalChinese).toContain("npx omniskill@latest install startup-team");
   });
 
   test("does not define placeholder workflow activity or install metrics", () => {

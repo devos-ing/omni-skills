@@ -29,7 +29,7 @@ Primary command preview:
 npx omniskill@latest install startup-team
 ```
 
-Primary action: Browse workflows.
+Primary action: Explore teams & skills.
 
 ## Supported Agents
 
@@ -134,16 +134,15 @@ Demo steps:
 Completion copy: Workflow complete - all 6 role steps returned. Startup answer
 ready.
 
-## Workflow Registry
+## Omniskills Teams
 
-Section label: Workflow Registry.
+Section label: Omniskills Teams.
 
-Heading: Pick an Omniskills workflow.
+Heading: Pick an Omniskills team.
 
-Body: Browse installable workflow bundles, then open a detail route for the
-role map, skill tree, and copyable install command.
-
-Search placeholder: Search workflows, skills, tags...
+Body: Start with a coordinated team when one role is not enough. One install
+gives your agent a coordinator, specialist roles, and the playbooks that
+connect them.
 
 ### Startup Team
 
@@ -159,8 +158,23 @@ Search placeholder: Search workflows, skills, tags...
 npx omniskill@latest install startup-team
 ```
 
-Description: Move a startup goal through the core operating roles: CEO, CTO,
-PM, web design, EM, founding engineer, and QA lead.
+Description: Turn one startup goal into a coordinated plan across strategy,
+product, design, architecture, delivery, implementation, and QA.
+
+Coordinator: `startup-goal` — Route the goal to the smallest useful role set.
+
+Members:
+
+- CEO — Company direction and hard tradeoffs
+- CTO — Architecture and technical risk
+- Product Manager — Discovery, requirements, and issue slicing
+- Web Design — Interface direction and motion quality
+- Engineering Manager — Delivery sequencing and quality gates
+- Founding Engineer — Implementation, tests, debugging, and review
+- QA Lead — Acceptance checks, regression risk, and release evidence
+
+Actions: `View team` opens `/workflows/startup-team`; `View team source` opens
+`https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`.
 
 Skills:
 
@@ -210,6 +224,37 @@ Ordered skill path:
    - Execute the planned change with tests and review.
 9. QA -> `qa-lead`
    - Check release readiness and residual risk.
+
+## Skill Hub
+
+Heading: Explore the Skill Hub.
+
+Body: Browse independently installable workflows or inspect the skills they
+assemble.
+
+Tabs:
+
+- Workflows
+  - Search placeholder: Search workflows, entry skills, or tags...
+  - Results exclude Startup Team because it is featured above.
+  - Each result opens its workflow detail route through `View workflow`.
+  - Empty state: No workflows match the current query; `Clear search` resets it.
+- Skills
+  - Search placeholder: Search skills, providers, or packages...
+  - Each canonical skill appears once with its provider and every package that
+    includes it.
+  - `View skill source` is the only skill action and opens the canonical source.
+  - No standalone skill install command is shown or implied.
+  - Empty state: No skills match the current query; `Clear search` resets it.
+
+The query persists across Workflows and Skills. Canonical source identity
+deduplicates aliases such as `implement` and `mattpocock:implement` while the
+package relationships remain visible.
+
+### Workflows
+
+The independently installable workflow catalog starts below. Startup Team is
+not repeated here.
 
 ### CEO
 

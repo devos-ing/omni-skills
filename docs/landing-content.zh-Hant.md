@@ -27,7 +27,7 @@ Primary command preview：
 npx omniskill@latest install startup-team
 ```
 
-Primary action：Browse workflows。
+Primary action：Explore teams & skills。
 
 ## 支援的 Agents
 
@@ -98,15 +98,14 @@ Demo steps：
 
 Completion copy：Workflow complete - all 6 role steps returned. Startup answer ready.
 
-## Workflow Registry
+## Omniskills Teams
 
-Section label：Workflow Registry。
+Section label：Omniskills Teams。
 
-Heading：Pick an Omniskills workflow。
+Heading：Pick an Omniskills team。
 
-Body：瀏覽可安裝的 workflow bundles，然後打開 detail route 查看 role map、skill tree、copyable install command。
-
-Search placeholder：Search workflows, skills, tags...
+Body：當單一 role 不足以完成目標時，先選擇 coordinated team。一次安裝即可讓 agent
+取得 coordinator、specialist roles，以及連接這些 roles 的 playbooks。
 
 ### Startup Team
 
@@ -122,11 +121,54 @@ Search placeholder：Search workflows, skills, tags...
 npx omniskill@latest install startup-team
 ```
 
-Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、web design、EM、founding engineer、QA lead。
+Description：把一個 startup goal 轉成涵蓋 strategy、product、design、architecture、
+delivery、implementation、QA 的 coordinated plan。
+
+Coordinator：`startup-goal` — 把 goal route 到最小且足夠的 role set。
+
+Members：
+
+- CEO — Company direction and hard tradeoffs
+- CTO — Architecture and technical risk
+- Product Manager — Discovery, requirements, and issue slicing
+- Web Design — Interface direction and motion quality
+- Engineering Manager — Delivery sequencing and quality gates
+- Founding Engineer — Implementation, tests, debugging, and review
+- QA Lead — Acceptance checks, regression risk, and release evidence
+
+Actions：`View team` 開啟 `/workflows/startup-team`；`View team source` 開啟
+`https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`。
 
 Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`web-design`、`engineering-manager`、`founding-engineer`、`qa-lead`、`emilkowalski:emil-design-eng`、`emilkowalski:animation-vocabulary`、`emilkowalski:apple-design`、`emilkowalski:review-animations`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:wayfinder`、`mattpocock:grill-with-docs`、`mattpocock:to-spec`、`mattpocock:to-tickets`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`mattpocock:implement`。
 
 Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Design -> `web-design`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation frame -> `founding-engineer`；Implement -> `mattpocock:implement`；QA -> `qa-lead`。
+
+## Skill Hub
+
+Heading：Explore the Skill Hub。
+
+Body：瀏覽可獨立安裝的 workflows，或檢視它們組合的 skills。
+
+Tabs：
+
+- Workflows
+  - Search placeholder：Search workflows, entry skills, or tags...
+  - Results 不包含 Startup Team，因為它已在上方 featured section 顯示。
+  - 每個 result 透過 `View workflow` 開啟 workflow detail route。
+  - Empty state：沒有 workflow 符合目前 query；`Clear search` 會重設 query。
+- Skills
+  - Search placeholder：Search skills, providers, or packages...
+  - 每個 canonical skill 只顯示一次，並列出 provider 與所有使用它的 packages。
+  - `View skill source` 是唯一 skill action，會開啟 canonical source。
+  - 不顯示或暗示 standalone skill install command。
+  - Empty state：沒有 skill 符合目前 query；`Clear search` 會重設 query。
+
+Query 會在 Workflows 與 Skills 之間保留。Canonical source identity 會去重
+`implement` 與 `mattpocock:implement` 等 aliases，同時保留 package relationships。
+
+### Workflows
+
+以下是可獨立安裝的 workflow catalog；Startup Team 不會在此重複。
 
 ### CEO
 
