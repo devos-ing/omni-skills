@@ -208,9 +208,9 @@ npx omniskill@latest install cto
 
 Description：Technical leadership，處理 architecture、domain model、platform direction、engineering risk。
 
-Skills：`cto`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
+Skills：`cto`、`archify`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
 
-Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
+Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Diagram -> `archify`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
 
 ### Product Manager
 

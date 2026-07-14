@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "skill-tree-demo",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-14T07:48:54.368Z",
+  "generatedAt": "2026-07-14T17:41:43.500Z",
   "workflows": [
     {
       "id": "workflow:skill-tree-demo@0.1.0",
@@ -13,9 +13,9 @@
       }
     },
     {
-      "id": "workflow:cto@0.1.1",
+      "id": "workflow:cto@0.1.2",
       "name": "cto",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": {
         "kind": "local",
         "path": "../cto"
@@ -25,7 +25,7 @@
   "edges": [
     {
       "from": "workflow:skill-tree-demo@0.1.0",
-      "to": "workflow:cto@0.1.1"
+      "to": "workflow:cto@0.1.2"
     }
   ],
   "skills": [
@@ -39,7 +39,14 @@
       "source": "../cto/skills/cto",
       "resolvedName": "cto",
       "kind": "local",
-      "hash": "sha256:537d4753b34622b969200709611d0751263e807a0500f02a1b35a5157b60320b"
+      "hash": "sha256:af3a19924e08e03eb6221c64eb38caaec24423b64409d64fc71ac7c70acfc601"
+    },
+    {
+      "source": "archify",
+      "resolvedName": "archify",
+      "kind": "external",
+      "repo": "https://github.com/tt-a1i/archify/tree/v2.10.0",
+      "hash": "sha256:ff2cb06ec10a2e7c88720bcad21700701d3871d1919e35808518a2d49fee75f1"
     },
     {
       "source": "mattpocock:codebase-design",

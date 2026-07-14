@@ -1,12 +1,16 @@
 {
   "schemaVersion": "0.1",
   "name": "cto",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Act as the startup CTO for architecture, technical risk, platform boundaries, and engineering strategy.",
   "skills": [
     {
       "source": "./skills/cto",
       "entry": true
+    },
+    {
+      "source": "archify",
+      "repo": "https://github.com/tt-a1i/archify/tree/v2.10.0"
     },
     {
       "source": "mattpocock:codebase-design",
@@ -41,6 +45,12 @@
       "id": "architecture",
       "title": "Review the architecture boundary",
       "skill": "mattpocock:codebase-design"
+    },
+    {
+      "id": "architecture-diagram",
+      "title": "Draw the architecture deliverable",
+      "skill": "archify",
+      "instruction": "Use Archify for every architecture deliverable. Produce a validated self-contained HTML diagram and a review-friendly dual-theme SVG export. If Archify is unavailable or validation or export fails, stop and report the blocker; no text-only substitute."
     },
     {
       "id": "risk",

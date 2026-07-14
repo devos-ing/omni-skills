@@ -310,6 +310,7 @@ direction, and engineering risk.
 Skills:
 
 - `cto`: Set the technical frame
+- `archify`: Draw and export architecture deliverables
 - `mattpocock:codebase-design`: Review module boundaries
 - `mattpocock:domain-modeling`: Clarify domain concepts
 - `mattpocock:diagnosing-bugs`: Diagnose technical risk
@@ -323,9 +324,11 @@ Ordered skill path:
    - Name the business concepts before abstractions.
 3. Architecture -> `mattpocock:codebase-design`
    - Review boundaries and interfaces.
-4. Risk -> `mattpocock:diagnosing-bugs`
+4. Diagram -> `archify`
+   - Produce validated self-contained HTML and a review-friendly dual-theme SVG.
+5. Risk -> `mattpocock:diagnosing-bugs`
    - Diagnose failures and fragile assumptions.
-5. Review -> `mattpocock:code-review`
+6. Review -> `mattpocock:code-review`
    - Check behavior, blast radius, and tradeoffs.
 
 ### Product Manager
