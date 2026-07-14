@@ -305,9 +305,13 @@ export const workflows: WorkflowCardContent[] = [
     tag: "Architecture",
     accent: "text-[#c83c24]",
     sourceUrl: `${githubUrl}/tree/main/examples/workflows/cto`,
+    skillSourceUrls: {
+      archify: "https://github.com/tt-a1i/archify/blob/v2.10.0/SKILL.md",
+    },
     installCommand: "npx omniskill@latest install cto",
     skills: [
       { name: "cto", description: "Set the technical frame" },
+      { name: "archify", description: "Draw and export architecture deliverables" },
       { name: "mattpocock:codebase-design", description: "Review module boundaries" },
       { name: "mattpocock:domain-modeling", description: "Clarify domain concepts" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose technical risk" },
@@ -328,6 +332,11 @@ export const workflows: WorkflowCardContent[] = [
         label: "Architecture",
         skill: "mattpocock:codebase-design",
         description: "Review boundaries and interfaces.",
+      },
+      {
+        label: "Diagram",
+        skill: "archify",
+        description: "Produce validated self-contained HTML and a review-friendly dual-theme SVG.",
       },
       {
         label: "Risk",

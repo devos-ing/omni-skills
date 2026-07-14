@@ -10,6 +10,8 @@ implementation. Your job is to protect speed without mortgaging the codebase.
 
 ## Required Companion Skills
 
+- `archify` for drawing every architecture deliverable and exporting its
+  required review artifacts.
 - `mattpocock:codebase-design` for module boundaries and architecture pressure.
 - `mattpocock:domain-modeling` for naming the core business concepts.
 - `mattpocock:diagnosing-bugs` for isolating failures before proposing fixes.
@@ -17,6 +19,15 @@ implementation. Your job is to protect speed without mortgaging the codebase.
 
 If a companion skill is unavailable, stop and tell the user which dependency is
 missing.
+
+## Architecture Deliverable Contract
+
+Invoke Archify for every architecture deliverable. Each deliverable must include
+a validated self-contained HTML diagram and a review-friendly dual-theme SVG
+export. There is no text-only substitute.
+
+If Archify is unavailable, or validation or export fails, stop and report the
+blocker. Do not present the architecture deliverable as complete.
 
 ## Operating Mode
 

@@ -1521,6 +1521,56 @@ describe("workflow bundles", () => {
     expect(skill).toContain("If a companion skill is unavailable");
   });
 
+  test("cto requires Archify for every architecture deliverable", async () => {
+    const workflowDir = join(import.meta.dir, "..", "examples", "workflows", "cto");
+    const bundle = await loadWorkflowBundle(workflowDir);
+    const skill = await readFile(join(workflowDir, "skills", "cto", "SKILL.md"), "utf8");
+    const readme = await readFile(join(workflowDir, "README.md"), "utf8");
+    const archifyDependency = {
+      source: "archify",
+      repo: "https://github.com/tt-a1i/archify/tree/v2.10.0",
+    };
+
+    expect(bundle.manifest.version).toBe("0.1.2");
+    expect(bundle.manifest.skills).toContainEqual(archifyDependency);
+
+    const architectureStepIndex = bundle.manifest.steps.findIndex(
+      (step) => step.id === "architecture",
+    );
+    const archifyStep = bundle.manifest.steps[architectureStepIndex + 1];
+    expect(architectureStepIndex).toBeGreaterThanOrEqual(0);
+    expect(archifyStep?.skill).toBe("archify");
+    for (const phrase of [
+      "every architecture deliverable",
+      "validated self-contained HTML",
+      "review-friendly dual-theme SVG",
+      "no text-only substitute",
+    ]) {
+      expect(archifyStep?.instruction).toContain(phrase);
+    }
+
+    for (const phrase of [
+      "every architecture deliverable",
+      "validated self-contained HTML",
+      "review-friendly dual-theme SVG",
+      "no text-only substitute",
+      "If Archify is unavailable",
+      "validation or export fails",
+    ]) {
+      expect(skill).toContain(phrase);
+      expect(readme).toContain(phrase);
+    }
+
+    expect(bundle.lock?.workflowVersion).toBe("0.1.2");
+    expect(bundle.lock?.skills).toContainEqual({
+      source: "archify",
+      resolvedName: "archify",
+      kind: "external",
+      repo: "https://github.com/tt-a1i/archify/tree/v2.10.0",
+      hash: expect.stringMatching(/^sha256:/),
+    });
+  });
+
   test("startup team entry skill dispatches role subagents and combines results", async () => {
     const canonicalMembers = [
       "catalog:ceo",
