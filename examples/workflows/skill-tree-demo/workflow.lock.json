@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "0.2",
+  "workflow": "skill-tree-demo",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-14T07:36:42.069Z",
+  "workflows": [
+    {
+      "id": "workflow:skill-tree-demo@0.1.0",
+      "name": "skill-tree-demo",
+      "version": "0.1.0",
+      "source": {
+        "kind": "local",
+        "path": "."
+      }
+    },
+    {
+      "id": "workflow:cto@0.1.1",
+      "name": "cto",
+      "version": "0.1.1",
+      "source": {
+        "kind": "local",
+        "path": "../cto"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "workflow:skill-tree-demo@0.1.0",
+      "to": "workflow:cto@0.1.1"
+    }
+  ],
+  "skills": [
+    {
+      "source": "./skills/skill-tree-demo",
+      "resolvedName": "skill-tree-demo",
+      "kind": "local",
+      "hash": "sha256:473a43c02d642775b7210b749a592c84cd7df6fcfb2816ff08ddbe38d69f9173"
+    },
+    {
+      "source": "../cto/skills/cto",
+      "resolvedName": "cto",
+      "kind": "local",
+      "hash": "sha256:537d4753b34622b969200709611d0751263e807a0500f02a1b35a5157b60320b"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:452bfb044551a8177528b7df68e204e6a77b8a7f89daa741ef659f652c441376"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "resolvedName": "domain-modeling",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:f01e41e3fdaf3c4d4c20ddea9eb00e8330003d91bb564ef4518aaee856d4bf69"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+    },
+    {
+      "source": "mattpocock:code-review",
+      "resolvedName": "code-review",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
+    }
+  ]
+}

@@ -64,6 +64,9 @@ Compatibility aliases:
 - resolve local and public git bundle sources; bare `*-team` aliases route to
   `examples/teams/<name>`, while other bare aliases route to
   `examples/workflows/<name>`
+- recursively resolve child workflows before installation, select the highest
+  declared semantic version for duplicate workflow names, deduplicate leaf
+  skills, and reject cycles with the full active workflow path
 - list skill dependency sources plus optional Skills CLI repository metadata
 - prepare looped workflow entry skill installs with copied `workflow.json`,
   generated `loop.mjs`, and generated `loop.metadata.json`
@@ -144,6 +147,20 @@ deterministic hashes for local skill files and stable fingerprints for external
 skill sources so reviewers can see when a workflow's skill tree changed. Missing
 lock files remain valid for compatibility, but checked-in public workflows
 should include them.
+
+Parents declare only direct dependencies. A local dependency directory that
+contains `workflow.json` is a child workflow and is scanned recursively. Direct
+repository URLs, including `#subdirectory` fragments, work the same way.
+`catalog:<alias>` selects a canonical catalog workflow without making ordinary
+bare skill names ambiguous, and `installed:<name>` reopens an installed
+workflow's recorded source. `skill-tree-demo` is the minimal local example.
+
+New locks use schema `0.2`: they store the selected workflow nodes and edges,
+exact git commits, and fingerprints for the fully expanded leaf skill set.
+Locked git children fetch their recorded commit directly on repeat installs.
+Legacy `0.1` locks remain valid for flat workflows; once a child workflow is
+detected, authors must regenerate the lock. Child workflows with the same name
+must declare valid semantic versions, and the highest version's subtree wins.
 
 Loop-enabled workflows declare `loop` in `workflow.json`, mark exactly one local
 skill with `entry: true`, and keep phase instructions in `steps[].instruction`.

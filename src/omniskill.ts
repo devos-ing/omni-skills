@@ -30,6 +30,7 @@ import {
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
+  resolveWorkflowDependencyGraph,
   type WorkflowGitCommandRunner,
   type WorkflowInstallSkillArtifact,
   type WorkflowRemovalPlan,
@@ -293,7 +294,12 @@ function configureLockCommand(command: Command, options: ConfigureOmniskillComma
           );
         }
 
-        const result = await writeWorkflowLockFile(bundle);
+        const result = await writeWorkflowLockFile(bundle, {
+          ...(options.workflowGitCommandRunner
+            ? { runGitCommand: options.workflowGitCommandRunner }
+            : {}),
+          installedRootDir: options.rootDir,
+        });
         console.log(success(`Omniskills lock written: ${bundle.manifest.name}`));
         console.log(keyValue("Lock file", result.path));
         console.log(keyValue("Skills", String(result.lock.skills.length)));
@@ -345,13 +351,23 @@ async function runOmniskillInstall(
   });
   const installAgents = parseSkillInstallAgents(commandOptions.agents);
   const installedExternalPackages = new Set<string>();
-  const skillPlans = getWorkflowInstallSkillPlans(bundle);
   const installPrompt = options.installPrompt ?? createDefaultInstallPrompt();
   let preparedDependencies:
     | Awaited<ReturnType<typeof getPreparedWorkflowSkillInstallDependencies>>
     | undefined;
 
   try {
+    preparedDependencies = await getPreparedWorkflowSkillInstallDependencies({
+      bundle,
+      ...(options.workflowGitCommandRunner
+        ? { runGitCommand: options.workflowGitCommandRunner }
+        : {}),
+      installedRootDir: targetDir,
+    });
+    const skillPlans = preparedDependencies.dependencies.map((dependency, index) => ({
+      source: preparedDependencies?.displaySources[index] ?? dependency.source,
+      ...(dependency.repo ? { repo: dependency.repo } : {}),
+    }));
     printOmniskillInstallPlan({
       workflowName: bundle.manifest.name,
       workflowVersion: bundle.manifest.version,
@@ -381,11 +397,10 @@ async function runOmniskillInstall(
       workflowName: bundle.manifest.name,
       workflowVersion: bundle.manifest.version,
     });
-    preparedDependencies = await getPreparedWorkflowSkillInstallDependencies({ bundle });
     const skillDependencies = preparedDependencies.dependencies;
     const installArtifacts: WorkflowInstallSkillArtifact[] = [];
     for (const [index, skillDependency] of skillDependencies.entries()) {
-      const manifestSource = skillPlans[index]?.source ?? skillDependency.source;
+      const manifestSource = preparedDependencies.displaySources[index] ?? skillDependency.source;
       const displaySkill = manifestSource;
       console.log(`Processing ${index + 1}/${skillDependencies.length}: ${displaySkill}`);
       const skillResult = await installOmniskillSkillDependency({
@@ -452,15 +467,6 @@ async function getWorkflowVersionRefreshSources(input: {
   }
 
   return new Set((installedWorkflow.installArtifacts ?? []).map((artifact) => artifact.source));
-}
-
-function getWorkflowInstallSkillPlans(bundle: {
-  manifest: { skills: OmniskillInstallSkillPlan[] };
-}): OmniskillInstallSkillPlan[] {
-  return bundle.manifest.skills.map((skill) => ({
-    source: skill.source,
-    ...(skill.repo ? { repo: skill.repo } : {}),
-  }));
 }
 
 function printOmniskillInstallPlan(input: {
@@ -836,13 +842,20 @@ function configureDependencyCommand(
           ? { runGitCommand: options.workflowGitCommandRunner }
           : {}),
       });
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle,
+        ...(options.workflowGitCommandRunner
+          ? { runGitCommand: options.workflowGitCommandRunner }
+          : {}),
+        installedRootDir: options.rootDir,
+      });
       try {
         console.log(success(`Omniskills dependencies: ${bundle.manifest.name}`));
-        for (const skill of bundle.manifest.skills) {
-          const optional = skill.optional ? " (optional)" : "";
-          console.log(`- ${skill.source}${optional}`);
+        for (const [index, skill] of graph.dependencies.entries()) {
+          console.log(`- ${graph.displaySources[index] ?? skill.source}`);
         }
       } finally {
+        await graph.cleanup?.();
         await bundle.cleanup?.();
       }
     });
