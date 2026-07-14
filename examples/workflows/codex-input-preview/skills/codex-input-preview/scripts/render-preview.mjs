@@ -111,7 +111,7 @@ export function buildHtml({ prompt, model, effort }) {
 html,body{margin:0;width:1200px;height:675px;overflow:hidden;background:#fff}
 body{display:flex;align-items:center;justify-content:center;padding-top:110px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171816}
 .composer{width:1105px;min-height:190px;border:1px solid #dededb;border-radius:34px;background:#fff;padding:30px 30px 20px;box-shadow:0 14px 42px rgba(0,0,0,.08)}
-.prompt{height:112px;font-size:34px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere}
+.prompt{height:116px;font-size:34px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere}
 .footer{display:flex;align-items:center;justify-content:space-between;height:42px;color:#30312f;font-size:20px}
 .plus{font-size:34px;font-weight:300;line-height:1}
 .actions{display:flex;align-items:center;gap:16px}
@@ -192,35 +192,8 @@ function runBrowserProcess(browser, args) {
   });
 }
 
-async function pathExists(path) {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function replaceDestination(capturePath, outputPath) {
-  const backupPath = `${outputPath}.${process.pid}.${Date.now()}.backup`;
-  const hasDestination = await pathExists(outputPath);
-  if (hasDestination) await rename(outputPath, backupPath);
-  try {
-    await rename(capturePath, outputPath);
-  } catch (error) {
-    if (hasDestination && (await pathExists(backupPath))) {
-      await rename(backupPath, outputPath);
-    }
-    throw error;
-  }
-  if (hasDestination) await rm(backupPath, { force: true });
-}
-
 function browserFailure(result, action) {
-  const detail = result.stderr.trim();
-  return new Error(
-    detail ? `Browser failed to ${action}: ${detail}` : `Browser failed to ${action}`,
-  );
+  return new Error(`Browser failed to ${action} (exit ${result.status})`);
 }
 
 export async function renderPreview(input, dependencies = {}) {
@@ -266,7 +239,7 @@ export async function renderPreview(input, dependencies = {}) {
         `Expected a 1200 x 675 PNG, received ${dimensions.width} x ${dimensions.height}`,
       );
     }
-    await replaceDestination(capturePath, output);
+    await rename(capturePath, output);
     return { output, ...dimensions };
   } finally {
     await rm(capturePath, { force: true });

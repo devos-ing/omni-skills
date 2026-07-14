@@ -5,9 +5,8 @@ import { join } from "node:path";
 
 const rendererModulePath =
   "../examples/workflows/codex-input-preview/skills/codex-input-preview/scripts/render-preview.mjs";
-const { buildHtml, browserCandidates, parseArgs, readPngDimensions, renderPreview } = await import(
-  rendererModulePath
-);
+const { buildHtml, browserCandidates, findBrowser, parseArgs, readPngDimensions, renderPreview } =
+  await import(rendererModulePath);
 
 function pngHeader(width: number, height: number): Buffer {
   const buffer = Buffer.alloc(24);
@@ -97,6 +96,9 @@ describe("codex input preview renderer", () => {
     expect(browserCandidates({ platform: "linux", env: { PATH: "/usr/bin:/bin" } })).toContain(
       "/usr/bin/chromium",
     );
+    expect(() =>
+      findBrowser({ platform: "linux", env: { PATH: "" }, exists: () => false }),
+    ).toThrow("No supported browser found");
   });
 
   test("builds escaped fixed-size HTML with a fit marker", () => {
@@ -108,6 +110,7 @@ describe("codex input preview renderer", () => {
 
     expect(html).toContain("width:1200px");
     expect(html).toContain("height:675px");
+    expect(html).toContain(".prompt{height:116px");
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("GPT &amp; Codex");
     expect(html).toContain('dataset.previewStatus = fits ? "ok" : "overflow"');
@@ -124,6 +127,7 @@ describe("codex input preview renderer", () => {
   test("renders a verified png and removes temporary artifacts", async () => {
     const root = await mkdtemp(join(tmpdir(), "codex-preview-test-"));
     const output = join(root, "preview.png");
+    await writeFile(output, "existing preview");
     try {
       const result = await renderPreview(
         { prompt: "Ship it", model: "GPT-5.6", effort: "high", output },
@@ -205,6 +209,30 @@ describe("codex input preview renderer", () => {
         ),
       ).rejects.toThrow("Expected a 1200 x 675 PNG, received 800 x 600");
       expect(await readdir(root)).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("reports the browser exit status without dumping unrelated logs", async () => {
+    const root = await mkdtemp(join(tmpdir(), "codex-preview-test-"));
+    const output = join(root, "preview.png");
+    try {
+      const render = renderPreview(
+        { prompt: "Ship it", model: "GPT-5.6", effort: "high", output },
+        {
+          browserPath: "/fake/chrome",
+          tempRoot: root,
+          runBrowser: async () => ({
+            status: 23,
+            stdout: "",
+            stderr: "unrelated browser diagnostic noise",
+          }),
+        },
+      );
+
+      await expect(render).rejects.toThrow("Browser failed to measure the prompt (exit 23)");
+      await expect(render).rejects.not.toThrow("unrelated browser diagnostic noise");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

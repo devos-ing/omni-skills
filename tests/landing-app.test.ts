@@ -508,11 +508,14 @@ describe("landing app source contract", () => {
     expect(route).toContain("<CopyableCommand");
     expect(route).toContain("workflow.usageExample.invocation");
     expect(route).toContain("workflow.usageExample.caption");
+    expect(route).toContain("Example input");
 
     const genericCopyable = readLandingFile("components/copyable-command.tsx");
     expect(genericCopyable).toContain("label: string");
+    expect(genericCopyable).toContain("copyLabel: string");
     expect(genericCopyable).toContain("navigator.clipboard.writeText(command)");
-    expect(genericCopyable).toMatch(/aria-label=\{`Copy \$\{label\}:/);
+    expect(genericCopyable).toMatch(/aria-label=\{`\$\{copyLabel\}:/);
+    expect(genericCopyable).toContain('aria-live="polite"');
 
     const installCopyable = readLandingFile("components/copyable-install-command.tsx");
     expect(installCopyable).toContain("CopyableCommand");
@@ -538,7 +541,7 @@ describe("landing app source contract", () => {
     expect(terminal).toContain("copyText}`}");
     expect(terminal).toContain("cursor-copy");
 
-    expect(copyable).toMatch(/aria-label=\{`Copy \$\{label\}:/);
+    expect(copyable).toMatch(/aria-label=\{`\$\{copyLabel\}:/);
     expect(copyable).toContain("command}`}");
     expect(copyable).toContain("cursor-copy");
   });

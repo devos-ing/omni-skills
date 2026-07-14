@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "codex-input-preview",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-14T18:02:11.626Z",
+  "generatedAt": "2026-07-14T18:11:27.589Z",
   "workflows": [
     {
       "id": "workflow:codex-input-preview@0.1.0",
@@ -19,7 +19,7 @@
       "source": "./skills/codex-input-preview",
       "resolvedName": "codex-input-preview",
       "kind": "local",
-      "hash": "sha256:3b974fcd9c50cdbcc559af34bff01a0c2f9c3ce56620827949d91f92a2e9d4d5"
+      "hash": "sha256:96e212cff7120078a0a33fab9138684a0bc7e55374543530c00d164667f0d930"
     }
   ]
 }

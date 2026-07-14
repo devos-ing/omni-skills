@@ -5,5 +5,7 @@ interface CopyableInstallCommandProps {
 }
 
 export function CopyableInstallCommand({ command }: CopyableInstallCommandProps) {
-  return <CopyableCommand command={command} label="install command" />;
+  return (
+    <CopyableCommand command={command} label="install command" copyLabel="Copy install command" />
+  );
 }

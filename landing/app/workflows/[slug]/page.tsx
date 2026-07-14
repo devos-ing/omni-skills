@@ -97,7 +97,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
           {workflow.usageExample ? (
             <section className="mt-8 rounded-md border border-[var(--rule)] bg-white p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                Example output
+                Example input
               </p>
               <div className="mt-4 overflow-hidden rounded-md border border-[var(--rule)] bg-white">
                 <Image
@@ -112,6 +112,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                 <CopyableCommand
                   command={workflow.usageExample.invocation}
                   label="Codex invocation"
+                  copyLabel="Copy Codex invocation"
                 />
               </div>
               <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
