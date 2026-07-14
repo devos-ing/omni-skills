@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyableInstallCommand } from "../../../components/copyable-install-command";
 import { WorkflowAvatar } from "../../../components/workflow-avatar";
-import { getLocalSkillSourceUrl, workflows } from "../../../lib/landing-content";
+import { catalogEntries, getLocalSkillSourceUrl } from "../../../lib/landing-content";
 
 interface WorkflowPageProps {
   params: Promise<{
@@ -12,14 +12,14 @@ interface WorkflowPageProps {
 }
 
 export function generateStaticParams() {
-  return workflows.map((workflow) => ({
-    slug: workflow.slug,
+  return catalogEntries.map((entry) => ({
+    slug: entry.slug,
   }));
 }
 
 export default async function WorkflowPage({ params }: WorkflowPageProps) {
   const { slug } = await params;
-  const workflow = workflows.find((candidate) => candidate.slug === slug);
+  const workflow = catalogEntries.find((candidate) => candidate.slug === slug);
 
   if (!workflow) {
     notFound();

@@ -144,9 +144,9 @@ npx omniskill@latest install ceo
 
 Description：Founder-level strategy，處理 direction、hard tradeoffs、fundraising/customer framing、company decisions。
 
-Skills：`ceo`、`mattpocock:decision-mapping`、`mattpocock:grill-with-docs`。
+Skills：`ceo`、`mattpocock:wayfinder`、`mattpocock:grill-with-docs`。
 
-Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:decision-mapping`；Grill -> `mattpocock:grill-with-docs`。
+Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:wayfinder`；Grill -> `mattpocock:grill-with-docs`。
 
 ### CTO
 
@@ -164,9 +164,9 @@ npx omniskill@latest install cto
 
 Description：Technical leadership，處理 architecture、domain model、platform direction、engineering risk。
 
-Skills：`cto`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:review`。
+Skills：`cto`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
 
-Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`。
+Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
 
 ### Product Manager
 
@@ -184,9 +184,9 @@ npx omniskill@latest install product-manager
 
 Description：Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。
 
-Skills：`product-manager`、`superpowers:brainstorming`、`mattpocock:to-prd`、`mattpocock:to-issues`、`superpowers:writing-plans`。
+Skills：`product-manager`、`superpowers:brainstorming`、`mattpocock:to-spec`、`mattpocock:to-tickets`、`superpowers:writing-plans`。
 
-Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:brainstorming`；PRD -> `mattpocock:to-prd`；Issues -> `mattpocock:to-issues`；Plan -> `superpowers:writing-plans`。
+Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:brainstorming`；PRD -> `mattpocock:to-spec`；Issues -> `mattpocock:to-tickets`；Plan -> `superpowers:writing-plans`。
 
 ### Engineering Manager
 
@@ -204,9 +204,9 @@ npx omniskill@latest install engineering-manager
 
 Description：Delivery sequencing、execution risk、quality gates、blocker triage、engineering process。
 
-Skills：`engineering-manager`、`superpowers:writing-plans`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`。
+Skills：`engineering-manager`、`superpowers:writing-plans`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
 
-Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writing-plans`；Quality -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`。
+Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writing-plans`；Quality -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
 
 ### Founding Engineer
 
@@ -224,9 +224,9 @@ npx omniskill@latest install founding-engineer
 
 Description：Implementation lane，聚焦 smallest correct change：tests、debugging、review、verification。
 
-Skills：`founding-engineer`、`implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`、`superpowers:verification-before-completion`。
+Skills：`founding-engineer`、`implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`superpowers:verification-before-completion`。
 
-Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`；Verify -> `superpowers:verification-before-completion`。
+Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`；Verify -> `superpowers:verification-before-completion`。
 
 ### QA Lead
 
@@ -244,9 +244,9 @@ npx omniskill@latest install qa-lead
 
 Description：Release-risk lens，處理 acceptance checks、regression focus、reproduction gaps、verification evidence。
 
-Skills：`qa-lead`、`mattpocock:review`、`mattpocock:diagnosing-bugs`、`superpowers:verification-before-completion`。
+Skills：`qa-lead`、`mattpocock:code-review`、`mattpocock:diagnosing-bugs`、`superpowers:verification-before-completion`。
 
-Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:review`；Debug -> `mattpocock:diagnosing-bugs`；Verify -> `superpowers:verification-before-completion`。
+Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:code-review`；Debug -> `mattpocock:diagnosing-bugs`；Verify -> `superpowers:verification-before-completion`。
 
 ### Haaland
 

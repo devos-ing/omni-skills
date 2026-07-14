@@ -356,8 +356,8 @@ describe("landing app source contract", () => {
     expect(route).toContain('from "../../../lib/landing-content"');
     expect(route).toContain("getLocalSkillSourceUrl");
     expect(route).toContain("export function generateStaticParams()");
-    expect(route).toContain("workflows.map");
-    expect(route).toContain("workflows.find");
+    expect(route).toContain("catalogEntries.map");
+    expect(route).toContain("catalogEntries.find");
     expect(route).toContain("notFound()");
     expect(route).toContain("workflow.installCommand");
     expect(route).toContain("WorkflowAvatar");

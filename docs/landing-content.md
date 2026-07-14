@@ -231,14 +231,14 @@ fundraising/customer framing, and company decisions.
 Skills:
 
 - `ceo`: Set the executive frame
-- `mattpocock:decision-mapping`: Map strategic uncertainty
+- `mattpocock:wayfinder`: Map strategic uncertainty
 - `mattpocock:grill-with-docs`: Stress-test the company direction
 
 Ordered skill path:
 
 1. Brief -> `ceo`
    - State the company-level decision.
-2. Decision Map -> `mattpocock:decision-mapping`
+2. Decision Map -> `mattpocock:wayfinder`
    - Map options, constraints, and uncertainties.
 3. Grill -> `mattpocock:grill-with-docs`
    - Stress-test the direction before committing.
@@ -266,7 +266,7 @@ Skills:
 - `mattpocock:codebase-design`: Review module boundaries
 - `mattpocock:domain-modeling`: Clarify domain concepts
 - `mattpocock:diagnosing-bugs`: Diagnose technical risk
-- `mattpocock:review`: Review the technical decision
+- `mattpocock:code-review`: Review behavior and risk
 
 Ordered skill path:
 
@@ -278,7 +278,7 @@ Ordered skill path:
    - Review boundaries and interfaces.
 4. Risk -> `mattpocock:diagnosing-bugs`
    - Diagnose failures and fragile assumptions.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Check behavior, blast radius, and tradeoffs.
 
 ### Product Manager
@@ -302,8 +302,8 @@ Skills:
 
 - `product-manager`: Frame the product problem
 - `superpowers:brainstorming`: Explore product options
-- `mattpocock:to-prd`: Write the PRD
-- `mattpocock:to-issues`: Slice delivery issues
+- `mattpocock:to-spec`: Write the product specification
+- `mattpocock:to-tickets`: Slice delivery tickets
 - `superpowers:writing-plans`: Write the delivery plan
 
 Ordered skill path:
@@ -312,9 +312,9 @@ Ordered skill path:
    - Name the user, pain, and desired behavior change.
 2. Brainstorm -> `superpowers:brainstorming`
    - Explore product options before locking scope.
-3. PRD -> `mattpocock:to-prd`
+3. PRD -> `mattpocock:to-spec`
    - Write the requirement and acceptance criteria.
-4. Issues -> `mattpocock:to-issues`
+4. Issues -> `mattpocock:to-tickets`
    - Slice the PRD into visible progress.
 5. Plan -> `superpowers:writing-plans`
    - Turn scope into executable delivery steps.
@@ -342,7 +342,7 @@ Skills:
 - `superpowers:writing-plans`: Write the execution plan
 - `mattpocock:tdd`: Choose the test strategy
 - `mattpocock:diagnosing-bugs`: Triage blockers
-- `mattpocock:review`: Review delivery risk
+- `mattpocock:code-review`: Review behavior and risk
 
 Ordered skill path:
 
@@ -354,7 +354,7 @@ Ordered skill path:
    - Pick test gates by blast radius.
 4. Debug -> `mattpocock:diagnosing-bugs`
    - Triage blockers from evidence.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Review delivery risk before handoff.
 
 ### Founding Engineer
@@ -380,7 +380,7 @@ Skills:
 - `implement`: Implement the planned change
 - `mattpocock:tdd`: Use test-first development
 - `mattpocock:diagnosing-bugs`: Diagnose failures
-- `mattpocock:review`: Review the implementation
+- `mattpocock:code-review`: Review behavior and risk
 - `superpowers:verification-before-completion`: Verify completion
 
 Ordered skill path:
@@ -393,7 +393,7 @@ Ordered skill path:
    - Keep tests close to changed behavior.
 4. Debug -> `mattpocock:diagnosing-bugs`
    - Debug from evidence when checks fail.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Review risks and behavior.
 6. Verify -> `superpowers:verification-before-completion`
    - Run final checks before handoff.
@@ -418,7 +418,7 @@ reproduction gaps, and verification evidence.
 Skills:
 
 - `qa-lead`: Set the release-risk frame
-- `mattpocock:review`: Review acceptance and risk
+- `mattpocock:code-review`: Review behavior and risk
 - `mattpocock:diagnosing-bugs`: Diagnose failures
 - `superpowers:verification-before-completion`: Verify before handoff
 
@@ -426,7 +426,7 @@ Ordered skill path:
 
 1. Brief -> `qa-lead`
    - Restate the user-facing behavior that must be true.
-2. Review -> `mattpocock:review`
+2. Review -> `mattpocock:code-review`
    - Review acceptance and release risk.
 3. Debug -> `mattpocock:diagnosing-bugs`
    - Identify reproduction gaps and failure evidence.
