@@ -477,7 +477,11 @@ async function runOmniskillDispatchResume(
     options.createRunStore ?? ((dir) => createOrchestrationRunStore({ homeDir: dir }))
   )(homeDir);
   const stored = await store.load(runId);
-  if (stored.receipt.status !== "consultation_required" || !stored.receipt.sessionId) {
+  if (
+    stored.receipt.status !== "consultation_required" ||
+    stored.receipt.failureCode === "human_escalation_required" ||
+    !stored.receipt.sessionId
+  ) {
     throw new Error(`Orchestration run is not awaiting consultation: ${runId}`);
   }
   const dispatcher = options.dispatchers?.[stored.request.runtime];
@@ -538,11 +542,16 @@ async function runOmniskillDispatchResume(
     if (stored.receipt.reassignmentCount >= currentPlan.limits.reassignmentPerWorkItem) {
       throw new Error(`Dispatch reassignment limit exceeded: ${runId}`);
     }
+    const reassignmentTask = [
+      stored.request.task,
+      "",
+      `Coordinator decision (reassign): ${commandOptions.message}`,
+    ].join("\n");
     const reassignedPlanSet = await planOrchestrationDispatch({
       workflow: installed.workflow,
       role: commandOptions.role as string,
       runtime: stored.request.runtime,
-      task: stored.request.task,
+      task: reassignmentTask,
       cwd: stored.request.cwd,
       homeDir,
       approveWorkspaceWrite: stored.request.approveWorkspaceWrite,
@@ -576,6 +585,7 @@ async function runOmniskillDispatchResume(
     status: result.status,
     evidence: result.evidence,
     resumeDecision: decision,
+    decisionMessage: commandOptions.message,
     ...(result.sessionId ? { sessionId: result.sessionId } : {}),
     ...(result.failureCode ? { failureCode: result.failureCode } : {}),
     ...(result.failureReason ? { failureReason: result.failureReason } : {}),

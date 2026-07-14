@@ -112,6 +112,7 @@ export interface DispatchAttempt {
   failureReason?: string;
   fallbackFromAttempt?: number;
   resumeDecision?: ConsultationDecision;
+  decisionMessage?: string;
   consultation?: ConsultationRequest;
 }
 

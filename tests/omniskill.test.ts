@@ -966,6 +966,7 @@ describe("omniskill command module", () => {
     const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-reassign-home-"));
     const originalLog = console.log;
     const dispatchedRoles: string[] = [];
+    const dispatchedTasks: string[] = [];
     const consultation = {
       type: "consultation_request" as const,
       trigger: "elevated_risk" as const,
@@ -992,6 +993,7 @@ describe("omniskill command module", () => {
             available: async () => true,
             dispatch: async (plan) => {
               dispatchedRoles.push(plan.role);
+              dispatchedTasks.push(plan.task);
               return {
                 status: "consultation_required",
                 evidence: "launch_configured",
@@ -1065,12 +1067,28 @@ describe("omniskill command module", () => {
         "receipt.json",
       );
       expect(dispatchedRoles).toEqual(["catalog:cto", "./skills/startup-goal"]);
+      expect(dispatchedTasks).toEqual([
+        "Review boundaries",
+        expect.stringContaining("Coordinator should own this decision."),
+      ]);
       expect(JSON.parse(await readFile(receiptPath, "utf8"))).toEqual(
         expect.objectContaining({
           status: "consultation_required",
           role: "./skills/startup-goal",
           reassignmentCount: 1,
           consultationCount: 2,
+        }),
+      );
+      const reassignmentAttempts = (
+        await readFile(join(receiptPath, "..", "attempts.jsonl"), "utf8")
+      )
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(reassignmentAttempts[1]).toEqual(
+        expect.objectContaining({
+          resumeDecision: "reassign",
+          decisionMessage: "Coordinator should own this decision.",
         }),
       );
 
@@ -1099,6 +1117,125 @@ describe("omniskill command module", () => {
           consultationCount: 3,
         }),
       );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dispatch resume makes human escalation terminal", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-escalate-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-escalate-home-"));
+    const originalLog = console.log;
+    let resumeCalls = 0;
+    const configure = (program: Command) =>
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch escalation");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            createRunId: () => "run-escalate",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            available: async () => true,
+            dispatch: async () => ({
+              status: "consultation_required",
+              evidence: "launch_configured",
+              sessionId: "thread-escalate",
+              consultation: {
+                type: "consultation_request",
+                trigger: "elevated_risk",
+                current_task: "Review boundaries",
+                evidence: ["The decision needs product-owner authority."],
+                decision_needed: "Approve or reject the boundary.",
+                recommendation: "Escalate to the product owner.",
+              },
+            }),
+            resume: async () => {
+              resumeCalls += 1;
+              return { status: "completed", evidence: "launch_configured" };
+            },
+          },
+        },
+      });
+
+    try {
+      await writeInstalledDispatchFixture(homeDir);
+      console.log = () => {};
+      const startProgram = new Command();
+      configure(startProgram);
+      await startProgram.parseAsync(
+        [
+          "dispatch",
+          "startup-team",
+          "--role",
+          "catalog:cto",
+          "--task",
+          "Review boundaries",
+          "--home",
+          homeDir,
+        ],
+        { from: "user" },
+      );
+
+      const escalateProgram = new Command();
+      configure(escalateProgram);
+      await escalateProgram.parseAsync(
+        [
+          "dispatch",
+          "resume",
+          "run-escalate",
+          "--decision",
+          "escalate-to-human",
+          "--message",
+          "Product owner approval is required.",
+          "--home",
+          homeDir,
+        ],
+        { from: "user" },
+      );
+
+      const receiptPath = join(
+        homeDir,
+        ".omniskills",
+        "runs",
+        "startup-team",
+        "run-escalate",
+        "receipt.json",
+      );
+      expect(JSON.parse(await readFile(receiptPath, "utf8"))).toEqual(
+        expect.objectContaining({
+          status: "consultation_required",
+          failureCode: "human_escalation_required",
+        }),
+      );
+
+      const continueProgram = new Command();
+      configure(continueProgram);
+      await expect(
+        continueProgram.parseAsync(
+          [
+            "dispatch",
+            "resume",
+            "run-escalate",
+            "--decision",
+            "continue",
+            "--message",
+            "Continue anyway.",
+            "--home",
+            homeDir,
+          ],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("not awaiting consultation");
+      expect(resumeCalls).toBe(0);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
