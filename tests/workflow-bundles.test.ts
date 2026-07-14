@@ -136,6 +136,31 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("rejects a tampered root source in a transitive lock", async () => {
+    const bundle = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "skill-tree-demo"),
+    );
+    const lock = bundle.lock;
+    if (lock?.schemaVersion !== "0.2") {
+      throw new Error("Expected the skill-tree demo to have a transitive lock");
+    }
+    const rootWorkflow = lock.workflows[0];
+    if (!rootWorkflow) {
+      throw new Error("Expected the transitive lock to have a root workflow");
+    }
+    bundle.lock = {
+      ...lock,
+      workflows: [
+        { ...rootWorkflow, source: { kind: "local", path: "./tampered-root" } },
+        ...lock.workflows.slice(1),
+      ],
+    };
+
+    await expect(resolveWorkflowDependencyGraph({ bundle })).rejects.toThrow(
+      "Transitive workflow lock has an invalid root source",
+    );
+  });
+
   test("selects the highest leaf repository semver for one logical skill", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-leaf-version-"));
     await writeFile(
@@ -158,6 +183,38 @@ describe("workflow bundles", () => {
         bundle: await loadWorkflowBundle(rootDir),
       });
       expect(graph.dependencies).toEqual([{ source: "shared", repo: "org/pkg@2.0.0" }]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("selects a versioned leaf over an unversioned default in either mixed leaf order", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-mixed-leaf-version-"));
+
+    try {
+      for (const [index, repos] of [
+        ["org/pkg@2.0.0", "org/pkg"],
+        ["org/pkg", "org/pkg@2.0.0"],
+      ].entries()) {
+        const bundleDir = join(rootDir, String(index));
+        await mkdir(bundleDir, { recursive: true });
+        await writeFile(
+          join(bundleDir, "workflow.json"),
+          JSON.stringify({
+            schemaVersion: "0.1",
+            name: `mixed-leaf-version-${index}`,
+            version: "1.0.0",
+            description: "Mixed leaf version selection.",
+            skills: repos.map((repo) => ({ source: "shared", repo })),
+            steps: [{ id: "run", title: "Run", skill: "shared" }],
+          }),
+        );
+
+        const graph = await resolveWorkflowDependencyGraph({
+          bundle: await loadWorkflowBundle(bundleDir),
+        });
+        expect(graph.dependencies).toEqual([{ source: "shared", repo: "org/pkg@2.0.0" }]);
+      }
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }

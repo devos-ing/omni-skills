@@ -901,10 +901,10 @@ function isPreferredWorkflowSkillDependency(
   const candidateVersion = getWorkflowSkillDependencySemver(candidate.repo);
   const selectedVersion = getWorkflowSkillDependencySemver(selected.repo);
   if (!candidateVersion) {
-    return selectedVersion !== null;
+    return false;
   }
   if (!selectedVersion) {
-    return false;
+    return true;
   }
   return compareWorkflowSemver(candidateVersion, selectedVersion) > 0;
 }
@@ -1472,7 +1472,7 @@ async function validateResolvedTransitiveWorkflowLock(input: {
   const resolvedWorkflows = createLockedWorkflowGraph(input.rootDir, input.workflows);
   const lockedWorkflows = input.lock.workflows.map((workflow, index) => ({
     ...workflow,
-    source: index === 0 ? { kind: "root" as const } : workflow.source,
+    source: index === 0 ? validateLockedRootSource(workflow.source) : workflow.source,
   }));
   const resolvedSkills = await createWorkflowLockSkillEntries(input.rootDir, input.dependencies);
   const matches =
@@ -1482,6 +1482,15 @@ async function validateResolvedTransitiveWorkflowLock(input: {
   if (!matches) {
     throw new Error("Transitive workflow lock does not match resolved dependency graph");
   }
+}
+
+function validateLockedRootSource(source: z.infer<typeof LockedWorkflowSourceSchema>): {
+  kind: "root";
+} {
+  if (source.kind === "root" || (source.kind === "local" && source.path === ".")) {
+    return { kind: "root" };
+  }
+  throw new Error("Transitive workflow lock has an invalid root source");
 }
 
 function createLockedWorkflowGraph(
