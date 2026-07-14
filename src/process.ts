@@ -1,10 +1,13 @@
 import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
 
 export interface SubprocessCommand {
   executable: string;
   args: string[];
   cwd: string;
   env?: Record<string, string | undefined>;
+  stdin?: string;
+  onStdoutLine?: (line: string) => void;
 }
 
 export interface SubprocessResult {
@@ -17,11 +20,14 @@ export async function runSubprocess(command: SubprocessCommand): Promise<Subproc
   const subprocess = spawn(command.executable, command.args, {
     cwd: command.cwd,
     env: command.env,
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: [command.stdin === undefined ? "ignore" : "pipe", "pipe", "pipe"],
   });
+  if (command.stdin !== undefined) {
+    subprocess.stdin?.end(command.stdin);
+  }
   let spawnErrorMessage = "";
 
-  const stdout = readStream(subprocess.stdout);
+  const stdout = readStream(subprocess.stdout, command.onStdoutLine);
   const stderr = readStream(subprocess.stderr);
   const exitCode = new Promise<number>((resolve) => {
     subprocess.once("error", (error) => {
@@ -40,17 +46,34 @@ export async function runSubprocess(command: SubprocessCommand): Promise<Subproc
   };
 }
 
-function readStream(stream: NodeJS.ReadableStream | null): Promise<string> {
+function readStream(
+  stream: NodeJS.ReadableStream | null,
+  onLine?: (line: string) => void,
+): Promise<string> {
   if (!stream) {
     return Promise.resolve("");
   }
 
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
+    const decoder = new StringDecoder("utf8");
+    let pendingLine = "";
     stream.on("data", (chunk: Buffer | string) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      chunks.push(buffer);
+      if (onLine) {
+        const parts = `${pendingLine}${decoder.write(buffer)}`.split(/\r?\n/);
+        pendingLine = parts.pop() ?? "";
+        for (const line of parts) onLine(line);
+      }
     });
     stream.on("error", reject);
-    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    stream.on("end", () => {
+      if (onLine) {
+        pendingLine += decoder.end();
+        if (pendingLine) onLine(pendingLine);
+      }
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
   });
 }
