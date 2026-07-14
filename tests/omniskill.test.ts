@@ -13,6 +13,7 @@ import {
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
   type SkillInstallResult,
+  SkillSourceNotFoundError,
 } from "../src/plugins";
 import type { WorkflowGitCommand } from "../src/runtimes/omniskill/workflow-bundles";
 
@@ -328,6 +329,137 @@ describe("omniskill command module", () => {
       ).rejects.toThrow();
     } finally {
       console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("bootstraps a missing repo-backed role and verifies its installed name", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-repo-role-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-repo-role-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    const externalInstalls: Array<{ source: string; repo?: string; homeDir: string }> = [];
+    const customRoleInstalls: string[] = [];
+    const program = new Command();
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, {
+        team: true,
+        orchestration: true,
+        repoBackedRole: true,
+      });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async (input) => {
+          if (input.source === "custom-review") {
+            customRoleInstalls.push(input.source);
+            if (customRoleInstalls.length === 1) {
+              throw new SkillSourceNotFoundError("Skill source not found: custom-review");
+            }
+          }
+          const skillName = input.source.endsWith("git-extra")
+            ? "actual-git-extra"
+            : input.source === "custom-review"
+              ? "custom-review-agent"
+              : "git-entry";
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName,
+              destination: join(homeDir, ".agents", "skills", skillName),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+        installExternalSkillDependency: async (input) => {
+          externalInstalls.push(input);
+        },
+      });
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      expect(customRoleInstalls).toEqual(["custom-review", "custom-review"]);
+      expect(externalInstalls).toEqual([{ source: "custom-review", repo: "org/package", homeDir }]);
+      expect(
+        await readFile(
+          join(homeDir, ".codex", "agents", "omniskills-git-team-custom-review.toml"),
+          "utf8",
+        ),
+      ).toContain("`$custom-review-agent`");
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-team.json")),
+      ).resolves.toBeTruthy();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a repo-backed role when the first installed name mismatches", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-repo-role-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-repo-role-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    let customRoleInstalls = 0;
+    const program = new Command();
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, {
+        team: true,
+        orchestration: true,
+        repoBackedRole: true,
+      });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async (input) => {
+          if (input.source === "custom-review") {
+            customRoleInstalls += 1;
+            if (customRoleInstalls === 1) {
+              throw new SkillSourceNotFoundError("Skill source not found: custom-review");
+            }
+          }
+          const skillName = input.source.endsWith("git-extra")
+            ? "actual-git-extra"
+            : input.source === "custom-review"
+              ? "wrong-review-agent"
+              : "git-entry";
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName,
+              destination: join(homeDir, ".agents", "skills", skillName),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+        installExternalSkillDependency: async () => {},
+      });
+
+      await expect(
+        program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+          from: "user",
+        }),
+      ).rejects.toThrow(
+        "Installed skill name mismatch for custom-review: expected custom-review-agent, resolved wrong-review-agent",
+      );
+      await expect(
+        stat(join(homeDir, ".codex", "agents", "omniskills-git-team-custom-review.toml")),
+      ).rejects.toThrow();
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-team.json")),
+      ).rejects.toThrow();
+    } finally {
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });
     }

@@ -24,6 +24,7 @@ import {
   preflightAgentProfiles,
   resolveInstallSkillName,
   type SkillInstallResult,
+  SkillSourceNotFoundError,
 } from "./plugins";
 import { runSubprocess } from "./process";
 import {
@@ -468,6 +469,9 @@ async function runOmniskillInstall(
         rootDir: targetDir,
         source: skillDependency.source,
         ...(skillDependency.repo ? { repo: skillDependency.repo } : {}),
+        ...(skillDependency.installedName
+          ? { expectedInstalledName: skillDependency.installedName }
+          : {}),
         homeDir,
         agents: installAgents,
         installSkill: options.installSkill,
@@ -476,6 +480,15 @@ async function runOmniskillInstall(
         installedExternalPackages,
         forceRefreshExisting: versionRefreshSources.has(manifestSource),
       });
+
+      if (
+        skillDependency.installedName &&
+        skillResult.skillInstall.skillName !== skillDependency.installedName
+      ) {
+        throw new Error(
+          `Installed skill name mismatch for ${manifestSource}: expected ${skillDependency.installedName}, resolved ${skillResult.skillInstall.skillName}`,
+        );
+      }
 
       for (const target of skillResult.skillInstall.targets) {
         installArtifacts.push({
@@ -599,6 +612,7 @@ async function installOmniskillSkillDependency(input: {
   rootDir: string;
   source: string;
   repo?: string;
+  expectedInstalledName?: string;
   homeDir: string;
   agents: ReturnType<typeof parseSkillInstallAgents>;
   installSkill: OmniskillSkillInstaller;
@@ -612,6 +626,7 @@ async function installOmniskillSkillDependency(input: {
     const externalPackage = getSkillsCliPackageForMissingDependency(
       input.source,
       input.repo,
+      input.expectedInstalledName,
       error,
     );
     if (!externalPackage) {
@@ -634,7 +649,14 @@ async function installOmniskillSkillDependency(input: {
     try {
       return await installWorkflowSkillDependency(input);
     } catch (retryError) {
-      if (isMissingBootstrappableSkillError(retryError)) {
+      if (
+        isMissingBootstrappableSkillError(retryError, {
+          ...(input.repo ? { repo: input.repo } : {}),
+          ...(input.expectedInstalledName
+            ? { expectedInstalledName: input.expectedInstalledName }
+            : {}),
+        })
+      ) {
         throw new Error(
           `The skills CLI ran for ${externalPackage}, but ${input.source} is still missing. ${retryError.message}`,
         );
@@ -668,9 +690,15 @@ function installWorkflowSkillDependency(input: {
 function getSkillsCliPackageForMissingDependency(
   source: string,
   repo: string | undefined,
+  expectedInstalledName: string | undefined,
   error: unknown,
 ): string | null {
-  if (!isMissingBootstrappableSkillError(error)) {
+  if (
+    !isMissingBootstrappableSkillError(error, {
+      ...(repo ? { repo } : {}),
+      ...(expectedInstalledName ? { expectedInstalledName } : {}),
+    })
+  ) {
     return null;
   }
 
@@ -679,14 +707,19 @@ function getSkillsCliPackageForMissingDependency(
 
 function isMissingBootstrappableSkillError(
   error: unknown,
+  options: { repo?: string; expectedInstalledName?: string } = {},
 ): error is
   | MissingInterfaceCraftSkillError
   | MissingMattPocockSkillError
-  | MissingSuperpowersSkillError {
+  | MissingSuperpowersSkillError
+  | SkillSourceNotFoundError {
   return (
     error instanceof MissingInterfaceCraftSkillError ||
     error instanceof MissingMattPocockSkillError ||
-    error instanceof MissingSuperpowersSkillError
+    error instanceof MissingSuperpowersSkillError ||
+    (error instanceof SkillSourceNotFoundError &&
+      Boolean(options.repo) &&
+      Boolean(options.expectedInstalledName))
   );
 }
 

@@ -66,7 +66,12 @@ export interface ResolveInstallSkillNameOptions extends ResolveInstallSkillSourc
   expectedName?: string;
 }
 
-class SkillSourceNotFoundError extends Error {}
+export class SkillSourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SkillSourceNotFoundError";
+  }
+}
 
 export class MissingSuperpowersSkillError extends Error {
   constructor(input: { displayName: string; source: string }) {
