@@ -1,8 +1,9 @@
 import type { SubprocessCommand, SubprocessResult } from "../process";
-import type {
-  ConsultationDecision,
-  ConsultationRequest,
-  DispatchPlan,
+import {
+  type ConsultationDecision,
+  type ConsultationRequest,
+  ConsultationRequestSchema,
+  type DispatchPlan,
 } from "../runtimes/omniskill";
 
 export interface DispatchAttemptResult {
@@ -61,6 +62,23 @@ function findString(event: StructuredEvent, ...keys: string[]): string | undefin
   return undefined;
 }
 
+function findConsultation(events: StructuredEvent[]): ConsultationRequest | undefined {
+  for (const event of events) {
+    if (event.type !== "item.completed") continue;
+    const item = event.item;
+    if (typeof item !== "object" || item === null) continue;
+    const candidate = item as Record<string, unknown>;
+    if (candidate.type !== "agent_message" || typeof candidate.text !== "string") continue;
+    try {
+      const parsed = ConsultationRequestSchema.safeParse(JSON.parse(candidate.text));
+      if (parsed.success) return parsed.data;
+    } catch {
+      // Agent messages are ordinary text unless they match the strict consultation contract.
+    }
+  }
+  return undefined;
+}
+
 function classifyFailure(
   output: string,
 ): Pick<DispatchAttemptResult, "failureCode" | "failureReason"> {
@@ -100,6 +118,16 @@ function classifyResult(plan: DispatchPlan, result: SubprocessResult): DispatchA
       ...(runtimeModel ? { runtimeModel } : {}),
       ...(sessionId ? { sessionId } : {}),
       ...classifyFailure([result.stderr, result.stdout].filter(Boolean).join("\n")),
+    };
+  }
+  const consultation = findConsultation(events);
+  if (consultation) {
+    return {
+      status: "consultation_required",
+      evidence,
+      consultation,
+      ...(sessionId ? { sessionId } : {}),
+      ...(runtimeModel ? { runtimeModel } : {}),
     };
   }
   return {

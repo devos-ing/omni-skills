@@ -4,7 +4,10 @@ import {
   type OrchestrationDispatcher,
 } from "../src/plugins/orchestration-dispatcher";
 import type { SubprocessCommand, SubprocessResult } from "../src/process";
-import type { DispatchPlan } from "../src/runtimes/omniskill/orchestration-dispatch";
+import type {
+  ConsultationRequest,
+  DispatchPlan,
+} from "../src/runtimes/omniskill/orchestration-dispatch";
 
 const readOnlyPlan: DispatchPlan = {
   workflow: "startup-team",
@@ -124,6 +127,36 @@ describe("Codex orchestration dispatcher", () => {
       runtimeModel: "gpt-5.4",
       failureCode: "runtime_mismatch",
       failureReason: "Runtime reported gpt-5.4; dispatch required gpt-5.6",
+    });
+  });
+
+  test("returns a strict structured consultation request instead of completing", async () => {
+    const consultation: ConsultationRequest = {
+      type: "consultation_request",
+      trigger: "requirement_conflict",
+      current_task: "Review the service boundary.",
+      evidence: ["The requested public API conflicts with the installed compatibility rule."],
+      decision_needed: "Choose compatibility or the new API.",
+      recommendation: "Preserve compatibility and add an adapter.",
+    };
+    const { dispatcher } = dispatcherWith({
+      exitCode: 0,
+      stderr: "",
+      stdout: [
+        JSON.stringify({ type: "thread.started", thread_id: "thread-consult" }),
+        JSON.stringify({
+          type: "item.completed",
+          item: { type: "agent_message", text: JSON.stringify(consultation) },
+        }),
+        JSON.stringify({ type: "turn.completed" }),
+      ].join("\n"),
+    });
+
+    await expect(dispatcher.dispatch(readOnlyPlan)).resolves.toEqual({
+      status: "consultation_required",
+      evidence: "launch_configured",
+      sessionId: "thread-consult",
+      consultation,
     });
   });
 
