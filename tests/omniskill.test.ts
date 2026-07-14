@@ -168,7 +168,7 @@ async function writeGitWorkflowFixtureAt(
           ...(options.team
             ? [
                 {
-                  id: "member",
+                  id: options.orchestration ? "implement" : "member",
                   title: "Member",
                   skill: options.localTeamMember ? "./skills/git-extra" : "./member-workflow",
                 },
@@ -290,6 +290,10 @@ describe("omniskill command module", () => {
       expect(installCalls).toBe(0);
       expect(logs.join("\n")).toContain("Agent profiles:");
       expect(logs.join("\n")).toContain("omniskills-git-team-git-entry");
+      expect(logs.join("\n")).toContain("source=./skills/git-entry");
+      expect(logs.join("\n")).toContain("taskClass=role");
+      expect(logs.join("\n")).toContain("candidate=1/1");
+      expect(logs.join("\n")).toContain("ownership=unowned");
       await expect(
         readFile(join(homeDir, ".omniskills", "orchestration.json"), "utf8"),
       ).rejects.toThrow();

@@ -46,7 +46,10 @@ const manifest = WorkflowBundleManifestSchema.parse({
     { source: "catalog:cto" },
     { source: "mattpocock:implement" },
   ],
-  steps: [{ id: "route", title: "Route", skill: "./skills/coordinator" }],
+  steps: [
+    { id: "route", title: "Route", skill: "./skills/coordinator" },
+    { id: "implement", title: "Implement", skill: "mattpocock:implement" },
+  ],
 });
 
 describe("orchestration configuration", () => {
@@ -57,6 +60,15 @@ describe("orchestration configuration", () => {
         tiers: {
           ...DEFAULT_ORCHESTRATION_CONFIG.tiers,
           deep: { ...DEFAULT_ORCHESTRATION_CONFIG.tiers.deep, codex: [] },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      OrchestrationConfigSchema.parse({
+        ...DEFAULT_ORCHESTRATION_CONFIG,
+        tiers: {
+          ...DEFAULT_ORCHESTRATION_CONFIG.tiers,
+          turbo: DEFAULT_ORCHESTRATION_CONFIG.tiers.fast,
         },
       }),
     ).toThrow();
@@ -120,6 +132,17 @@ describe("orchestration configuration", () => {
     expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
       "Never expand scope, bypass an approval gate, change permissions, or downgrade a tier",
     );
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
+      "load and follow the installed `$cto` skill",
+    );
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
+      "omniskills-managed: team=test-team source=catalog:cto",
+    );
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.taskClass).toBe("role");
+    expect(profiles.find(({ source }) => source === "explorer")?.taskClass).toBe("support");
+    expect(profiles.find(({ source }) => source === "mattpocock:implement")?.content).toContain(
+      "Workspace-write tools are authorized only while executing an explicitly assigned implementation step",
+    );
     expect(profiles.every(({ contentHash }) => /^sha256:[a-f0-9]{64}$/.test(contentHash))).toBe(
       true,
     );
@@ -160,5 +183,57 @@ describe("orchestration configuration", () => {
         candidateIndex: 1,
       },
     ]);
+  });
+
+  test("omits Claude messaging when consultation is disabled", () => {
+    const noConsultationManifest = WorkflowBundleManifestSchema.parse({
+      ...manifest,
+      orchestration: {
+        ...manifest.orchestration,
+        roles: {
+          ...manifest.orchestration?.roles,
+          "catalog:cto": {
+            tier: "deep",
+            access: "read-only",
+            consultation: "none",
+          },
+        },
+      },
+    });
+    const profile = planAgentProfiles({
+      manifest: noConsultationManifest,
+      config: DEFAULT_ORCHESTRATION_CONFIG,
+      homeDir: "/tmp/orchestration-home",
+      targets: ["claude"],
+    }).find(({ source }) => source === "catalog:cto");
+
+    expect(profile?.content).not.toContain("SendMessage");
+  });
+
+  test("rejects sources that normalize to the same profile identifier", () => {
+    const collidingManifest = WorkflowBundleManifestSchema.parse({
+      ...manifest,
+      skills: [...manifest.skills, { source: "other:cto" }],
+      orchestration: {
+        ...manifest.orchestration,
+        roles: {
+          ...manifest.orchestration?.roles,
+          "other:cto": {
+            tier: "deep",
+            access: "read-only",
+            consultation: "request",
+          },
+        },
+      },
+    });
+
+    expect(() =>
+      planAgentProfiles({
+        manifest: collidingManifest,
+        config: DEFAULT_ORCHESTRATION_CONFIG,
+        homeDir: "/tmp/orchestration-home",
+        targets: ["codex"],
+      }),
+    ).toThrow("Duplicate agent profile identifier: omniskills-test-team-cto");
   });
 });

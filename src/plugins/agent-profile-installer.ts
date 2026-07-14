@@ -1,36 +1,43 @@
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
   DEFAULT_ORCHESTRATION_CONFIG,
+  hashAgentProfileContent,
   type OrchestrationConfig,
   OrchestrationConfigSchema,
   orchestrationConfigFileName,
   type PlannedAgentProfile,
-} from "../runtimes/omniskill/orchestration";
+  type WorkflowInstallAgentProfileArtifact,
+} from "../runtimes/omniskill";
 
-export type AgentProfileInstallStatus = "create" | "unchanged" | "update" | "conflict";
+export type AgentProfileInstallStatus =
+  | "create"
+  | "unchanged"
+  | "update"
+  | "conflict"
+  | "remove"
+  | "keep";
+export type AgentProfileOwnership = "unowned" | "managed" | "foreign";
 
-export interface AgentProfileArtifact {
-  kind: "agent_profile";
-  source: string;
-  profileId: string;
-  agent: "codex" | "claude";
-  status: "installed" | "updated" | "unchanged";
-  path: string;
-  contentHash: string;
-}
+export type AgentProfileArtifact = WorkflowInstallAgentProfileArtifact;
 
-export interface PlannedAgentProfileWrite {
+interface PlannedDesiredAgentProfileWrite {
   profile: PlannedAgentProfile;
-  status: AgentProfileInstallStatus;
+  status: "create" | "unchanged" | "update" | "conflict";
+  ownership: AgentProfileOwnership;
   artifact: AgentProfileArtifact;
 }
 
-function hash(content: string): string {
-  return `sha256:${createHash("sha256").update(content).digest("hex")}`;
+interface PlannedObsoleteAgentProfileWrite {
+  status: "remove" | "keep";
+  ownership: "managed";
+  artifact: AgentProfileArtifact;
 }
+
+export type PlannedAgentProfileWrite =
+  | PlannedDesiredAgentProfileWrite
+  | PlannedObsoleteAgentProfileWrite;
 
 export async function loadOrchestrationConfigPlan(input: { homeDir: string }): Promise<{
   path: string;
@@ -61,15 +68,30 @@ export async function preflightAgentProfiles(input: {
     input.previousArtifacts.map((artifact) => [artifact.path, artifact]),
   );
   const writes: PlannedAgentProfileWrite[] = [];
+  const desiredPaths = new Set(input.profiles.map((profile) => profile.destination));
+
+  for (const artifact of input.previousArtifacts) {
+    if (desiredPaths.has(artifact.path)) continue;
+    const status =
+      !existsSync(artifact.path) ||
+      hashAgentProfileContent(await readFile(artifact.path, "utf8")) === artifact.contentHash
+        ? "remove"
+        : "keep";
+    writes.push({ status, ownership: "managed", artifact });
+  }
+
   for (const profile of input.profiles) {
     const previous = previousByPath.get(profile.destination);
     const exists = existsSync(profile.destination);
+    const ownership: AgentProfileOwnership = previous ? "managed" : exists ? "foreign" : "unowned";
     let status: AgentProfileInstallStatus;
     if (!exists) {
       status = "create";
     } else {
-      const actualHash = hash(await readFile(profile.destination, "utf8"));
-      if (!previous || actualHash !== previous.contentHash) {
+      const actualHash = hashAgentProfileContent(await readFile(profile.destination, "utf8"));
+      if (!previous) {
+        status = "conflict";
+      } else if (actualHash !== previous.contentHash) {
         status = input.force ? "update" : "conflict";
       } else {
         status = actualHash === profile.contentHash ? "unchanged" : "update";
@@ -77,7 +99,8 @@ export async function preflightAgentProfiles(input: {
     }
     writes.push({
       profile,
-      status,
+      status: status as PlannedDesiredAgentProfileWrite["status"],
+      ownership,
       artifact: {
         kind: "agent_profile",
         source: profile.source,
@@ -87,6 +110,13 @@ export async function preflightAgentProfiles(input: {
           status === "update" ? "updated" : status === "unchanged" ? "unchanged" : "installed",
         path: profile.destination,
         contentHash: profile.contentHash,
+        taskClass: profile.taskClass,
+        tier: profile.tier,
+        model: profile.model,
+        effort: profile.effort,
+        access: profile.access,
+        candidateIndex: profile.candidateIndex,
+        candidateCount: profile.candidateCount,
       },
     });
   }
@@ -99,15 +129,21 @@ export async function executeAgentProfilePlan(input: {
 }): Promise<AgentProfileArtifact[]> {
   const conflict = input.profiles.find(({ status }) => status === "conflict");
   if (conflict) {
-    throw new Error(`Agent profile conflict: ${conflict.profile.destination}`);
+    throw new Error(`Agent profile conflict: ${conflict.artifact.path}`);
   }
 
   const changed: Array<{ path: string; previous: string | null }> = [];
   try {
     for (const planned of input.profiles) {
-      if (planned.status === "unchanged") continue;
-      const destination = planned.profile.destination;
+      if (planned.status === "unchanged" || planned.status === "keep") continue;
+      const destination = planned.artifact.path;
       const previous = existsSync(destination) ? await readFile(destination, "utf8") : null;
+      if (planned.status === "remove") {
+        await rm(destination, { force: true });
+        changed.push({ path: destination, previous });
+        continue;
+      }
+      if (!("profile" in planned)) continue;
       await mkdir(dirname(destination), { recursive: true });
       const temporary = `${destination}.omniskills-tmp`;
       await writeFile(temporary, planned.profile.content);
@@ -127,11 +163,12 @@ export async function executeAgentProfilePlan(input: {
       if (entry.previous === null) {
         await rm(entry.path, { force: true });
       } else {
+        await mkdir(dirname(entry.path), { recursive: true });
         await writeFile(entry.path, entry.previous);
       }
     }
     throw error;
   }
 
-  return input.profiles.map(({ artifact }) => artifact);
+  return input.profiles.filter(({ status }) => status !== "remove").map(({ artifact }) => artifact);
 }

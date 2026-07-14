@@ -8,37 +8,50 @@ export const orchestrationTiers = ["deep", "standard", "fast"] as const;
 export type OrchestrationTier = (typeof orchestrationTiers)[number];
 export type AgentProfileTarget = "codex" | "claude";
 
-const CodexCandidateSchema = z.object({
-  model: z.string().min(1),
-  reasoningEffort: z.enum(["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]),
-});
-const ClaudeCandidateSchema = z.object({
-  model: z.string().min(1),
-  effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
-});
-const TierCandidatesSchema = z.object({
-  codex: z.array(CodexCandidateSchema).min(1),
-  claude: z.array(ClaudeCandidateSchema).min(1),
-});
+const CodexCandidateSchema = z
+  .object({
+    model: z.string().min(1),
+    reasoningEffort: z.enum(["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]),
+  })
+  .strict();
+const ClaudeCandidateSchema = z
+  .object({
+    model: z.string().min(1),
+    effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
+  })
+  .strict();
+const TierCandidatesSchema = z
+  .object({
+    codex: z.array(CodexCandidateSchema).min(1),
+    claude: z.array(ClaudeCandidateSchema).min(1),
+  })
+  .strict();
 
 export const OrchestrationConfigSchema = z
   .object({
     schemaVersion: z.literal("0.1"),
-    tiers: z.object({
-      deep: TierCandidatesSchema,
-      standard: TierCandidatesSchema,
-      fast: TierCandidatesSchema,
-    }),
-    limits: z.object({
-      retryPerCandidate: z.number().int().min(1).max(3),
-      reassignmentPerWorkItem: z.number().int().min(1).max(3),
-      consultationsPerAgent: z.number().int().min(1).max(5),
-    }),
-    policy: z.object({
-      sameTierFallback: z.literal("automatic_disclosed"),
-      lowerTierFallback: z.literal("human_approval"),
-    }),
+    tiers: z
+      .object({
+        deep: TierCandidatesSchema,
+        standard: TierCandidatesSchema,
+        fast: TierCandidatesSchema,
+      })
+      .strict(),
+    limits: z
+      .object({
+        retryPerCandidate: z.number().int().min(1).max(3),
+        reassignmentPerWorkItem: z.number().int().min(1).max(3),
+        consultationsPerAgent: z.number().int().min(1).max(5),
+      })
+      .strict(),
+    policy: z
+      .object({
+        sameTierFallback: z.literal("automatic_disclosed"),
+        lowerTierFallback: z.literal("human_approval"),
+      })
+      .strict(),
   })
+  .strict()
   .superRefine((config, context) => {
     for (const tier of orchestrationTiers) {
       for (const target of ["codex", "claude"] as const) {
@@ -91,6 +104,7 @@ export const DEFAULT_ORCHESTRATION_CONFIG: OrchestrationConfig = {
 
 export interface PlannedAgentProfile {
   source: string;
+  taskClass: "role" | "support";
   profileId: string;
   target: AgentProfileTarget;
   tier: OrchestrationTier;
@@ -98,9 +112,14 @@ export interface PlannedAgentProfile {
   effort: string;
   access: "read-only" | "workspace-write";
   candidateIndex: number;
+  candidateCount: number;
   destination: string;
   content: string;
   contentHash: string;
+}
+
+export function hashAgentProfileContent(content: string): string {
+  return `sha256:${createHash("sha256").update(content).digest("hex")}`;
 }
 
 function sourceId(source: string): string {
@@ -112,12 +131,20 @@ function sourceId(source: string): string {
 function instructions(input: {
   team: string;
   source: string;
+  taskClass: "role" | "support";
   tier: OrchestrationTier;
+  access: "read-only" | "workspace-write";
   consultation: "receive" | "request" | "none";
   limits: OrchestrationConfig["limits"];
 }): string {
   return [
     `You are the ${input.source} agent for the ${input.team} Omniskills team.`,
+    input.taskClass === "role"
+      ? `Before acting, load and follow the installed \`$${sourceId(input.source)}\` skill.`
+      : "This is a support task class with no installed role skill.",
+    input.access === "workspace-write"
+      ? "Workspace-write tools are authorized only while executing an explicitly assigned implementation step."
+      : "Operate read-only; do not create, edit, move, or delete workspace files.",
     `Capability tier: ${input.tier}. Stay within the assigned runtime vendor.`,
     `Retry each model candidate at most ${input.limits.retryPerCandidate} time(s).`,
     `Reassign a work item at most ${input.limits.reassignmentPerWorkItem} time(s).`,
@@ -136,8 +163,10 @@ function renderCodex(input: {
   effort: string;
   access: "read-only" | "workspace-write";
   developerInstructions: string;
+  ownershipMarker: string;
 }): string {
   return [
+    `# ${input.ownershipMarker}`,
     `name = ${JSON.stringify(input.profileId)}`,
     `description = ${JSON.stringify(`Omniskills managed agent ${input.profileId}`)}`,
     `model = ${JSON.stringify(input.model)}`,
@@ -154,11 +183,17 @@ function renderClaude(input: {
   effort: string;
   access: "read-only" | "workspace-write";
   developerInstructions: string;
+  consultation: "receive" | "request" | "none";
+  ownershipMarker: string;
 }): string {
-  const tools =
-    input.access === "workspace-write"
-      ? "Read, Glob, Grep, Bash, Write, Edit, SendMessage"
-      : "Read, Glob, Grep, Bash, SendMessage";
+  const tools = [
+    "Read",
+    "Glob",
+    "Grep",
+    "Bash",
+    ...(input.access === "workspace-write" ? ["Write", "Edit"] : []),
+    ...(input.consultation === "none" ? [] : ["SendMessage"]),
+  ].join(", ");
   return [
     "---",
     `name: ${input.profileId}`,
@@ -168,6 +203,8 @@ function renderClaude(input: {
     `tools: ${tools}`,
     "disallowedTools: Agent",
     "---",
+    "",
+    `<!-- ${input.ownershipMarker} -->`,
     "",
     input.developerInstructions,
     "",
@@ -185,15 +222,26 @@ export function planAgentProfiles(input: {
     ...Object.entries(input.manifest.orchestration.roles).map(([source, assignment]) => ({
       source,
       assignment,
+      taskClass: "role" as const,
     })),
     ...Object.entries(input.manifest.orchestration.support ?? {}).map(([source, assignment]) => ({
       source,
       assignment,
+      taskClass: "support" as const,
     })),
   ];
   const profiles: PlannedAgentProfile[] = [];
 
-  for (const { source, assignment } of assignments) {
+  const profileIds = new Set<string>();
+  for (const { source } of assignments) {
+    const profileId = `omniskills-${input.manifest.name}-${sourceId(source)}`;
+    if (profileIds.has(profileId)) {
+      throw new Error(`Duplicate agent profile identifier: ${profileId}`);
+    }
+    profileIds.add(profileId);
+  }
+
+  for (const { source, assignment, taskClass } of assignments) {
     for (const target of input.targets) {
       const candidates = input.config.tiers[assignment.tier][target];
       for (const [candidateIndex, candidate] of candidates.entries()) {
@@ -203,13 +251,16 @@ export function planAgentProfiles(input: {
         const developerInstructions = instructions({
           team: input.manifest.name,
           source,
+          taskClass,
           tier: assignment.tier,
+          access: assignment.access,
           consultation: assignment.consultation,
           limits: input.config.limits,
         });
         const model = candidate.model;
         const effort =
           "reasoningEffort" in candidate ? candidate.reasoningEffort : candidate.effort;
+        const ownershipMarker = `omniskills-managed: team=${input.manifest.name} source=${source}`;
         const content =
           target === "codex"
             ? renderCodex({
@@ -218,6 +269,7 @@ export function planAgentProfiles(input: {
                 effort,
                 access: assignment.access,
                 developerInstructions,
+                ownershipMarker,
               })
             : renderClaude({
                 profileId,
@@ -225,10 +277,13 @@ export function planAgentProfiles(input: {
                 effort,
                 access: assignment.access,
                 developerInstructions,
+                consultation: assignment.consultation,
+                ownershipMarker,
               });
         const extension = target === "codex" ? "toml" : "md";
         profiles.push({
           source,
+          taskClass,
           profileId,
           target,
           tier: assignment.tier,
@@ -236,9 +291,10 @@ export function planAgentProfiles(input: {
           effort,
           access: assignment.access,
           candidateIndex,
+          candidateCount: candidates.length,
           destination: join(input.homeDir, `.${target}`, "agents", `${profileId}.${extension}`),
           content,
-          contentHash: `sha256:${createHash("sha256").update(content).digest("hex")}`,
+          contentHash: hashAgentProfileContent(content),
         });
       }
     }

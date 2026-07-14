@@ -98,6 +98,7 @@ const validTeamManifest = {
   steps: [
     { id: "route", title: "Route work", skill: "./skills/coordinator" },
     { id: "review", title: "Review work", skill: "catalog:member-workflow" },
+    { id: "implement", title: "Implement", skill: "external-review" },
   ],
 } as const;
 
@@ -1275,6 +1276,24 @@ describe("workflow bundles", () => {
       {
         manifest: {
           ...validTeamManifest,
+          orchestration: {
+            ...validTeamManifest.orchestration,
+            roles: {
+              ...validTeamManifest.orchestration.roles,
+              "catalog:member-workflow": {
+                tier: "standard",
+                access: "workspace-write",
+                consultation: "request",
+              },
+            },
+          },
+        },
+        message:
+          "Workspace-write orchestration access requires an explicit implement step: catalog:member-workflow",
+      },
+      {
+        manifest: {
+          ...validTeamManifest,
           kind: "workflow",
           coordinator: undefined,
           members: undefined,
@@ -2291,6 +2310,17 @@ describe("workflow bundles", () => {
       });
       const installed = JSON.parse(await readFile(install.path, "utf8"));
       expect(installed.installArtifacts[0].kind).toBe("agent_profile");
+
+      await installWorkflowBundle({
+        rootDir,
+        bundle,
+        installArtifacts: [
+          {
+            ...installed.installArtifacts[0],
+            status: "unchanged",
+          },
+        ],
+      });
 
       const cleanPlan = await createWorkflowRemovalPlan({
         rootDir,

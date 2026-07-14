@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { z } from "zod";
 import { runSubprocess } from "../../process";
+import { hashAgentProfileContent } from "./orchestration";
 
 export const workflowFileName = "workflow.json";
 export const workflowLockFileName = "workflow.lock.json";
@@ -109,6 +110,10 @@ export const WorkflowBundleManifestSchema = z
     }
 
     if (manifest.orchestration && effectiveKind === "team") {
+      const implementationSources = new Set(
+        manifest.steps.filter((step) => step.id === "implement").map((step) => step.skill),
+      );
+
       for (const source of Object.keys(manifest.orchestration.roles)) {
         if (!skillSources.has(source)) {
           context.addIssue({
@@ -147,6 +152,21 @@ export const WorkflowBundleManifestSchema = z
             message: `Only the team coordinator can receive consultations: ${source}`,
             path: ["orchestration", "support", source, "consultation"],
           });
+        }
+      }
+
+      for (const [taskClass, assignments] of [
+        ["roles", manifest.orchestration.roles],
+        ["support", manifest.orchestration.support ?? {}],
+      ] as const) {
+        for (const [source, assignment] of Object.entries(assignments)) {
+          if (assignment.access === "workspace-write" && !implementationSources.has(source)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Workspace-write orchestration access requires an explicit implement step: ${source}`,
+              path: ["orchestration", taskClass, source, "access"],
+            });
+          }
         }
       }
     }
@@ -459,6 +479,13 @@ export interface WorkflowInstallAgentProfileArtifact {
   status: string;
   path: string;
   contentHash: string;
+  taskClass?: "role" | "support";
+  tier?: "deep" | "standard" | "fast";
+  model?: string;
+  effort?: string;
+  access?: "read-only" | "workspace-write";
+  candidateIndex?: number;
+  candidateCount?: number;
 }
 
 export type WorkflowInstallArtifact =
@@ -1483,7 +1510,7 @@ async function profileMatchesInstalledHash(
 ): Promise<boolean> {
   try {
     const content = await readFile(artifact.path, "utf8");
-    return `sha256:${createHash("sha256").update(content).digest("hex")}` === artifact.contentHash;
+    return hashAgentProfileContent(content) === artifact.contentHash;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
     throw error;
@@ -1491,7 +1518,12 @@ async function profileMatchesInstalledHash(
 }
 
 function isRemovableInstallStatus(status: string): boolean {
-  return status === "installed" || status === "updated" || status === "overwritten";
+  return (
+    status === "installed" ||
+    status === "updated" ||
+    status === "overwritten" ||
+    status === "unchanged"
+  );
 }
 
 function getArtifactPathOwners(workflows: InstalledWorkflowBundle[]): Map<string, string[]> {

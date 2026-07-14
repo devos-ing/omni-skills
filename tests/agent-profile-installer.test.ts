@@ -17,6 +17,7 @@ function profile(homeDir: string): PlannedAgentProfile {
   const content = 'name = "omniskills-test-team-cto"\n';
   return {
     source: "catalog:cto",
+    taskClass: "role",
     profileId: "omniskills-test-team-cto",
     target: "codex",
     tier: "deep",
@@ -24,6 +25,7 @@ function profile(homeDir: string): PlannedAgentProfile {
     effort: "high",
     access: "read-only",
     candidateIndex: 0,
+    candidateCount: 1,
     destination: join(homeDir, ".codex", "agents", "omniskills-test-team-cto.toml"),
     content,
     contentHash: "sha256:dc1e7574859a9c5ffaf59e58344aabf284394fcb97d8d5775e5af5a8390eb285",
@@ -97,7 +99,7 @@ describe("agent profile installer", () => {
     }
   });
 
-  test("refuses an unowned foreign profile unless force is explicit", async () => {
+  test("refuses an unowned foreign profile even when force is explicit", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-foreign-"));
     const planned = profile(homeDir);
     try {
@@ -117,7 +119,73 @@ describe("agent profile installer", () => {
         previousArtifacts: [],
         force: true,
       });
-      expect(forced.map(({ status }) => status)).toEqual(["update"]);
+      expect(forced.map(({ status, ownership }) => ({ status, ownership }))).toEqual([
+        { status: "conflict", ownership: "foreign" },
+      ]);
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("removes obsolete managed fallbacks and omits their artifacts", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "orchestration-obsolete-"));
+    const primary = { ...profile(homeDir), candidateCount: 2 };
+    const fallbackContent = 'name = "omniskills-test-team-cto-fallback-2"\n';
+    const fallback: PlannedAgentProfile = {
+      ...primary,
+      profileId: "omniskills-test-team-cto-fallback-2",
+      model: "gpt-5.4",
+      candidateIndex: 1,
+      destination: join(homeDir, ".codex", "agents", "omniskills-test-team-cto-fallback-2.toml"),
+      content: fallbackContent,
+      contentHash: `sha256:${createHash("sha256").update(fallbackContent).digest("hex")}`,
+    };
+    try {
+      const initial = await preflightAgentProfiles({
+        profiles: [primary, fallback],
+        previousArtifacts: [],
+      });
+      const artifacts = await executeAgentProfilePlan({ profiles: initial });
+      const reduced = await preflightAgentProfiles({
+        profiles: [{ ...primary, candidateCount: 1 }],
+        previousArtifacts: artifacts,
+      });
+
+      expect(reduced.map(({ status }) => status)).toEqual(["remove", "unchanged"]);
+      const remaining = await executeAgentProfilePlan({ profiles: reduced });
+      await expect(readFile(fallback.destination, "utf8")).rejects.toThrow();
+      expect(remaining.map(({ path }) => path)).toEqual([primary.destination]);
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps drifted obsolete managed fallbacks and retains their artifacts", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "orchestration-obsolete-drift-"));
+    const primary = { ...profile(homeDir), candidateCount: 2 };
+    const fallback: PlannedAgentProfile = {
+      ...primary,
+      profileId: "omniskills-test-team-cto-fallback-2",
+      model: "gpt-5.4",
+      candidateIndex: 1,
+      destination: join(homeDir, ".codex", "agents", "omniskills-test-team-cto-fallback-2.toml"),
+    };
+    try {
+      const initial = await preflightAgentProfiles({
+        profiles: [primary, fallback],
+        previousArtifacts: [],
+      });
+      const artifacts = await executeAgentProfilePlan({ profiles: initial });
+      await writeFile(fallback.destination, "user edit\n");
+      const reduced = await preflightAgentProfiles({
+        profiles: [{ ...primary, candidateCount: 1 }],
+        previousArtifacts: artifacts,
+      });
+
+      expect(reduced.map(({ status }) => status)).toEqual(["keep", "unchanged"]);
+      const remaining = await executeAgentProfilePlan({ profiles: reduced });
+      await expect(readFile(fallback.destination, "utf8")).resolves.toBe("user edit\n");
+      expect(remaining.map(({ path }) => path)).toContain(fallback.destination);
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }

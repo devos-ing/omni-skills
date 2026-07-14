@@ -544,8 +544,23 @@ function printOmniskillInstallPlan(input: {
   console.log("Agent profiles:");
   if (input.profilePlan.length === 0) console.log("- none");
   for (const planned of input.profilePlan) {
+    const profile = "profile" in planned ? planned.profile : undefined;
+    const artifact = planned.artifact;
+    const candidateIndex = profile?.candidateIndex ?? artifact.candidateIndex;
+    const candidateCount = profile?.candidateCount ?? artifact.candidateCount;
     console.log(
-      `- ${planned.status}: ${planned.profile.profileId} (${planned.profile.target}/${planned.profile.tier}/${planned.profile.model}/${planned.profile.effort}) -> ${planned.profile.destination}`,
+      [
+        `- ${planned.status}: ${profile?.profileId ?? artifact.profileId}`,
+        `target=${profile?.target ?? artifact.agent}`,
+        `source=${profile?.source ?? artifact.source}`,
+        `taskClass=${profile?.taskClass ?? artifact.taskClass ?? "unknown"}`,
+        `tier=${profile?.tier ?? artifact.tier ?? "unknown"}`,
+        `model=${profile?.model ?? artifact.model ?? "unknown"}`,
+        `effort=${profile?.effort ?? artifact.effort ?? "unknown"}`,
+        `candidate=${candidateIndex === undefined ? "unknown" : candidateIndex + 1}/${candidateCount ?? "unknown"}`,
+        `ownership=${planned.ownership}`,
+        `path=${profile?.destination ?? artifact.path}`,
+      ].join(" "),
     );
   }
   if (input.configPlan) {
