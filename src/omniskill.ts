@@ -33,6 +33,7 @@ import {
 import { runSubprocess } from "./process";
 import {
   type AgentProfileTarget,
+  createDispatchAttemptSchedule,
   createWorkflowBundleScaffold,
   createWorkflowRemovalPlan,
   type DispatchAttempt,
@@ -343,30 +344,63 @@ function configureDispatchCommand(
       if (!dispatcher) {
         throw new Error(`Dispatch runtime unavailable: ${runtime}`);
       }
-      const result = await dispatcher.dispatch(planSet.primary);
-      const attempt: DispatchAttempt = {
-        attemptNumber: 1,
-        candidateIndex: planSet.primary.candidateIndex,
-        profileId: planSet.primary.profileId,
-        model: planSet.primary.model,
-        status: result.status,
-        evidence: result.evidence,
-        ...(result.sessionId ? { sessionId: result.sessionId } : {}),
-        ...(result.failureCode ? { failureCode: result.failureCode } : {}),
-        ...(result.failureReason ? { failureReason: result.failureReason } : {}),
-      };
+      const schedule = createDispatchAttemptSchedule(planSet);
+      let selectedPlan = planSet.primary;
+      let result = await dispatcher.dispatch(selectedPlan);
+      let attemptsMade = 0;
+      for (const [index, candidate] of schedule.entries()) {
+        if (index > 0) {
+          selectedPlan = candidate;
+          result = await dispatcher.dispatch(selectedPlan);
+        }
+        attemptsMade = index + 1;
+        const previousCandidate = schedule[index - 1];
+        const attempt: DispatchAttempt = {
+          attemptNumber: index + 1,
+          candidateIndex: selectedPlan.candidateIndex,
+          profileId: selectedPlan.profileId,
+          model: selectedPlan.model,
+          status: result.status,
+          evidence: result.evidence,
+          ...(result.sessionId ? { sessionId: result.sessionId } : {}),
+          ...(result.failureCode ? { failureCode: result.failureCode } : {}),
+          ...(result.failureReason ? { failureReason: result.failureReason } : {}),
+          ...(previousCandidate && previousCandidate.candidateIndex !== selectedPlan.candidateIndex
+            ? { fallbackFromAttempt: index }
+            : {}),
+        };
+        await store.appendAttempt(plannedReceipt.runId, attempt);
+        if (
+          result.status !== "failed" ||
+          result.failureCode === "runtime_mismatch" ||
+          result.failureCode === "runtime_upgrade_required"
+        ) {
+          break;
+        }
+      }
+      const exhausted = result.status === "failed" && attemptsMade === schedule.length;
       const receipt: DispatchReceipt = {
         ...plannedReceipt,
+        profileId: selectedPlan.profileId,
+        profileHash: selectedPlan.profileHash,
+        model: selectedPlan.model,
+        effort: selectedPlan.effort,
         status: result.status,
         evidence: result.evidence,
         consultationCount:
           plannedReceipt.consultationCount + (result.status === "consultation_required" ? 1 : 0),
         ...(result.sessionId ? { sessionId: result.sessionId } : {}),
-        ...(result.failureCode ? { failureCode: result.failureCode } : {}),
-        ...(result.failureReason ? { failureReason: result.failureReason } : {}),
+        ...(exhausted
+          ? {
+              failureCode: "retry_exhausted",
+              failureReason: `Dispatch exhausted ${schedule.length} configured attempts`,
+            }
+          : result.failureCode
+            ? { failureCode: result.failureCode }
+            : {}),
+        ...(!exhausted && result.failureReason ? { failureReason: result.failureReason } : {}),
         updatedAt: new Date().toISOString(),
       };
-      await store.appendAttempt(plannedReceipt.runId, attempt);
       await store.finish(plannedReceipt.runId, receipt);
       if (commandOptions.json) {
         console.log(JSON.stringify(receipt, null, 2));
@@ -377,7 +411,7 @@ function configureDispatchCommand(
         console.log(keyValue("Evidence", receipt.evidence));
       }
       if (result.status === "failed") {
-        throw new Error(result.failureReason ?? `Orchestration dispatch failed: ${receipt.runId}`);
+        throw new Error(receipt.failureReason ?? `Orchestration dispatch failed: ${receipt.runId}`);
       }
     });
 }

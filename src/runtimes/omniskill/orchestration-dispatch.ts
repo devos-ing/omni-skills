@@ -137,6 +137,12 @@ export interface DispatchReceipt {
   updatedAt: string;
 }
 
+export function createDispatchAttemptSchedule(planSet: DispatchPlanSet): DispatchPlan[] {
+  return planSet.candidates.flatMap((candidate) =>
+    Array.from({ length: candidate.limits.retryPerCandidate + 1 }, () => candidate),
+  );
+}
+
 interface DispatchableProfileArtifact extends WorkflowInstallAgentProfileArtifact {
   taskClass: "role" | "support";
   tier: "deep" | "standard" | "fast";

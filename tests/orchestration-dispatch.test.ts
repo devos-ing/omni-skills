@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { hashAgentProfileContent } from "../src/runtimes/omniskill/orchestration";
 import {
+  createDispatchAttemptSchedule,
   MAX_DISPATCH_TASK_BYTES,
   OrchestrationDispatchError,
   planOrchestrationDispatch,
@@ -165,6 +166,17 @@ describe("orchestration dispatch planning", () => {
       planSet.candidates.map(({ model, candidateIndex }) => ({ model, candidateIndex })),
     ).toEqual([
       { model: "gpt-5.6", candidateIndex: 0 },
+      { model: "gpt-5.4", candidateIndex: 1 },
+    ]);
+    expect(
+      createDispatchAttemptSchedule(planSet).map(({ model, candidateIndex }) => ({
+        model,
+        candidateIndex,
+      })),
+    ).toEqual([
+      { model: "gpt-5.6", candidateIndex: 0 },
+      { model: "gpt-5.6", candidateIndex: 0 },
+      { model: "gpt-5.4", candidateIndex: 1 },
       { model: "gpt-5.4", candidateIndex: 1 },
     ]);
   });

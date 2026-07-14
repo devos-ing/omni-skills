@@ -46,7 +46,10 @@ function fakeSkillInstallResult(input: {
   };
 }
 
-async function writeInstalledDispatchFixture(homeDir: string): Promise<{
+async function writeInstalledDispatchFixture(
+  homeDir: string,
+  options: { fallback?: boolean } = {},
+): Promise<{
   profileId: string;
   profilePath: string;
 }> {
@@ -54,9 +57,64 @@ async function writeInstalledDispatchFixture(homeDir: string): Promise<{
   const profilePath = join(homeDir, ".codex", "agents", `${profileId}.toml`);
   const profileContent =
     '# omniskills-managed: team=startup-team source=catalog:cto\nname = "omniskills-startup-team-cto"\n';
+  const fallbackProfileId = "omniskills-startup-team-cto-fallback-2";
+  const fallbackProfilePath = join(homeDir, ".codex", "agents", `${fallbackProfileId}.toml`);
+  const fallbackProfileContent = `# omniskills-managed: team=startup-team source=catalog:cto\nname = "${fallbackProfileId}"\n`;
   await mkdir(join(homeDir, ".omniskills", "workflows"), { recursive: true });
   await mkdir(join(homeDir, ".codex", "agents"), { recursive: true });
   await writeFile(profilePath, profileContent);
+  if (options.fallback) {
+    await writeFile(fallbackProfilePath, fallbackProfileContent);
+  }
+  const profileLimits = {
+    retryPerCandidate: 1,
+    reassignmentPerWorkItem: 1,
+    consultationsPerAgent: 2,
+  };
+  const installArtifacts = [
+    {
+      kind: "agent_profile",
+      source: "catalog:cto",
+      profileId,
+      agent: "codex",
+      status: "installed",
+      path: profilePath,
+      contentHash: hashAgentProfileContent(profileContent),
+      taskClass: "role",
+      tier: "deep",
+      model: "gpt-5.6",
+      effort: "high",
+      access: "read-only",
+      instructions: "You are the catalog:cto agent.",
+      consultation: "request",
+      limits: profileLimits,
+      candidateIndex: 0,
+      candidateCount: options.fallback ? 2 : 1,
+    },
+    ...(options.fallback
+      ? [
+          {
+            kind: "agent_profile",
+            source: "catalog:cto",
+            profileId: fallbackProfileId,
+            agent: "codex",
+            status: "installed",
+            path: fallbackProfilePath,
+            contentHash: hashAgentProfileContent(fallbackProfileContent),
+            taskClass: "role",
+            tier: "deep",
+            model: "gpt-5.4",
+            effort: "high",
+            access: "read-only",
+            instructions: "You are the fallback catalog:cto agent.",
+            consultation: "request",
+            limits: profileLimits,
+            candidateIndex: 1,
+            candidateCount: 2,
+          },
+        ]
+      : []),
+  ];
   await writeFile(
     join(homeDir, ".omniskills", "workflows", "startup-team.json"),
     JSON.stringify({
@@ -84,31 +142,7 @@ async function writeInstalledDispatchFixture(homeDir: string): Promise<{
       skills: [{ source: "./skills/startup-goal", entry: true }, { source: "catalog:cto" }],
       steps: [{ id: "route", title: "Route", skill: "./skills/startup-goal" }],
       source: { kind: "local", path: "/tmp/startup-team" },
-      installArtifacts: [
-        {
-          kind: "agent_profile",
-          source: "catalog:cto",
-          profileId,
-          agent: "codex",
-          status: "installed",
-          path: profilePath,
-          contentHash: hashAgentProfileContent(profileContent),
-          taskClass: "role",
-          tier: "deep",
-          model: "gpt-5.6",
-          effort: "high",
-          access: "read-only",
-          instructions: "You are the catalog:cto agent.",
-          consultation: "request",
-          limits: {
-            retryPerCandidate: 1,
-            reassignmentPerWorkItem: 1,
-            consultationsPerAgent: 2,
-          },
-          candidateIndex: 0,
-          candidateCount: 1,
-        },
-      ],
+      installArtifacts,
     }),
   );
   return { profileId, profilePath };
@@ -603,6 +637,177 @@ describe("omniskill command module", () => {
       expect((await readFile(join(runDir, "attempts.jsonl"), "utf8")).trim()).toContain(
         '"status":"completed"',
       );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dispatch retries each candidate and records ordered fallback attempts", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-fallback-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-fallback-home-"));
+    const models: string[] = [];
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    try {
+      await writeInstalledDispatchFixture(homeDir, { fallback: true });
+      console.log = (...values: unknown[]) => logs.push(values.join(" "));
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch fallback");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            createRunId: () => "run-fallback",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            available: async () => true,
+            dispatch: async (plan) => {
+              models.push(plan.model);
+              return models.length < 3
+                ? {
+                    status: "failed",
+                    evidence: "launch_configured",
+                    failureCode: "model_unavailable",
+                    failureReason: `${plan.model} unavailable`,
+                  }
+                : {
+                    status: "completed",
+                    evidence: "launch_configured",
+                    sessionId: "thread-fallback",
+                  };
+            },
+            resume: async () => {
+              throw new Error("resume is not exercised by dispatch fallback");
+            },
+          },
+        },
+      });
+
+      await program.parseAsync(
+        [
+          "dispatch",
+          "startup-team",
+          "--role",
+          "catalog:cto",
+          "--task",
+          "Review boundaries",
+          "--home",
+          homeDir,
+          "--json",
+        ],
+        { from: "user" },
+      );
+
+      expect(models).toEqual(["gpt-5.6", "gpt-5.6", "gpt-5.4"]);
+      const receipt = JSON.parse(logs.join("\n"));
+      expect(receipt).toEqual(
+        expect.objectContaining({
+          status: "completed",
+          profileId: "omniskills-startup-team-cto-fallback-2",
+          model: "gpt-5.4",
+          sessionId: "thread-fallback",
+        }),
+      );
+      const attempts = (
+        await readFile(
+          join(homeDir, ".omniskills", "runs", "startup-team", "run-fallback", "attempts.jsonl"),
+          "utf8",
+        )
+      )
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(attempts).toEqual([
+        expect.objectContaining({ attemptNumber: 1, candidateIndex: 0, status: "failed" }),
+        expect.objectContaining({ attemptNumber: 2, candidateIndex: 0, status: "failed" }),
+        expect.objectContaining({
+          attemptNumber: 3,
+          candidateIndex: 1,
+          fallbackFromAttempt: 2,
+          status: "completed",
+        }),
+      ]);
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dispatch fails closed after exhausting configured candidate attempts", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exhaust-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exhaust-home-"));
+    const originalLog = console.log;
+    const program = new Command();
+
+    try {
+      await writeInstalledDispatchFixture(homeDir, { fallback: true });
+      console.log = () => {};
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch exhaustion");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            createRunId: () => "run-exhausted",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            available: async () => true,
+            dispatch: async () => ({
+              status: "failed",
+              evidence: "launch_configured",
+              failureCode: "model_unavailable",
+              failureReason: "model unavailable",
+            }),
+            resume: async () => {
+              throw new Error("resume is not exercised by dispatch exhaustion");
+            },
+          },
+        },
+      });
+
+      await expect(
+        program.parseAsync(
+          [
+            "dispatch",
+            "startup-team",
+            "--role",
+            "catalog:cto",
+            "--task",
+            "Review boundaries",
+            "--home",
+            homeDir,
+            "--json",
+          ],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("Dispatch exhausted 4 configured attempts");
+
+      const runDir = join(homeDir, ".omniskills", "runs", "startup-team", "run-exhausted");
+      expect(JSON.parse(await readFile(join(runDir, "receipt.json"), "utf8"))).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          failureCode: "retry_exhausted",
+          model: "gpt-5.4",
+        }),
+      );
+      expect(
+        (await readFile(join(runDir, "attempts.jsonl"), "utf8")).trim().split("\n"),
+      ).toHaveLength(4);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
