@@ -24,10 +24,10 @@ tree，帶著 goal 呼叫一個 entry skill，讓 agent 取得能 3x your abilit
 Primary command preview：
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-Primary action：Browse workflows。
+Primary action：Explore teams & skills。
 
 ## 支援的 Agents
 
@@ -98,35 +98,79 @@ Demo steps：
 
 Completion copy：Workflow complete - all 6 role steps returned. Startup answer ready.
 
-## Workflow Registry
+## Omniskills Teams
 
-Section label：Workflow Registry。
+Section label：Omniskills Teams。
 
-Heading：Pick an Omniskills workflow。
+Heading：Pick an Omniskills team。
 
-Body：瀏覽可安裝的 workflow bundles，然後打開 detail route 查看 role map、skill tree、copyable install command。
+Body：當單一 role 不足以完成目標時，先選擇 coordinated team。一次安裝即可讓 agent
+取得 coordinator、specialist roles，以及連接這些 roles 的 playbooks。
 
-Search placeholder：Search workflows, skills, tags...
+### Startup Team
 
-### Startup Goal
-
-- slug: `startup-goal`
-- tag: Goal
+- slug: `startup-team`
+- tag: Team
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
 - accent: `text-[#c83c24]`
-- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-Description：讓 startup goal 依序經過 core operating roles：CEO、CTO、PM、EM、founding engineer、QA lead。
+Runtime description：Move one startup goal from direction to delivery with a
+coordinator that brings in strategy, product, design, engineering, and QA only
+when the work needs them.
 
-Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`engineering-manager`、`founding-engineer`、`qa-lead`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:decision-mapping`、`mattpocock:grill-with-docs`、`mattpocock:to-prd`、`mattpocock:to-issues`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`、`implement`。
+Coordinator：`$startup-goal` — Clarifies the brief, selects the needed roles,
+and combines their outputs.
 
-Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation frame -> `founding-engineer`；Implement -> `implement`；QA -> `qa-lead`。
+Members：
+
+- CEO — Company direction and tradeoffs
+- CTO — Architecture and technical risk
+- Product Manager — Discovery, PRDs, and issue slicing
+- Web Design — Interface direction and motion quality
+- Engineering Manager — Delivery sequencing and quality gates
+- Founding Engineer — Implementation framing and handoff
+- QA Lead — Acceptance checks and release risk
+
+Actions：`View team` 開啟 `/workflows/startup-team`；`View team source` 開啟
+`https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`。
+
+Skills：`startup-goal`、`ceo`、`cto`、`product-manager`、`web-design`、`engineering-manager`、`founding-engineer`、`qa-lead`、`emilkowalski:emil-design-eng`、`emilkowalski:animation-vocabulary`、`emilkowalski:apple-design`、`emilkowalski:review-animations`、`superpowers:brainstorming`、`superpowers:writing-plans`、`superpowers:verification-before-completion`、`mattpocock:wayfinder`、`mattpocock:grill-with-docs`、`mattpocock:to-spec`、`mattpocock:to-tickets`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`mattpocock:implement`。
+
+Ordered skill path：Route -> `startup-goal`；Strategy -> `ceo`；Product -> `product-manager`；Design -> `web-design`；Technology -> `cto`；Delivery -> `engineering-manager`；Implementation frame -> `founding-engineer`；Implement -> `mattpocock:implement`；QA -> `qa-lead`。
+
+## Skill Hub
+
+Heading：Explore the Skill Hub。
+
+Body：瀏覽可獨立安裝的 workflows，或檢視它們組合的 skills。
+
+Tabs：
+
+- Workflows
+  - Search placeholder：Search workflows, entry skills, or tags...
+  - Results 不包含 Startup Team，因為它已在上方 featured section 顯示。
+  - 每個 result 透過 `View workflow` 開啟 workflow detail route。
+  - Empty state：沒有 workflow 符合目前 query；`Clear search` 會重設 query。
+- Skills
+  - Search placeholder：Search skills, providers, or packages...
+  - 每個 canonical skill 只顯示一次，並列出 provider 與所有使用它的 packages。
+  - `View skill source` 是唯一 skill action，會開啟 canonical source。
+  - 不顯示或暗示 standalone skill install command。
+  - Empty state：沒有 skill 符合目前 query；`Clear search` 會重設 query。
+
+Query 會在 Workflows 與 Skills 之間保留。Canonical source identity 會去重
+`implement` 與 `mattpocock:implement` 等 aliases，同時保留 package relationships。
+
+### Workflows
+
+以下是可獨立安裝的 workflow catalog；Startup Team 不會在此重複。
 
 ### CEO
 
@@ -144,9 +188,9 @@ npx omniskill@latest install ceo
 
 Description：Founder-level strategy，處理 direction、hard tradeoffs、fundraising/customer framing、company decisions。
 
-Skills：`ceo`、`mattpocock:decision-mapping`、`mattpocock:grill-with-docs`。
+Skills：`ceo`、`mattpocock:wayfinder`、`mattpocock:grill-with-docs`。
 
-Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:decision-mapping`；Grill -> `mattpocock:grill-with-docs`。
+Ordered skill path：Brief -> `ceo`；Decision Map -> `mattpocock:wayfinder`；Grill -> `mattpocock:grill-with-docs`。
 
 ### CTO
 
@@ -164,9 +208,9 @@ npx omniskill@latest install cto
 
 Description：Technical leadership，處理 architecture、domain model、platform direction、engineering risk。
 
-Skills：`cto`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:review`。
+Skills：`cto`、`mattpocock:codebase-design`、`mattpocock:domain-modeling`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
 
-Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`。
+Ordered skill path：Brief -> `cto`；Domain -> `mattpocock:domain-modeling`；Architecture -> `mattpocock:codebase-design`；Risk -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
 
 ### Product Manager
 
@@ -184,9 +228,9 @@ npx omniskill@latest install product-manager
 
 Description：Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。
 
-Skills：`product-manager`、`superpowers:brainstorming`、`mattpocock:to-prd`、`mattpocock:to-issues`、`superpowers:writing-plans`。
+Skills：`product-manager`、`superpowers:brainstorming`、`mattpocock:to-spec`、`mattpocock:to-tickets`、`superpowers:writing-plans`。
 
-Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:brainstorming`；PRD -> `mattpocock:to-prd`；Issues -> `mattpocock:to-issues`；Plan -> `superpowers:writing-plans`。
+Ordered skill path：Brief -> `product-manager`；Brainstorm -> `superpowers:brainstorming`；PRD -> `mattpocock:to-spec`；Issues -> `mattpocock:to-tickets`；Plan -> `superpowers:writing-plans`。
 
 ### Engineering Manager
 
@@ -204,9 +248,9 @@ npx omniskill@latest install engineering-manager
 
 Description：Delivery sequencing、execution risk、quality gates、blocker triage、engineering process。
 
-Skills：`engineering-manager`、`superpowers:writing-plans`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`。
+Skills：`engineering-manager`、`superpowers:writing-plans`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`。
 
-Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writing-plans`；Quality -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`。
+Ordered skill path：Brief -> `engineering-manager`；Plan -> `superpowers:writing-plans`；Quality -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`。
 
 ### Founding Engineer
 
@@ -224,9 +268,9 @@ npx omniskill@latest install founding-engineer
 
 Description：Implementation lane，聚焦 smallest correct change：tests、debugging、review、verification。
 
-Skills：`founding-engineer`、`implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:review`、`superpowers:verification-before-completion`。
+Skills：`founding-engineer`、`implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`superpowers:verification-before-completion`。
 
-Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:review`；Verify -> `superpowers:verification-before-completion`。
+Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`；Verify -> `superpowers:verification-before-completion`。
 
 ### QA Lead
 
@@ -244,9 +288,9 @@ npx omniskill@latest install qa-lead
 
 Description：Release-risk lens，處理 acceptance checks、regression focus、reproduction gaps、verification evidence。
 
-Skills：`qa-lead`、`mattpocock:review`、`mattpocock:diagnosing-bugs`、`superpowers:verification-before-completion`。
+Skills：`qa-lead`、`mattpocock:code-review`、`mattpocock:diagnosing-bugs`、`superpowers:verification-before-completion`。
 
-Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:review`；Debug -> `mattpocock:diagnosing-bugs`；Verify -> `superpowers:verification-before-completion`。
+Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:code-review`；Debug -> `mattpocock:diagnosing-bugs`；Verify -> `superpowers:verification-before-completion`。
 
 ### Haaland
 
@@ -279,14 +323,14 @@ metadata bootstrap missing external skills，並預設把 installed Omniskills w
 `~/.omniskills/workflows/`。Loop-enabled workflows 使用 `omniskill loop` 管理 resumable、action-only state。
 
 ```bash
-npx omniskill@latest install startup-goal
-npx omniskill@latest deps startup-goal
-npx omniskill@latest lock examples/workflows/startup-goal
+npx omniskill@latest install startup-team
+npx omniskill@latest deps startup-team
+npx omniskill@latest lock examples/teams/startup-team
 npx omniskill@latest loop status grilled-product-dev --latest --json
 npx omniskill@latest init my-workflow
 npx omniskill@latest validate my-workflow
 npx omniskill@latest list
-npx omniskill@latest remove startup-goal
+npx omniskill@latest remove startup-team
 ```
 
 Then invoke in your agent：

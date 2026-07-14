@@ -26,10 +26,10 @@ playbooks, and verification habits that 3x your ability.
 Primary command preview:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-Primary action: Browse workflows.
+Primary action: Explore teams & skills.
 
 ## Supported Agents
 
@@ -134,33 +134,49 @@ Demo steps:
 Completion copy: Workflow complete - all 6 role steps returned. Startup answer
 ready.
 
-## Workflow Registry
+## Omniskills Teams
 
-Section label: Workflow Registry.
+Section label: Omniskills Teams.
 
-Heading: Pick an Omniskills workflow.
+Heading: Pick an Omniskills team.
 
-Body: Browse installable workflow bundles, then open a detail route for the
-role map, skill tree, and copyable install command.
+Body: Start with a coordinated team when one role is not enough. One install
+gives your agent a coordinator, specialist roles, and the playbooks that
+connect them.
 
-Search placeholder: Search workflows, skills, tags...
+### Startup Team
 
-### Startup Goal
-
-- slug: `startup-goal`
-- tag: Goal
+- slug: `startup-team`
+- tag: Team
 - entry skill: `$startup-goal`
 - avatar seed: `sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f`
 - accent: `text-[#c83c24]`
-- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/startup-goal`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`
 - install:
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-Description: Move a startup goal through the core operating roles: CEO, CTO,
-PM, EM, founding engineer, and QA lead.
+Description: Move one startup goal from direction to delivery with a
+coordinator that brings in strategy, product, design, engineering, and QA only
+when the work needs them.
+
+Coordinator: `$startup-goal` — Clarifies the brief, selects the needed roles,
+and combines their outputs.
+
+Members:
+
+- CEO — Company direction and tradeoffs
+- CTO — Architecture and technical risk
+- Product Manager — Discovery, PRDs, and issue slicing
+- Web Design — Interface direction and motion quality
+- Engineering Manager — Delivery sequencing and quality gates
+- Founding Engineer — Implementation framing and handoff
+- QA Lead — Acceptance checks and release risk
+
+Actions: `View team` opens `/workflows/startup-team`; `View team source` opens
+`https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`.
 
 Skills:
 
@@ -168,22 +184,27 @@ Skills:
 - `ceo`: Company direction and tradeoffs
 - `cto`: Architecture and technical risk
 - `product-manager`: Discovery, PRDs, and issue slicing
+- `web-design`: Interface direction and motion quality
 - `engineering-manager`: Delivery sequencing and quality gates
 - `founding-engineer`: Implementation framing and handoff
 - `qa-lead`: Acceptance checks and release risk
+- `emilkowalski:emil-design-eng`: Polish interface implementation
+- `emilkowalski:animation-vocabulary`: Name and select motion patterns
+- `emilkowalski:apple-design`: Apply Apple design principles
+- `emilkowalski:review-animations`: Review motion quality
 - `superpowers:brainstorming`: Explore options before scope locks
 - `superpowers:writing-plans`: Create executable plans
 - `superpowers:verification-before-completion`: Verify before claiming done
-- `mattpocock:decision-mapping`: Map decisions and uncertainty
+- `mattpocock:wayfinder`: Map decisions and uncertainty
 - `mattpocock:grill-with-docs`: Stress-test direction
-- `mattpocock:to-prd`: Write product requirements
-- `mattpocock:to-issues`: Slice work into issues
+- `mattpocock:to-spec`: Write product requirements
+- `mattpocock:to-tickets`: Slice work into issues
 - `mattpocock:codebase-design`: Review codebase boundaries
 - `mattpocock:domain-modeling`: Name domain concepts
 - `mattpocock:tdd`: Build with tests where practical
 - `mattpocock:diagnosing-bugs`: Diagnose failures from evidence
-- `mattpocock:review`: Review behavior and risk
-- `implement`: Execute the implementation slice
+- `mattpocock:code-review`: Review behavior and risk
+- `mattpocock:implement`: Execute the implementation slice
 
 Ordered skill path:
 
@@ -193,16 +214,49 @@ Ordered skill path:
    - Clarify company direction and tradeoffs.
 3. Product -> `product-manager`
    - Shape customer value, PRD, and issue slices.
-4. Technology -> `cto`
+4. Design -> `web-design`
+   - Set responsive interface direction and motion quality.
+5. Technology -> `cto`
    - Set architecture and technical risk boundaries.
-5. Delivery -> `engineering-manager`
+6. Delivery -> `engineering-manager`
    - Sequence execution and quality gates.
-6. Implementation frame -> `founding-engineer`
+7. Implementation frame -> `founding-engineer`
    - Prepare the smallest correct implementation slice.
-7. Implement -> `implement`
+8. Implement -> `mattpocock:implement`
    - Execute the planned change with tests and review.
-8. QA -> `qa-lead`
+9. QA -> `qa-lead`
    - Check release readiness and residual risk.
+
+## Skill Hub
+
+Heading: Explore the Skill Hub.
+
+Body: Browse independently installable workflows or inspect the skills they
+assemble.
+
+Tabs:
+
+- Workflows
+  - Search placeholder: Search workflows, entry skills, or tags...
+  - Results exclude Startup Team because it is featured above.
+  - Each result opens its workflow detail route through `View workflow`.
+  - Empty state: No workflows match the current query; `Clear search` resets it.
+- Skills
+  - Search placeholder: Search skills, providers, or packages...
+  - Each canonical skill appears once with its provider and every package that
+    includes it.
+  - `View skill source` is the only skill action and opens the canonical source.
+  - No standalone skill install command is shown or implied.
+  - Empty state: No skills match the current query; `Clear search` resets it.
+
+The query persists across Workflows and Skills. Canonical source identity
+deduplicates aliases such as `implement` and `mattpocock:implement` while the
+package relationships remain visible.
+
+### Workflows
+
+The independently installable workflow catalog starts below. Startup Team is
+not repeated here.
 
 ### CEO
 
@@ -224,14 +278,14 @@ fundraising/customer framing, and company decisions.
 Skills:
 
 - `ceo`: Set the executive frame
-- `mattpocock:decision-mapping`: Map strategic uncertainty
+- `mattpocock:wayfinder`: Map strategic uncertainty
 - `mattpocock:grill-with-docs`: Stress-test the company direction
 
 Ordered skill path:
 
 1. Brief -> `ceo`
    - State the company-level decision.
-2. Decision Map -> `mattpocock:decision-mapping`
+2. Decision Map -> `mattpocock:wayfinder`
    - Map options, constraints, and uncertainties.
 3. Grill -> `mattpocock:grill-with-docs`
    - Stress-test the direction before committing.
@@ -259,7 +313,7 @@ Skills:
 - `mattpocock:codebase-design`: Review module boundaries
 - `mattpocock:domain-modeling`: Clarify domain concepts
 - `mattpocock:diagnosing-bugs`: Diagnose technical risk
-- `mattpocock:review`: Review the technical decision
+- `mattpocock:code-review`: Review behavior and risk
 
 Ordered skill path:
 
@@ -271,7 +325,7 @@ Ordered skill path:
    - Review boundaries and interfaces.
 4. Risk -> `mattpocock:diagnosing-bugs`
    - Diagnose failures and fragile assumptions.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Check behavior, blast radius, and tradeoffs.
 
 ### Product Manager
@@ -295,8 +349,8 @@ Skills:
 
 - `product-manager`: Frame the product problem
 - `superpowers:brainstorming`: Explore product options
-- `mattpocock:to-prd`: Write the PRD
-- `mattpocock:to-issues`: Slice delivery issues
+- `mattpocock:to-spec`: Write the product specification
+- `mattpocock:to-tickets`: Slice delivery tickets
 - `superpowers:writing-plans`: Write the delivery plan
 
 Ordered skill path:
@@ -305,9 +359,9 @@ Ordered skill path:
    - Name the user, pain, and desired behavior change.
 2. Brainstorm -> `superpowers:brainstorming`
    - Explore product options before locking scope.
-3. PRD -> `mattpocock:to-prd`
+3. PRD -> `mattpocock:to-spec`
    - Write the requirement and acceptance criteria.
-4. Issues -> `mattpocock:to-issues`
+4. Issues -> `mattpocock:to-tickets`
    - Slice the PRD into visible progress.
 5. Plan -> `superpowers:writing-plans`
    - Turn scope into executable delivery steps.
@@ -335,7 +389,7 @@ Skills:
 - `superpowers:writing-plans`: Write the execution plan
 - `mattpocock:tdd`: Choose the test strategy
 - `mattpocock:diagnosing-bugs`: Triage blockers
-- `mattpocock:review`: Review delivery risk
+- `mattpocock:code-review`: Review behavior and risk
 
 Ordered skill path:
 
@@ -347,7 +401,7 @@ Ordered skill path:
    - Pick test gates by blast radius.
 4. Debug -> `mattpocock:diagnosing-bugs`
    - Triage blockers from evidence.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Review delivery risk before handoff.
 
 ### Founding Engineer
@@ -373,7 +427,7 @@ Skills:
 - `implement`: Implement the planned change
 - `mattpocock:tdd`: Use test-first development
 - `mattpocock:diagnosing-bugs`: Diagnose failures
-- `mattpocock:review`: Review the implementation
+- `mattpocock:code-review`: Review behavior and risk
 - `superpowers:verification-before-completion`: Verify completion
 
 Ordered skill path:
@@ -386,7 +440,7 @@ Ordered skill path:
    - Keep tests close to changed behavior.
 4. Debug -> `mattpocock:diagnosing-bugs`
    - Debug from evidence when checks fail.
-5. Review -> `mattpocock:review`
+5. Review -> `mattpocock:code-review`
    - Review risks and behavior.
 6. Verify -> `superpowers:verification-before-completion`
    - Run final checks before handoff.
@@ -411,7 +465,7 @@ reproduction gaps, and verification evidence.
 Skills:
 
 - `qa-lead`: Set the release-risk frame
-- `mattpocock:review`: Review acceptance and risk
+- `mattpocock:code-review`: Review behavior and risk
 - `mattpocock:diagnosing-bugs`: Diagnose failures
 - `superpowers:verification-before-completion`: Verify before handoff
 
@@ -419,7 +473,7 @@ Ordered skill path:
 
 1. Brief -> `qa-lead`
    - Restate the user-facing behavior that must be true.
-2. Review -> `mattpocock:review`
+2. Review -> `mattpocock:code-review`
    - Review acceptance and release risk.
 3. Debug -> `mattpocock:diagnosing-bugs`
    - Identify reproduction gaps and failure evidence.
@@ -464,22 +518,22 @@ and records installed Omniskills workflows under `~/.omniskills/workflows/` by
 default. Loop-enabled workflows use `omniskill loop` for resumable,
 action-only state.
 
-### Install Startup Goal
+### Install Startup Team
 
 ```bash
-npx omniskill@latest install startup-goal
+npx omniskill@latest install startup-team
 ```
 
-### Inspect Startup Goal deps
+### Inspect Startup Team deps
 
 ```bash
-npx omniskill@latest deps startup-goal
+npx omniskill@latest deps startup-team
 ```
 
 ### Lock skill fingerprints
 
 ```bash
-npx omniskill@latest lock examples/workflows/startup-goal
+npx omniskill@latest lock examples/teams/startup-team
 ```
 
 ### Check loop status
@@ -509,7 +563,7 @@ npx omniskill@latest list
 ### Remove installed workflow
 
 ```bash
-npx omniskill@latest remove startup-goal
+npx omniskill@latest remove startup-team
 ```
 
 Then invoke in your agent:

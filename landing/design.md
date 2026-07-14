@@ -14,24 +14,28 @@ without making the root CLI package depend on landing-only decisions.
 - Visual reference: `https://www.context.store`
 - Page content model: `landing/lib/landing-content.ts`
 - Page shell: `landing/components/landing-page.tsx`
+- Featured team composition: `landing/components/featured-team-section.tsx`
+- Tabbed catalog: `landing/components/skill-hub.tsx`
+- Canonical skill result: `landing/components/skill-row.tsx`
 - Workflow entry component: `landing/components/workflow-card.tsx`
 - Workflow detail route: `landing/app/workflows/[slug]/page.tsx`
 - Export attribution: `landing/ATTRIBUTIONS.md`
 
 ## Product Story
 
-The first screen should make Omniskills unmistakable, then move directly into
-the workflow registry. One command installs a whole AI-agent workflow as a
-callable skill. Supporting copy should explain workflow bundles, skill-tree
-installation, and root-first commands without delaying browsing.
+The first screen should make Omniskills unmistakable, then show the simulated
+workflow, a featured coordinated team, and the Skill Hub. One command installs
+a whole AI-agent team or workflow as a callable skill. Supporting copy should
+explain teams, workflows, skill relationships, and root-first commands without
+delaying browsing.
 
 Preferred message hierarchy:
 
 1. Omniskills is the product.
 2. One install command gives an agent a complete workflow.
-3. Workflows are shareable bundles with one entry skill.
-4. Workflow bundles can be browsed like a registry, then inspected on detail
-   routes.
+3. Teams coordinate several role workflows behind one entry skill.
+4. Workflows remain independently installable; canonical skills can be
+   inspected by provider and package relationship.
 5. Users can install, list, initialize, validate, and author bundles from the
    current root command surface.
 
@@ -44,7 +48,7 @@ Adopt these ideas from the downloaded reference:
 
 - A restrained editorial product mood: warm paper, ink text, fine rules, and
   one precise saturated accent.
-- A workflow registry section labeled "Workflow Registry".
+- A featured `Omniskills Teams` section followed by a compact `Skill Hub`.
 - Workflow entries that scan like compact rows, not only marketing cards.
 - Searchable workflow rows with name, tag, entry skill, sub-skill count, and a
   detail-route affordance.
@@ -70,34 +74,55 @@ The app is a single public marketing page with these stable sections:
    install command without badge or chip rows.
 3. Workflow example: a visible simulated workflow run that starts once when it
    enters the viewport.
-4. Workflow Registry: searchable registry rows driven from
-   `landing/lib/landing-content.ts`.
-5. Common commands: segmented command selector plus terminal preview.
-6. Authoring CTA: create command and author-guide link.
-7. Footer: compact repo and docs links.
+4. Omniskills Teams: one featured coordinated team with coordinator, members,
+   install command, detail route, and source route.
+5. Skill Hub: retained-query Workflows and Skills tabs driven from
+   `landing/lib/landing-content.ts` and `landing/lib/skill-hub.ts`.
+6. Common commands: segmented command selector plus terminal preview.
+7. Authoring CTA: create command and author-guide link.
+8. Footer: compact repo and docs links.
 
 Keep sections full-width and unframed. Use cards only for repeated workflow
 rows/items, command choices, terminal previews, and the final CTA panel.
 
-## Workflow Registry
+## Omniskills Teams
 
-The workflow browsing section should feel like a lightweight package registry:
+The featured team section answers when to choose a coordinated team before the
+visitor enters the broader catalog:
 
-- Section label: `Workflow Registry`.
-- Content set: lead with the current startup role catalog (`startup-team`,
-  `ceo`, `cto`, `product-manager`, `engineering-manager`,
-  `founding-engineer`, and `qa-lead`).
-- Search input: full-width inside the section, with an obvious clear action
-  when a query is active.
-- Desktop rows: hash-seeded avatar, workflow identity, tag, callable entry
-  skill, sub-skill count, and route affordance.
-- Mobile rows: stack into a stable one-column scan layout; preserve workflow
-  avatar, name, tag, entry skill, sub-skill count, and the route link.
-- Avatars: render `boring-avatars` from the workflow's checked
-  `workflow.lock.json` skill hash so visual identity follows the skill tree.
-- Metrics: hide activity, rank, and install counts until the app has real
-  registry telemetry.
-- Route behavior: each row links to `/workflows/[slug]`.
+- Section label: `Omniskills Teams`.
+- Heading: `Pick an Omniskills team`.
+- Startup Team is the sole featured item and owns the `#workflows` anchor.
+- The left pane shows its hash-seeded avatar, benefit-led description, copyable
+  install command, `View team`, and `View team source` actions.
+- The right pane is a semantic role ledger: `startup-goal` is the coordinator,
+  followed by the seven declared members in manifest order.
+- The composition stacks into one column before desktop. At 320px, commands,
+  labels, roles, and actions must wrap without horizontal overflow.
+- Only the outer featured composition uses the shared one-time reveal. Member
+  rows do not animate independently.
+
+## Skill Hub
+
+`Explore the Skill Hub` separates installable Workflows from canonical Skills:
+
+- Workflows and Skills are real ARIA tabs linked to two retained DOM tabpanels.
+- Arrow Left/Right wraps focus; Home and End jump to the first and last tab.
+- One query persists when switching tabs. The placeholder and clear-action
+  label change to match the active catalog.
+- The Workflows tab excludes Startup Team, because it is already featured. Each
+  row keeps its hash-seeded avatar, tag, entry skill, sub-skill count, and
+  `/workflows/[slug]` route.
+- The Skills tab deduplicates by canonical source, shows provider and package
+  relationships, and offers only `View skill source`. It does not invent a
+  standalone install command.
+- Filtering updates immediately without `Reveal`, stagger, row entrance, or
+  layout animation. Both empty states remain actionable and announce result
+  counts through a polite live region.
+- At 320px, tabs stay side-by-side while workflow and skill rows stack into a
+  stable one-column reading order.
+- Until real registry telemetry exists, hide activity, rank, and install counts;
+  do not substitute fake popularity evidence.
 
 ## Workflow Detail Pages
 
@@ -122,8 +147,8 @@ workflow:
 - Rules: solid `#dedbd3`, including card, input, and terminal borders.
 - Primary accent: red-orange `#e64b2e` for the brand mark, primary CTA,
   selection, and completion states.
-- Panels: white only where they clarify commands, registry rows, ordered steps,
-  or the authoring call to action.
+- Panels: white only where they clarify the featured team, commands, catalog
+  rows, ordered steps, or the authoring call to action.
 - Corners: 8px radius for buttons, cards, inputs, badges, rows, and terminal
   panels.
 - Icons: use `lucide-react` icons when an icon is needed.
@@ -141,6 +166,8 @@ workflow comparison.
   `landing/lib/landing-content.ts`.
 - Keep components presentation-focused; they should not import root CLI runtime
   modules or read generated `.omniskills/` state.
+- Treat `featured-team-section.tsx`, `skill-hub.tsx`, and `skill-row.tsx` as
+  stable presentation boundaries for the new catalog hierarchy.
 - Prefer small components for stable repeated pieces such as workflow rows,
   terminal blocks, flow diagrams, and copyable command controls.
 - Search, command selection, and copy feedback should remain client-side and
@@ -163,19 +190,20 @@ language.
 
 ## Responsive And Interaction Rules
 
-- The first viewport must show the product signal and the beginning of the
-  workflow registry on mobile and desktop.
+- The page order is masthead, workflow example, Omniskills Teams, then Skill
+  Hub on mobile and desktop.
 - Text must wrap inside buttons, terminal panels, badges, rows, and cards
   without overlapping neighboring content.
-- Workflow rows should remain scannable in a one-column mobile layout and a
-  dense desktop layout.
-- The workflow search input must have an obvious clear action when a query is
-  active.
+- Team, workflow, and skill rows should remain scannable in a one-column mobile
+  layout and a dense desktop layout.
+- The Skill Hub search must have an obvious catalog-specific clear action when
+  a query is active, and its query must survive tab changes.
 - Copy buttons must show clear copied feedback.
 - Interactive elements use 120–220 ms property-specific transitions and subtle
   press feedback. Translating hover effects are gated to fine pointers.
-- The workflow example is fully visible before the registry and begins once when
-  its workbench enters the viewport. Scrolling away and back must not restart it.
+- The workflow example is fully visible before Omniskills Teams and begins once
+  when its workbench enters the viewport. Scrolling away and back must not
+  restart it.
 - Reduced motion removes transform and smooth-scroll movement while retaining
   short 150–200 ms opacity and color transitions for legible state changes.
 
@@ -184,9 +212,8 @@ language.
 - The masthead uses a one-time four-beat reveal for the product signal,
   headline, explanation, and install controls. It must remain readable before
   hydration and must not replay during normal navigation.
-- Registry rows reveal once with a 50 ms stagger capped at six indices so the
-  cascade resolves quickly. Search filtering must update immediately without
-  replaying the entrance.
+- The featured team reveals once as a single composition. Skill Hub filtering
+  updates immediately and must not replay or add entrance motion to result rows.
 - Workflow rows, arrows, and avatars use subtle fine-pointer feedback. Touch and
   keyboard interaction must not depend on hover motion.
 - The workflow workbench is visible by default and its sequence starts once on

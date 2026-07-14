@@ -9,7 +9,7 @@ export interface WorkflowDiagramStep {
   description: string;
 }
 
-export interface WorkflowCardContent {
+interface CatalogEntryBase {
   slug: string;
   name: string;
   description: string;
@@ -23,6 +23,24 @@ export interface WorkflowCardContent {
   skills: WorkflowSkill[];
   diagramSteps: WorkflowDiagramStep[];
 }
+
+export interface TeamRoleContent {
+  name: string;
+  skill: string;
+  description: string;
+}
+
+export interface WorkflowCardContent extends CatalogEntryBase {
+  kind: "workflow";
+}
+
+export interface TeamCardContent extends CatalogEntryBase {
+  kind: "team";
+  coordinator: TeamRoleContent;
+  members: TeamRoleContent[];
+}
+
+export type CatalogEntryContent = TeamCardContent | WorkflowCardContent;
 
 export interface CommandExample {
   label: string;
@@ -39,7 +57,7 @@ export interface AgentBadgeContent {
 
 export const githubUrl = "https://github.com/devos-ing/omni-skills";
 
-export function getLocalSkillSourceUrl(workflow: WorkflowCardContent, skill: string) {
+export function getLocalSkillSourceUrl(workflow: CatalogEntryContent, skill: string) {
   if (!workflow.localSkillNames.includes(skill)) return null;
   return `${workflow.sourceUrl.replace("/tree/", "/blob/")}/skills/${skill}/SKILL.md`;
 }
@@ -56,96 +74,187 @@ export const agents: AgentBadgeContent[] = [
   },
 ];
 
+export const startupTeam: TeamCardContent = {
+  kind: "team",
+  slug: "startup-team",
+  name: "Startup Team",
+  description:
+    "Move one startup goal from direction to delivery with a coordinator that brings in strategy, product, design, engineering, and QA only when the work needs them.",
+  entrySkill: "startup-goal",
+  coordinator: {
+    name: "Startup Goal",
+    skill: "startup-goal",
+    description: "Clarifies the brief, selects the needed roles, and combines their outputs.",
+  },
+  members: [
+    { name: "CEO", skill: "ceo", description: "Company direction and tradeoffs" },
+    { name: "CTO", skill: "cto", description: "Architecture and technical risk" },
+    {
+      name: "Product Manager",
+      skill: "product-manager",
+      description: "Discovery, PRDs, and issue slicing",
+    },
+    {
+      name: "Web Design",
+      skill: "web-design",
+      description: "Interface direction and motion quality",
+    },
+    {
+      name: "Engineering Manager",
+      skill: "engineering-manager",
+      description: "Delivery sequencing and quality gates",
+    },
+    {
+      name: "Founding Engineer",
+      skill: "founding-engineer",
+      description: "Implementation framing and handoff",
+    },
+    {
+      name: "QA Lead",
+      skill: "qa-lead",
+      description: "Acceptance checks and release risk",
+    },
+  ],
+  localSkillNames: [
+    "startup-goal",
+    "ceo",
+    "cto",
+    "product-manager",
+    "web-design",
+    "engineering-manager",
+    "founding-engineer",
+    "qa-lead",
+  ],
+  avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
+  tag: "Team",
+  accent: "text-[#c83c24]",
+  sourceUrl: `${githubUrl}/tree/main/examples/teams/startup-team`,
+  installCommand: "npx omniskill@latest install startup-team",
+  skills: [
+    { name: "startup-goal", description: "Coordinate role subagents around one goal" },
+    { name: "ceo", description: "Company direction and tradeoffs" },
+    { name: "cto", description: "Architecture and technical risk" },
+    { name: "product-manager", description: "Discovery, PRDs, and issue slicing" },
+    { name: "web-design", description: "Interface direction and motion quality" },
+    { name: "engineering-manager", description: "Delivery sequencing and quality gates" },
+    { name: "founding-engineer", description: "Implementation framing and handoff" },
+    { name: "qa-lead", description: "Acceptance checks and release risk" },
+    { name: "emilkowalski:emil-design-eng", description: "Polish interface implementation" },
+    {
+      name: "emilkowalski:animation-vocabulary",
+      description: "Name and select motion patterns",
+    },
+    { name: "emilkowalski:apple-design", description: "Apply Apple design principles" },
+    { name: "emilkowalski:review-animations", description: "Review motion quality" },
+    { name: "superpowers:brainstorming", description: "Explore options before scope locks" },
+    { name: "superpowers:writing-plans", description: "Create executable plans" },
+    {
+      name: "superpowers:verification-before-completion",
+      description: "Verify before claiming done",
+    },
+    { name: "mattpocock:wayfinder", description: "Map decisions and uncertainty" },
+    { name: "mattpocock:grill-with-docs", description: "Stress-test direction" },
+    { name: "mattpocock:to-spec", description: "Write product requirements" },
+    { name: "mattpocock:to-tickets", description: "Slice work into issues" },
+    { name: "mattpocock:codebase-design", description: "Review codebase boundaries" },
+    { name: "mattpocock:domain-modeling", description: "Name domain concepts" },
+    { name: "mattpocock:tdd", description: "Build with tests where practical" },
+    { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures from evidence" },
+    { name: "mattpocock:code-review", description: "Review behavior and risk" },
+    { name: "mattpocock:implement", description: "Execute the implementation slice" },
+  ],
+  diagramSteps: [
+    {
+      label: "Route",
+      skill: "startup-goal",
+      description: "Dispatch the needed role subagents for the next decision.",
+    },
+    {
+      label: "Strategy",
+      skill: "ceo",
+      description: "Clarify company direction and tradeoffs.",
+    },
+    {
+      label: "Product",
+      skill: "product-manager",
+      description: "Shape customer value, PRD, and issue slices.",
+    },
+    {
+      label: "Design",
+      skill: "web-design",
+      description: "Set responsive interface direction and motion quality.",
+    },
+    {
+      label: "Technology",
+      skill: "cto",
+      description: "Set architecture and technical risk boundaries.",
+    },
+    {
+      label: "Delivery",
+      skill: "engineering-manager",
+      description: "Sequence execution and quality gates.",
+    },
+    {
+      label: "Implementation frame",
+      skill: "founding-engineer",
+      description: "Prepare the smallest correct implementation slice.",
+    },
+    {
+      label: "Implement",
+      skill: "mattpocock:implement",
+      description: "Execute the planned change with tests and review.",
+    },
+    {
+      label: "QA",
+      skill: "qa-lead",
+      description: "Check release readiness and residual risk.",
+    },
+  ],
+};
+
+export const featuredTeamSectionContent = {
+  eyebrow: "Omniskills Teams",
+  heading: "Pick an Omniskills team",
+  lead: "Start with a coordinated team when one role is not enough. One install gives your agent a coordinator, specialist roles, and the playbooks that connect them.",
+  featuredLabel: "Featured team",
+  copyInstallLabel: "Copy Startup Team install command",
+  viewTeamLabel: "View team",
+  viewTeamSourceLabel: "View team source",
+  coordinatorLabel: "Coordinator",
+  membersLabel: "Members",
+} as const;
+
+export const skillHubSectionContent = {
+  eyebrow: "Skill Hub",
+  heading: "Explore the Skill Hub",
+  lead: "Browse independently installable workflows or inspect the skills they assemble.",
+  catalogLabel: "Skill Hub catalog",
+  clearAction: "Clear search",
+  noResultsPrefix: "No",
+  matchLabel: "match",
+  tabs: {
+    workflows: {
+      label: "Workflows",
+      searchLabel: "Search workflows",
+      placeholder: "Search workflows, entry skills, or tags...",
+      clearLabel: "Clear workflow search",
+      noun: "workflow",
+      nounPlural: "workflows",
+    },
+    skills: {
+      label: "Skills",
+      searchLabel: "Search skills",
+      placeholder: "Search skills, providers, or packages...",
+      clearLabel: "Clear skill search",
+      noun: "skill",
+      nounPlural: "skills",
+    },
+  },
+} as const;
+
 export const workflows: WorkflowCardContent[] = [
   {
-    slug: "startup-goal",
-    name: "Startup Goal",
-    description:
-      "Move a startup goal through the core operating roles: CEO, CTO, PM, EM, founding engineer, and QA lead.",
-    entrySkill: "startup-goal",
-    localSkillNames: [
-      "startup-goal",
-      "ceo",
-      "cto",
-      "product-manager",
-      "engineering-manager",
-      "founding-engineer",
-      "qa-lead",
-    ],
-    avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
-    tag: "Goal",
-    accent: "text-[#c83c24]",
-    sourceUrl: `${githubUrl}/tree/main/examples/workflows/startup-goal`,
-    installCommand: "npx omniskill@latest install startup-goal",
-    skills: [
-      { name: "startup-goal", description: "Coordinate role subagents around one goal" },
-      { name: "ceo", description: "Company direction and tradeoffs" },
-      { name: "cto", description: "Architecture and technical risk" },
-      { name: "product-manager", description: "Discovery, PRDs, and issue slicing" },
-      { name: "engineering-manager", description: "Delivery sequencing and quality gates" },
-      { name: "founding-engineer", description: "Implementation framing and handoff" },
-      { name: "qa-lead", description: "Acceptance checks and release risk" },
-      { name: "superpowers:brainstorming", description: "Explore options before scope locks" },
-      { name: "superpowers:writing-plans", description: "Create executable plans" },
-      {
-        name: "superpowers:verification-before-completion",
-        description: "Verify before claiming done",
-      },
-      { name: "mattpocock:decision-mapping", description: "Map decisions and uncertainty" },
-      { name: "mattpocock:grill-with-docs", description: "Stress-test direction" },
-      { name: "mattpocock:to-prd", description: "Write product requirements" },
-      { name: "mattpocock:to-issues", description: "Slice work into issues" },
-      { name: "mattpocock:codebase-design", description: "Review codebase boundaries" },
-      { name: "mattpocock:domain-modeling", description: "Name domain concepts" },
-      { name: "mattpocock:tdd", description: "Build with tests where practical" },
-      { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures from evidence" },
-      { name: "mattpocock:review", description: "Review behavior and risk" },
-      { name: "implement", description: "Execute the implementation slice" },
-    ],
-    diagramSteps: [
-      {
-        label: "Route",
-        skill: "startup-goal",
-        description: "Dispatch the needed role subagents for the next decision.",
-      },
-      {
-        label: "Strategy",
-        skill: "ceo",
-        description: "Clarify company direction and tradeoffs.",
-      },
-      {
-        label: "Product",
-        skill: "product-manager",
-        description: "Shape customer value, PRD, and issue slices.",
-      },
-      {
-        label: "Technology",
-        skill: "cto",
-        description: "Set architecture and technical risk boundaries.",
-      },
-      {
-        label: "Delivery",
-        skill: "engineering-manager",
-        description: "Sequence execution and quality gates.",
-      },
-      {
-        label: "Implementation frame",
-        skill: "founding-engineer",
-        description: "Prepare the smallest correct implementation slice.",
-      },
-      {
-        label: "Implement",
-        skill: "implement",
-        description: "Execute the planned change with tests and review.",
-      },
-      {
-        label: "QA",
-        skill: "qa-lead",
-        description: "Check release readiness and residual risk.",
-      },
-    ],
-  },
-  {
+    kind: "workflow",
     slug: "ceo",
     name: "CEO",
     description:
@@ -159,7 +268,7 @@ export const workflows: WorkflowCardContent[] = [
     installCommand: "npx omniskill@latest install ceo",
     skills: [
       { name: "ceo", description: "Set the executive frame" },
-      { name: "mattpocock:decision-mapping", description: "Map strategic uncertainty" },
+      { name: "mattpocock:wayfinder", description: "Map strategic uncertainty" },
       { name: "mattpocock:grill-with-docs", description: "Stress-test the company direction" },
     ],
     diagramSteps: [
@@ -170,7 +279,7 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Decision Map",
-        skill: "mattpocock:decision-mapping",
+        skill: "mattpocock:wayfinder",
         description: "Map options, constraints, and uncertainties.",
       },
       {
@@ -181,6 +290,7 @@ export const workflows: WorkflowCardContent[] = [
     ],
   },
   {
+    kind: "workflow",
     slug: "cto",
     name: "CTO",
     description:
@@ -197,7 +307,7 @@ export const workflows: WorkflowCardContent[] = [
       { name: "mattpocock:codebase-design", description: "Review module boundaries" },
       { name: "mattpocock:domain-modeling", description: "Clarify domain concepts" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose technical risk" },
-      { name: "mattpocock:review", description: "Review the technical decision" },
+      { name: "mattpocock:code-review", description: "Review behavior and risk" },
     ],
     diagramSteps: [
       {
@@ -222,12 +332,13 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Review",
-        skill: "mattpocock:review",
+        skill: "mattpocock:code-review",
         description: "Check behavior, blast radius, and tradeoffs.",
       },
     ],
   },
   {
+    kind: "workflow",
     slug: "product-manager",
     name: "Product Manager",
     description:
@@ -242,8 +353,8 @@ export const workflows: WorkflowCardContent[] = [
     skills: [
       { name: "product-manager", description: "Frame the product problem" },
       { name: "superpowers:brainstorming", description: "Explore product options" },
-      { name: "mattpocock:to-prd", description: "Write the PRD" },
-      { name: "mattpocock:to-issues", description: "Slice delivery issues" },
+      { name: "mattpocock:to-spec", description: "Write the product specification" },
+      { name: "mattpocock:to-tickets", description: "Slice delivery tickets" },
       { name: "superpowers:writing-plans", description: "Write the delivery plan" },
     ],
     diagramSteps: [
@@ -259,12 +370,12 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "PRD",
-        skill: "mattpocock:to-prd",
+        skill: "mattpocock:to-spec",
         description: "Write the requirement and acceptance criteria.",
       },
       {
         label: "Issues",
-        skill: "mattpocock:to-issues",
+        skill: "mattpocock:to-tickets",
         description: "Slice the PRD into visible progress.",
       },
       {
@@ -275,6 +386,7 @@ export const workflows: WorkflowCardContent[] = [
     ],
   },
   {
+    kind: "workflow",
     slug: "engineering-manager",
     name: "Engineering Manager",
     description:
@@ -291,7 +403,7 @@ export const workflows: WorkflowCardContent[] = [
       { name: "superpowers:writing-plans", description: "Write the execution plan" },
       { name: "mattpocock:tdd", description: "Choose the test strategy" },
       { name: "mattpocock:diagnosing-bugs", description: "Triage blockers" },
-      { name: "mattpocock:review", description: "Review delivery risk" },
+      { name: "mattpocock:code-review", description: "Review behavior and risk" },
     ],
     diagramSteps: [
       {
@@ -316,12 +428,13 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Review",
-        skill: "mattpocock:review",
+        skill: "mattpocock:code-review",
         description: "Review delivery risk before handoff.",
       },
     ],
   },
   {
+    kind: "workflow",
     slug: "founding-engineer",
     name: "Founding Engineer",
     description:
@@ -338,7 +451,7 @@ export const workflows: WorkflowCardContent[] = [
       { name: "implement", description: "Implement the planned change" },
       { name: "mattpocock:tdd", description: "Use test-first development" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
-      { name: "mattpocock:review", description: "Review the implementation" },
+      { name: "mattpocock:code-review", description: "Review behavior and risk" },
       { name: "superpowers:verification-before-completion", description: "Verify completion" },
     ],
     diagramSteps: [
@@ -364,7 +477,7 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Review",
-        skill: "mattpocock:review",
+        skill: "mattpocock:code-review",
         description: "Review risks and behavior.",
       },
       {
@@ -375,6 +488,7 @@ export const workflows: WorkflowCardContent[] = [
     ],
   },
   {
+    kind: "workflow",
     slug: "qa-lead",
     name: "QA Lead",
     description:
@@ -388,7 +502,7 @@ export const workflows: WorkflowCardContent[] = [
     installCommand: "npx omniskill@latest install qa-lead",
     skills: [
       { name: "qa-lead", description: "Set the release-risk frame" },
-      { name: "mattpocock:review", description: "Review acceptance and risk" },
+      { name: "mattpocock:code-review", description: "Review behavior and risk" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
       { name: "superpowers:verification-before-completion", description: "Verify before handoff" },
     ],
@@ -400,7 +514,7 @@ export const workflows: WorkflowCardContent[] = [
       },
       {
         label: "Review",
-        skill: "mattpocock:review",
+        skill: "mattpocock:code-review",
         description: "Review acceptance and release risk.",
       },
       {
@@ -416,6 +530,7 @@ export const workflows: WorkflowCardContent[] = [
     ],
   },
   {
+    kind: "workflow",
     slug: "haaland",
     name: "Haaland",
     description:
@@ -438,18 +553,20 @@ export const workflows: WorkflowCardContent[] = [
   },
 ];
 
+export const catalogEntries: CatalogEntryContent[] = [startupTeam, ...workflows];
+
 export const commands: CommandExample[] = [
   {
-    label: "Install Startup Goal",
-    command: "npx omniskill@latest install startup-goal",
+    label: "Install Startup Team",
+    command: "npx omniskill@latest install startup-team",
   },
   {
-    label: "Inspect Startup Goal deps",
-    command: "npx omniskill@latest deps startup-goal",
+    label: "Inspect Startup Team deps",
+    command: "npx omniskill@latest deps startup-team",
   },
   {
     label: "Lock skill fingerprints",
-    command: "npx omniskill@latest lock examples/workflows/startup-goal",
+    command: "npx omniskill@latest lock examples/teams/startup-team",
   },
   {
     label: "Check loop status",
@@ -469,7 +586,7 @@ export const commands: CommandExample[] = [
   },
   {
     label: "Remove installed workflow",
-    command: "npx omniskill@latest remove startup-goal",
+    command: "npx omniskill@latest remove startup-team",
   },
 ];
 

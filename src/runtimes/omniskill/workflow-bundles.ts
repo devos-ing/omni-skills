@@ -10,6 +10,7 @@ export const workflowFileName = "workflow.json";
 export const workflowLockFileName = "workflow.lock.json";
 const workflowStoreDir = ".omniskills/workflows";
 const canonicalExamplesGitUrl = "https://github.com/devos-ing/omni-skills.git";
+const canonicalExamplesTeamPath = "examples/teams";
 const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -49,9 +50,12 @@ const WorkflowLoopSchema = z.object({
 export const WorkflowBundleManifestSchema = z
   .object({
     schemaVersion: z.literal("0.1"),
+    kind: z.enum(["workflow", "team"]).optional(),
     name: z.string().min(1),
     version: z.string().min(1),
     description: z.string().min(1),
+    coordinator: z.string().min(1).optional(),
+    members: z.array(z.string().min(1)).optional(),
     loop: WorkflowLoopSchema.optional(),
     skills: z.array(WorkflowSkillSchema).min(1),
     steps: z.array(WorkflowStepSchema).min(1),
@@ -70,6 +74,80 @@ export const WorkflowBundleManifestSchema = z
     }
 
     const skillSources = new Set(manifest.skills.map((skill) => skill.source));
+    const effectiveKind = manifest.kind ?? "workflow";
+
+    if (effectiveKind === "team") {
+      if (!manifest.coordinator) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Team manifests must declare a coordinator",
+          path: ["coordinator"],
+        });
+      } else {
+        if (!skillSources.has(manifest.coordinator)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Team coordinator references unknown skill: ${manifest.coordinator}`,
+            path: ["coordinator"],
+          });
+        }
+        if (!isLocalWorkflowSkillSource(manifest.coordinator)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Team coordinator must be a local skill path: ${manifest.coordinator}`,
+            path: ["coordinator"],
+          });
+        }
+      }
+
+      if (!manifest.members || manifest.members.length === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Team manifests must declare at least one member",
+          path: ["members"],
+        });
+      } else {
+        const seenMembers = new Set<string>();
+        for (const [index, member] of manifest.members.entries()) {
+          if (!skillSources.has(member)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Team member references unknown skill: ${member}`,
+              path: ["members", index],
+            });
+          }
+          if (!isLocalWorkflowSkillSource(member)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Team member must be a local skill path: ${member}`,
+              path: ["members", index],
+            });
+          }
+          if (seenMembers.has(member)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicate team member: ${member}`,
+              path: ["members", index],
+            });
+          }
+          if (member === manifest.coordinator) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Team coordinator cannot also be a member: ${member}`,
+              path: ["members", index],
+            });
+          }
+          seenMembers.add(member);
+        }
+      }
+    } else if (manifest.coordinator !== undefined || manifest.members !== undefined) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Workflow manifests cannot declare coordinator or members",
+        path: [manifest.coordinator !== undefined ? "coordinator" : "members"],
+      });
+    }
+
     for (const [index, step] of manifest.steps.entries()) {
       if (!skillSources.has(step.skill)) {
         context.addIssue({
@@ -138,6 +216,13 @@ export const WorkflowBundleManifestSchema = z
   });
 
 export type WorkflowBundleManifest = z.infer<typeof WorkflowBundleManifestSchema>;
+
+export function getWorkflowInvocationSkillName(manifest: WorkflowBundleManifest): string | null {
+  if (manifest.kind !== "team" || !manifest.coordinator) {
+    return null;
+  }
+  return basename(manifest.coordinator);
+}
 
 const WorkflowSkillLockEntrySchema = z.object({
   source: z.string().min(1),
@@ -295,6 +380,11 @@ export async function loadWorkflowBundle(
   try {
     const rawManifest = await readFile(manifestPath, "utf8");
     const manifest = WorkflowBundleManifestSchema.parse(JSON.parse(rawManifest));
+    if (resolvedSource.alias?.endsWith("-team") && manifest.kind !== "team") {
+      throw new Error(
+        `Omniskills team alias "${resolvedSource.alias}" must resolve to kind: "team"`,
+      );
+    }
     validateWorkflowBundleFiles({ manifest, sourceDir: manifestDir });
     const loadedLock = await loadWorkflowLockFileForManifest({ manifest, sourceDir: manifestDir });
 
@@ -1071,10 +1161,13 @@ function parseWorkflowAliasSource(source: string): GitWorkflowSource | null {
     return null;
   }
 
-  const url = `${canonicalExamplesGitUrl}#${canonicalExamplesWorkflowPath}/${source}`;
+  const catalogPath = source.endsWith("-team")
+    ? canonicalExamplesTeamPath
+    : canonicalExamplesWorkflowPath;
+  const url = `${canonicalExamplesGitUrl}#${catalogPath}/${source}`;
   const gitSource = parseGitWorkflowSource(url);
   if (!gitSource) {
-    throw new Error(`Could not build canonical Omniskills workflow alias URL: ${source}`);
+    throw new Error(`Could not build canonical Omniskills alias URL: ${source}`);
   }
 
   return { ...gitSource, alias: source };

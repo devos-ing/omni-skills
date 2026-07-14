@@ -26,6 +26,7 @@ import {
   createWorkflowRemovalPlan,
   executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
+  getWorkflowInvocationSkillName,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
@@ -308,10 +309,10 @@ function configureInstallCommand(
 ): void {
   command
     .command("install")
-    .description("Install an Omniskills workflow and its skills.")
+    .description("Install an Omniskills workflow or team and its skills.")
     .argument(
       "<source>",
-      "workflow alias, local Omniskills path, workflow.json path, or public git source",
+      "workflow or team alias, local Omniskills path, workflow.json path, or public git source",
     )
     .option("--dir <dir>", "override directory that receives .omniskills/workflows")
     .option(
@@ -428,6 +429,10 @@ async function runOmniskillInstall(
         skillCount: skillDependencies.length,
       }),
     );
+    const invocationSkillName = getWorkflowInvocationSkillName(bundle.manifest);
+    if (invocationSkillName) {
+      console.log(nextStep(`$${invocationSkillName}`));
+    }
   } finally {
     await preparedDependencies?.cleanup?.();
     await bundle.cleanup?.();
@@ -709,7 +714,7 @@ async function runExternalSkillCommand(
 function configureListCommand(command: Command, rootDir: string): void {
   command
     .command("list")
-    .description("List installed Omniskills workflows.")
+    .description("List installed Omniskills workflows and teams.")
     .option("--dir <dir>", "override directory with .omniskills/workflows")
     .option("--home <dir>", "home directory that contains global Omniskills records", homedir())
     .action(async (commandOptions: { dir?: string; home: string }) => {
@@ -735,8 +740,10 @@ function configureListCommand(command: Command, rootDir: string): void {
 function configureRemoveCommand(command: Command, options: ConfigureOmniskillCommandOptions): void {
   command
     .command("remove")
-    .description("Remove an installed Omniskills workflow and its recorded skill artifacts.")
-    .argument("<workflow-name>", "installed Omniskills workflow name")
+    .description(
+      "Remove an installed Omniskills workflow or team and its recorded skill artifacts.",
+    )
+    .argument("<workflow-name>", "installed Omniskills workflow or team name")
     .option("--dir <dir>", "override directory with .omniskills/workflows")
     .option("--home <dir>", "home directory with global Omniskills records", homedir())
     .option("--dry-run", "print the removal plan without deleting files", false)
@@ -820,7 +827,7 @@ function configureDependencyCommand(
   command
     .command("deps")
     .aliases(["dependencies", "dependence"])
-    .description("List the skill dependencies declared by an Omniskills workflow.")
+    .description("List the skill dependencies declared by an Omniskills workflow or team.")
     .argument("<source>", "local Omniskills path, workflow.json path, or public git source")
     .action(async (source: string) => {
       const bundle = await loadWorkflowBundle(source, {

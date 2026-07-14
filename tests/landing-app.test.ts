@@ -45,7 +45,7 @@ describe("landing app source contract", () => {
 
     expect(page).toContain("LandingPage");
     expect(content).toContain("Omniskills");
-    expect(content).toContain("Startup Goal");
+    expect(content).toContain("Startup Team");
     expect(content).toContain("CEO");
     expect(content).toContain("CTO");
     expect(content).toContain("Product Manager");
@@ -53,17 +53,18 @@ describe("landing app source contract", () => {
     expect(content).toContain("Founding Engineer");
     expect(content).toContain("QA Lead");
     expect(content).toContain("avatarSeed");
-    expect(content).toContain("npx omniskill@latest install startup-goal");
+    expect(content).toContain("npx omniskill@latest install startup-team");
     expect(content).toContain("npx omniskill@latest install ceo");
     expect(content).toContain("npx omniskill@latest install cto");
     expect(content).toContain("npx omniskill@latest install product-manager");
     expect(content).toContain("npx omniskill@latest install engineering-manager");
     expect(content).toContain("npx omniskill@latest install founding-engineer");
     expect(content).toContain("npx omniskill@latest install qa-lead");
-    expect(content).toContain("npx omniskill@latest deps startup-goal");
-    expect(content).toContain("npx omniskill@latest lock examples/workflows/startup-goal");
-    expect(content).toContain("npx omniskill@latest remove startup-goal");
-    expect(content).not.toContain("npx omniskill@latest install startup-team");
+    expect(content).toContain("npx omniskill@latest deps startup-team");
+    expect(content).toContain("npx omniskill@latest lock examples/teams/startup-team");
+    expect(content).toContain("npx omniskill@latest remove startup-team");
+    expect(content).not.toContain("npx omniskill@latest install startup-goal");
+    expect(content).not.toContain("examples/workflows/startup-goal");
     expect(content).toContain(
       "npx omniskill@latest loop status grilled-product-dev --latest --json",
     );
@@ -79,7 +80,7 @@ describe("landing app source contract", () => {
     expect(page).toContain("Install the workflow.");
     expect(page).toContain("many-skill bank");
     expect(page).toContain("3x your ability");
-    expect(page).toContain("npx omniskill@latest install startup-goal");
+    expect(page).toContain("npx omniskill@latest install startup-team");
     expect(page).toContain("Workflow in motion");
     expect(page).toContain("See startup-goal coordinate the work.");
     expect(page).not.toContain("How it works + Agent run demo");
@@ -129,10 +130,12 @@ describe("landing app source contract", () => {
     expect(card).toContain("border-[var(--rule)]");
     expect(`${page}\n${card}`).not.toMatch(/text-\[#191817\]\/([2-5]\d)/);
 
-    const registryIndex = page.indexOf('id="workflows"');
+    const teamIndex = page.indexOf("<FeaturedTeamSection");
+    const hubIndex = page.indexOf("<SkillHub");
     const demoIndex = page.indexOf('id="workflow-example"');
-    expect(registryIndex).toBeGreaterThan(-1);
-    expect(demoIndex).toBeLessThan(registryIndex);
+    expect(teamIndex).toBeGreaterThan(-1);
+    expect(hubIndex).toBeGreaterThan(teamIndex);
+    expect(demoIndex).toBeLessThan(teamIndex);
   });
 
   test("shows the workflow example before the registry and autoplays on viewport entry", () => {
@@ -152,15 +155,17 @@ describe("landing app source contract", () => {
     const reveal = readLandingFile("components/reveal.tsx");
     const page = readLandingFile("components/landing-page.tsx");
     const card = readLandingFile("components/workflow-card.tsx");
+    const featuredTeam = readLandingFile("components/featured-team-section.tsx");
     const demo = readLandingFile("components/workflow-run-demo.tsx");
     const globals = readLandingFile("app/globals.css");
-    const motionSources = `${reveal}\n${page}\n${card}\n${demo}\n${globals}`;
+    const motionSources = `${reveal}\n${page}\n${card}\n${featuredTeam}\n${demo}\n${globals}`;
 
     expect(reveal).toContain("IntersectionObserver");
     expect(reveal).toContain("data-reveal");
     expect(reveal).toContain("--reveal-index");
     expect(page).toContain("motion-masthead");
-    expect(page).toContain("motion-registry-row");
+    expect(featuredTeam).toContain("<Reveal");
+    expect(page).not.toContain("motion-registry-row");
     expect(card).toContain("motion-avatar");
     expect(demo).toContain("motion-workbench");
     expect(demo).toContain("motion-active-role");
@@ -175,7 +180,11 @@ describe("landing app source contract", () => {
     const design = readLandingFile("design.md");
 
     expect(design).toContain("https://www.context.store");
-    expect(design).toContain("Workflow Registry");
+    expect(design).toContain("Omniskills Teams");
+    expect(design).toContain("Skill Hub");
+    expect(design).toContain("landing/components/featured-team-section.tsx");
+    expect(design).toContain("landing/components/skill-hub.tsx");
+    expect(design).toContain("landing/components/skill-row.tsx");
     expect(design).toContain("hide activity, rank, and install counts");
     expect(design).toContain("copyable");
     expect(design).toContain("landing/components/workflow-card.tsx");
@@ -184,6 +193,26 @@ describe("landing app source contract", () => {
     expect(design).not.toContain("Trending");
     expect(design).not.toContain("Hot");
     expect(design).not.toContain("dependency-free mini bar/sparkline");
+  });
+
+  test("documents the featured team and Skill Hub in both content mirrors", () => {
+    const design = readLandingFile("design.md");
+    const english = readFileSync(join(repoRoot, "docs", "landing-content.md"), "utf8");
+    const traditionalChinese = readFileSync(
+      join(repoRoot, "docs", "landing-content.zh-Hant.md"),
+      "utf8",
+    );
+
+    for (const document of [design, english, traditionalChinese]) {
+      expect(document).toContain("Pick an Omniskills team");
+      expect(document).toContain("Explore the Skill Hub");
+      expect(document).toContain("Workflows");
+      expect(document).toContain("Skills");
+      expect(document).toContain("View skill source");
+      expect(document).not.toContain("Heading: Pick an Omniskills workflow");
+    }
+    expect(english).toContain("npx omniskill@latest install startup-team");
+    expect(traditionalChinese).toContain("npx omniskill@latest install startup-team");
   });
 
   test("does not define placeholder workflow activity or install metrics", () => {
@@ -214,19 +243,53 @@ describe("landing app source contract", () => {
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
     expect(content).toContain("getLocalSkillSourceUrl");
     expect(content).toContain('localSkillNames: ["haaland"]');
-    expect(content).toContain('slug: "startup-goal"');
+    expect(content).toContain('slug: "startup-team"');
+    expect(content).toContain(
+      '{ name: "web-design", description: "Interface direction and motion quality" }',
+    );
+    expect(content).toContain('label: "Design"');
+    expect(content).toContain('skill: "web-design"');
     expect(content).toContain('slug: "founding-engineer"');
     expect(content).toContain('slug: "haaland"');
-    expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/startup-goal`);
+    expect(content).toContain(`\${githubUrl}/tree/main/examples/teams/startup-team`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/haaland`);
-    expect(content).toContain("npx omniskill@latest install startup-goal");
+    expect(content).toContain("npx omniskill@latest install startup-team");
+    expect(content).not.toContain("npx omniskill@latest install startup-goal");
     expect(content).toContain("npx omniskill@latest install haaland");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
     expect(content).toContain('label: "Implementation frame"');
     expect(content).toContain('skill: "founding-engineer"');
     expect(content).toContain("Execute the planned change with tests and review.");
+  });
+
+  test("mirrors the exact startup-team manifest skill roster", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+    const startupCardStart = content.indexOf('slug: "startup-team"');
+    const nextCardStart = content.indexOf('slug: "ceo"', startupCardStart);
+    const startupCard = content.slice(startupCardStart, nextCardStart);
+    const manifest = JSON.parse(
+      readFileSync(join(repoRoot, "examples", "teams", "startup-team", "workflow.json"), "utf8"),
+    ) as { skills: Array<{ source: string }> };
+    const expectedNames = manifest.skills.map(({ source }) =>
+      source.startsWith("./skills/") ? source.slice("./skills/".length) : source,
+    );
+
+    expect(startupCardStart).toBeGreaterThan(-1);
+    expect(nextCardStart).toBeGreaterThan(startupCardStart);
+    expect(expectedNames).toHaveLength(25);
+    for (const name of expectedNames) {
+      expect(startupCard).toContain(`name: "${name}"`);
+    }
+    for (const staleName of [
+      "mattpocock:decision-mapping",
+      "mattpocock:to-prd",
+      "mattpocock:to-issues",
+      "mattpocock:review",
+    ]) {
+      expect(startupCard).not.toContain(`{ name: "${staleName}"`);
+    }
   });
 
   test("renders workflow cards as route links with hash-seeded avatars", () => {
@@ -256,13 +319,73 @@ describe("landing app source contract", () => {
     expect(card).not.toContain("aria-pressed");
   });
 
-  test("keeps workflow browsing route-only on the landing page", () => {
+  test("features Startup Team before the searchable Skill Hub", () => {
     const page = readLandingFile("components/landing-page.tsx");
+    const team = readLandingFile("components/featured-team-section.tsx");
+    const hub = readLandingFile("components/skill-hub.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
 
-    expect(page).toContain("<WorkflowCard");
-    expect(page).toContain("Workflow Registry");
-    expect(page).toContain("filteredWorkflows.map");
-    expect(page).toContain("text-[var(--muted)]");
+    expect(page).toContain("<FeaturedTeamSection");
+    expect(page).toContain("<SkillHub");
+    expect(page).toContain("Explore teams & skills");
+    expect(team).toContain('id="workflows"');
+    expect(team).toContain("team.coordinator");
+    expect(team).toContain("`$${team.coordinator.skill}`");
+    expect(team).toContain("team.members.map");
+    expect(team).not.toContain("tracking-[-0.025em]");
+    expect(team).toContain("featuredTeamSectionContent");
+    expect(content).toContain("export const featuredTeamSectionContent");
+    expect(content).toContain("Pick an Omniskills team");
+    expect(content).toContain("View team source");
+    expect(team).not.toContain("Start with a coordinated team");
+    expect(hub).toContain('id="skill-hub"');
+    expect(content).toContain("Explore the Skill Hub");
+    expect(page.indexOf("<FeaturedTeamSection")).toBeLessThan(page.indexOf("<SkillHub"));
+  });
+
+  test("implements keyboard-accessible Workflow and Skill tabs", () => {
+    const hub = readLandingFile("components/skill-hub.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
+
+    expect(hub).toContain('role="tablist"');
+    expect(hub).toContain('role="tab"');
+    expect(hub).toContain('role="tabpanel"');
+    expect(hub).toContain("aria-selected");
+    expect(hub).toContain("aria-controls");
+    expect(hub).toContain('event.key === "ArrowRight"');
+    expect(hub).toContain('event.key === "ArrowLeft"');
+    expect(hub).toContain('event.key === "Home"');
+    expect(hub).toContain('event.key === "End"');
+    expect(hub).toContain('type="search"');
+    expect(hub).toContain('aria-live="polite"');
+    expect(content).toContain("Clear workflow search");
+    expect(content).toContain("Clear skill search");
+    expect(hub).toContain("font-semibold");
+    expect(hub).toContain("active:bg-[#f0ede6]");
+    expect(hub).not.toContain("tracking-[-0.025em]");
+    expect(hub).toContain("skillHubSectionContent");
+    expect(hub).toContain("function EmptyState");
+    expect(content).toContain("export const skillHubSectionContent");
+    expect(content).toContain("Explore the Skill Hub");
+    expect(content).toContain("Clear workflow search");
+    expect(content).toContain("Clear skill search");
+    expect(hub).not.toContain("Browse independently installable workflows");
+  });
+
+  test("keeps skill results source-only and unanimated while filtering", () => {
+    const page = readLandingFile("components/landing-page.tsx");
+    const row = readLandingFile("components/skill-row.tsx");
+    const hub = readLandingFile("components/skill-hub.tsx");
+
+    expect(row).toContain("View skill source");
+    expect(row).toContain("entry.usedBy");
+    expect(row).toContain('target="_blank"');
+    expect(row).toContain('rel="noreferrer"');
+    expect(row).not.toContain("installCommand");
+    expect(row).not.toContain("Copy");
+    expect(hub).not.toContain("<Reveal");
+    expect(hub).not.toContain("motion-registry-row");
+    expect(hub).not.toContain("editorial-control");
     expect(readLandingFile("components/workflow-card.tsx")).toContain("View workflow");
     expect(page).not.toContain("type WorkflowActivityMode");
     expect(page).not.toContain("Workflows Leaderboard");
@@ -321,8 +444,8 @@ describe("landing app source contract", () => {
     expect(route).toContain('from "../../../lib/landing-content"');
     expect(route).toContain("getLocalSkillSourceUrl");
     expect(route).toContain("export function generateStaticParams()");
-    expect(route).toContain("workflows.map");
-    expect(route).toContain("workflows.find");
+    expect(route).toContain("catalogEntries.map");
+    expect(route).toContain("catalogEntries.find");
     expect(route).toContain("notFound()");
     expect(route).toContain("workflow.installCommand");
     expect(route).toContain("WorkflowAvatar");
@@ -360,7 +483,7 @@ describe("landing app source contract", () => {
 
     expect(landingPage).toContain("const heroInstallCommand =");
     expect(landingPage).toContain("copyText={heroInstallCommand}");
-    expect(landingPage).toContain('copyLabel="Copy startup-goal install command"');
+    expect(landingPage).toContain('copyLabel="Copy startup-team install command"');
     expect(landingPage).toContain("copiedCommandIndex");
     expect(landingPage).toContain("navigator.clipboard.writeText(command.command)");
     expect(landingPage).toContain("aria-label={`Copy command:");
@@ -434,7 +557,7 @@ describe("landing app source contract", () => {
     expect(demo).toContain('aria-live="polite"');
     expect(demo).toContain("aria-pressed={isSelected}");
     expect(demo).toContain(
-      "https://github.com/devos-ing/omni-skills/blob/main/examples/workflows/startup-goal/skills",
+      "https://github.com/devos-ing/omni-skills/blob/main/examples/teams/startup-team/skills",
     );
     expect(demo).toContain('target="_blank"');
     expect(demo).toContain('rel="noreferrer"');
@@ -464,14 +587,14 @@ describe("landing app source contract", () => {
     expect(page).toContain("[ok] QA");
 
     const demoIndex = page.indexOf("<WorkflowRunDemo");
-    const workflowsIndex = page.indexOf('id="workflows"');
+    const teamIndex = page.indexOf("<FeaturedTeamSection");
 
     expect(page).toContain("import { WorkflowRunDemo }");
     expect(page).not.toContain("import { FlowDiagram }");
     expect(page).not.toContain("workflowRun");
     expect(demoIndex).toBeGreaterThan(-1);
-    expect(workflowsIndex).toBeGreaterThan(-1);
-    expect(demoIndex).toBeLessThan(workflowsIndex);
+    expect(teamIndex).toBeGreaterThan(-1);
+    expect(demoIndex).toBeLessThan(teamIndex);
   });
 
   test("documents supported agents without a hero chip row", () => {

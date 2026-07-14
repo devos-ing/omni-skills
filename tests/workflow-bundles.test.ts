@@ -10,12 +10,14 @@ import {
   createWorkflowRemovalPlan,
   executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
+  getWorkflowInvocationSkillName,
   getWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallSources,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
   loadWorkflowLockFile,
+  WorkflowBundleManifestSchema,
   type WorkflowGitCommand,
   type WorkflowInstallSkillArtifact,
   workflowLockFileName,
@@ -47,18 +49,60 @@ const startupRoleContracts = [
 
 const readStartupRoleSkill = (role: string) =>
   readFile(
-    join(
-      import.meta.dir,
-      "..",
-      "examples",
-      "workflows",
-      "startup-goal",
-      "skills",
-      role,
-      "SKILL.md",
-    ),
+    join(import.meta.dir, "..", "examples", "teams", "startup-team", "skills", role, "SKILL.md"),
     "utf8",
   );
+
+const validTeamManifest = {
+  schemaVersion: "0.1",
+  kind: "team",
+  name: "test-team",
+  version: "0.1.0",
+  description: "A test team with one coordinator and one member.",
+  coordinator: "./skills/coordinator",
+  members: ["./skills/member"],
+  skills: [
+    { source: "./skills/coordinator", entry: true },
+    { source: "./skills/member" },
+    { source: "external-review" },
+  ],
+  steps: [
+    { id: "route", title: "Route work", skill: "./skills/coordinator" },
+    { id: "review", title: "Review work", skill: "./skills/member" },
+  ],
+} as const;
+
+async function writeTeamBundleFixtureAt(bundleDir: string, kind: "team" | "workflow" = "team") {
+  await mkdir(join(bundleDir, "skills", "coordinator"), { recursive: true });
+  await mkdir(join(bundleDir, "skills", "member"), { recursive: true });
+  await writeFile(
+    join(bundleDir, "skills", "coordinator", "SKILL.md"),
+    '---\nname: coordinator\ndescription: "Coordinate the team."\n---\n',
+  );
+  await writeFile(
+    join(bundleDir, "skills", "member", "SKILL.md"),
+    '---\nname: member\ndescription: "Act as a team member."\n---\n',
+  );
+  await writeFile(
+    join(bundleDir, "workflow.json"),
+    `${JSON.stringify(
+      {
+        schemaVersion: "0.1",
+        kind,
+        name: "fixture-team",
+        version: "0.1.0",
+        description: "Team alias fixture.",
+        ...(kind === "team"
+          ? { coordinator: "./skills/coordinator", members: ["./skills/member"] }
+          : {}),
+        skills: [{ source: "./skills/coordinator", entry: true }, { source: "./skills/member" }],
+        steps: [{ id: "route", title: "Route", skill: "./skills/coordinator" }],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
 
 describe("workflow bundles", () => {
   test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
@@ -75,6 +119,74 @@ describe("workflow bundles", () => {
     await expect(loadWorkflowBundle("product_dev")).rejects.toThrow(
       "Unsupported Omniskills source: product_dev",
     );
+  });
+
+  test("parses first-class team metadata while legacy manifests remain workflows", () => {
+    const team = WorkflowBundleManifestSchema.parse(validTeamManifest);
+    const legacy = WorkflowBundleManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "legacy-workflow",
+      version: "0.1.0",
+      description: "A legacy workflow without an explicit kind.",
+      skills: [{ source: "skill-a" }],
+      steps: [{ id: "run", title: "Run", skill: "skill-a" }],
+    });
+
+    expect(team.kind).toBe("team");
+    expect(team.coordinator).toBe("./skills/coordinator");
+    expect(team.members).toEqual(["./skills/member"]);
+    expect(legacy.kind).toBeUndefined();
+    expect(getWorkflowInvocationSkillName(team)).toBe("coordinator");
+    expect(getWorkflowInvocationSkillName(legacy)).toBeNull();
+  });
+
+  test("rejects invalid team coordinator and member contracts", () => {
+    const invalidCases = [
+      {
+        manifest: { ...validTeamManifest, coordinator: undefined },
+        message: "Team manifests must declare a coordinator",
+      },
+      {
+        manifest: { ...validTeamManifest, members: [] },
+        message: "Team manifests must declare at least one member",
+      },
+      {
+        manifest: { ...validTeamManifest, coordinator: "./skills/missing" },
+        message: "Team coordinator references unknown skill: ./skills/missing",
+      },
+      {
+        manifest: { ...validTeamManifest, coordinator: "external-review" },
+        message: "Team coordinator must be a local skill path: external-review",
+      },
+      {
+        manifest: { ...validTeamManifest, members: ["./skills/missing"] },
+        message: "Team member references unknown skill: ./skills/missing",
+      },
+      {
+        manifest: { ...validTeamManifest, members: ["external-review"] },
+        message: "Team member must be a local skill path: external-review",
+      },
+      {
+        manifest: { ...validTeamManifest, members: ["./skills/member", "./skills/member"] },
+        message: "Duplicate team member: ./skills/member",
+      },
+      {
+        manifest: { ...validTeamManifest, members: ["./skills/coordinator"] },
+        message: "Team coordinator cannot also be a member: ./skills/coordinator",
+      },
+    ];
+
+    for (const invalidCase of invalidCases) {
+      expect(() => WorkflowBundleManifestSchema.parse(invalidCase.manifest)).toThrow(
+        invalidCase.message,
+      );
+    }
+  });
+
+  test("rejects team-only metadata on workflow manifests", () => {
+    expect(() =>
+      WorkflowBundleManifestSchema.parse({ ...validTeamManifest, kind: "workflow" }),
+    ).toThrow("Workflow manifests cannot declare coordinator or members");
   });
 
   test("rejects duplicate workflow step ids", async () => {
@@ -254,7 +366,6 @@ describe("workflow bundles", () => {
       "founding-engineer",
       "qa-lead",
       "web-design",
-      "startup-goal",
       "haaland",
     ];
 
@@ -270,6 +381,16 @@ describe("workflow bundles", () => {
       );
       expect(bundle.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
     }
+
+    const startupTeam = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
+    );
+    expect(startupTeam.manifest.name).toBe("startup-team");
+    expect(startupTeam.lock?.workflow).toBe("startup-team");
+    expect(startupTeam.lock?.skills.map((skill) => skill.source)).toEqual(
+      startupTeam.manifest.skills.map((skill) => skill.source),
+    );
+    expect(startupTeam.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
   });
 
   test("pins every Matt Pocock example dependency to the v1.1.0 catalog", async () => {
@@ -284,7 +405,6 @@ describe("workflow bundles", () => {
       "product-manager",
       "qa-lead",
       "real-engineering",
-      "startup-goal",
     ] as const;
     const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
     const retiredMattPocockSources = [
@@ -312,6 +432,21 @@ describe("workflow bundles", () => {
       for (const source of stepSources) {
         expect(retiredMattPocockSources).not.toContain(source);
       }
+    }
+
+    const startupTeam = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
+    );
+    const startupTeamMattPocockSkills = startupTeam.manifest.skills.filter((skill) =>
+      skill.source.startsWith("mattpocock:"),
+    );
+    expect(startupTeamMattPocockSkills).not.toHaveLength(0);
+    for (const skill of startupTeamMattPocockSkills) {
+      expect(skill.repo).toBe(mattPocockV1_1Repo);
+      expect(retiredMattPocockSources).not.toContain(skill.source);
+    }
+    for (const source of startupTeam.manifest.steps.map((step) => step.skill)) {
+      expect(retiredMattPocockSources).not.toContain(source);
     }
 
     const developmentDesignDelivery = await loadWorkflowBundle(
@@ -351,23 +486,44 @@ describe("workflow bundles", () => {
     expect(skill).toContain("If a companion skill is unavailable");
   });
 
-  test("startup goal entry skill dispatches role subagents and combines results", async () => {
+  test("startup team entry skill dispatches role subagents and combines results", async () => {
     const bundle = await loadWorkflowBundle(
-      join(import.meta.dir, "..", "examples", "workflows", "startup-goal"),
+      join(import.meta.dir, "..", "examples", "teams", "startup-team"),
     );
     const skill = await readFile(
       join(
         import.meta.dir,
         "..",
         "examples",
-        "workflows",
-        "startup-goal",
+        "teams",
+        "startup-team",
         "skills",
         "startup-goal",
         "SKILL.md",
       ),
       "utf8",
     );
+
+    expect(bundle.manifest).toMatchObject({
+      kind: "team",
+      name: "startup-team",
+      version: "0.2.0",
+      coordinator: "./skills/startup-goal",
+      members: [
+        "./skills/ceo",
+        "./skills/cto",
+        "./skills/product-manager",
+        "./skills/web-design",
+        "./skills/engineering-manager",
+        "./skills/founding-engineer",
+        "./skills/qa-lead",
+      ],
+    });
+    expect(
+      bundle.manifest.skills.find((candidate) => candidate.source === bundle.manifest.coordinator),
+    ).toEqual({ source: "./skills/startup-goal", entry: true });
+    expect(bundle.lock?.workflow).toBe("startup-team");
+    expect(bundle.lock?.workflowVersion).toBe("0.2.0");
 
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["requirements", "superpowers:brainstorming", "human_approval"],
@@ -378,7 +534,7 @@ describe("workflow bundles", () => {
       ["technology", "./skills/cto", null],
       ["delivery", "./skills/engineering-manager", null],
       ["implementation", "./skills/founding-engineer", null],
-      ["implement", "implement", null],
+      ["implement", "mattpocock:implement", null],
       ["qa", "./skills/qa-lead", null],
     ]);
     expect(bundle.manifest.steps[0]?.instruction).toContain(
@@ -391,8 +547,13 @@ describe("workflow bundles", () => {
         { source: "emilkowalski:animation-vocabulary", repo: "emilkowalski/skills" },
         { source: "emilkowalski:apple-design", repo: "emilkowalski/skills" },
         { source: "emilkowalski:review-animations", repo: "emilkowalski/skills" },
+        {
+          source: "mattpocock:implement",
+          repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+        },
       ]),
     );
+    expect(bundle.manifest.skills).not.toContainEqual({ source: "implement" });
     expect(skill).toContain("name: startup-goal");
     for (const heading of [
       "## 1. Clarify",
@@ -430,7 +591,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("startup goal bundled role skills define role-specific operating modes", async () => {
+  test("startup team bundled role skills define role-specific operating modes", async () => {
     for (const contract of startupRoleContracts) {
       const skill = await readStartupRoleSkill(contract.role);
 
@@ -444,7 +605,7 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("startup goal separates implementation framing from execution", async () => {
+  test("startup team separates implementation framing from execution", async () => {
     const skill = await readStartupRoleSkill("founding-engineer");
 
     for (const phrase of [
@@ -1383,6 +1544,90 @@ describe("workflow bundles", () => {
 
     await bundle.cleanup?.();
     await expect(stat(checkoutDir)).rejects.toThrow();
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("resolves team aliases from examples/teams and retains team metadata", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-team-alias-"));
+    const installRoot = await mkdtemp(join(tmpdir(), "workflow-team-install-"));
+    let checkoutDir = "";
+
+    const bundle = await loadWorkflowBundle("startup-team", {
+      tempDir,
+      runGitCommand: async (command) => {
+        if (command.args[0] === "clone") {
+          checkoutDir = command.args.at(-1) ?? "";
+          await writeTeamBundleFixtureAt(join(checkoutDir, "examples", "teams", "startup-team"));
+          return { stdout: "", stderr: "", exitCode: 0 };
+        }
+        return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+      },
+    });
+
+    expect(bundle.manifest.kind).toBe("team");
+    expect(bundle.manifest.coordinator).toBe("./skills/coordinator");
+    expect(bundle.manifest.members).toEqual(["./skills/member"]);
+    expect(bundle.source).toEqual({
+      kind: "git",
+      url: "https://github.com/devos-ing/omni-skills.git#examples/teams/startup-team",
+      commit: "abc123",
+      subdirectory: "examples/teams/startup-team",
+    });
+
+    const install = await installWorkflowBundle({ rootDir: installRoot, bundle });
+    expect(install.workflow.kind).toBe("team");
+    expect(install.workflow.coordinator).toBe("./skills/coordinator");
+    expect(install.workflow.members).toEqual(["./skills/member"]);
+
+    await bundle.cleanup?.();
+    await expect(stat(checkoutDir)).rejects.toThrow();
+    await rm(installRoot, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("rejects a workflow manifest resolved through a team alias", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-team-kind-mismatch-"));
+
+    await expect(
+      loadWorkflowBundle("startup-team", {
+        tempDir,
+        runGitCommand: async (command) => {
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await writeTeamBundleFixtureAt(
+              join(checkoutDir, "examples", "teams", "startup-team"),
+              "workflow",
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      }),
+    ).rejects.toThrow('Omniskills team alias "startup-team" must resolve to kind: "team"');
+
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  test("does not redirect the startup-goal alias to startup-team", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "workflow-startup-goal-alias-"));
+
+    await expect(
+      loadWorkflowBundle("startup-goal", {
+        tempDir,
+        runGitCommand: async (command) => {
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await mkdir(join(checkoutDir, "examples", "workflows"), { recursive: true });
+            await writeTeamBundleFixtureAt(join(checkoutDir, "examples", "teams", "startup-team"));
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      }),
+    ).rejects.toThrow(
+      "Omniskills workflow alias not found: startup-goal\nChecked: https://github.com/devos-ing/omni-skills.git#examples/workflows/startup-goal",
+    );
+
     await rm(tempDir, { recursive: true, force: true });
   });
 

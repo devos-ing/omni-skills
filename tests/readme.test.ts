@@ -25,7 +25,7 @@ describe("README source contract", () => {
     expect(firstScreen).toContain("many-skill bank");
     expect(firstScreen).toContain("one entry skill");
     expect(firstScreen).toContain("3x your ability");
-    expect(firstScreen).toContain("Startup Goal");
+    expect(firstScreen).toContain("Startup Team");
     expect(firstScreen).toContain("CEO");
     expect(firstScreen).toContain("CTO");
     expect(firstScreen).toContain("Product Manager");
@@ -36,10 +36,9 @@ describe("README source contract", () => {
     expect(firstScreen).not.toContain("assets/diagrams/omniskill-install-sequence.svg");
   });
 
-  test("documents startup-goal and individual startup role commands", () => {
+  test("documents startup-team and its startup-goal coordinator", () => {
     const readme = readReadme();
     const roleAliases = [
-      "startup-goal",
       "ceo",
       "cto",
       "product-manager",
@@ -52,13 +51,16 @@ describe("README source contract", () => {
       expect(readme).toContain(`npx omniskill@latest install ${alias}`);
     }
 
+    expect(readme).toContain("npx omniskill@latest install startup-team");
     expect(readme).toContain(
       "$startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
     );
     expect(readme).toContain(
-      "npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/workflows/startup-goal'",
+      "npx omniskill@latest install 'https://github.com/devos-ing/omni-skills.git#examples/teams/startup-team'",
     );
-    expect(readme).not.toContain("npx omniskill@latest install startup-team");
+    expect(readme).toContain("examples/teams/startup-team");
+    expect(readme).not.toContain("npx omniskill@latest install startup-goal");
+    expect(readme).not.toContain("examples/workflows/startup-goal");
     expect(readme).not.toContain(
       "$startup-team help me launch this product from idea to shipped v1",
     );
@@ -85,6 +87,39 @@ describe("README source contract", () => {
     expect(readme).not.toMatch(
       /fully autonomous|uncontrolled shell|runs shell commands by itself/i,
     );
+  });
+
+  test("keeps authoritative repository guidance aligned with first-class teams", () => {
+    const agents = readRepoFile("AGENTS.md");
+    const architecture = readRepoFile("docs/architecture.md");
+
+    expect(agents).toContain("examples/teams/startup-team");
+    expect(agents).toContain('kind: "team"');
+    expect(agents).toContain("`coordinator`");
+    expect(agents).toContain("`members`");
+    expect(agents).not.toContain("examples/workflows/startup-goal");
+    expect(agents).not.toContain("remove startup-goal --dry-run");
+
+    expect(architecture).toContain('kind: "team"');
+    expect(architecture).toContain("`coordinator`");
+    expect(architecture).toContain("`members`");
+    expect(architecture).toContain("examples/teams/<name>");
+    expect(architecture).toContain("startup-goal remains the callable coordinator");
+    expect(architecture).toMatch(
+      /For `startup-team`, the coordinator is marked as the callable\s+entry skill/,
+    );
+    expect(architecture).not.toContain("the coordinator must also be the callable entry skill");
+  });
+
+  test("records the clean-install amendment to the approved startup-team plan", () => {
+    const design = readRepoFile("docs/superpowers/specs/2026-07-14-startup-team-design.md");
+    const plan = readRepoFile("docs/superpowers/plans/2026-07-14-startup-team.md");
+
+    for (const document of [design, plan]) {
+      expect(document).toContain("Clean-install amendment");
+      expect(document).toContain("mattpocock:implement");
+      expect(document).toContain("clean home");
+    }
   });
 
   test("names the built-in skill ecosystem", () => {
@@ -120,7 +155,7 @@ describe("README source contract", () => {
     expect(readme).toContain("[English](README.md)");
     expect(readme).toContain("繁體中文");
     expect(readme).toContain("Power your ability.");
-    expect(readme).toContain("npx omniskill@latest install startup-goal");
+    expect(readme).toContain("npx omniskill@latest install startup-team");
     expect(readme).toContain("npx omniskill@latest install ceo");
     expect(readme).toContain("npx omniskill@latest install qa-lead");
     expect(readme).toContain(
@@ -129,7 +164,8 @@ describe("README source contract", () => {
     expect(readme).toContain("npx omniskill@latest loop start grilled-product-dev --json");
     expect(readme).toContain("workflow.json");
     expect(readme).toContain("$creating-bundle-skills");
-    expect(readme).toContain("examples/workflows/startup-goal");
+    expect(readme).toContain("examples/teams/startup-team");
+    expect(readme).not.toContain("npx omniskill@latest install startup-goal");
     expect(readme).toContain("omniskill");
   });
 });

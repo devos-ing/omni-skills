@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowRight, Check, Copy, Github, Search, X, Zap } from "lucide-react";
+import { ArrowRight, Check, Copy, Github, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { commands, githubUrl, workflows } from "../lib/landing-content";
+import { commands, githubUrl, startupTeam, workflows } from "../lib/landing-content";
+import { skillHubEntries } from "../lib/skill-hub";
+import { FeaturedTeamSection } from "./featured-team-section";
 import { Reveal } from "./reveal";
+import { type HubTab, SkillHub } from "./skill-hub";
 import { TerminalBlock } from "./terminal-block";
-import { WorkflowCard } from "./workflow-card";
 import { WorkflowRunDemo } from "./workflow-run-demo";
 
 interface LandingPageProps {
@@ -14,6 +16,7 @@ interface LandingPageProps {
 
 export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   const [activeCommand, setActiveCommand] = useState(0);
+  const [activeHubTab, setActiveHubTab] = useState<HubTab>("workflows");
   const [copiedCommandIndex, setCopiedCommandIndex] = useState<number | null>(null);
   const [query, setQuery] = useState("");
 
@@ -36,8 +39,22 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
     });
   }, [query]);
 
+  const filteredSkills = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return skillHubEntries;
+
+    return skillHubEntries.filter((skill) => {
+      return (
+        skill.name.toLowerCase().includes(needle) ||
+        skill.description.toLowerCase().includes(needle) ||
+        skill.provider.toLowerCase().includes(needle) ||
+        skill.usedBy.some(({ name }) => name.toLowerCase().includes(needle))
+      );
+    });
+  }, [query]);
+
   const active = commands[activeCommand] ?? commands[0];
-  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-goal";
+  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-team";
 
   function copyCommand(command: (typeof commands)[number], index: number) {
     setActiveCommand(index);
@@ -59,7 +76,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </a>
         <div className="flex items-center gap-4 text-sm text-[var(--body)] sm:gap-6">
           <a href="#workflows" className="transition-colors hover:text-[var(--ink)]">
-            Workflows
+            Teams &amp; skills
           </a>
           <a href="#install" className="transition-colors hover:text-[var(--ink)]">
             Install
@@ -98,14 +115,14 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
             <TerminalBlock
               compact
               copyText={heroInstallCommand}
-              copyLabel="Copy startup-goal install command"
+              copyLabel="Copy startup-team install command"
               lines={[{ prefix: "$", text: heroInstallCommand }]}
             />
             <a
               href="#workflows"
               className="editorial-control inline-flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white hover:bg-[var(--accent-pressed)]"
             >
-              Browse workflows
+              {"Explore teams & skills"}
               <ArrowRight size={14} />
             </a>
           </div>
@@ -130,69 +147,15 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         <WorkflowRunDemo />
       </section>
 
-      <section
-        id="workflows"
-        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
-      >
-        <div className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-              Workflow Registry
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)] sm:text-4xl">
-              Pick an Omniskills workflow
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--body)]">
-              Browse installable workflow bundles, then open a detail route for the role map, skill
-              tree, and copyable install command.
-            </p>
-          </div>
-          <div className="relative">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]"
-            />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search workflows, skills, tags..."
-              className="w-full rounded-md border border-[var(--rule)] bg-white py-3 pl-9 pr-9 text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
-            />
-            {query ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label="Clear workflow search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
-              >
-                <X size={14} />
-              </button>
-            ) : null}
-          </div>
-        </div>
-        <div className="border-t border-[var(--rule)]">
-          {filteredWorkflows.map((workflow, index) => (
-            <Reveal key={workflow.slug} className="motion-registry-row" index={Math.min(index, 5)}>
-              <WorkflowCard {...workflow} />
-            </Reveal>
-          ))}
-          {filteredWorkflows.length === 0 ? (
-            <div className="border-b border-[var(--rule)] px-5 py-14 text-center text-[var(--body)]">
-              <Search size={26} className="mx-auto mb-3 text-[var(--faint)]" />
-              <p className="text-sm">
-                No workflows match <span className="font-medium text-[var(--ink)]">"{query}"</span>
-              </p>
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="editorial-control mt-3 text-sm font-medium text-[var(--accent-pressed)]"
-              >
-                Clear search
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </section>
+      <FeaturedTeamSection team={startupTeam} />
+      <SkillHub
+        activeTab={activeHubTab}
+        query={query}
+        workflows={filteredWorkflows}
+        skills={filteredSkills}
+        onTabChange={setActiveHubTab}
+        onQueryChange={setQuery}
+      />
 
       <section
         id="install"

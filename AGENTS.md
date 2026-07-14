@@ -11,7 +11,7 @@ This file gives AI agents the short operating map for this repository.
 ### Architecture
 
 Bun + TypeScript CLI runtime for authoring, installing, and validating
-Omniskills workflow bundles.
+Omniskills workflow and team bundles.
 
 - `src/cli.ts` - thin Commander CLI shell.
 - `src/omniskill.ts` - primary Omniskills command module.
@@ -51,15 +51,17 @@ Author or user request
 
 ## Omniskills Rules
 
-- An Omniskills workflow is a deployable bundle skills set with a `workflow.json`,
-  optional `workflow.lock.json`, README, and optional local skills.
-- Role workflows such as `startup-goal`, `cto`, `product-manager`, and
-  `founding-engineer` are the primary public examples. Older workflows remain
-  compatibility/demo examples for now.
+- An Omniskills bundle is a deployable skills set with a `workflow.json`,
+  optional `workflow.lock.json`, README, and optional local skills. Omitted
+  `kind` means workflow; first-class teams declare `kind: "team"` plus a local
+  declared `coordinator` and unique local declared `members`.
+- `startup-team` under `examples/teams/startup-team` is the primary public team.
+  Role workflows such as `cto`, `product-manager`, and `founding-engineer`
+  remain independently installable public examples.
 - If a workflow provides one callable entry skill, that skill must be listed in
   `skills[]`; it does not need a workflow step.
 - Every `steps[].skill` value must exactly match a declared `skills[].source`.
-- `omniskill install` is the only public workflow install command.
+- `omniskill install` is the only public workflow or team install command.
 - The older `bundle` and `workflow` command surfaces exist only as
   compatibility aliases.
 - Pony Trail history, revert, and prehook features are paused. Do not expose or
@@ -70,10 +72,10 @@ Author or user request
 ```bash
 bun install                 # Install dependencies
 bun run dev -- --help       # Show CLI commands
-bun run dev -- install examples/workflows/startup-goal
-bun run dev -- deps examples/workflows/startup-goal
+bun run dev -- install examples/teams/startup-team
+bun run dev -- deps examples/teams/startup-team
 bun run dev -- list
-bun run dev -- remove startup-goal --dry-run
+bun run dev -- remove startup-team --dry-run
 bun run dev -- loop status examples/workflows/grilled-product-dev --latest --json
 bun run dev -- init my-workflow
 bun run dev -- lock examples/workflows/cto
@@ -125,6 +127,6 @@ For CLI changes, also run a smoke check against a scratch directory under
 
 ```bash
 rtk bun run dev -- --help
-rtk bun run dev -- deps examples/workflows/startup-goal
-rtk bun run dev -- validate examples/workflows/startup-goal
+rtk bun run dev -- deps examples/teams/startup-team
+rtk bun run dev -- validate examples/teams/startup-team
 ```

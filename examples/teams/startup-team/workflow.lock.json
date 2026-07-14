@@ -1,8 +1,8 @@
 {
   "schemaVersion": "0.1",
-  "workflow": "startup-goal",
-  "workflowVersion": "0.1.5",
-  "generatedAt": "2026-07-13T11:02:38.419Z",
+  "workflow": "startup-team",
+  "workflowVersion": "0.2.0",
+  "generatedAt": "2026-07-13T18:02:25.039Z",
   "skills": [
     {
       "source": "./skills/startup-goal",
@@ -165,10 +165,11 @@
       "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
     },
     {
-      "source": "implement",
+      "source": "mattpocock:implement",
       "resolvedName": "implement",
       "kind": "external",
-      "hash": "sha256:16f51d5ecc0b385c98451eb9da8edc19bf16bd27d7c65321abdd26592b1df311"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:1ad478cef4ccf1cde4cfff91cd551cb781e21da4e6d4940ef4df64c209db35cc"
     }
   ]
 }

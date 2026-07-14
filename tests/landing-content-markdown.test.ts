@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { agents, commands, githubUrl, howItWorks, workflows } from "../landing/lib/landing-content";
+import {
+  agents,
+  commands,
+  githubUrl,
+  howItWorks,
+  startupTeam,
+  workflows,
+} from "../landing/lib/landing-content";
 
 const repoRoot = join(import.meta.dir, "..");
 
@@ -33,6 +40,13 @@ describe("landing content markdown mirrors", () => {
     for (const item of howItWorks) {
       expectIncludes(markdown, item.title);
       expectIncludes(markdown, item.body);
+    }
+
+    expectIncludes(markdown, startupTeam.description);
+    expectIncludes(markdown, startupTeam.coordinator.description);
+    for (const member of startupTeam.members) {
+      expectIncludes(markdown, member.name);
+      expectIncludes(markdown, member.description);
     }
 
     for (const command of commands) {
@@ -80,6 +94,13 @@ describe("landing content markdown mirrors", () => {
 
     for (const command of commands) {
       expectIncludes(markdown, command.command);
+    }
+
+    expectIncludes(markdown, startupTeam.description);
+    expectIncludes(markdown, startupTeam.coordinator.description);
+    for (const member of startupTeam.members) {
+      expectIncludes(markdown, member.name);
+      expectIncludes(markdown, member.description);
     }
 
     for (const workflow of workflows) {
