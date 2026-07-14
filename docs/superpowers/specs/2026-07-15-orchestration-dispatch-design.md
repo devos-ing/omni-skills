@@ -178,7 +178,9 @@ receipt write, profile write, or workflow mutation.
 1. Load the installed root workflow record.
 2. Find exactly one recorded `agent_profile` artifact matching the requested
    role/support source, runtime, and primary candidate.
-3. Re-read the profile and verify the managed marker and recorded content hash.
+3. Require the recorded path to stay under the expected runtime agent directory
+   in `homeDir`, then re-read the profile and verify the managed marker and
+   recorded content hash.
 4. Verify the selected source and profile are present in the root install
    record; dispatch does not re-resolve mutable remote workflow metadata.
 5. Require `--approve-workspace-write` before a recorded workspace-write
@@ -235,12 +237,18 @@ coordinator records one disposition:
 ```bash
 omniskill dispatch resume <run-id> \
   --decision continue|retry|reassign|escalate-to-human \
+  [--role <replacement-source>] \
   --message <text>
 ```
 
 Resume validates the original profile hash, consultation count, approval state,
-and runtime session identity. Repeated consultation without new evidence is
-rejected. The existing limit of two consultations remains authoritative.
+and runtime session identity. `--role` is required only for `reassign`; it must
+resolve to another declared managed role in the same installed workflow. The
+new role receives the original task plus the decision message as its prior
+handoff, starts a new child session under the same run ID, and increments the
+reassignment count. Reassignment stops at `reassignmentPerWorkItem`. Repeated
+consultation without new evidence is rejected. The existing limit of two
+consultations remains authoritative.
 
 ## State and Auditability
 
@@ -265,6 +273,7 @@ Errors are typed and stable enough for tests and automation:
 - `workflow_not_installed`
 - `profile_not_found`
 - `profile_ambiguous`
+- `profile_path_invalid`
 - `profile_drifted`
 - `runtime_unavailable`
 - `runtime_upgrade_required`
