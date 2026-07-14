@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const rendererModulePath =
   "../examples/workflows/codex-input-preview/skills/codex-input-preview/scripts/render-preview.mjs";
-const { buildHtml, browserCandidates, parseArgs, readPngDimensions } = await import(
+const { buildHtml, browserCandidates, parseArgs, readPngDimensions, renderPreview } = await import(
   rendererModulePath
 );
 
@@ -116,5 +119,94 @@ describe("codex input preview renderer", () => {
     expect(() => readPngDimensions(Buffer.from("not png"))).toThrow(
       "Browser did not produce a valid PNG",
     );
+  });
+
+  test("renders a verified png and removes temporary artifacts", async () => {
+    const root = await mkdtemp(join(tmpdir(), "codex-preview-test-"));
+    const output = join(root, "preview.png");
+    try {
+      const result = await renderPreview(
+        { prompt: "Ship it", model: "GPT-5.6", effort: "high", output },
+        {
+          browserPath: "/fake/chrome",
+          tempRoot: root,
+          runBrowser: async (_browser: string, args: string[]) => {
+            const screenshot = args.find((arg) => arg.startsWith("--screenshot="));
+            if (screenshot) {
+              await writeFile(screenshot.slice("--screenshot=".length), pngHeader(1200, 675));
+              return { status: 0, stdout: "", stderr: "" };
+            }
+            return {
+              status: 0,
+              stdout: '<html data-preview-status="ok"></html>',
+              stderr: "",
+            };
+          },
+        },
+      );
+
+      expect(result).toEqual({ output, width: 1200, height: 675 });
+      expect(readPngDimensions(await readFile(output))).toEqual({ width: 1200, height: 675 });
+      expect(await readdir(root)).toEqual(["preview.png"]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("preserves an existing destination when the prompt overflows", async () => {
+    const root = await mkdtemp(join(tmpdir(), "codex-preview-test-"));
+    const output = join(root, "preview.png");
+    await writeFile(output, "existing preview");
+    try {
+      await expect(
+        renderPreview(
+          { prompt: "Too long", model: "GPT-5.6", effort: "high", output },
+          {
+            browserPath: "/fake/chrome",
+            tempRoot: root,
+            runBrowser: async () => ({
+              status: 0,
+              stdout: '<html data-preview-status="overflow"></html>',
+              stderr: "",
+            }),
+          },
+        ),
+      ).rejects.toThrow("Prompt exceeds four lines");
+      expect(await readFile(output, "utf8")).toBe("existing preview");
+      expect(await readdir(root)).toEqual(["preview.png"]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects incorrect dimensions and removes temporary artifacts", async () => {
+    const root = await mkdtemp(join(tmpdir(), "codex-preview-test-"));
+    const output = join(root, "preview.png");
+    try {
+      await expect(
+        renderPreview(
+          { prompt: "Ship it", model: "GPT-5.6", effort: "high", output },
+          {
+            browserPath: "/fake/chrome",
+            tempRoot: root,
+            runBrowser: async (_browser: string, args: string[]) => {
+              const screenshot = args.find((arg) => arg.startsWith("--screenshot="));
+              if (screenshot) {
+                await writeFile(screenshot.slice("--screenshot=".length), pngHeader(800, 600));
+                return { status: 0, stdout: "", stderr: "" };
+              }
+              return {
+                status: 0,
+                stdout: '<html data-preview-status="ok"></html>',
+                stderr: "",
+              };
+            },
+          },
+        ),
+      ).rejects.toThrow("Expected a 1200 x 675 PNG, received 800 x 600");
+      expect(await readdir(root)).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
+import { spawn } from "node:child_process";
 import { accessSync, constants, existsSync } from "node:fs";
-import { delimiter, extname, join } from "node:path";
+import { access, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, delimiter, dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const EFFORTS = new Set(["low", "medium", "high", "xhigh"]);
 const FLAGS = ["--prompt", "--model", "--effort", "--output"];
@@ -156,4 +160,128 @@ export function readPngDimensions(buffer) {
     width: buffer.readUInt32BE(16),
     height: buffer.readUInt32BE(20),
   };
+}
+
+const COMMON_BROWSER_ARGS = [
+  "--headless=new",
+  "--disable-background-networking",
+  "--disable-extensions",
+  "--disable-gpu",
+  "--force-device-scale-factor=1",
+  "--hide-scrollbars",
+  "--no-first-run",
+];
+
+function runBrowserProcess(browser, args) {
+  return new Promise((resolveRun, rejectRun) => {
+    const child = spawn(browser, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", rejectRun);
+    child.on("close", (status) => {
+      resolveRun({ status: status ?? 1, stdout, stderr });
+    });
+  });
+}
+
+async function pathExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function replaceDestination(capturePath, outputPath) {
+  const backupPath = `${outputPath}.${process.pid}.${Date.now()}.backup`;
+  const hasDestination = await pathExists(outputPath);
+  if (hasDestination) await rename(outputPath, backupPath);
+  try {
+    await rename(capturePath, outputPath);
+  } catch (error) {
+    if (hasDestination && (await pathExists(backupPath))) {
+      await rename(backupPath, outputPath);
+    }
+    throw error;
+  }
+  if (hasDestination) await rm(backupPath, { force: true });
+}
+
+function browserFailure(result, action) {
+  const detail = result.stderr.trim();
+  return new Error(
+    detail ? `Browser failed to ${action}: ${detail}` : `Browser failed to ${action}`,
+  );
+}
+
+export async function renderPreview(input, dependencies = {}) {
+  const output = resolve(input.output);
+  await access(dirname(output), constants.W_OK);
+
+  const browser = dependencies.browserPath ?? findBrowser();
+  const runBrowser = dependencies.runBrowser ?? runBrowserProcess;
+  const workDirectory = await mkdtemp(join(dependencies.tempRoot ?? tmpdir(), "codex-preview-"));
+  const htmlPath = join(workDirectory, "preview.html");
+  const capturePath = join(
+    dirname(output),
+    `.${basename(output)}.${process.pid}.${Date.now()}.tmp.png`,
+  );
+
+  try {
+    await writeFile(htmlPath, buildHtml(input), "utf8");
+    const pageUrl = pathToFileURL(htmlPath).href;
+    const browserArgs = [
+      ...COMMON_BROWSER_ARGS,
+      `--user-data-dir=${join(workDirectory, "browser-profile")}`,
+    ];
+    const fitResult = await runBrowser(browser, [...browserArgs, "--dump-dom", pageUrl]);
+    if (fitResult.status !== 0) throw browserFailure(fitResult, "measure the prompt");
+    if (fitResult.stdout.includes('data-preview-status="overflow"')) {
+      throw new Error("Prompt exceeds four lines. Shorten the prompt and try again.");
+    }
+    if (!fitResult.stdout.includes('data-preview-status="ok"')) {
+      throw new Error("Browser could not verify the prompt layout");
+    }
+
+    const captureResult = await runBrowser(browser, [
+      ...browserArgs,
+      "--window-size=1200,675",
+      `--screenshot=${capturePath}`,
+      pageUrl,
+    ]);
+    if (captureResult.status !== 0) throw browserFailure(captureResult, "capture the preview");
+
+    const dimensions = readPngDimensions(await readFile(capturePath));
+    if (dimensions.width !== 1200 || dimensions.height !== 675) {
+      throw new Error(
+        `Expected a 1200 x 675 PNG, received ${dimensions.width} x ${dimensions.height}`,
+      );
+    }
+    await replaceDestination(capturePath, output);
+    return { output, ...dimensions };
+  } finally {
+    await rm(capturePath, { force: true });
+    await rm(workDirectory, { recursive: true, force: true });
+  }
+}
+
+const invokedPath = process.argv[1] ? resolve(process.argv[1]) : "";
+if (invokedPath === resolve(fileURLToPath(import.meta.url))) {
+  try {
+    const input = parseArgs(process.argv.slice(2));
+    const result = await renderPreview(input);
+    process.stdout.write(`${JSON.stringify(result)}\n`);
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  }
 }
