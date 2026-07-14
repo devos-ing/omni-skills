@@ -63,15 +63,15 @@ const validTeamManifest = {
   version: "0.1.0",
   description: "A test team with one coordinator and one member.",
   coordinator: "./skills/coordinator",
-  members: ["./skills/member"],
+  members: ["catalog:member-workflow"],
   skills: [
     { source: "./skills/coordinator", entry: true },
-    { source: "./skills/member" },
+    { source: "catalog:member-workflow" },
     { source: "external-review" },
   ],
   steps: [
     { id: "route", title: "Route work", skill: "./skills/coordinator" },
-    { id: "review", title: "Review work", skill: "./skills/member" },
+    { id: "review", title: "Review work", skill: "catalog:member-workflow" },
   ],
 } as const;
 
@@ -107,12 +107,250 @@ async function writeTeamBundleFixtureAt(bundleDir: string, kind: "team" | "workf
   );
 }
 
+async function writeTeamWithMemberFixture(input: {
+  rootDir: string;
+  memberSource: string;
+  childSkills?: Array<{ source: string; entry?: boolean }>;
+}): Promise<{ teamDir: string; childDir: string }> {
+  const teamDir = join(input.rootDir, "team");
+  const childDir = join(input.rootDir, "child");
+  const childSkills = input.childSkills ?? [{ source: "./skills/member", entry: true }];
+  await mkdir(join(teamDir, "skills", "coordinator"), { recursive: true });
+  await mkdir(childDir, { recursive: true });
+  await writeFile(join(teamDir, "skills", "coordinator", "SKILL.md"), "# coordinator\n");
+  for (const skill of childSkills) {
+    if (skill.source.startsWith("./skills/")) {
+      await mkdir(join(childDir, skill.source), { recursive: true });
+      await writeFile(join(childDir, skill.source, "SKILL.md"), `# ${skill.source}\n`);
+    }
+  }
+  await writeFile(
+    join(childDir, "workflow.json"),
+    JSON.stringify({
+      schemaVersion: "0.1",
+      name: "member-workflow",
+      version: "1.0.0",
+      description: "Canonical member workflow.",
+      skills: childSkills,
+      steps: [{ id: "member", title: "Member", skill: childSkills[0]?.source }],
+    }),
+  );
+  await writeFile(
+    join(teamDir, "workflow.json"),
+    JSON.stringify({
+      schemaVersion: "0.1",
+      kind: "team",
+      name: "test-team",
+      version: "1.0.0",
+      description: "Team with one canonical member workflow.",
+      coordinator: "./skills/coordinator",
+      members: [input.memberSource],
+      skills: [{ source: "./skills/coordinator", entry: true }, { source: input.memberSource }],
+      steps: [
+        { id: "coordinate", title: "Coordinate", skill: "./skills/coordinator" },
+        { id: "member", title: "Member", skill: input.memberSource },
+      ],
+    }),
+  );
+  return { teamDir, childDir };
+}
+
 describe("workflow bundles", () => {
   test("exports workflow bundle helpers from the Omniskills runtime namespace", async () => {
     const runtime = await import("../src/runtimes/omniskill/workflow-bundles");
 
     expect(typeof runtime.loadWorkflowBundle).toBe("function");
     expect(typeof runtime.getPreparedWorkflowSkillInstallDependencies).toBe("function");
+  });
+
+  test("rejects a copied local skill as a team member", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "team-local-member-"));
+    try {
+      const { teamDir } = await writeTeamWithMemberFixture({
+        rootDir,
+        memberSource: "./skills/copied-member",
+      });
+      await mkdir(join(teamDir, "skills", "copied-member"), { recursive: true });
+      await writeFile(join(teamDir, "skills", "copied-member", "SKILL.md"), "# copied\n");
+
+      await expect(
+        resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(teamDir) }),
+      ).rejects.toThrow(
+        "Team member must reference a child workflow with exactly one local entry skill: ./skills/copied-member",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves a team member to one canonical child workflow entry skill", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "team-member-workflow-"));
+    try {
+      const { teamDir } = await writeTeamWithMemberFixture({
+        rootDir,
+        memberSource: "../child",
+      });
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(teamDir),
+      });
+
+      expect(graph.workflows.map(({ name }) => name)).toEqual(["test-team", "member-workflow"]);
+      expect(graph.edges).toEqual([
+        { from: "workflow:test-team@1.0.0", to: "workflow:member-workflow@1.0.0" },
+      ]);
+      expect(graph.dependencies.map(({ source }) => source)).toEqual([
+        join(teamDir, "skills", "coordinator"),
+        join(rootDir, "child", "skills", "member"),
+      ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects team member workflows without one local entry skill", async () => {
+    const cases = [
+      {
+        label: "zero entries",
+        childSkills: [{ source: "./skills/member" }],
+        message:
+          "Team member must reference a child workflow with exactly one local entry skill: ../child",
+      },
+      {
+        label: "non-local entry",
+        childSkills: [{ source: "external-member", entry: true }],
+        message:
+          "Team member must reference a child workflow with exactly one local entry skill: ../child",
+      },
+      {
+        label: "multiple entries",
+        childSkills: [
+          { source: "./skills/member", entry: true },
+          { source: "./skills/other", entry: true },
+        ],
+        message:
+          /Failed to resolve team member \.\.\/child:[\s\S]*Only one workflow skill can be marked as entry/,
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const rootDir = await mkdtemp(join(tmpdir(), `team-member-${testCase.label}-`));
+      try {
+        const { teamDir } = await writeTeamWithMemberFixture({
+          rootDir,
+          memberSource: "../child",
+          childSkills: [...testCase.childSkills],
+        });
+        await expect(
+          resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(teamDir) }),
+        ).rejects.toThrow(testCase.message);
+      } finally {
+        await rm(rootDir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("rejects duplicate resolved team workflows and entry skill names", async () => {
+    const cases = [
+      {
+        label: "workflow",
+        firstName: "shared-member",
+        secondName: "shared-member",
+        firstEntry: "first-entry",
+        secondEntry: "second-entry",
+        message: "Duplicate resolved team workflow: shared-member",
+      },
+      {
+        label: "entry",
+        firstName: "first-member",
+        secondName: "second-member",
+        firstEntry: "shared-entry",
+        secondEntry: "shared-entry",
+        message: "Duplicate resolved team entry skill: shared-entry",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const rootDir = await mkdtemp(join(tmpdir(), `team-duplicate-${testCase.label}-`));
+      const teamDir = join(rootDir, "team");
+      const writeChild = async (directory: string, name: string, entryName: string) => {
+        await mkdir(join(directory, "skills", entryName), { recursive: true });
+        await writeFile(join(directory, "skills", entryName, "SKILL.md"), `# ${entryName}\n`);
+        await writeFile(
+          join(directory, "workflow.json"),
+          JSON.stringify({
+            schemaVersion: "0.1",
+            name,
+            version: "1.0.0",
+            description: `${name} workflow.`,
+            skills: [{ source: `./skills/${entryName}`, entry: true }],
+            steps: [{ id: "run", title: "Run", skill: `./skills/${entryName}` }],
+          }),
+        );
+      };
+
+      try {
+        await mkdir(join(teamDir, "skills", "coordinator"), { recursive: true });
+        await writeFile(join(teamDir, "skills", "coordinator", "SKILL.md"), "# coordinator\n");
+        await writeChild(join(rootDir, "first"), testCase.firstName, testCase.firstEntry);
+        await writeChild(join(rootDir, "second"), testCase.secondName, testCase.secondEntry);
+        await writeFile(
+          join(teamDir, "workflow.json"),
+          JSON.stringify({
+            schemaVersion: "0.1",
+            kind: "team",
+            name: "duplicate-team",
+            version: "1.0.0",
+            description: "Team with duplicate resolved member identities.",
+            coordinator: "./skills/coordinator",
+            members: ["../first", "../second"],
+            skills: [
+              { source: "./skills/coordinator", entry: true },
+              { source: "../first" },
+              { source: "../second" },
+            ],
+            steps: [
+              { id: "first", title: "First", skill: "../first" },
+              { id: "second", title: "Second", skill: "../second" },
+            ],
+          }),
+        );
+
+        await expect(
+          resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(teamDir) }),
+        ).rejects.toThrow(testCase.message);
+      } finally {
+        await rm(rootDir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("identifies the team member source when its workflow graph cycles", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "team-member-cycle-"));
+    try {
+      const { teamDir, childDir } = await writeTeamWithMemberFixture({
+        rootDir,
+        memberSource: "../child",
+      });
+      await writeFile(
+        join(childDir, "workflow.json"),
+        JSON.stringify({
+          schemaVersion: "0.1",
+          name: "member-workflow",
+          version: "1.0.0",
+          description: "Member workflow that cycles to its team.",
+          skills: [{ source: "./skills/member", entry: true }, { source: "../team" }],
+          steps: [{ id: "member", title: "Member", skill: "./skills/member" }],
+        }),
+      );
+
+      await expect(
+        resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(teamDir) }),
+      ).rejects.toThrow(
+        "Failed to resolve team member ../child: Workflow dependency cycle: workflow:test-team@1.0.0 -> workflow:member-workflow@1.0.0 -> workflow:test-team@1.0.0",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
   });
 
   test("rejects bare sources that are not valid workflow aliases", async () => {
@@ -357,41 +595,52 @@ describe("workflow bundles", () => {
     }
   });
 
-  test("selects the highest child workflow semver and replaces the losing subtree", async () => {
+  test("selects the highest child workflow semver for a team member", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-version-"));
     const parentDir = join(rootDir, "parent");
     const lowDir = join(parentDir, "low");
     const highDir = join(parentDir, "high");
-    const writeManifest = async (
-      bundleDir: string,
-      name: string,
-      version: string,
-      sources: string[],
-    ) => {
-      await mkdir(bundleDir, { recursive: true });
+    const writeMemberManifest = async (bundleDir: string, version: string, entryName: string) => {
+      await mkdir(join(bundleDir, "skills", entryName), { recursive: true });
+      await writeFile(join(bundleDir, "skills", entryName, "SKILL.md"), `# ${entryName}\n`);
       await writeFile(
         join(bundleDir, "workflow.json"),
         JSON.stringify(
           {
             schemaVersion: "0.1",
-            name,
+            name: "shared-child",
             version,
-            description: `${name} workflow.`,
-            skills: sources.map((source) => ({ source })),
-            steps: sources.map((source, index) => ({
-              id: `step-${index}`,
-              title: `Step ${index}`,
-              skill: source,
-            })),
+            description: "Shared child workflow.",
+            skills: [{ source: `./skills/${entryName}`, entry: true }],
+            steps: [{ id: "run", title: "Run", skill: `./skills/${entryName}` }],
           },
           null,
           2,
         ),
       );
     };
-    await writeManifest(parentDir, "parent", "1.0.0", ["./low", "./high"]);
-    await writeManifest(lowDir, "shared-child", "1.2.0", ["low-only-skill"]);
-    await writeManifest(highDir, "shared-child", "1.10.0", ["high-only-skill"]);
+    await mkdir(join(parentDir, "skills", "coordinator"), { recursive: true });
+    await writeFile(join(parentDir, "skills", "coordinator", "SKILL.md"), "# coordinator\n");
+    await writeFile(
+      join(parentDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        kind: "team",
+        name: "parent",
+        version: "1.0.0",
+        description: "Team whose member has competing versions.",
+        coordinator: "./skills/coordinator",
+        members: ["./low"],
+        skills: [
+          { source: "./skills/coordinator", entry: true },
+          { source: "./low" },
+          { source: "./high" },
+        ],
+        steps: [{ id: "member", title: "Member", skill: "./low" }],
+      }),
+    );
+    await writeMemberManifest(lowDir, "1.2.0", "low-only-skill");
+    await writeMemberManifest(highDir, "1.10.0", "high-only-skill");
 
     try {
       const graph = await resolveWorkflowDependencyGraph({
@@ -402,7 +651,10 @@ describe("workflow bundles", () => {
         "parent@1.0.0",
         "shared-child@1.10.0",
       ]);
-      expect(graph.dependencies).toEqual([{ source: "high-only-skill" }]);
+      expect(graph.dependencies.map(({ source }) => source)).toEqual([
+        join(parentDir, "skills", "coordinator"),
+        join(highDir, "skills", "high-only-skill"),
+      ]);
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
@@ -413,15 +665,19 @@ describe("workflow bundles", () => {
     const parentDir = join(rootDir, "parent");
     const source = "https://github.com/acme/workflows.git#packages/child";
     const commands: WorkflowGitCommand[] = [];
-    await mkdir(parentDir, { recursive: true });
+    await mkdir(join(parentDir, "skills", "coordinator"), { recursive: true });
+    await writeFile(join(parentDir, "skills", "coordinator", "SKILL.md"), "# coordinator\n");
     await writeFile(
       join(parentDir, "workflow.json"),
       JSON.stringify({
         schemaVersion: "0.1",
+        kind: "team",
         name: "parent",
         version: "1.0.0",
-        description: "Parent workflow.",
-        skills: [{ source }],
+        description: "Parent team.",
+        coordinator: "./skills/coordinator",
+        members: [source],
+        skills: [{ source: "./skills/coordinator", entry: true }, { source }],
         steps: [{ id: "child", title: "Child", skill: source }],
       }),
     );
@@ -443,7 +699,7 @@ describe("workflow bundles", () => {
                 name: "child",
                 version: "2.0.0",
                 description: "Repository child.",
-                skills: [{ source: "./skills/child" }],
+                skills: [{ source: "./skills/child", entry: true }],
                 steps: [{ id: "run", title: "Run", skill: "./skills/child" }],
               }),
             );
@@ -459,8 +715,8 @@ describe("workflow bundles", () => {
         version: "2.0.0",
         source: { kind: "git", url: source, commit: "abc123", subdirectory: "packages/child" },
       });
-      expect(graph.dependencies).toHaveLength(1);
-      expect(graph.dependencies[0]?.source).toContain("packages/child/skills/child");
+      expect(graph.dependencies).toHaveLength(2);
+      expect(graph.dependencies[1]?.source).toContain("packages/child/skills/child");
       await graph.cleanup?.();
     } finally {
       await rm(rootDir, { recursive: true, force: true });
@@ -477,28 +733,48 @@ describe("workflow bundles", () => {
       name: string,
       version: string,
       source: string,
+      options: { team?: boolean; entry?: boolean } = {},
     ) => {
       await mkdir(bundleDir, { recursive: true });
+      if (options.team) {
+        await mkdir(join(bundleDir, "skills", "coordinator"), { recursive: true });
+        await writeFile(join(bundleDir, "skills", "coordinator", "SKILL.md"), "# coordinator\n");
+      }
+      if (options.entry && source.startsWith("./skills/")) {
+        await mkdir(join(bundleDir, source), { recursive: true });
+        await writeFile(join(bundleDir, source, "SKILL.md"), `# ${name}\n`);
+      }
       await writeFile(
         join(bundleDir, "workflow.json"),
         JSON.stringify({
           schemaVersion: "0.1",
+          ...(options.team
+            ? { kind: "team", coordinator: "./skills/coordinator", members: [source] }
+            : {}),
           name,
           version,
           description: `${name} workflow.`,
-          skills: [{ source }],
+          skills: [
+            ...(options.team ? [{ source: "./skills/coordinator", entry: true }] : []),
+            { source, ...(options.entry ? { entry: true } : {}) },
+          ],
           steps: [{ id: "run", title: "Run", skill: source }],
         }),
       );
     };
-    await writeManifest(catalogParentDir, "catalog-parent", "1.0.0", "catalog:catalog-child");
+    await writeManifest(catalogParentDir, "catalog-parent", "1.0.0", "catalog:catalog-child", {
+      team: true,
+    });
     await writeManifest(
       installedParentDir,
       "installed-parent",
       "1.0.0",
       "installed:installed-child",
+      { team: true },
     );
-    await writeManifest(installedChildDir, "installed-child", "3.0.0", "installed-leaf");
+    await writeManifest(installedChildDir, "installed-child", "3.0.0", "./skills/installed-entry", {
+      entry: true,
+    });
     await installWorkflowBundle({
       rootDir,
       bundle: await loadWorkflowBundle(installedChildDir),
@@ -514,7 +790,8 @@ describe("workflow bundles", () => {
               join(checkoutDir, "examples", "workflows", "catalog-child"),
               "catalog-child",
               "2.0.0",
-              "catalog-leaf",
+              "./skills/catalog-entry",
+              { entry: true },
             );
             return { stdout: "", stderr: "", exitCode: 0 };
           }
@@ -530,8 +807,12 @@ describe("workflow bundles", () => {
         { installedRootDir: rootDir, generatedAt: "2026-07-14T00:00:00.000Z" },
       );
 
-      expect(catalogGraph.dependencies).toEqual([{ source: "catalog-leaf" }]);
-      expect(installedGraph.dependencies).toEqual([{ source: "installed-leaf" }]);
+      expect(catalogGraph.dependencies).toHaveLength(2);
+      expect(catalogGraph.dependencies[1]?.source).toEndWith("skills/catalog-entry");
+      expect(installedGraph.dependencies.map(({ source }) => source)).toEqual([
+        join(installedParentDir, "skills", "coordinator"),
+        join(installedChildDir, "skills", "installed-entry"),
+      ]);
       expect(catalogGraph.workflows.map((workflow) => workflow.name)).toEqual([
         "catalog-parent",
         "catalog-child",
@@ -780,7 +1061,7 @@ describe("workflow bundles", () => {
 
     expect(team.kind).toBe("team");
     expect(team.coordinator).toBe("./skills/coordinator");
-    expect(team.members).toEqual(["./skills/member"]);
+    expect(team.members).toEqual(["catalog:member-workflow"]);
     expect(legacy.kind).toBeUndefined();
     expect(getWorkflowInvocationSkillName(team)).toBe("coordinator");
     expect(getWorkflowInvocationSkillName(legacy)).toBeNull();
@@ -805,16 +1086,24 @@ describe("workflow bundles", () => {
         message: "Team coordinator must be a local skill path: external-review",
       },
       {
+        manifest: {
+          ...validTeamManifest,
+          skills: validTeamManifest.skills.map((skill) =>
+            skill.source === validTeamManifest.coordinator ? { source: skill.source } : skill,
+          ),
+        },
+        message: "Team coordinator must be marked as the entry skill",
+      },
+      {
         manifest: { ...validTeamManifest, members: ["./skills/missing"] },
         message: "Team member references unknown skill: ./skills/missing",
       },
       {
-        manifest: { ...validTeamManifest, members: ["external-review"] },
-        message: "Team member must be a local skill path: external-review",
-      },
-      {
-        manifest: { ...validTeamManifest, members: ["./skills/member", "./skills/member"] },
-        message: "Duplicate team member: ./skills/member",
+        manifest: {
+          ...validTeamManifest,
+          members: ["catalog:member-workflow", "catalog:member-workflow"],
+        },
+        message: "Duplicate team member: catalog:member-workflow",
       },
       {
         manifest: { ...validTeamManifest, members: ["./skills/coordinator"] },

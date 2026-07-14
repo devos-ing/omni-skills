@@ -106,6 +106,16 @@ export const WorkflowBundleManifestSchema = z
             path: ["coordinator"],
           });
         }
+        const coordinatorSkill = manifest.skills.find(
+          (skill) => skill.source === manifest.coordinator,
+        );
+        if (coordinatorSkill && coordinatorSkill.entry !== true) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Team coordinator must be marked as the entry skill",
+            path: ["coordinator"],
+          });
+        }
       }
 
       if (!manifest.members || manifest.members.length === 0) {
@@ -121,13 +131,6 @@ export const WorkflowBundleManifestSchema = z
             context.addIssue({
               code: z.ZodIssueCode.custom,
               message: `Team member references unknown skill: ${member}`,
-              path: ["members", index],
-            });
-          }
-          if (!isLocalWorkflowSkillSource(member)) {
-            context.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `Team member must be a local skill path: ${member}`,
               path: ["members", index],
             });
           }
@@ -714,6 +717,44 @@ export function getWorkflowSkillInstallDependencies(
   });
 }
 
+function validateResolvedTeamMembers(input: {
+  root: WorkflowBundle;
+  resolvedChildren: Map<string, WorkflowBundle>;
+  selectedByName: Map<string, WorkflowBundle>;
+}): void {
+  if (input.root.manifest.kind !== "team") {
+    return;
+  }
+
+  const rootId = getCanonicalWorkflowIdentity(input.root);
+  const workflowNames = new Set<string>();
+  const entryNames = new Set<string>();
+
+  for (const member of input.root.manifest.members ?? []) {
+    const index = input.root.manifest.skills.findIndex((skill) => skill.source === member);
+    const discovered = input.resolvedChildren.get(`${rootId}\n${index}`);
+    const child = discovered
+      ? (input.selectedByName.get(discovered.manifest.name) ?? discovered)
+      : null;
+    const entries = child?.manifest.skills.filter((skill) => skill.entry === true) ?? [];
+    const entry = entries[0];
+    if (!child || entries.length !== 1 || !entry || !isLocalWorkflowSkillSource(entry.source)) {
+      throw new Error(
+        `Team member must reference a child workflow with exactly one local entry skill: ${member}`,
+      );
+    }
+    if (workflowNames.has(child.manifest.name)) {
+      throw new Error(`Duplicate resolved team workflow: ${child.manifest.name}`);
+    }
+    const entryName = basename(entry.source);
+    if (entryNames.has(entryName)) {
+      throw new Error(`Duplicate resolved team entry skill: ${entryName}`);
+    }
+    workflowNames.add(child.manifest.name);
+    entryNames.add(entryName);
+  }
+}
+
 export async function resolveWorkflowDependencyGraph(input: {
   bundle: WorkflowBundle;
   resolver?: WorkflowDependencyResolver;
@@ -764,20 +805,47 @@ export async function resolveWorkflowDependencyGraph(input: {
 
     const nextActive = [...active, bundle];
     for (const [index, dependency] of getWorkflowSkillInstallDependencies(bundle).entries()) {
-      const child = await resolver.resolve({ dependency, parent: bundle });
-      if (!child) {
-        continue;
+      const memberSource =
+        bundle === input.bundle && bundle.manifest.kind === "team"
+          ? bundle.manifest.members?.find(
+              (source) => source === bundle.manifest.skills[index]?.source,
+            )
+          : undefined;
+      try {
+        const child = await resolver.resolve({ dependency, parent: bundle });
+        if (!child) {
+          continue;
+        }
+        resolvedChildren.set(`${canonicalId}\n${index}`, child);
+        if (child.cleanup) {
+          cleanups.push(child.cleanup);
+        }
+        await discover(child, nextActive);
+      } catch (error) {
+        if (!memberSource) {
+          throw error;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to resolve team member ${memberSource}: ${message}`, {
+          cause: error,
+        });
       }
-      resolvedChildren.set(`${canonicalId}\n${index}`, child);
-      if (child.cleanup) {
-        cleanups.push(child.cleanup);
-      }
-      await discover(child, nextActive);
     }
   };
 
   try {
     await discover(input.bundle, []);
+  } catch (error) {
+    await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
+    throw error;
+  }
+
+  try {
+    validateResolvedTeamMembers({
+      root: input.bundle,
+      resolvedChildren,
+      selectedByName,
+    });
   } catch (error) {
     await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
     throw error;
