@@ -2,15 +2,14 @@
   "schemaVersion": "0.2",
   "workflow": "skill-tree-demo",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-14T07:36:42.069Z",
+  "generatedAt": "2026-07-14T07:48:54.368Z",
   "workflows": [
     {
       "id": "workflow:skill-tree-demo@0.1.0",
       "name": "skill-tree-demo",
       "version": "0.1.0",
       "source": {
-        "kind": "local",
-        "path": "."
+        "kind": "root"
       }
     },
     {

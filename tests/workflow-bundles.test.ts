@@ -124,6 +124,58 @@ describe("workflow bundles", () => {
     );
   });
 
+  test("validates a transitive lock with transport-independent root identity", async () => {
+    const repositoryUrl = pathToFileURL(join(import.meta.dir, "..")).toString();
+    const bundle = await loadWorkflowBundle(`${repositoryUrl}#examples/workflows/skill-tree-demo`);
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({ bundle });
+      expect(graph.workflows.map((workflow) => workflow.name)).toEqual(["skill-tree-demo", "cto"]);
+    } finally {
+      await bundle.cleanup?.();
+    }
+  });
+
+  test("selects the highest leaf repository semver for one logical skill", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-leaf-version-"));
+    await writeFile(
+      join(rootDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "leaf-version",
+        version: "1.0.0",
+        description: "Leaf version selection.",
+        skills: [
+          { source: "shared", repo: "org/pkg@1.0.0" },
+          { source: "shared", repo: "org/pkg@2.0.0" },
+        ],
+        steps: [{ id: "run", title: "Run", skill: "shared" }],
+      }),
+    );
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(rootDir),
+      });
+      expect(graph.dependencies).toEqual([{ source: "shared", repo: "org/pkg@2.0.0" }]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects invalid manifest semantic versions during schema parsing", () => {
+    expect(() =>
+      WorkflowBundleManifestSchema.parse({
+        schemaVersion: "0.1",
+        name: "invalid-version",
+        version: "not-semver",
+        description: "Invalid version.",
+        skills: [{ source: "leaf" }],
+        steps: [{ id: "run", title: "Run", skill: "leaf" }],
+      }),
+    ).toThrow("Invalid workflow semantic version: not-semver");
+  });
+
   test("creates a transitive lock while expanding three local workflow levels", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-tree-"));
     const parentDir = join(rootDir, "parent");
@@ -649,9 +701,9 @@ describe("workflow bundles", () => {
             steps: [{ id: "run", title: "Run", skill: "leaf" }],
           }),
         );
-        await expect(
-          resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(bundleDir) }),
-        ).rejects.toThrow(`declares invalid semantic version: ${version}`);
+        await expect(loadWorkflowBundle(bundleDir)).rejects.toThrow(
+          `Invalid workflow semantic version: ${version}`,
+        );
       }
     } finally {
       await rm(rootDir, { recursive: true, force: true });
