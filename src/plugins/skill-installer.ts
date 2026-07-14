@@ -1,10 +1,9 @@
 import { constants, type Dirent } from "node:fs";
-import { access, chmod, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export type SkillInstallAgent = "claude" | "copilot" | "codex" | "cursor" | "opencode";
-type HookCapableSkillInstallAgent = Exclude<SkillInstallAgent, "cursor" | "opencode">;
 
 export type SkillInstallStatus =
   | "installed"
@@ -30,19 +29,11 @@ export interface SkillInstallTargetResult {
   status: SkillInstallStatus;
 }
 
-export interface SkillInstallPrehookResult {
-  agent: SkillInstallAgent;
-  hookScript: string;
-  settingsPath: string;
-  status: SkillInstallStatus;
-}
-
 export interface SkillInstallResult {
   skillName: string;
   source: ResolvedInstallSkillSource;
   dryRun: boolean;
   targets: SkillInstallTargetResult[];
-  prehooks: SkillInstallPrehookResult[];
 }
 
 export interface InstallAgentSkillInput {
@@ -54,7 +45,6 @@ export interface InstallAgentSkillInput {
   force?: boolean;
   operation?: SkillInstallOperation;
   refreshExisting?: boolean;
-  installPrehook?: boolean;
 }
 
 export interface ResolveInstallSkillSourceOptions {
@@ -150,11 +140,6 @@ export function getInterfaceCraftInstalledSkillName(source: string): string | nu
   );
   return mapping?.installedName ?? null;
 }
-const bundledSkillAliases: Record<string, string> = {
-  "record-change-evidence": "pony-trail",
-  "enter-into-evidence": "pony-trail",
-  "snapshotting-file-changes": "pony-trail",
-};
 const moduleDir = dirname(fileURLToPath(import.meta.url));
 const bundledSkillsDirCandidates = [
   resolve(moduleDir, "..", "..", "bundled-skills"),
@@ -172,18 +157,6 @@ const agentSkillTargets: Record<
   opencode: { kind: "directory", path: [".agents", "skills"] },
 };
 
-const prehookScriptName = "ponytrail-prehook.sh";
-const legacyPrehookScriptNames = ["devcourt-record-change-evidence-prehook.sh"];
-const prehookMatchers = ["Write", "Edit", "MultiEdit", "NotebookEdit", "Bash"];
-const agentPrehookPaths: Record<
-  HookCapableSkillInstallAgent,
-  { hookDir: string[]; settingsPath: string[] }
-> = {
-  claude: { hookDir: [".claude", "hooks"], settingsPath: [".claude", "settings.json"] },
-  copilot: { hookDir: [".agents", "hooks"], settingsPath: [".agents", "hooks.json"] },
-  codex: { hookDir: [".codex", "hooks"], settingsPath: [".codex", "hooks.json"] },
-};
-
 export async function installAgentSkill(
   input: InstallAgentSkillInput,
 ): Promise<SkillInstallResult> {
@@ -192,7 +165,6 @@ export async function installAgentSkill(
     homeDir: input.homeDir,
   });
   const targets: SkillInstallTargetResult[] = [];
-  const prehooks: SkillInstallPrehookResult[] = [];
   const operation = input.operation ?? "install";
   const refreshExisting = operation === "update" || input.refreshExisting === true;
   const handledDestinations = new Map<string, SkillInstallStatus>();
@@ -213,16 +185,6 @@ export async function installAgentSkill(
         }
       }
       targets.push({ agent, destination, artifactPaths, status: handledStatus });
-      if (input.installPrehook && hasPrehookSupport(agent)) {
-        prehooks.push(
-          await installAgentSkillPrehook({
-            agent,
-            source,
-            homeDir: input.homeDir,
-            dryRun: input.dryRun ?? false,
-          }),
-        );
-      }
       continue;
     }
 
@@ -253,17 +215,6 @@ export async function installAgentSkill(
 
     handledDestinations.set(destination, status);
     targets.push({ agent, destination, artifactPaths, status });
-
-    if (input.installPrehook && hasPrehookSupport(agent)) {
-      prehooks.push(
-        await installAgentSkillPrehook({
-          agent,
-          source,
-          homeDir: input.homeDir,
-          dryRun: input.dryRun ?? false,
-        }),
-      );
-    }
   }
 
   return {
@@ -271,7 +222,6 @@ export async function installAgentSkill(
     source,
     dryRun: input.dryRun ?? false,
     targets,
-    prehooks,
   };
 }
 
@@ -312,8 +262,7 @@ export async function resolveInstallSkillSource(
     return resolvePathSkill(pathCandidate);
   }
 
-  const bundledName = bundledSkillAliases[sourceOrName] ?? sourceOrName;
-  const bundledPath = await resolveBundledSkillPath(bundledName);
+  const bundledPath = await resolveBundledSkillPath(sourceOrName);
   if (bundledPath) {
     const name = await readSkillName(bundledPath);
     return { kind: "bundled", name, path: bundledPath };
@@ -655,150 +604,6 @@ async function renderCursorRule(source: ResolvedInstallSkillSource): Promise<str
   return `---\nalwaysApply: true\n---\n\n${content.trim()}\n`;
 }
 
-async function installAgentSkillPrehook(input: {
-  agent: HookCapableSkillInstallAgent;
-  source: ResolvedInstallSkillSource;
-  homeDir: string;
-  dryRun: boolean;
-}): Promise<SkillInstallPrehookResult> {
-  const prehookSource = join(input.source.path, "hooks", "pre-file-change.sh");
-  if (!(await pathExists(prehookSource))) {
-    throw new Error(`Skill does not include a prehook script: ${prehookSource}`);
-  }
-
-  const paths = agentPrehookPaths[input.agent];
-  const hookScript = join(input.homeDir, ...paths.hookDir, prehookScriptName);
-  const settingsPath = join(input.homeDir, ...paths.settingsPath);
-  const command = `sh ${shellQuote(hookScript)}`;
-  const existingSettings = await readJsonSettings(settingsPath);
-  const alreadyConfigured = hasPrehookEntries(existingSettings, command);
-  const hookScriptExists = await pathExists(hookScript);
-  const status = getPrehookStatus({
-    dryRun: input.dryRun,
-    hookScriptExists,
-    alreadyConfigured,
-  });
-
-  if (!input.dryRun) {
-    await mkdir(dirname(hookScript), { recursive: true });
-    await cp(prehookSource, hookScript);
-    await chmod(hookScript, 0o755);
-
-    const mergedSettings = mergePrehookSettings(existingSettings, command);
-    await mkdir(dirname(settingsPath), { recursive: true });
-    await writeFile(settingsPath, `${JSON.stringify(mergedSettings, null, 2)}\n`);
-  }
-
-  return {
-    agent: input.agent,
-    hookScript,
-    settingsPath,
-    status,
-  };
-}
-
-async function readJsonSettings(path: string): Promise<Record<string, unknown>> {
-  try {
-    return JSON.parse(await readFile(path, "utf8"));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {};
-    }
-    throw error;
-  }
-}
-
-function mergePrehookSettings(
-  settings: Record<string, unknown>,
-  command: string,
-): Record<string, unknown> {
-  const merged = { ...settings };
-  const hooks =
-    merged.hooks && typeof merged.hooks === "object" && !Array.isArray(merged.hooks)
-      ? { ...(merged.hooks as Record<string, unknown>) }
-      : {};
-  const preToolUse = Array.isArray(hooks.PreToolUse)
-    ? removeLegacyPrehookEntries(hooks.PreToolUse)
-    : [];
-
-  for (const matcher of prehookMatchers) {
-    if (!hasHookEntry(preToolUse, matcher, command)) {
-      preToolUse.push({
-        matcher,
-        hooks: [{ type: "command", command }],
-      });
-    }
-  }
-
-  hooks.PreToolUse = preToolUse;
-  merged.hooks = hooks;
-  return merged;
-}
-
-function removeLegacyPrehookEntries(entries: unknown[]): unknown[] {
-  return entries.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      return [entry];
-    }
-
-    const hookEntry = entry as Record<string, unknown>;
-    if (!Array.isArray(hookEntry.hooks)) {
-      return [entry];
-    }
-
-    const hooks = hookEntry.hooks.filter((hook) => !isLegacyPrehookCommand(hook));
-    if (hooks.length === 0) {
-      return [];
-    }
-    if (hooks.length === hookEntry.hooks.length) {
-      return [entry];
-    }
-    return [{ ...hookEntry, hooks }];
-  });
-}
-
-function isLegacyPrehookCommand(hook: unknown): boolean {
-  if (!hook || typeof hook !== "object" || Array.isArray(hook)) {
-    return false;
-  }
-
-  const command = (hook as { command?: unknown }).command;
-  return (
-    typeof command === "string" &&
-    legacyPrehookScriptNames.some((scriptName) => command.includes(scriptName))
-  );
-}
-
-function hasPrehookEntries(settings: Record<string, unknown>, command: string): boolean {
-  const hooks = settings.hooks;
-  if (!hooks || typeof hooks !== "object" || Array.isArray(hooks)) {
-    return false;
-  }
-  const preToolUse = (hooks as Record<string, unknown>).PreToolUse;
-  if (!Array.isArray(preToolUse)) {
-    return false;
-  }
-  return prehookMatchers.every((matcher) => hasHookEntry(preToolUse, matcher, command));
-}
-
-function hasHookEntry(entries: unknown[], matcher: string, command: string): boolean {
-  return entries.some((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      return false;
-    }
-    const hookEntry = entry as { matcher?: unknown; hooks?: unknown };
-    if (hookEntry.matcher !== matcher || !Array.isArray(hookEntry.hooks)) {
-      return false;
-    }
-    return hookEntry.hooks.some((hook) => {
-      if (!hook || typeof hook !== "object" || Array.isArray(hook)) {
-        return false;
-      }
-      return (hook as { type?: unknown; command?: unknown }).command === command;
-    });
-  });
-}
-
 async function readSkillName(skillDir: string): Promise<string> {
   const skillPath = join(skillDir, "SKILL.md");
   const content = await readFile(skillPath, "utf8");
@@ -860,23 +665,6 @@ function getInstallStatus(input: {
   return "installed";
 }
 
-function getPrehookStatus(input: {
-  dryRun: boolean;
-  hookScriptExists: boolean;
-  alreadyConfigured: boolean;
-}): SkillInstallStatus {
-  if (input.dryRun && (input.hookScriptExists || input.alreadyConfigured)) {
-    return "would_update";
-  }
-  if (input.dryRun) {
-    return "would_install";
-  }
-  if (input.hookScriptExists || input.alreadyConfigured) {
-    return input.alreadyConfigured ? "already_present" : "updated";
-  }
-  return "installed";
-}
-
 function isSkillInstallAgent(agent: string): agent is SkillInstallAgent {
   return (
     agent === "claude" ||
@@ -903,20 +691,12 @@ function normalizeSkillInstallAgent(agent: string): SkillInstallAgent | null {
   return isSkillInstallAgent(canonical) ? canonical : null;
 }
 
-function hasPrehookSupport(agent: SkillInstallAgent): agent is HookCapableSkillInstallAgent {
-  return agent !== "cursor" && agent !== "opencode";
-}
-
 function looksLikePath(value: string): boolean {
   return value.startsWith(".") || value.startsWith("~") || value.includes(sep) || isAbsolute(value);
 }
 
 function formatSuperpowersInstallCommand(source: string): string {
   return `omniskill skills install ${source} --agents codex,claude,cursor,copilot,opencode --home ~`;
-}
-
-function shellQuote(value: string): string {
-  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 async function pathExists(path: string): Promise<boolean> {

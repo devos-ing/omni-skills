@@ -18,7 +18,7 @@ Before doing workflow work, load/use these skills in order:
 2. superpowers:brainstorming - design deepening before implementation planning
 3. superpowers:writing-plans - split approved scope into executable tasks
 4. mattpocock:tdd - build task by task with failing tests first
-5. pony-trail - record file-change evidence, verification, and rollback context
+5. superpowers:verification-before-completion - verify delivery before claiming completion
 
 If any required sub-skill is unavailable, stop and tell the user which dependency is missing.
 
@@ -36,8 +36,8 @@ If any required sub-skill is unavailable, stop and tell the user which dependenc
    - Skill: superpowers:writing-plans
 5. Build each task with TDD and `specs/` context.
    - Skill: mattpocock:tdd
-6. Verify delivery and preserve evidence.
-   - Skill: pony-trail
+6. Verify delivery before claiming completion.
+   - Skill: superpowers:verification-before-completion
 7. Run `/opsx:archive` to update specs and project knowledge.
    - Skill: opsx-handoff-review (`./skills/opsx-handoff-review`)
    - Gate: wait for explicit human approval.

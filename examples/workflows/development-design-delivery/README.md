@@ -29,7 +29,7 @@ $development-design-delivery build this product feature
 | Build with tests | `mattpocock:tdd` | None |
 | Debug when blocked | `mattpocock:diagnosing-bugs` | None |
 | Review the change | `mattpocock:code-review` | None |
-| Preserve evidence | `pony-trail` | None |
+| Verify completion | `superpowers:verification-before-completion` | None |
 
 ## Dependencies
 
@@ -44,7 +44,7 @@ This Omniskills workflow combines reusable agent skills:
 - `mattpocock:tdd`
 - `mattpocock:diagnosing-bugs`
 - `mattpocock:code-review`
-- `pony-trail`
+- `superpowers:verification-before-completion`
 
 `omniskill install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same

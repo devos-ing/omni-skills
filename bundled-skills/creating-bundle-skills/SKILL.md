@@ -13,7 +13,7 @@ Core distinction:
 
 - **Omniskills workflow**: the installable workflow bundle folder.
 - **Entry skill**: the callable `SKILL.md` that tells the agent to use N sub-skills in order.
-- **Sub-skill**: one dependency such as `superpowers:brainstorming`, `pony-trail`, or `mattpocock:tdd`.
+- **Sub-skill**: one dependency such as `superpowers:brainstorming`, `superpowers:verification-before-completion`, or `mattpocock:tdd`.
 
 An entry skill cannot guarantee tool-level function calls in every agent runtime. It can require skill use through instructions. Omniskills makes that reliable by installing dependencies, validating the manifest, and recording the workflow.
 
@@ -48,7 +48,7 @@ Before doing workflow work, load/use these skills in order:
 1. superpowers:brainstorming
 2. ./skills/custom-review
 3. superpowers:writing-plans
-4. pony-trail
+4. superpowers:verification-before-completion
 
 If any required sub-skill is unavailable, stop and tell the user the missing skill and install command.
 
@@ -72,7 +72,7 @@ Add the entry skill itself to `skills[]` so installation puts the callable skill
     { "source": "superpowers:brainstorming" },
     { "source": "./skills/custom-review" },
     { "source": "superpowers:writing-plans" },
-    { "source": "pony-trail" }
+    { "source": "superpowers:verification-before-completion", "repo": "obra/superpowers" }
   ]
 }
 ```

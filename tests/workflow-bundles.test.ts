@@ -1222,10 +1222,10 @@ describe("workflow bundles", () => {
           name: "duplicate-steps",
           version: "0.1.0",
           description: "Invalid duplicate step ids.",
-          skills: [{ source: "pony-trail" }],
+          skills: [{ source: "validation-helper" }],
           steps: [
-            { id: "same", title: "First", skill: "pony-trail" },
-            { id: "same", title: "Second", skill: "pony-trail" },
+            { id: "same", title: "First", skill: "validation-helper" },
+            { id: "same", title: "Second", skill: "validation-helper" },
           ],
         },
         null,
@@ -1378,7 +1378,7 @@ describe("workflow bundles", () => {
     });
   });
 
-  test("loads curated workflow examples with checked skill locks and no pony-trail dependency", async () => {
+  test("loads curated workflow examples with checked skill locks", async () => {
     const curatedWorkflowNames = [
       "ceo",
       "cto",
@@ -2173,7 +2173,7 @@ describe("workflow bundles", () => {
   test("preserves artifacts referenced by another installed workflow", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-shared-"));
     const releaseBundle = await loadWorkflowBundle("examples/workflows/release-review");
-    const sharedPath = join(rootDir, ".agents", "skills", "pony-trail");
+    const sharedPath = join(rootDir, ".agents", "skills", "shared-review-helper");
     const otherBundle = {
       ...releaseBundle,
       manifest: { ...releaseBundle.manifest, name: "ops-review" },
@@ -2185,8 +2185,8 @@ describe("workflow bundles", () => {
         bundle: releaseBundle,
         installArtifacts: [
           {
-            source: "pony-trail",
-            skillName: "pony-trail",
+            source: "shared-review-helper",
+            skillName: "shared-review-helper",
             agent: "codex",
             status: "installed",
             paths: [sharedPath],
@@ -2198,8 +2198,8 @@ describe("workflow bundles", () => {
         bundle: otherBundle,
         installArtifacts: [
           {
-            source: "pony-trail",
-            skillName: "pony-trail",
+            source: "shared-review-helper",
+            skillName: "shared-review-helper",
             agent: "codex",
             status: "installed",
             paths: [sharedPath],
@@ -2340,7 +2340,7 @@ describe("workflow bundles", () => {
       "shape",
       "release-risk-review",
       "plan",
-      "evidence",
+      "verification",
     ]);
   });
 
@@ -2350,9 +2350,9 @@ describe("workflow bundles", () => {
     expect(bundle.manifest.name).toBe("real-engineering");
     expect(bundle.manifest.skills.map((skill) => skill.source)).toEqual([
       "./skills/rtk-command-discipline",
-      "pony-trail",
       "superpowers:brainstorming",
       "superpowers:writing-plans",
+      "superpowers:verification-before-completion",
       "mattpocock:grill-with-docs",
       "mattpocock:tdd",
       "mattpocock:codebase-design",
@@ -2366,7 +2366,7 @@ describe("workflow bundles", () => {
       ["design", "mattpocock:codebase-design"],
       ["tdd", "mattpocock:tdd"],
       ["debug", "mattpocock:diagnosing-bugs"],
-      ["evidence", "pony-trail"],
+      ["verification", "superpowers:verification-before-completion"],
     ]);
   });
 
@@ -2384,7 +2384,7 @@ describe("workflow bundles", () => {
       "mattpocock:tdd",
       "mattpocock:diagnosing-bugs",
       "mattpocock:code-review",
-      "pony-trail",
+      "superpowers:verification-before-completion",
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["shape", "superpowers:brainstorming", "human_approval"],
@@ -2395,7 +2395,7 @@ describe("workflow bundles", () => {
       ["build", "mattpocock:tdd", null],
       ["debug", "mattpocock:diagnosing-bugs", null],
       ["review", "mattpocock:code-review", null],
-      ["evidence", "pony-trail", null],
+      ["verification", "superpowers:verification-before-completion", null],
     ]);
     await expect(
       readFile(
@@ -2426,7 +2426,7 @@ describe("workflow bundles", () => {
       "superpowers:brainstorming",
       "superpowers:writing-plans",
       "mattpocock:tdd",
-      "pony-trail",
+      "superpowers:verification-before-completion",
     ]);
     expect(
       bundle.manifest.skills
@@ -2436,6 +2436,7 @@ describe("workflow bundles", () => {
       ["superpowers:brainstorming", "obra/superpowers"],
       ["superpowers:writing-plans", "obra/superpowers"],
       ["mattpocock:tdd", "https://github.com/mattpocock/skills/tree/v1.1.0"],
+      ["superpowers:verification-before-completion", "obra/superpowers"],
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["opsx-propose", "./skills/opsx-handoff-review"],
@@ -2443,7 +2444,7 @@ describe("workflow bundles", () => {
       ["design-deepening", "superpowers:brainstorming"],
       ["implementation-plan", "superpowers:writing-plans"],
       ["task-by-task-build", "mattpocock:tdd"],
-      ["verification", "pony-trail"],
+      ["verification", "superpowers:verification-before-completion"],
       ["opsx-archive", "./skills/opsx-handoff-review"],
     ]);
     await expect(
@@ -2905,10 +2906,13 @@ describe("workflow bundles", () => {
           version: "0.1.0",
           description: "Uses a loop runtime.",
           loop: { script: "./loop.mjs", state: "global", execution: "action-only" },
-          skills: [{ source: "./skills/looped-workflow", entry: true }, { source: "pony-trail" }],
+          skills: [
+            { source: "./skills/looped-workflow", entry: true },
+            { source: "verification-helper" },
+          ],
           steps: [
             { id: "entry", title: "Entry", skill: "./skills/looped-workflow" },
-            { id: "evidence", title: "Evidence", skill: "pony-trail" },
+            { id: "verification", title: "Verification", skill: "verification-helper" },
           ],
         },
         null,
@@ -2937,7 +2941,7 @@ describe("workflow bundles", () => {
 
       expect(prepared.dependencies).toHaveLength(2);
       expect(prepared.dependencies[0]?.source).toContain("looped-workflow-entry-");
-      expect(prepared.dependencies[1]).toEqual({ source: "pony-trail" });
+      expect(prepared.dependencies[1]).toEqual({ source: "verification-helper" });
       const preparedEntry = prepared.dependencies[0];
       expect(preparedEntry).toBeDefined();
       await expect(

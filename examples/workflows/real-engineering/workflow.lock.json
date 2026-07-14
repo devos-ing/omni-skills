@@ -1,20 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "real-engineering",
   "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:11:48.481Z",
+  "generatedAt": "2026-07-14T10:05:11.979Z",
+  "workflows": [
+    {
+      "id": "workflow:real-engineering@0.1.1",
+      "name": "real-engineering",
+      "version": "0.1.1",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/rtk-command-discipline",
       "resolvedName": "rtk-command-discipline",
       "kind": "local",
       "hash": "sha256:1d594fc71793332753cd0a63fe3f98a1ec42f2f67f477175ca9310cf5e3c3def"
-    },
-    {
-      "source": "pony-trail",
-      "resolvedName": "pony-trail",
-      "kind": "external",
-      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
     },
     {
       "source": "superpowers:brainstorming",
@@ -29,6 +34,13 @@
       "kind": "external",
       "repo": "obra/superpowers",
       "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
+      "kind": "external",
+      "repo": "obra/superpowers",
+      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
     },
     {
       "source": "mattpocock:grill-with-docs",

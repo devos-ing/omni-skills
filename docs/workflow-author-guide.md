@@ -424,7 +424,7 @@ local entry skill. Member workflow dependencies are expanded recursively; only
 the root team install record is written. Local helper skills may still be
 declared, but they are not team members.
 
-## Compatibility Example: Combine RTK, Ponytrail, Superpowers, And Matt Pocock Skills
+## Compatibility Example: Combine RTK, Superpowers, And Matt Pocock Skills
 
 The checked-in `real-engineering` workflow shows how to combine local workflow
 guidance with external skill packs. It remains available as a compatibility demo
@@ -437,9 +437,9 @@ bun run dev -- validate examples/workflows/real-engineering
 It uses:
 
 - `./skills/rtk-command-discipline` for repo command rules
-- `pony-trail` for file-change snapshots
 - `superpowers:brainstorming`
 - `superpowers:writing-plans`
+- `superpowers:verification-before-completion`
 - `mattpocock:grill-with-docs`
 - `mattpocock:tdd`
 - `mattpocock:codebase-design`

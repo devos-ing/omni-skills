@@ -39,9 +39,6 @@ Preferred message hierarchy:
 5. Users can install, list, initialize, validate, and author bundles from the
    current root command surface.
 
-Do not present paused Pony Trail history, revert, or prehook features as active
-landing-page capabilities.
-
 ## Reference Direction
 
 Adopt these ideas from the downloaded reference:

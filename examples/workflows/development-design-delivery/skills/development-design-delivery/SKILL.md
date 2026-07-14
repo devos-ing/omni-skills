@@ -22,7 +22,7 @@ Before doing workflow work, load/use these skills in order:
 6. mattpocock:tdd - build task by task with failing tests first
 7. mattpocock:diagnosing-bugs - diagnose unexpected failures or regressions when blocked
 8. mattpocock:code-review - review changes against standards and the approved spec
-9. pony-trail - record file-change evidence, verification, and rollback context
+9. superpowers:verification-before-completion - verify results before claiming completion
 
 If any required sub-skill is unavailable, stop and tell the user which
 dependency is missing. For missing `mattpocock:*` skills, tell the user to run:
@@ -52,11 +52,11 @@ omniskill skills install mattpocock/skills
    - Skill: mattpocock:diagnosing-bugs
 8. Review the change against repo standards and the approved spec.
    - Skill: mattpocock:code-review
-9. Preserve verification and rollback evidence.
-   - Skill: pony-trail
+9. Verify the result before claiming completion.
+   - Skill: superpowers:verification-before-completion
 
 ## Author Notes
 
 - Keep this entry skill, `workflow.json`, and `README.md` aligned when adding or removing steps.
 - This skill orchestrates through required instructions; Omniskills installs and validates the dependency skills.
-- Do not silently skip approval gates, throwaway interface prototyping, implementation planning, TDD, review, or evidence capture.
+- Do not silently skip approval gates, throwaway interface prototyping, implementation planning, TDD, review, or verification.

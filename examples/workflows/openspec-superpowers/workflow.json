@@ -23,7 +23,8 @@
       "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "pony-trail"
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
     }
   ],
   "steps": [
@@ -56,8 +57,8 @@
     },
     {
       "id": "verification",
-      "title": "Verify delivery and preserve evidence",
-      "skill": "pony-trail"
+      "title": "Verify delivery before completion",
+      "skill": "superpowers:verification-before-completion"
     },
     {
       "id": "opsx-archive",

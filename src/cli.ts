@@ -160,7 +160,6 @@ function configureSkillChangeCommand(
           dryRun: commandOptions.dryRun,
           force: operation === "install" ? commandOptions.force === true : false,
           refreshExisting: false,
-          installPrehook: false,
         });
 
         printSkillInstallResult(result.skillInstall, operation);
@@ -177,7 +176,6 @@ interface InstallSkillInput {
   dryRun: boolean;
   force: boolean;
   refreshExisting: boolean;
-  installPrehook: boolean;
 }
 
 interface InstallSkillResult {
@@ -214,7 +212,6 @@ async function installSkill(input: InstallSkillInput): Promise<InstallSkillResul
     force: input.force,
     operation: input.operation,
     refreshExisting: input.refreshExisting,
-    installPrehook: input.installPrehook,
   });
 
   return { skillInstall };
@@ -275,20 +272,6 @@ function printSkillInstallResult(
     console.log(
       `${target.agent}: ${formatSkillInstallStatus(target.status)} ${muted(target.destination)}`,
     );
-  }
-
-  if (result.prehooks.length > 0) {
-    console.log("");
-    console.log(
-      success(result.dryRun ? `Prehook ${operation} plan` : `Prehook ${operation} result`),
-    );
-    for (const prehook of result.prehooks) {
-      console.log(
-        `${prehook.agent}: ${formatSkillInstallStatus(prehook.status)} ${muted(
-          prehook.hookScript,
-        )} ${muted(`settings: ${prehook.settingsPath}`)}`,
-      );
-    }
   }
 
   if (options.showPostSkillChangeWelcome !== false) {

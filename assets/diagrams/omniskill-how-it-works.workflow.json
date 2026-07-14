@@ -146,7 +146,7 @@
       "items": [
         "Users call the entry skill after restarting the agent",
         "The agent follows the ordered sub-skills",
-        "Pony Trail history and prehooks stay paused"
+        "Loop state is stored under the Omniskills home"
       ]
     }
   ]

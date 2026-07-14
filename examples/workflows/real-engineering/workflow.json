@@ -8,14 +8,15 @@
       "source": "./skills/rtk-command-discipline"
     },
     {
-      "source": "pony-trail"
-    },
-    {
       "source": "superpowers:brainstorming",
       "repo": "obra/superpowers"
     },
     {
       "source": "superpowers:writing-plans",
+      "repo": "obra/superpowers"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
       "repo": "obra/superpowers"
     },
     {
@@ -74,9 +75,9 @@
       "skill": "mattpocock:diagnosing-bugs"
     },
     {
-      "id": "evidence",
-      "title": "Record snapshots and rollback evidence",
-      "skill": "pony-trail"
+      "id": "verification",
+      "title": "Verify the result before completion",
+      "skill": "superpowers:verification-before-completion"
     }
   ]
 }

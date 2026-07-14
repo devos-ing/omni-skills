@@ -42,6 +42,10 @@ async function writeSuperpowersProcessSkills(homeDir: string): Promise<void> {
     name: "writing-plans",
     description: "Use when you have a spec or requirements for a multi-step task.",
   });
+  await writeSuperpowersSkill(join(baseDir, "verification-before-completion"), {
+    name: "verification-before-completion",
+    description: "Verify results before claiming completion.",
+  });
 }
 
 async function writeLoopedWorkflowFixture(workflowDir: string): Promise<void> {
@@ -257,7 +261,7 @@ describe("cli", () => {
   });
 
   test("bundle init creates an authorable Omniskills and validate accepts it", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-bundle-cli-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-bundle-cli-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -305,8 +309,8 @@ describe("cli", () => {
   });
 
   test("workflow install installs example workflow skills and lists the installed Omniskills", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-workflow-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-workflow-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-workflow-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -332,7 +336,7 @@ describe("cli", () => {
         "release-risk-review",
         "superpowers-brainstorming",
         "superpowers-writing-plans",
-        "pony-trail",
+        "superpowers-verification-before-completion",
       ]) {
         await expect(
           stat(join(homeDir, ".agents", "skills", skill, "SKILL.md")),
@@ -348,8 +352,8 @@ describe("cli", () => {
   });
 
   test("omniskill install writes generated loop runner files into the installed entry skill", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-loop-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-loop-home-"));
     const workflowDir = join(rootDir, "looped-cli");
     const logs: string[] = [];
     const originalLog = console.log;
@@ -400,7 +404,7 @@ describe("cli", () => {
   });
 
   test("omniskill loop controls looped workflows through the CLI", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-run-home-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-loop-run-home-"));
     const workflowSource = "examples/workflows/grilled-product-dev";
 
     try {
@@ -524,7 +528,7 @@ describe("cli", () => {
   });
 
   test("omniskill loop fails plainly for non-loop workflows", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-loop-non-loop-home-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-loop-non-loop-home-"));
 
     try {
       await expect(
@@ -555,7 +559,7 @@ describe("cli", () => {
 
       expect(stripAnsiLines(logs)).toContain("Omniskills dependencies: real-engineering");
       expect(stripAnsiLines(logs)).toContain("- ./skills/rtk-command-discipline");
-      expect(stripAnsiLines(logs)).toContain("- pony-trail");
+      expect(stripAnsiLines(logs)).toContain("- superpowers:verification-before-completion");
       expect(stripAnsiLines(logs)).toContain("- superpowers:brainstorming");
       expect(stripAnsiLines(logs)).toContain("- mattpocock:tdd");
     } finally {
@@ -564,7 +568,7 @@ describe("cli", () => {
   });
 
   test("skills install defaults to the bundle authoring helper", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -604,8 +608,8 @@ describe("cli", () => {
   });
 
   test("skills install and update accept opencode and GitHub Copilot aliases", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -618,7 +622,7 @@ describe("cli", () => {
         [
           "skills",
           "install",
-          "pony-trail",
+          "writing-workflow-skills",
           "--home",
           homeDir,
           "--agents",
@@ -627,11 +631,19 @@ describe("cli", () => {
         { from: "user" },
       );
       await writeFile(
-        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md"),
         "stale installed copy",
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "opencode,githubcopilot"],
+        [
+          "skills",
+          "update",
+          "writing-workflow-skills",
+          "--home",
+          homeDir,
+          "--agents",
+          "opencode,githubcopilot",
+        ],
         { from: "user" },
       );
 
@@ -640,8 +652,11 @@ describe("cli", () => {
       expect(logs.some((line) => line.includes("opencode: updated"))).toBe(true);
       expect(logs.some((line) => line.includes("copilot: updated"))).toBe(true);
       expect(
-        await readFile(join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"), "utf8"),
-      ).toContain("name: pony-trail");
+        await readFile(
+          join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md"),
+          "utf8",
+        ),
+      ).toContain("name: writing-workflow-skills");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -649,8 +664,8 @@ describe("cli", () => {
     }
   });
 
-  test("skills install can still install pony-trail when requested explicitly", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+  test("skills install can still install writing-workflow-skills when requested explicitly", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -660,12 +675,12 @@ describe("cli", () => {
 
     try {
       await buildProgram({ cwd: homeDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--dry-run"],
+        ["skills", "install", "writing-workflow-skills", "--home", homeDir, "--dry-run"],
         { from: "user" },
       );
 
       expect(stripAnsiLines(logs)).toContain("Skill install plan");
-      expect(logs.some((line) => line.includes("pony-trail"))).toBe(true);
+      expect(logs.some((line) => line.includes("writing-workflow-skills"))).toBe(true);
       expect(logs.some((line) => line.includes("claude: would install"))).toBe(true);
     } finally {
       console.log = originalLog;
@@ -674,8 +689,8 @@ describe("cli", () => {
   });
 
   test("skills install can delegate external skills packages to the Skills CLI", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const externalInstalls: Array<{ source: string; homeDir: string }> = [];
     const originalLog = console.log;
@@ -718,8 +733,8 @@ describe("cli", () => {
   });
 
   test("skills install dry-runs external skills packages without invoking the Skills CLI", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const externalInstalls: Array<{ source: string; homeDir: string }> = [];
     const originalLog = console.log;
@@ -754,8 +769,8 @@ describe("cli", () => {
   });
 
   test("skills install does not record failed external package installs", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const originalLog = console.log;
 
     console.log = () => {};
@@ -771,8 +786,6 @@ describe("cli", () => {
           from: "user",
         }),
       ).rejects.toThrow("skills cli unavailable");
-
-      await expect(stat(join(rootDir, ".omniskills", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -781,8 +794,8 @@ describe("cli", () => {
   });
 
   test("skills install does not record failed local skill installs", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const originalLog = console.log;
 
     console.log = () => {};
@@ -794,8 +807,6 @@ describe("cli", () => {
           { from: "user" },
         ),
       ).rejects.toThrow("Matt Pocock tdd skill not found");
-
-      await expect(stat(join(rootDir, ".omniskills", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -804,8 +815,8 @@ describe("cli", () => {
   });
 
   test("skills install and update report existing target states", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -815,22 +826,31 @@ describe("cli", () => {
 
     try {
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        ["skills", "install", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
-        { from: "user" },
-      );
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex", "--dry-run"],
+        ["skills", "install", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
         [
           "skills",
           "install",
-          "pony-trail",
+          "writing-workflow-skills",
+          "--home",
+          homeDir,
+          "--agents",
+          "codex",
+          "--dry-run",
+        ],
+        { from: "user" },
+      );
+      await buildProgram({ cwd: rootDir }).parseAsync(
+        [
+          "skills",
+          "install",
+          "writing-workflow-skills",
           "--home",
           homeDir,
           "--agents",
@@ -841,23 +861,41 @@ describe("cli", () => {
         { from: "user" },
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex", "--force"],
+        [
+          "skills",
+          "install",
+          "writing-workflow-skills",
+          "--home",
+          homeDir,
+          "--agents",
+          "codex",
+          "--force",
+        ],
         { from: "user" },
       );
       await writeFile(
-        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md"),
         "stale installed copy",
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex", "--dry-run"],
+        [
+          "skills",
+          "update",
+          "writing-workflow-skills",
+          "--home",
+          homeDir,
+          "--agents",
+          "codex",
+          "--dry-run",
+        ],
         { from: "user" },
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        ["skills", "update", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        ["skills", "update", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
 
@@ -883,13 +921,13 @@ describe("cli", () => {
 
     try {
       await buildProgram().parseAsync(
-        ["skills", "install", "pony-trail", "--home", "~", "--dry-run"],
+        ["skills", "install", "writing-workflow-skills", "--home", "~", "--dry-run"],
         {
           from: "user",
         },
       );
       await buildProgram().parseAsync(
-        ["skills", "install", "pony-trail", "--home", "~/omniskill-test", "--dry-run"],
+        ["skills", "install", "writing-workflow-skills", "--home", "~/omniskill-test", "--dry-run"],
         { from: "user" },
       );
 
@@ -899,9 +937,9 @@ describe("cli", () => {
     }
   });
 
-  test("skills install does not create local snapshot history", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
+  test("skills update refreshes installed skill files", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-cli-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-skill-home-"));
     const logs: string[] = [];
     const originalLog = console.log;
 
@@ -911,50 +949,26 @@ describe("cli", () => {
 
     try {
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
-        { from: "user" },
-      );
-
-      await expect(stat(join(rootDir, ".omniskills", "snapshots.jsonl"))).rejects.toThrow();
-      expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
-    } finally {
-      console.log = originalLog;
-      await rm(rootDir, { recursive: true, force: true });
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("skills update refreshes installed skill files without local snapshot history", async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "ponytrail-cli-"));
-    const homeDir = await mkdtemp(join(tmpdir(), "ponytrail-skill-home-"));
-    const logs: string[] = [];
-    const originalLog = console.log;
-
-    console.log = (...values: unknown[]) => {
-      logs.push(values.join(" "));
-    };
-
-    try {
-      await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "install", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        ["skills", "install", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
       await writeFile(
-        join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"),
+        join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md"),
         "stale installed copy",
       );
 
       await buildProgram({ cwd: rootDir }).parseAsync(
-        ["skills", "update", "pony-trail", "--home", homeDir, "--agents", "codex"],
+        ["skills", "update", "writing-workflow-skills", "--home", homeDir, "--agents", "codex"],
         { from: "user" },
       );
 
       expect(
-        await readFile(join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md"), "utf8"),
-      ).toContain("name: pony-trail");
+        await readFile(
+          join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md"),
+          "utf8",
+        ),
+      ).toContain("name: writing-workflow-skills");
       expect(logs.some((line) => line.includes("Skill update result"))).toBe(true);
-      expect(logs.some((line) => line.includes("Local history:"))).toBe(false);
-      await expect(stat(join(rootDir, ".omniskills", "snapshots.jsonl"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

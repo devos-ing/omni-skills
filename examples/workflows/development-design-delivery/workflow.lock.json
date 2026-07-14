@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "development-design-delivery",
   "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:11:48.570Z",
+  "generatedAt": "2026-07-14T10:05:11.987Z",
+  "workflows": [
+    {
+      "id": "workflow:development-design-delivery@0.1.1",
+      "name": "development-design-delivery",
+      "version": "0.1.1",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/development-design-delivery",
       "resolvedName": "development-design-delivery",
       "kind": "local",
-      "hash": "sha256:3c0a3e6c489bd165e0faed390ba79bf781219b2ef6df2efbe7971288683a4267"
+      "hash": "sha256:5846547b860b74757dea56b72df35873f599962adbc353309b277eb94680799d"
     },
     {
       "source": "superpowers:brainstorming",
@@ -67,10 +78,11 @@
       "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
     },
     {
-      "source": "pony-trail",
-      "resolvedName": "pony-trail",
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
-      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
+      "repo": "obra/superpowers",
+      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
     }
   ]
 }

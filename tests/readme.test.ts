@@ -128,7 +128,7 @@ describe("README source contract", () => {
 
     expect(readme).toContain("Matt Pocock skills");
     expect(readme).toContain("Superpowers skills");
-    expect(readme).toContain("Ponytrail evidence");
+    expect(readme).toContain("Richer composition example with verification");
     expect(readme).toContain("More workflow packs are coming");
   });
 

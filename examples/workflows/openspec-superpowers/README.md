@@ -52,7 +52,7 @@ skills:
 - `superpowers:brainstorming`
 - `superpowers:writing-plans`
 - `mattpocock:tdd`
-- `pony-trail`
+- `superpowers:verification-before-completion`
 
 `omniskill install` automatically uses the Skills CLI to fetch missing
 `mattpocock:*` dependencies. If that automatic bootstrap fails, run the same

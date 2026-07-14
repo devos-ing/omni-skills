@@ -100,7 +100,6 @@ Omniskills workflows 可以組合 local skills、bundled skills、external skill
   `interface-craft:design-engineering`、`interface-craft:motion-vocabulary`、
   `interface-craft:fluid-interface-design`、`interface-craft:motion-review`，並從
   `emilkowalski/skills` 安裝。較舊的 `emilkowalski:*` identifiers 僅保留為 compatibility aliases。
-- Pony Trail 的 history、revert、prehook features 目前暫停。Public workflow installs 不會建立 Pony Trail snapshots。
 - More workflow packs are coming.
 
 `omniskill install` 會使用每個 workflow skill 的 `repo` metadata，透過 Skills CLI 抓取缺少的 external
@@ -197,8 +196,8 @@ npx omniskill@latest deps ./release-review
 | `examples/workflows/qa-lead` | Acceptance checks、regression focus、release verification。 | Uses review, diagnosing, and verification skills. |
 | `examples/workflows/grilled-product-dev` | 將 product-development work 形成 approved plan 的 goal loops。 | Provides `loop start`, `loop status`, and `loop advance`. |
 | `examples/workflows/openspec-superpowers` | OpenSpec delivery 的 compatibility/demo workflow。 | Kept for one release while the role catalog becomes the primary example set. |
-| `examples/workflows/development-design-delivery` | Product-minded engineering 的 compatibility/demo workflow。 | Richer composition example with Ponytrail evidence. |
-| `examples/workflows/real-engineering` | 組合 RTK、Ponytrail、Superpowers、Matt Pocock skills 的 compatibility/demo workflow。 | Fetches Matt Pocock skills if missing. |
+| `examples/workflows/development-design-delivery` | Product-minded engineering 的 compatibility/demo workflow。 | Richer composition example with verification. |
+| `examples/workflows/real-engineering` | 組合 RTK、Superpowers、Matt Pocock skills 的 compatibility/demo workflow。 | Fetches external skills if missing. |
 | `examples/workflows/release-review` | Release-risk review 的 compatibility/demo workflow。 | Good minimal example. |
 | `examples/workflows/haaland` | Curated playful Haaland/JTS meme workflow。 | 使用 bundled profile asset 產生一張 meme。 |
 

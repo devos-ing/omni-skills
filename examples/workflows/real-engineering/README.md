@@ -3,8 +3,7 @@
 This example combines:
 
 - RTK command discipline
-- Ponytrail file-change snapshots
-- Superpowers brainstorming and writing-plans
+- Superpowers brainstorming, writing-plans, and verification
 - Matt Pocock engineering skills
 
 `omniskill install` automatically uses the Skills CLI to fetch missing

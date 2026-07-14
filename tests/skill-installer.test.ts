@@ -32,12 +32,16 @@ async function writeSuperpowersSkill(
 }
 
 describe("skill installer", () => {
-  test("resolves the bundled pony trail skill by name", async () => {
-    const source = await resolveInstallSkillSource("pony-trail");
+  test("does not expose the removed pony-trail bundled skill", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
-    expect(source.name).toBe("pony-trail");
-    expect(source.kind).toBe("bundled");
-    expect(await readFile(join(source.path, "SKILL.md"), "utf8")).toContain("name: pony-trail");
+    try {
+      await expect(resolveInstallSkillSource("pony-trail", { homeDir })).rejects.toThrow(
+        "Skill source not found: pony-trail",
+      );
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
   });
 
   test("resolves the bundled review past decisions skill by name", async () => {
@@ -526,31 +530,17 @@ describe("skill installer", () => {
     }
   });
 
-  test("keeps previous bundled skill names as aliases", async () => {
-    for (const alias of [
-      "record-change-evidence",
-      "enter-into-evidence",
-      "snapshotting-file-changes",
-    ]) {
-      const source = await resolveInstallSkillSource(alias);
-
-      expect(source.name).toBe("pony-trail");
-      expect(source.kind).toBe("bundled");
-      expect(source.path.endsWith(join("bundled-skills", "pony-trail"))).toBe(true);
-    }
-  });
-
   test("installs a bundled skill into Claude, Copilot/shared, Codex, Cursor, and opencode targets", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
     try {
       const result = await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: [...allAgents, "opencode"],
       });
 
-      expect(result.skillName).toBe("pony-trail");
+      expect(result.skillName).toBe("writing-workflow-skills");
       expect(result.targets.map((target) => target.status)).toEqual([
         "installed",
         "installed",
@@ -561,51 +551,51 @@ describe("skill installer", () => {
       expect(result.targets).toEqual([
         expect.objectContaining({
           agent: "claude",
-          destination: join(homeDir, ".claude", "skills", "pony-trail"),
-          artifactPaths: [join(homeDir, ".claude", "skills", "pony-trail")],
+          destination: join(homeDir, ".claude", "skills", "writing-workflow-skills"),
+          artifactPaths: [join(homeDir, ".claude", "skills", "writing-workflow-skills")],
           status: "installed",
         }),
         expect.objectContaining({
           agent: "copilot",
-          destination: join(homeDir, ".agents", "skills", "pony-trail"),
-          artifactPaths: [join(homeDir, ".agents", "skills", "pony-trail")],
+          destination: join(homeDir, ".agents", "skills", "writing-workflow-skills"),
+          artifactPaths: [join(homeDir, ".agents", "skills", "writing-workflow-skills")],
           status: "installed",
         }),
         expect.objectContaining({
           agent: "codex",
-          destination: join(homeDir, ".agents", "skills", "pony-trail"),
+          destination: join(homeDir, ".agents", "skills", "writing-workflow-skills"),
           artifactPaths: [
-            join(homeDir, ".agents", "skills", "pony-trail"),
-            join(homeDir, ".codex", "skills", "pony-trail"),
+            join(homeDir, ".agents", "skills", "writing-workflow-skills"),
+            join(homeDir, ".codex", "skills", "writing-workflow-skills"),
           ],
           status: "installed",
         }),
         expect.objectContaining({
           agent: "cursor",
-          destination: join(homeDir, ".cursor", "rules", "pony-trail.mdc"),
-          artifactPaths: [join(homeDir, ".cursor", "rules", "pony-trail.mdc")],
+          destination: join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc"),
+          artifactPaths: [join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc")],
           status: "installed",
         }),
         expect.objectContaining({
           agent: "opencode",
-          destination: join(homeDir, ".agents", "skills", "pony-trail"),
-          artifactPaths: [join(homeDir, ".agents", "skills", "pony-trail")],
+          destination: join(homeDir, ".agents", "skills", "writing-workflow-skills"),
+          artifactPaths: [join(homeDir, ".agents", "skills", "writing-workflow-skills")],
           status: "installed",
         }),
       ]);
 
       await expect(
-        stat(join(homeDir, ".claude", "skills", "pony-trail", "SKILL.md")),
+        stat(join(homeDir, ".claude", "skills", "writing-workflow-skills", "SKILL.md")),
       ).resolves.toBeTruthy();
       await expect(
-        stat(join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md")),
+        stat(join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md")),
       ).resolves.toBeTruthy();
       await expect(
-        stat(join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md")),
+        stat(join(homeDir, ".codex", "skills", "writing-workflow-skills", "SKILL.md")),
       ).resolves.toBeTruthy();
-      const cursorRulePath = join(homeDir, ".cursor", "rules", "pony-trail.mdc");
+      const cursorRulePath = join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc");
       await expect(stat(cursorRulePath)).resolves.toBeTruthy();
-      expect(await readFile(cursorRulePath, "utf8")).toContain("name: pony-trail");
+      expect(await readFile(cursorRulePath, "utf8")).toContain("name: writing-workflow-skills");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -613,12 +603,24 @@ describe("skill installer", () => {
 
   test("updates existing bundled skill targets when requested", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
-    const installedSkillPath = join(homeDir, ".agents", "skills", "pony-trail", "SKILL.md");
-    const legacyInstalledSkillPath = join(homeDir, ".codex", "skills", "pony-trail", "SKILL.md");
+    const installedSkillPath = join(
+      homeDir,
+      ".agents",
+      "skills",
+      "writing-workflow-skills",
+      "SKILL.md",
+    );
+    const legacyInstalledSkillPath = join(
+      homeDir,
+      ".codex",
+      "skills",
+      "writing-workflow-skills",
+      "SKILL.md",
+    );
 
     try {
       await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["codex"],
       });
@@ -626,7 +628,7 @@ describe("skill installer", () => {
       await writeFile(legacyInstalledSkillPath, "stale legacy skill");
 
       const dryRun = await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["codex"],
         dryRun: true,
@@ -640,7 +642,7 @@ describe("skill installer", () => {
       expect(await readFile(installedSkillPath, "utf8")).toBe("stale skill");
 
       const result = await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["codex"],
         operation: "update",
@@ -650,8 +652,10 @@ describe("skill installer", () => {
         agent: "codex",
         status: "updated",
       });
-      expect(await readFile(installedSkillPath, "utf8")).toContain("name: pony-trail");
-      expect(await readFile(legacyInstalledSkillPath, "utf8")).toContain("name: pony-trail");
+      expect(await readFile(installedSkillPath, "utf8")).toContain("name: writing-workflow-skills");
+      expect(await readFile(legacyInstalledSkillPath, "utf8")).toContain(
+        "name: writing-workflow-skills",
+      );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -662,13 +666,13 @@ describe("skill installer", () => {
 
     try {
       await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["codex"],
       });
 
       const result = await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["codex"],
         operation: "update",
@@ -688,7 +692,7 @@ describe("skill installer", () => {
 
     try {
       const result = await installAgentSkill({
-        source: "pony-trail",
+        source: "writing-workflow-skills",
         homeDir,
         agents: ["cursor"],
         dryRun: true,
@@ -696,174 +700,11 @@ describe("skill installer", () => {
 
       expect(result.targets[0]).toMatchObject({
         agent: "cursor",
-        destination: join(homeDir, ".cursor", "rules", "pony-trail.mdc"),
-        status: "would_install",
-      });
-      await expect(stat(join(homeDir, ".cursor", "rules", "pony-trail.mdc"))).rejects.toThrow();
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("installs prehook scripts and merges hook settings when requested", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
-    const claudeSettingsPath = join(homeDir, ".claude", "settings.json");
-    const codexHooksPath = join(homeDir, ".codex", "hooks.json");
-
-    try {
-      await mkdir(join(homeDir, ".claude"), { recursive: true });
-      await writeFile(
-        claudeSettingsPath,
-        JSON.stringify(
-          {
-            env: { EXISTING: "1" },
-            hooks: {
-              PreToolUse: [
-                {
-                  matcher: "Bash",
-                  hooks: [{ type: "command", command: "existing-hook" }],
-                },
-              ],
-            },
-          },
-          null,
-          2,
-        ),
-      );
-      await mkdir(join(homeDir, ".codex"), { recursive: true });
-      await writeFile(
-        codexHooksPath,
-        JSON.stringify(
-          {
-            hooks: {
-              PreToolUse: [
-                {
-                  matcher: "Edit",
-                  hooks: [
-                    {
-                      type: "command",
-                      command:
-                        "sh '/Users/roy/.codex/hooks/devcourt-record-change-evidence-prehook.sh'",
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-          null,
-          2,
-        ),
-      );
-
-      const result = await installAgentSkill({
-        source: "pony-trail",
-        homeDir,
-        agents: allAgents,
-        force: true,
-        installPrehook: true,
-      });
-
-      expect(result.prehooks.map((prehook) => prehook.status)).toEqual([
-        "installed",
-        "installed",
-        "installed",
-      ]);
-
-      const claudeHookPath = join(homeDir, ".claude", "hooks", "ponytrail-prehook.sh");
-      const codexHookPath = join(homeDir, ".codex", "hooks", "ponytrail-prehook.sh");
-      const copilotHookPath = join(homeDir, ".agents", "hooks", "ponytrail-prehook.sh");
-
-      await expect(stat(claudeHookPath)).resolves.toBeTruthy();
-      await expect(stat(codexHookPath)).resolves.toBeTruthy();
-      await expect(stat(copilotHookPath)).resolves.toBeTruthy();
-      expect(await readFile(claudeHookPath, "utf8")).toContain("$pony-trail");
-
-      const claudeSettings = JSON.parse(await readFile(claudeSettingsPath, "utf8"));
-      expect(claudeSettings.env.EXISTING).toBe("1");
-      expect(
-        claudeSettings.hooks.PreToolUse.some(
-          (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
-            entry.matcher === "Bash" &&
-            entry.hooks?.some((hook) => hook.command === "existing-hook"),
-        ),
-      ).toBe(true);
-      expect(
-        claudeSettings.hooks.PreToolUse.some(
-          (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
-            entry.matcher === "Write" &&
-            entry.hooks?.some((hook) => hook.command?.includes(claudeHookPath)),
-        ),
-      ).toBe(true);
-
-      const codexHooks = JSON.parse(await readFile(codexHooksPath, "utf8"));
-      expect(
-        codexHooks.hooks.PreToolUse.some(
-          (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
-            entry.matcher === "Edit" &&
-            entry.hooks?.some((hook) => hook.command?.includes(codexHookPath)),
-        ),
-      ).toBe(true);
-      expect(JSON.stringify(codexHooks.hooks.PreToolUse)).not.toContain(
-        "devcourt-record-change-evidence-prehook.sh",
-      );
-
-      const copilotHooks = JSON.parse(
-        await readFile(join(homeDir, ".agents", "hooks.json"), "utf8"),
-      );
-      expect(
-        copilotHooks.hooks.PreToolUse.some(
-          (entry: { matcher?: string; hooks?: Array<{ command?: string }> }) =>
-            entry.matcher === "MultiEdit" &&
-            entry.hooks?.some((hook) => hook.command?.includes(copilotHookPath)),
-        ),
-      ).toBe(true);
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("dry-runs prehook installation without writing hook files", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
-
-    try {
-      const result = await installAgentSkill({
-        source: "pony-trail",
-        homeDir,
-        agents: ["codex"],
-        dryRun: true,
-        installPrehook: true,
-      });
-
-      expect(result.prehooks[0]).toMatchObject({
-        agent: "codex",
+        destination: join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc"),
         status: "would_install",
       });
       await expect(
-        stat(join(homeDir, ".codex", "hooks", "ponytrail-prehook.sh")),
-      ).rejects.toThrow();
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("does not install prehooks for the opencode shared skill target", async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
-
-    try {
-      const result = await installAgentSkill({
-        source: "pony-trail",
-        homeDir,
-        agents: ["opencode"],
-        installPrehook: true,
-      });
-
-      expect(result.targets[0]).toMatchObject({
-        agent: "opencode",
-        status: "installed",
-      });
-      expect(result.prehooks).toEqual([]);
-      await expect(
-        stat(join(homeDir, ".agents", "hooks", "ponytrail-prehook.sh")),
+        stat(join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc")),
       ).rejects.toThrow();
     } finally {
       await rm(homeDir, { recursive: true, force: true });

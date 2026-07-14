@@ -16,7 +16,8 @@
       "repo": "obra/superpowers"
     },
     {
-      "source": "pony-trail"
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
     }
   ],
   "steps": [
@@ -38,9 +39,9 @@
       "skill": "superpowers:writing-plans"
     },
     {
-      "id": "evidence",
-      "title": "Record release evidence and rollback context",
-      "skill": "pony-trail"
+      "id": "verification",
+      "title": "Verify the release before completion",
+      "skill": "superpowers:verification-before-completion"
     }
   ]
 }

@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "openspec-delivery",
   "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:11:48.553Z",
+  "generatedAt": "2026-07-14T10:05:12.003Z",
+  "workflows": [
+    {
+      "id": "workflow:openspec-delivery@0.1.1",
+      "name": "openspec-delivery",
+      "version": "0.1.1",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/openspec-delivery",
       "resolvedName": "openspec-delivery",
       "kind": "local",
-      "hash": "sha256:5308133e101191939e82f9a24ef7f3d826f572b0630a5a0a56230e0ed56e7c96"
+      "hash": "sha256:571427bbd1a3acd59aa0b2b10aa10883092adc1ecbd4413e1194934744a963ab"
     },
     {
       "source": "./skills/opsx-handoff-review",
@@ -38,10 +49,11 @@
       "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
     },
     {
-      "source": "pony-trail",
-      "resolvedName": "pony-trail",
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
-      "hash": "sha256:12605f367862d5bace11c6523a309f8d70c14a999e47de3b3b3fbc416d411377"
+      "repo": "obra/superpowers",
+      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
     }
   ]
 }

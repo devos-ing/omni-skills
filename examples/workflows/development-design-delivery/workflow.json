@@ -40,7 +40,8 @@
       "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
-      "source": "pony-trail"
+      "source": "superpowers:verification-before-completion",
+      "repo": "obra/superpowers"
     }
   ],
   "steps": [
@@ -88,9 +89,9 @@
       "skill": "mattpocock:code-review"
     },
     {
-      "id": "evidence",
-      "title": "Record verification and rollback evidence",
-      "skill": "pony-trail"
+      "id": "verification",
+      "title": "Verify the result before completion",
+      "skill": "superpowers:verification-before-completion"
     }
   ]
 }

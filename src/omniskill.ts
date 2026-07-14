@@ -46,7 +46,6 @@ export interface OmniskillInstallSkillInput {
   dryRun: false;
   force: boolean;
   refreshExisting: boolean;
-  installPrehook: false;
 }
 
 export interface OmniskillInstallSkillResult {
@@ -564,7 +563,6 @@ function installWorkflowSkillDependency(input: {
     dryRun: false,
     force: input.forceRefreshExisting,
     refreshExisting: !input.forceRefreshExisting,
-    installPrehook: false,
   });
 }
 

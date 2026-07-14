@@ -161,7 +161,7 @@ Skills to install:
 - superpowers:brainstorming
 - ./skills/release-risk-review
 - superpowers:writing-plans
-- pony-trail
+- superpowers:verification-before-completion
 ? Install 4 skills for release-review? yes
 Installing skills...
 Processing 1/4: superpowers:brainstorming
@@ -188,9 +188,9 @@ without prompting after printing the plan.
 
 ```text
 Skill install result
-Skill: pony-trail
-Source: /path/to/bundled-skills/pony-trail
-codex: installed /home/.agents/skills/pony-trail
+Skill: writing-workflow-skills
+Source: /path/to/bundled-skills/writing-workflow-skills
+codex: installed /home/.agents/skills/writing-workflow-skills
 ```
 
 Keep target rows scan-friendly. Do not introduce decorative bullets.
@@ -237,7 +237,6 @@ Required coverage:
 
 - root help contains `OMNISKILLS`, welcome copy, examples, and current public
   commands;
-- removed Pony Trail commands remain absent;
 - no-command invocation prints the welcome help if the implementation enables
   it;
 - validate, deps, install, list, onboard, and skill install output retain their

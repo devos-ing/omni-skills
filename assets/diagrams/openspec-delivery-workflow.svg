@@ -72,7 +72,7 @@
 
   <rect x="748" y="402" width="142" height="94" class="card evidence" />
   <text x="772" y="436" class="label">6. Verify</text>
-  <text x="772" y="461" class="body">pony-trail</text>
+  <text x="772" y="461" class="body">superpowers:verification</text>
   <text x="772" y="481" class="body">evidence before claim</text>
 
   <path d="M 250 297 H 286" class="arrow" />

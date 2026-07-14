@@ -73,8 +73,8 @@ const expectedInstalledSkills = [
   "opsx-handoff-review",
   "superpowers-brainstorming",
   "superpowers-writing-plans",
+  "superpowers-verification-before-completion",
   "tdd",
-  "pony-trail",
 ];
 
 export async function runCliSandboxEvaluation(
@@ -221,7 +221,9 @@ async function runBaseline(input: {
         label: "CLI lists workflow dependencies before install",
         passed:
           logs.some((line) => stripAnsi(line).includes("- mattpocock:tdd")) &&
-          logs.some((line) => stripAnsi(line).includes("- pony-trail")),
+          logs.some((line) =>
+            stripAnsi(line).includes("- superpowers:verification-before-completion"),
+          ),
         detail: "deps should expose reusable workflow skill requirements",
       },
       {
@@ -403,6 +405,10 @@ async function writeFakeDependencyHome(homeDir: string): Promise<void> {
   await writeSkill(join(superpowersRoot, "writing-plans"), {
     name: "writing-plans",
     description: "Sandbox Superpowers writing-plans skill.",
+  });
+  await writeSkill(join(superpowersRoot, "verification-before-completion"), {
+    name: "verification-before-completion",
+    description: "Sandbox Superpowers verification skill.",
   });
   await writeSkill(join(homeDir, ".agents", "skills", "tdd"), {
     name: "tdd",

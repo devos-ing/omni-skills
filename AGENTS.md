@@ -16,7 +16,7 @@ Omniskills workflow and team bundles.
 - `src/cli.ts` - thin Commander CLI shell.
 - `src/omniskill.ts` - primary Omniskills command module.
 - `src/runtimes/omniskill/` - internal runtime for workflow
-  manifests and install records; snapshot modules are paused from the public CLI.
+  manifests, lock files, install records, removal plans, and loop metadata.
 - `src/plugins/` - skill installer seam for bundled, local, Superpowers,
   external, and agent-target installs.
 - `tests/` - Bun tests for runtime behavior and CLI command registration.
@@ -67,8 +67,6 @@ Author or user request
 - `omniskill install` is the only public workflow or team install command.
 - The older `bundle` and `workflow` command surfaces exist only as
   compatibility aliases.
-- Pony Trail history, revert, and prehook features are paused. Do not expose or
-  document them as active CLI commands unless the feature is explicitly resumed.
 
 ## Commands
 

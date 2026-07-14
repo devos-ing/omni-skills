@@ -106,8 +106,6 @@ skill packs:
   `interface-craft:fluid-interface-design`, and
   `interface-craft:motion-review`; they install from `emilkowalski/skills`.
   The older `emilkowalski:*` identifiers are compatibility aliases only.
-- Pony Trail history, revert, and prehook features are paused. Public workflow
-  installs do not create Pony Trail snapshots.
 - More workflow packs are coming.
 
 `omniskill install` uses each workflow skill's `repo` metadata to fetch
@@ -208,8 +206,8 @@ The full guide is in [`docs/workflow-author-guide.md`](docs/workflow-author-guid
 | `examples/workflows/qa-lead` | Acceptance checks, regression focus, and release verification. | Uses review, diagnosing, and verification skills. |
 | `examples/workflows/grilled-product-dev` | Goal loops for shaping product-development work into an approved plan. | Provides `loop start`, `loop status`, and `loop advance`. |
 | `examples/workflows/openspec-superpowers` | Compatibility/demo workflow for OpenSpec delivery. | Kept for one release while the role catalog becomes the primary example set. |
-| `examples/workflows/development-design-delivery` | Compatibility/demo workflow for product-minded engineering. | Richer composition example with Ponytrail evidence. |
-| `examples/workflows/real-engineering` | Compatibility/demo workflow combining RTK, Ponytrail, Superpowers, and Matt Pocock skills. | Fetches Matt Pocock skills if missing. |
+| `examples/workflows/development-design-delivery` | Compatibility/demo workflow for product-minded engineering. | Richer composition example with verification. |
+| `examples/workflows/real-engineering` | Compatibility/demo workflow combining RTK, Superpowers, and Matt Pocock skills. | Fetches external skills if missing. |
 | `examples/workflows/release-review` | Compatibility/demo workflow for release-risk review. | Good minimal example. |
 | `examples/workflows/haaland` | Curated playful Haaland/JTS meme workflow. | Generates one meme from its bundled profile asset. |
 

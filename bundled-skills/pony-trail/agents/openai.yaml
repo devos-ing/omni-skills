@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ponytrail"
-  short_description: "Decision snapshots for every file edit"
-  default_prompt: "Use $pony-trail to record rationale snapshots before and after file edits."

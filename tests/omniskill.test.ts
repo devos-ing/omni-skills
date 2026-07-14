@@ -40,7 +40,6 @@ function fakeSkillInstallResult(input: {
         status: "installed",
       },
     ],
-    prehooks: [],
   };
 }
 
