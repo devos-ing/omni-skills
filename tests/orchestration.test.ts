@@ -162,6 +162,13 @@ describe("orchestration configuration", () => {
     expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
       "load and follow the installed `$cto` skill",
     );
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.instructions).toContain(
+      "load and follow the installed `$cto` skill",
+    );
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.consultation).toBe("request");
+    expect(profiles.find(({ source }) => source === "catalog:cto")?.limits).toEqual(
+      DEFAULT_ORCHESTRATION_CONFIG.limits,
+    );
     expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
       "omniskills-managed: team=test-team source=catalog:cto",
     );

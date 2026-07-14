@@ -24,6 +24,9 @@ function profile(homeDir: string): PlannedAgentProfile {
     model: "gpt-5.6",
     effort: "high",
     access: "read-only",
+    instructions: "You are the catalog:cto agent for the test-team Omniskills team.",
+    consultation: "request",
+    limits: DEFAULT_ORCHESTRATION_CONFIG.limits,
     candidateIndex: 0,
     candidateCount: 1,
     destination: join(homeDir, ".codex", "agents", "omniskills-test-team-cto.toml"),
@@ -51,7 +54,15 @@ describe("agent profile installer", () => {
     try {
       const first = await preflightAgentProfiles({ profiles: [planned], previousArtifacts: [] });
       expect(first.map(({ status }) => status)).toEqual(["create"]);
-      await executeAgentProfilePlan({ profiles: first });
+      const artifacts = await executeAgentProfilePlan({ profiles: first });
+      expect(artifacts[0]).toEqual(
+        expect.objectContaining({
+          kind: "agent_profile",
+          instructions: expect.stringContaining("catalog:cto agent"),
+          consultation: "request",
+          limits: DEFAULT_ORCHESTRATION_CONFIG.limits,
+        }),
+      );
 
       const unchanged = await preflightAgentProfiles({
         profiles: [planned],

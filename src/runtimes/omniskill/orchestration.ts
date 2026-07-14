@@ -113,6 +113,9 @@ export interface PlannedAgentProfile {
   model: string;
   effort: string;
   access: "read-only" | "workspace-write";
+  instructions: string;
+  consultation: "receive" | "request" | "none";
+  limits: OrchestrationConfig["limits"];
   candidateIndex: number;
   candidateCount: number;
   destination: string;
@@ -318,6 +321,9 @@ export function planAgentProfiles(input: {
           model,
           effort,
           access: assignment.access,
+          instructions: developerInstructions,
+          consultation: assignment.consultation,
+          limits: config.limits,
           candidateIndex,
           candidateCount: candidates.length,
           destination,

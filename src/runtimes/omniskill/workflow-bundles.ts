@@ -503,6 +503,13 @@ export interface WorkflowInstallAgentProfileArtifact {
   model?: string;
   effort?: string;
   access?: "read-only" | "workspace-write";
+  instructions?: string;
+  consultation?: "receive" | "request" | "none";
+  limits?: {
+    retryPerCandidate: number;
+    reassignmentPerWorkItem: number;
+    consultationsPerAgent: number;
+  };
   candidateIndex?: number;
   candidateCount?: number;
 }
