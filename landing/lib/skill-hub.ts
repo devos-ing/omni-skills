@@ -32,7 +32,7 @@ const providerSources: Record<string, { provider: string; root: string }> = {
   },
   mattpocock: {
     provider: "mattpocock/skills@v1.1.0",
-    root: "https://github.com/mattpocock/skills/blob/v1.1.0/skills",
+    root: "https://github.com/mattpocock/skills/blob/v1.1.0/skills/engineering",
   },
 };
 

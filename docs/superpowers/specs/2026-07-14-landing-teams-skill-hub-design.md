@@ -315,8 +315,8 @@ Implementation is complete only after this ladder passes:
 
 ```bash
 rtk bun test tests/landing-app.test.ts
-rtk bun --cwd landing run typecheck
-rtk bun --cwd landing run build
+rtk bun run typecheck # run from landing/
+rtk bun run build     # run from landing/
 rtk bun run check
 ```
 

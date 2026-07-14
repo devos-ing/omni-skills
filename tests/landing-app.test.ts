@@ -323,23 +323,29 @@ describe("landing app source contract", () => {
     const page = readLandingFile("components/landing-page.tsx");
     const team = readLandingFile("components/featured-team-section.tsx");
     const hub = readLandingFile("components/skill-hub.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
 
     expect(page).toContain("<FeaturedTeamSection");
     expect(page).toContain("<SkillHub");
     expect(page).toContain("Explore teams & skills");
     expect(team).toContain('id="workflows"');
-    expect(team).toContain("Pick an Omniskills team");
-    expect(team).toContain("View team");
-    expect(team).toContain("View team source");
     expect(team).toContain("team.coordinator");
+    expect(team).toContain("`$${team.coordinator.skill}`");
     expect(team).toContain("team.members.map");
+    expect(team).not.toContain("tracking-[-0.025em]");
+    expect(team).toContain("featuredTeamSectionContent");
+    expect(content).toContain("export const featuredTeamSectionContent");
+    expect(content).toContain("Pick an Omniskills team");
+    expect(content).toContain("View team source");
+    expect(team).not.toContain("Start with a coordinated team");
     expect(hub).toContain('id="skill-hub"');
-    expect(hub).toContain("Explore the Skill Hub");
+    expect(content).toContain("Explore the Skill Hub");
     expect(page.indexOf("<FeaturedTeamSection")).toBeLessThan(page.indexOf("<SkillHub"));
   });
 
   test("implements keyboard-accessible Workflow and Skill tabs", () => {
     const hub = readLandingFile("components/skill-hub.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
 
     expect(hub).toContain('role="tablist"');
     expect(hub).toContain('role="tab"');
@@ -352,8 +358,18 @@ describe("landing app source contract", () => {
     expect(hub).toContain('event.key === "End"');
     expect(hub).toContain('type="search"');
     expect(hub).toContain('aria-live="polite"');
-    expect(hub).toContain("Clear workflow search");
-    expect(hub).toContain("Clear skill search");
+    expect(content).toContain("Clear workflow search");
+    expect(content).toContain("Clear skill search");
+    expect(hub).toContain("font-semibold");
+    expect(hub).toContain("active:bg-[#f0ede6]");
+    expect(hub).not.toContain("tracking-[-0.025em]");
+    expect(hub).toContain("skillHubSectionContent");
+    expect(hub).toContain("function EmptyState");
+    expect(content).toContain("export const skillHubSectionContent");
+    expect(content).toContain("Explore the Skill Hub");
+    expect(content).toContain("Clear workflow search");
+    expect(content).toContain("Clear skill search");
+    expect(hub).not.toContain("Browse independently installable workflows");
   });
 
   test("keeps skill results source-only and unanimated while filtering", () => {

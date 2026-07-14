@@ -1,6 +1,6 @@
 import { Search, X } from "lucide-react";
 import type { KeyboardEvent } from "react";
-import type { WorkflowCardContent } from "../lib/landing-content";
+import { skillHubSectionContent, type WorkflowCardContent } from "../lib/landing-content";
 import type { SkillHubEntry } from "../lib/skill-hub";
 import { SkillRow } from "./skill-row";
 import { WorkflowCard } from "./workflow-card";
@@ -17,9 +17,34 @@ interface SkillHubProps {
 }
 
 const tabs: Array<{ id: HubTab; label: string }> = [
-  { id: "workflows", label: "Workflows" },
-  { id: "skills", label: "Skills" },
+  { id: "workflows", label: skillHubSectionContent.tabs.workflows.label },
+  { id: "skills", label: skillHubSectionContent.tabs.skills.label },
 ];
+
+interface EmptyStateProps {
+  nounPlural: string;
+  query: string;
+  onClear: () => void;
+}
+
+function EmptyState({ nounPlural, query, onClear }: EmptyStateProps) {
+  return (
+    <div className="border-b border-[var(--rule)] px-5 py-14 text-center text-[var(--body)]">
+      <Search size={26} className="mx-auto mb-3 text-[var(--faint)]" />
+      <p className="text-sm">
+        {skillHubSectionContent.noResultsPrefix} {nounPlural} {skillHubSectionContent.matchLabel}{" "}
+        <span className="font-medium text-[var(--ink)]">"{query}"</span>.
+      </p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-3 min-h-11 px-2 text-sm font-medium text-[var(--accent-pressed)] transition-colors duration-150 hover:text-[var(--ink)] active:bg-[#f0ede6]"
+      >
+        {skillHubSectionContent.clearAction}
+      </button>
+    </div>
+  );
+}
 
 export function SkillHub({
   activeTab,
@@ -29,13 +54,8 @@ export function SkillHub({
   onTabChange,
   onQueryChange,
 }: SkillHubProps) {
+  const activeCatalog = skillHubSectionContent.tabs[activeTab];
   const count = activeTab === "workflows" ? workflows.length : skills.length;
-  const noun = activeTab === "workflows" ? "workflow" : "skill";
-  const placeholder =
-    activeTab === "workflows"
-      ? "Search workflows, entry skills, or tags..."
-      : "Search skills, providers, or packages...";
-  const clearLabel = activeTab === "workflows" ? "Clear workflow search" : "Clear skill search";
 
   function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentTab: HubTab) {
     const currentIndex = tabs.findIndex(({ id }) => id === currentTab);
@@ -60,22 +80,22 @@ export function SkillHub({
       <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-end">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-            Skill Hub
+            {skillHubSectionContent.eyebrow}
           </p>
           <h2
             id="skill-hub-heading"
-            className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)] sm:text-4xl"
+            className="mt-3 text-3xl font-semibold text-[var(--ink)] sm:text-4xl"
           >
-            Explore the Skill Hub
+            {skillHubSectionContent.heading}
           </h2>
           <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--body)]">
-            Browse independently installable workflows or inspect the skills they assemble.
+            {skillHubSectionContent.lead}
           </p>
         </div>
         <div>
           <div
             role="tablist"
-            aria-label="Skill Hub catalog"
+            aria-label={skillHubSectionContent.catalogLabel}
             className="grid grid-cols-2 border-b border-[var(--rule)]"
           >
             {tabs.map((tab) => (
@@ -89,10 +109,10 @@ export function SkillHub({
                 tabIndex={activeTab === tab.id ? 0 : -1}
                 onClick={() => onTabChange(tab.id)}
                 onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
-                className={`min-h-11 border-b-2 px-4 text-sm font-medium transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                className={`min-h-11 border-b-2 px-4 text-sm transition-colors duration-150 active:bg-[#f0ede6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
                   activeTab === tab.id
-                    ? "border-[var(--accent)] text-[var(--ink)]"
-                    : "border-transparent text-[var(--muted)]"
+                    ? "border-[var(--accent)] font-semibold text-[var(--ink)]"
+                    : "border-transparent font-medium text-[var(--muted)]"
                 }`}
               >
                 {tab.label}
@@ -100,7 +120,7 @@ export function SkillHub({
             ))}
           </div>
           <label htmlFor="skill-hub-search" className="sr-only">
-            Search {activeTab}
+            {activeCatalog.searchLabel}
           </label>
           <div className="relative mt-4">
             <Search
@@ -112,15 +132,15 @@ export function SkillHub({
               type="search"
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              placeholder={placeholder}
+              placeholder={activeCatalog.placeholder}
               className="min-h-11 w-full rounded-md border border-[var(--rule)] bg-white py-3 pl-9 pr-9 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => onQueryChange("")}
-                aria-label={clearLabel}
-                className="absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+                aria-label={activeCatalog.clearLabel}
+                className="absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] active:bg-[#f0ede6]"
               >
                 <X size={14} />
               </button>
@@ -130,7 +150,7 @@ export function SkillHub({
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {count} {noun} {count === 1 ? "result" : "results"}
+        {count} {activeCatalog.noun} {count === 1 ? "result" : "results"}
       </p>
       <div
         id="hub-panel-workflows"
@@ -143,19 +163,11 @@ export function SkillHub({
           <WorkflowCard key={workflow.slug} {...workflow} />
         ))}
         {activeTab === "workflows" && count === 0 ? (
-          <div className="border-b border-[var(--rule)] px-5 py-14 text-center text-[var(--body)]">
-            <Search size={26} className="mx-auto mb-3 text-[var(--faint)]" />
-            <p className="text-sm">
-              No workflows match <span className="font-medium text-[var(--ink)]">"{query}"</span>.
-            </p>
-            <button
-              type="button"
-              onClick={() => onQueryChange("")}
-              className="mt-3 min-h-11 text-sm font-medium text-[var(--accent-pressed)] transition-colors duration-150 hover:text-[var(--ink)]"
-            >
-              Clear search
-            </button>
-          </div>
+          <EmptyState
+            nounPlural={skillHubSectionContent.tabs.workflows.nounPlural}
+            query={query}
+            onClear={() => onQueryChange("")}
+          />
         ) : null}
       </div>
       <div
@@ -169,19 +181,11 @@ export function SkillHub({
           <SkillRow key={skill.id} entry={skill} />
         ))}
         {activeTab === "skills" && count === 0 ? (
-          <div className="border-b border-[var(--rule)] px-5 py-14 text-center text-[var(--body)]">
-            <Search size={26} className="mx-auto mb-3 text-[var(--faint)]" />
-            <p className="text-sm">
-              No skills match <span className="font-medium text-[var(--ink)]">"{query}"</span>.
-            </p>
-            <button
-              type="button"
-              onClick={() => onQueryChange("")}
-              className="mt-3 min-h-11 text-sm font-medium text-[var(--accent-pressed)] transition-colors duration-150 hover:text-[var(--ink)]"
-            >
-              Clear search
-            </button>
-          </div>
+          <EmptyState
+            nounPlural={skillHubSectionContent.tabs.skills.nounPlural}
+            query={query}
+            onClear={() => onQueryChange("")}
+          />
         ) : null}
       </div>
     </section>

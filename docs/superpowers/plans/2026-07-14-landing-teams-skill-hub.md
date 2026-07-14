@@ -967,7 +967,7 @@ Run:
 
 ```bash
 rtk bun test tests/landing-skill-hub.test.ts tests/landing-app.test.ts
-rtk bun --cwd landing run typecheck
+rtk bun run typecheck # run from landing/
 ```
 
 Expected: both test files pass and typecheck exits 0.
@@ -1114,8 +1114,8 @@ If the verdict is **Block**, add a focused failing source-contract assertion, ma
 
 ```bash
 rtk bun test tests/landing-skill-hub.test.ts tests/landing-app.test.ts
-rtk bun --cwd landing run typecheck
-rtk bun --cwd landing run build
+rtk bun run typecheck # run from landing/
+rtk bun run build     # run from landing/
 ```
 
 Expected: all commands exit 0.
@@ -1125,7 +1125,7 @@ Expected: all commands exit 0.
 Start the landing app with:
 
 ```bash
-rtk bun --cwd landing run dev
+rtk bun run dev # run from landing/
 ```
 
 Check 320px, 768px, and desktop widths:

@@ -1,6 +1,6 @@
 import { ArrowRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import type { TeamCardContent } from "../lib/landing-content";
+import { featuredTeamSectionContent, type TeamCardContent } from "../lib/landing-content";
 import { Reveal } from "./reveal";
 import { TerminalBlock } from "./terminal-block";
 import { WorkflowAvatar } from "./workflow-avatar";
@@ -13,17 +13,13 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
       className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
     >
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-        Omniskills Teams
+        {featuredTeamSectionContent.eyebrow}
       </p>
-      <h2
-        id="teams-heading"
-        className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)] sm:text-4xl"
-      >
-        Pick an Omniskills team
+      <h2 id="teams-heading" className="mt-3 text-3xl font-semibold text-[var(--ink)] sm:text-4xl">
+        {featuredTeamSectionContent.heading}
       </h2>
       <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--body)]">
-        Start with a coordinated team when one role is not enough. One install gives your agent a
-        coordinator, specialist roles, and the playbooks that connect them.
+        {featuredTeamSectionContent.lead}
       </p>
 
       <Reveal className="mt-10" index={0}>
@@ -36,7 +32,7 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
               <WorkflowAvatar seed={team.avatarSeed} label={team.name} size={48} />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Featured team
+                  {featuredTeamSectionContent.featuredLabel}
                 </p>
                 <h3
                   id="startup-team-heading"
@@ -51,7 +47,7 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
               <TerminalBlock
                 compact
                 copyText={team.installCommand}
-                copyLabel="Copy Startup Team install command"
+                copyLabel={featuredTeamSectionContent.copyInstallLabel}
                 lines={[{ prefix: "$", text: team.installCommand }]}
               />
             </div>
@@ -60,7 +56,7 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
                 href={`/workflows/${team.slug}`}
                 className="editorial-control fine-pointer-arrow inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--ink)]"
               >
-                View team
+                {featuredTeamSectionContent.viewTeamLabel}
                 <ArrowRight
                   size={14}
                   className="fine-pointer-arrow-icon transition-transform duration-150"
@@ -73,7 +69,7 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
                 aria-label={`View ${team.name} source (opens in a new tab)`}
                 className="editorial-control inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--body)] hover:text-[var(--ink)]"
               >
-                View team source
+                {featuredTeamSectionContent.viewTeamSourceLabel}
                 <ExternalLink size={13} />
               </a>
             </div>
@@ -82,11 +78,11 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
           <div className="border-t border-[var(--rule)] bg-[#f0ede6]/45 p-6 sm:p-8 lg:border-l lg:border-t-0">
             <dl>
               <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                Coordinator
+                {featuredTeamSectionContent.coordinatorLabel}
               </dt>
               <dd className="mt-3">
                 <code className="font-mono text-sm font-semibold text-[var(--ink)]">
-                  {team.coordinator.skill}
+                  {`$${team.coordinator.skill}`}
                 </code>
                 <p className="mt-1 text-sm leading-6 text-[var(--body)]">
                   {team.coordinator.description}
@@ -94,7 +90,7 @@ export function FeaturedTeamSection({ team }: { team: TeamCardContent }) {
               </dd>
             </dl>
             <p className="mt-7 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Members
+              {featuredTeamSectionContent.membersLabel}
             </p>
             <ul className="mt-3 divide-y divide-[var(--rule)] border-y border-[var(--rule)]">
               {team.members.map((member) => (

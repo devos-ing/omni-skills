@@ -212,6 +212,46 @@ export const startupTeam: TeamCardContent = {
   ],
 };
 
+export const featuredTeamSectionContent = {
+  eyebrow: "Omniskills Teams",
+  heading: "Pick an Omniskills team",
+  lead: "Start with a coordinated team when one role is not enough. One install gives your agent a coordinator, specialist roles, and the playbooks that connect them.",
+  featuredLabel: "Featured team",
+  copyInstallLabel: "Copy Startup Team install command",
+  viewTeamLabel: "View team",
+  viewTeamSourceLabel: "View team source",
+  coordinatorLabel: "Coordinator",
+  membersLabel: "Members",
+} as const;
+
+export const skillHubSectionContent = {
+  eyebrow: "Skill Hub",
+  heading: "Explore the Skill Hub",
+  lead: "Browse independently installable workflows or inspect the skills they assemble.",
+  catalogLabel: "Skill Hub catalog",
+  clearAction: "Clear search",
+  noResultsPrefix: "No",
+  matchLabel: "match",
+  tabs: {
+    workflows: {
+      label: "Workflows",
+      searchLabel: "Search workflows",
+      placeholder: "Search workflows, entry skills, or tags...",
+      clearLabel: "Clear workflow search",
+      noun: "workflow",
+      nounPlural: "workflows",
+    },
+    skills: {
+      label: "Skills",
+      searchLabel: "Search skills",
+      placeholder: "Search skills, providers, or packages...",
+      clearLabel: "Clear skill search",
+      noun: "skill",
+      nounPlural: "skills",
+    },
+  },
+} as const;
+
 export const workflows: WorkflowCardContent[] = [
   {
     kind: "workflow",

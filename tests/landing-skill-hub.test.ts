@@ -73,6 +73,14 @@ describe("landing teams and skill hub data", () => {
       "Startup Team",
       "Founding Engineer",
     ]);
+    expect(implement?.sourceUrl).toBe(
+      "https://github.com/mattpocock/skills/blob/v1.1.0/skills/engineering/implement/SKILL.md",
+    );
+
+    const wayfinder = skills.find(({ name }) => name === "mattpocock:wayfinder");
+    expect(wayfinder?.sourceUrl).toBe(
+      "https://github.com/mattpocock/skills/blob/v1.1.0/skills/engineering/wayfinder/SKILL.md",
+    );
   });
 
   test("gives every visible skill a canonical source-only destination", () => {

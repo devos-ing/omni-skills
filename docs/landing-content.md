@@ -158,20 +158,22 @@ connect them.
 npx omniskill@latest install startup-team
 ```
 
-Description: Turn one startup goal into a coordinated plan across strategy,
-product, design, architecture, delivery, implementation, and QA.
+Description: Move one startup goal from direction to delivery with a
+coordinator that brings in strategy, product, design, engineering, and QA only
+when the work needs them.
 
-Coordinator: `startup-goal` — Route the goal to the smallest useful role set.
+Coordinator: `$startup-goal` — Clarifies the brief, selects the needed roles,
+and combines their outputs.
 
 Members:
 
-- CEO — Company direction and hard tradeoffs
+- CEO — Company direction and tradeoffs
 - CTO — Architecture and technical risk
-- Product Manager — Discovery, requirements, and issue slicing
+- Product Manager — Discovery, PRDs, and issue slicing
 - Web Design — Interface direction and motion quality
 - Engineering Manager — Delivery sequencing and quality gates
-- Founding Engineer — Implementation, tests, debugging, and review
-- QA Lead — Acceptance checks, regression risk, and release evidence
+- Founding Engineer — Implementation framing and handoff
+- QA Lead — Acceptance checks and release risk
 
 Actions: `View team` opens `/workflows/startup-team`; `View team source` opens
 `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/startup-team`.
