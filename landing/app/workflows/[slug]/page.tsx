@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight, ExternalLink, GitBranch, Zap } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CopyableCommand } from "../../../components/copyable-command";
 import { CopyableInstallCommand } from "../../../components/copyable-install-command";
 import { WorkflowAvatar } from "../../../components/workflow-avatar";
 import { catalogEntries, getSkillSourceUrl } from "../../../lib/landing-content";
@@ -91,6 +93,32 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
               </code>
             )}
           </div>
+
+          {workflow.usageExample ? (
+            <section className="mt-8 rounded-md border border-[var(--rule)] bg-white p-4 sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                Example output
+              </p>
+              <div className="mt-4 overflow-hidden rounded-md border border-[var(--rule)] bg-white">
+                <Image
+                  src={workflow.usageExample.imageSrc}
+                  alt={workflow.usageExample.imageAlt}
+                  width={1200}
+                  height={675}
+                  className="h-auto w-full"
+                />
+              </div>
+              <div className="mt-4">
+                <CopyableCommand
+                  command={workflow.usageExample.invocation}
+                  label="Codex invocation"
+                />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+                {workflow.usageExample.caption}
+              </p>
+            </section>
+          ) : null}
         </div>
 
         <aside className="rounded-md border border-[var(--rule)] bg-white p-5">

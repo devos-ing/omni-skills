@@ -292,6 +292,33 @@ Skills：`qa-lead`、`mattpocock:code-review`、`mattpocock:diagnosing-bugs`、`
 
 Ordered skill path：Brief -> `qa-lead`；Review -> `mattpocock:code-review`；Debug -> `mattpocock:diagnosing-bugs`；Verify -> `superpowers:verification-before-completion`。
 
+### Codex Input Preview
+
+- slug: `codex-input-preview`
+- tag: Workflow
+- entry skill: `$codex-input-preview`
+- avatar seed: `sha256:badcaa276e46a5648ede65d2d0cb3429ca4dd81b0443420b9c72ad704d79a1bd`
+- accent: `text-[#5f5ce6]`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/workflows/codex-input-preview`
+- install:
+
+```bash
+npx omniskill@latest install codex-input-preview
+```
+
+Description：把 prompt、model label、reasoning effort 轉成忠實的 1200 × 675 simulated Codex composer PNG。
+
+Skills：`codex-input-preview` — Render one verified Codex composer PNG。
+
+Ordered skill path：Render -> `codex-input-preview` — Fit the prompt, capture the composer, and verify exact PNG dimensions.
+
+Example output：
+
+- image：`/examples/codex-input-preview.png`
+- alt：Simulated Codex input showing “Help me announce that I’m joining the Codex team!” with GPT-5.6 and high effort.
+- invocation：`$codex-input-preview Draw “Help me announce that I’m joining the Codex team!” using GPT-5.6 with high effort.`
+- disclosure：Simulated Codex composer preview — not a live Codex session.
+
 ### Haaland
 
 - slug: `haaland`

@@ -74,6 +74,13 @@ describe("landing content markdown mirrors", () => {
         expectIncludes(markdown, step.skill);
         expectIncludes(markdown, step.description);
       }
+
+      if (workflow.usageExample) {
+        expectIncludes(markdown, workflow.usageExample.imageSrc);
+        expectIncludes(markdown, workflow.usageExample.imageAlt);
+        expectIncludes(markdown, workflow.usageExample.invocation);
+        expectIncludes(markdown, workflow.usageExample.caption);
+      }
     }
   });
 
@@ -119,6 +126,13 @@ describe("landing content markdown mirrors", () => {
       for (const step of workflow.diagramSteps) {
         expectIncludes(markdown, step.label);
         expectIncludes(markdown, step.skill);
+      }
+
+      if (workflow.usageExample) {
+        expectIncludes(markdown, workflow.usageExample.imageSrc);
+        expectIncludes(markdown, workflow.usageExample.imageAlt);
+        expectIncludes(markdown, workflow.usageExample.invocation);
+        expectIncludes(markdown, workflow.usageExample.caption);
       }
     }
   });

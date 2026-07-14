@@ -242,6 +242,8 @@ describe("landing app source contract", () => {
     expect(content).toContain("installCommand: string");
     expect(content).toContain("localSkillNames: string[]");
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
+    expect(content).toContain("export interface WorkflowUsageExample");
+    expect(content).toContain("usageExample?: WorkflowUsageExample");
     expect(content).toContain("getSkillSourceUrl");
     expect(content).toContain('localSkillNames: ["haaland"]');
     expect(content).toContain('slug: "startup-team"');
@@ -252,12 +254,17 @@ describe("landing app source contract", () => {
     expect(content).toContain('skill: "web-design"');
     expect(content).toContain('slug: "founding-engineer"');
     expect(content).toContain('slug: "haaland"');
+    expect(content).toContain('slug: "codex-input-preview"');
     expect(content).toContain(`\${githubUrl}/tree/main/examples/teams/startup-team`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/cto`);
     expect(content).toContain(`\${githubUrl}/tree/main/examples/workflows/haaland`);
     expect(content).toContain("npx omniskill@latest install startup-team");
     expect(content).not.toContain("npx omniskill@latest install startup-goal");
     expect(content).toContain("npx omniskill@latest install haaland");
+    expect(content).toContain("npx omniskill@latest install codex-input-preview");
+    expect(content).toContain("/examples/codex-input-preview.png");
+    expect(content).toContain("$codex-input-preview Draw “Help me announce");
+    expect(content).toContain("Simulated Codex composer preview — not a live Codex session.");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
     expect(content).toContain('label: "Implementation frame"');
@@ -482,19 +489,40 @@ describe("landing app source contract", () => {
     expect(route).toContain("CopyableInstallCommand");
     expect(route).toContain("workflow.installCommand");
 
-    const copyable = readLandingFile("components/copyable-install-command.tsx");
+    const copyable = readLandingFile("components/copyable-command.tsx");
+    const installCopyable = readLandingFile("components/copyable-install-command.tsx");
 
     expect(copyable).toContain('"use client"');
     expect(copyable).toContain("navigator.clipboard.writeText(command)");
     expect(copyable).toContain("Copied");
     expect(copyable).toContain("Copy");
-    expect(copyable).toContain("install command");
+    expect(installCopyable).toContain('label="install command"');
+  });
+
+  test("renders an optional simulated usage example with a copyable invocation", () => {
+    const route = readLandingFile("app/workflows/[slug]/page.tsx");
+
+    expect(existsSync(join(landingRoot, "components", "copyable-command.tsx"))).toBe(true);
+    expect(route).toContain('import Image from "next/image"');
+    expect(route).toContain("workflow.usageExample");
+    expect(route).toContain("<CopyableCommand");
+    expect(route).toContain("workflow.usageExample.invocation");
+    expect(route).toContain("workflow.usageExample.caption");
+
+    const genericCopyable = readLandingFile("components/copyable-command.tsx");
+    expect(genericCopyable).toContain("label: string");
+    expect(genericCopyable).toContain("navigator.clipboard.writeText(command)");
+    expect(genericCopyable).toMatch(/aria-label=\{`Copy \$\{label\}:/);
+
+    const installCopyable = readLandingFile("components/copyable-install-command.tsx");
+    expect(installCopyable).toContain("CopyableCommand");
+    expect(installCopyable).toContain('label="install command"');
   });
 
   test("makes every visible landing command click-to-copy", () => {
     const landingPage = readLandingFile("components/landing-page.tsx");
     const terminal = readLandingFile("components/terminal-block.tsx");
-    const copyable = readLandingFile("components/copyable-install-command.tsx");
+    const copyable = readLandingFile("components/copyable-command.tsx");
 
     expect(landingPage).toContain("const heroInstallCommand =");
     expect(landingPage).toContain("copyText={heroInstallCommand}");
@@ -510,7 +538,7 @@ describe("landing app source contract", () => {
     expect(terminal).toContain("copyText}`}");
     expect(terminal).toContain("cursor-copy");
 
-    expect(copyable).toContain("aria-label={`Copy install command:");
+    expect(copyable).toMatch(/aria-label=\{`Copy \$\{label\}:/);
     expect(copyable).toContain("command}`}");
     expect(copyable).toContain("cursor-copy");
   });

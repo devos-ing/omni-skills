@@ -9,6 +9,13 @@ export interface WorkflowDiagramStep {
   description: string;
 }
 
+export interface WorkflowUsageExample {
+  imageSrc: string;
+  imageAlt: string;
+  invocation: string;
+  caption: string;
+}
+
 interface CatalogEntryBase {
   slug: string;
   name: string;
@@ -23,6 +30,7 @@ interface CatalogEntryBase {
   installCommand: string;
   skills: WorkflowSkill[];
   diagramSteps: WorkflowDiagramStep[];
+  usageExample?: WorkflowUsageExample;
 }
 
 export interface TeamRoleContent {
@@ -532,6 +540,41 @@ export const workflows: WorkflowCardContent[] = [
         description: "Separate verified facts from residual risk.",
       },
     ],
+  },
+  {
+    kind: "workflow",
+    slug: "codex-input-preview",
+    name: "Codex Input Preview",
+    description:
+      "Turn a prompt, model label, and reasoning effort into a faithful 1200 × 675 simulated Codex composer PNG.",
+    entrySkill: "codex-input-preview",
+    localSkillNames: ["codex-input-preview"],
+    avatarSeed: "sha256:badcaa276e46a5648ede65d2d0cb3429ca4dd81b0443420b9c72ad704d79a1bd",
+    tag: "Workflow",
+    accent: "text-[#5f5ce6]",
+    sourceUrl: `${githubUrl}/tree/main/examples/workflows/codex-input-preview`,
+    installCommand: "npx omniskill@latest install codex-input-preview",
+    skills: [
+      {
+        name: "codex-input-preview",
+        description: "Render one verified Codex composer PNG",
+      },
+    ],
+    diagramSteps: [
+      {
+        label: "Render",
+        skill: "codex-input-preview",
+        description: "Fit the prompt, capture the composer, and verify exact PNG dimensions.",
+      },
+    ],
+    usageExample: {
+      imageSrc: "/examples/codex-input-preview.png",
+      imageAlt:
+        "Simulated Codex input showing “Help me announce that I’m joining the Codex team!” with GPT-5.6 and high effort.",
+      invocation:
+        "$codex-input-preview Draw “Help me announce that I’m joining the Codex team!” using GPT-5.6 with high effort.",
+      caption: "Simulated Codex composer preview — not a live Codex session.",
+    },
   },
   {
     kind: "workflow",
