@@ -207,6 +207,39 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("validates resolved members inside nested team workflows", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "nested-team-members-"));
+    const outerDir = join(rootDir, "outer");
+    try {
+      const { teamDir } = await writeTeamWithMemberFixture({
+        rootDir,
+        memberSource: "./skills/copied-member",
+      });
+      await mkdir(join(teamDir, "skills", "copied-member"), { recursive: true });
+      await writeFile(join(teamDir, "skills", "copied-member", "SKILL.md"), "# copied\n");
+      await mkdir(outerDir, { recursive: true });
+      await writeFile(
+        join(outerDir, "workflow.json"),
+        JSON.stringify({
+          schemaVersion: "0.1",
+          name: "outer-workflow",
+          version: "1.0.0",
+          description: "Workflow containing a nested team.",
+          skills: [{ source: "../team" }],
+          steps: [{ id: "team", title: "Team", skill: "../team" }],
+        }),
+      );
+
+      await expect(
+        resolveWorkflowDependencyGraph({ bundle: await loadWorkflowBundle(outerDir) }),
+      ).rejects.toThrow(
+        "Team member must reference a child workflow with exactly one local entry skill: ./skills/copied-member",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("rejects team member workflows without one local entry skill", async () => {
     const cases = [
       {

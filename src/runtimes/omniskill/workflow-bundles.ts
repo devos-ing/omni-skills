@@ -815,7 +815,7 @@ export async function resolveWorkflowDependencyGraph(input: {
     const nextActive = [...active, bundle];
     for (const [index, dependency] of getWorkflowSkillInstallDependencies(bundle).entries()) {
       const memberSource =
-        bundle === input.bundle && bundle.manifest.kind === "team"
+        bundle.manifest.kind === "team"
           ? bundle.manifest.members?.find(
               (source) => source === bundle.manifest.skills[index]?.source,
             )
@@ -850,11 +850,13 @@ export async function resolveWorkflowDependencyGraph(input: {
   }
 
   try {
-    validateResolvedTeamMembers({
-      root: input.bundle,
-      resolvedChildren,
-      selectedByName,
-    });
+    for (const bundle of selectedByName.values()) {
+      validateResolvedTeamMembers({
+        root: bundle,
+        resolvedChildren,
+        selectedByName,
+      });
+    }
   } catch (error) {
     await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
     throw error;
