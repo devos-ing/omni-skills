@@ -81,8 +81,10 @@ const CHECKPOINTS: readonly Checkpoint[] = [
   { id: "complete", label: "Combined answer" },
 ];
 
-const STARTUP_GOAL_SKILL_SOURCE_ROOT =
-  "https://github.com/devos-ing/omni-skills/blob/main/examples/teams/startup-team/skills";
+const STARTUP_GOAL_SKILL_SOURCE =
+  "https://github.com/devos-ing/omni-skills/blob/main/examples/teams/startup-team/skills/startup-goal/SKILL.md";
+const ROLE_WORKFLOW_SOURCE_ROOT =
+  "https://github.com/devos-ing/omni-skills/blob/main/examples/workflows";
 
 const ROLE_PRESENTATION: Record<
   SkillId,
@@ -125,8 +127,10 @@ const ROLE_PRESENTATION: Record<
   },
 };
 
-function skillSourceUrl(skill: string) {
-  return `${STARTUP_GOAL_SKILL_SOURCE_ROOT}/${skill}/SKILL.md`;
+function skillSourceUrl(skill: SkillId) {
+  return skill === "startup-goal"
+    ? STARTUP_GOAL_SKILL_SOURCE
+    : `${ROLE_WORKFLOW_SOURCE_ROOT}/${skill}/skills/${skill}/SKILL.md`;
 }
 
 function makeStep(skill: SkillId, lines: string[], response: string): SkillStep {

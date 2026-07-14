@@ -96,18 +96,19 @@ describe("README source contract", () => {
     expect(agents).toContain("examples/teams/startup-team");
     expect(agents).toContain('kind: "team"');
     expect(agents).toContain("`coordinator`");
-    expect(agents).toContain("`members`");
+    expect(agents).toContain("`members[]`");
+    expect(agents).toContain("resolve to a child workflow");
+    expect(agents).not.toContain("unique local declared members");
     expect(agents).not.toContain("examples/workflows/startup-goal");
     expect(agents).not.toContain("remove startup-goal --dry-run");
 
     expect(architecture).toContain('kind: "team"');
     expect(architecture).toContain("`coordinator`");
-    expect(architecture).toContain("`members`");
+    expect(architecture).toContain("`members[]`");
+    expect(architecture).toContain("resolve to a child workflow");
     expect(architecture).toContain("examples/teams/<name>");
-    expect(architecture).toContain("startup-goal remains the callable coordinator");
-    expect(architecture).toMatch(
-      /For `startup-team`, the coordinator is marked as the callable\s+entry skill/,
-    );
+    expect(architecture).toMatch(/startup-goal remains the\s+callable coordinator/);
+    expect(architecture).toContain("The coordinator is one declared local entry skill.");
     expect(architecture).not.toContain("the coordinator must also be the callable entry skill");
   });
 

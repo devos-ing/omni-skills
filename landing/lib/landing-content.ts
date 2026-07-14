@@ -19,6 +19,7 @@ interface CatalogEntryBase {
   tag: string;
   accent: string;
   sourceUrl: string;
+  skillSourceUrls?: Record<string, string>;
   installCommand: string;
   skills: WorkflowSkill[];
   diagramSteps: WorkflowDiagramStep[];
@@ -57,7 +58,9 @@ export interface AgentBadgeContent {
 
 export const githubUrl = "https://github.com/devos-ing/omni-skills";
 
-export function getLocalSkillSourceUrl(workflow: CatalogEntryContent, skill: string) {
+export function getSkillSourceUrl(workflow: CatalogEntryContent, skill: string) {
+  const explicitSource = workflow.skillSourceUrls?.[skill];
+  if (explicitSource) return explicitSource;
   if (!workflow.localSkillNames.includes(skill)) return null;
   return `${workflow.sourceUrl.replace("/tree/", "/blob/")}/skills/${skill}/SKILL.md`;
 }
@@ -115,20 +118,21 @@ export const startupTeam: TeamCardContent = {
       description: "Acceptance checks and release risk",
     },
   ],
-  localSkillNames: [
-    "startup-goal",
-    "ceo",
-    "cto",
-    "product-manager",
-    "web-design",
-    "engineering-manager",
-    "founding-engineer",
-    "qa-lead",
-  ],
+  localSkillNames: ["startup-goal"],
   avatarSeed: "sha256:e2445fdfee4ef3d0a8aae8333a820a8485338bd1f62674c2596be49dba878f5f",
   tag: "Team",
   accent: "text-[#c83c24]",
   sourceUrl: `${githubUrl}/tree/main/examples/teams/startup-team`,
+  skillSourceUrls: {
+    "startup-goal": `${githubUrl}/blob/main/examples/teams/startup-team/skills/startup-goal/SKILL.md`,
+    ceo: `${githubUrl}/blob/main/examples/workflows/ceo/skills/ceo/SKILL.md`,
+    cto: `${githubUrl}/blob/main/examples/workflows/cto/skills/cto/SKILL.md`,
+    "product-manager": `${githubUrl}/blob/main/examples/workflows/product-manager/skills/product-manager/SKILL.md`,
+    "web-design": `${githubUrl}/blob/main/examples/workflows/web-design/skills/web-design/SKILL.md`,
+    "engineering-manager": `${githubUrl}/blob/main/examples/workflows/engineering-manager/skills/engineering-manager/SKILL.md`,
+    "founding-engineer": `${githubUrl}/blob/main/examples/workflows/founding-engineer/skills/founding-engineer/SKILL.md`,
+    "qa-lead": `${githubUrl}/blob/main/examples/workflows/qa-lead/skills/qa-lead/SKILL.md`,
+  },
   installCommand: "npx omniskill@latest install startup-team",
   skills: [
     { name: "startup-goal", description: "Coordinate role subagents around one goal" },
@@ -161,6 +165,7 @@ export const startupTeam: TeamCardContent = {
     { name: "mattpocock:tdd", description: "Build with tests where practical" },
     { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures from evidence" },
     { name: "mattpocock:code-review", description: "Review behavior and risk" },
+    { name: "implement", description: "Execute an approved implementation plan" },
     { name: "mattpocock:implement", description: "Execute the implementation slice" },
   ],
   diagramSteps: [

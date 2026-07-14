@@ -418,6 +418,12 @@ Install `startup-team` when you want the full role bench. Invoke its
 bun run dev -- install examples/teams/startup-team
 ```
 
+A team coordinator is one declared local entry skill. Every `members[]` source
+must be declared in `skills[]` and resolve to a child workflow with exactly one
+local entry skill. Member workflow dependencies are expanded recursively; only
+the root team install record is written. Local helper skills may still be
+declared, but they are not team members.
+
 ## Compatibility Example: Combine RTK, Ponytrail, Superpowers, And Matt Pocock Skills
 
 The checked-in `real-engineering` workflow shows how to combine local workflow

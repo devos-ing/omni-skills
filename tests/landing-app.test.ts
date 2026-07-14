@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { githubUrl, startupTeam } from "../landing/lib/landing-content";
 
 const repoRoot = join(import.meta.dir, "..");
 const landingRoot = join(repoRoot, "landing");
@@ -241,7 +242,7 @@ describe("landing app source contract", () => {
     expect(content).toContain("installCommand: string");
     expect(content).toContain("localSkillNames: string[]");
     expect(content).toContain("diagramSteps: WorkflowDiagramStep[]");
-    expect(content).toContain("getLocalSkillSourceUrl");
+    expect(content).toContain("getSkillSourceUrl");
     expect(content).toContain('localSkillNames: ["haaland"]');
     expect(content).toContain('slug: "startup-team"');
     expect(content).toContain(
@@ -264,21 +265,35 @@ describe("landing app source contract", () => {
     expect(content).toContain("Execute the planned change with tests and review.");
   });
 
-  test("mirrors the exact startup-team manifest skill roster", () => {
+  test("mirrors the expanded startup-team roster and canonical member sources", () => {
     const content = readLandingFile("lib/landing-content.ts");
     const startupCardStart = content.indexOf('slug: "startup-team"');
     const nextCardStart = content.indexOf('slug: "ceo"', startupCardStart);
     const startupCard = content.slice(startupCardStart, nextCardStart);
     const manifest = JSON.parse(
       readFileSync(join(repoRoot, "examples", "teams", "startup-team", "workflow.json"), "utf8"),
-    ) as { skills: Array<{ source: string }> };
-    const expectedNames = manifest.skills.map(({ source }) =>
-      source.startsWith("./skills/") ? source.slice("./skills/".length) : source,
+    ) as { members: string[] };
+    const lock = JSON.parse(
+      readFileSync(
+        join(repoRoot, "examples", "teams", "startup-team", "workflow.lock.json"),
+        "utf8",
+      ),
+    ) as { skills: Array<{ source: string; resolvedName: string; kind: "local" | "external" }> };
+    const memberSkills = startupTeam.members.map(({ skill }) => skill);
+    const expectedNames = lock.skills.map(({ source, resolvedName, kind }) =>
+      kind === "external" ? source : resolvedName,
     );
 
     expect(startupCardStart).toBeGreaterThan(-1);
     expect(nextCardStart).toBeGreaterThan(startupCardStart);
-    expect(expectedNames).toHaveLength(25);
+    expect(manifest.members).toEqual(memberSkills.map((skill) => `catalog:${skill}`));
+    expect(startupTeam.localSkillNames).toEqual(["startup-goal"]);
+    for (const skill of memberSkills) {
+      expect(startupTeam.skillSourceUrls?.[skill]).toBe(
+        `${githubUrl}/blob/main/examples/workflows/${skill}/skills/${skill}/SKILL.md`,
+      );
+    }
+    expect(expectedNames).toHaveLength(26);
     for (const name of expectedNames) {
       expect(startupCard).toContain(`name: "${name}"`);
     }
@@ -442,7 +457,7 @@ describe("landing app source contract", () => {
     expect(route).toContain('import Link from "next/link"');
     expect(route).toContain('import { notFound } from "next/navigation"');
     expect(route).toContain('from "../../../lib/landing-content"');
-    expect(route).toContain("getLocalSkillSourceUrl");
+    expect(route).toContain("getSkillSourceUrl");
     expect(route).toContain("export function generateStaticParams()");
     expect(route).toContain("catalogEntries.map");
     expect(route).toContain("catalogEntries.find");
@@ -556,9 +571,11 @@ describe("landing app source contract", () => {
     expect(demo).toContain("getRoleStatus");
     expect(demo).toContain('aria-live="polite"');
     expect(demo).toContain("aria-pressed={isSelected}");
-    expect(demo).toContain(
-      "https://github.com/devos-ing/omni-skills/blob/main/examples/teams/startup-team/skills",
+    expect(demo).toContain("examples/teams/startup-team/skills/startup-goal/SKILL.md");
+    expect(demo).toMatch(
+      /\$\{ROLE_WORKFLOW_SOURCE_ROOT\}\/\$\{skill\}\/skills\/\$\{skill\}\/SKILL\.md/,
     );
+    expect(demo).not.toMatch(/examples\/teams\/startup-team\/skills\/\$\{skill\}\/SKILL\.md/);
     expect(demo).toContain('target="_blank"');
     expect(demo).toContain('rel="noreferrer"');
     expect(demo).toContain("lg:grid-cols-[13rem_minmax(0,1fr)_13rem]");

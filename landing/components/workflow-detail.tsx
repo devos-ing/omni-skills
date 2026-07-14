@@ -1,5 +1,5 @@
 import { ArrowRight, ExternalLink, GitBranch, Zap } from "lucide-react";
-import { getLocalSkillSourceUrl, type WorkflowCardContent } from "../lib/landing-content";
+import { getSkillSourceUrl, type WorkflowCardContent } from "../lib/landing-content";
 import { WorkflowAvatar } from "./workflow-avatar";
 
 interface WorkflowDetailProps {
@@ -7,7 +7,7 @@ interface WorkflowDetailProps {
 }
 
 export function WorkflowDetail({ workflow }: WorkflowDetailProps) {
-  const entrySkillSourceUrl = getLocalSkillSourceUrl(workflow, workflow.entrySkill);
+  const entrySkillSourceUrl = getSkillSourceUrl(workflow, workflow.entrySkill);
 
   return (
     <aside className="rounded-lg border border-white/10 bg-white/[0.035] p-5 lg:sticky lg:top-6">
@@ -52,7 +52,7 @@ export function WorkflowDetail({ workflow }: WorkflowDetailProps) {
 
       <div className="mt-5 space-y-3">
         {workflow.diagramSteps.map((step, index) => {
-          const skillSourceUrl = getLocalSkillSourceUrl(workflow, step.skill);
+          const skillSourceUrl = getSkillSourceUrl(workflow, step.skill);
           return (
             <div key={`${step.label}-${step.skill}`} className="relative flex gap-3">
               <div className="flex flex-col items-center">

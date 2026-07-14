@@ -16,8 +16,15 @@ function manifestPath(entry: CatalogEntryContent) {
   return join(repoRoot, "examples", folder, entry.slug, "workflow.json");
 }
 
-function localName(source: string) {
-  return source.startsWith("./skills/") ? source.slice("./skills/".length) : source;
+function lockPath(entry: CatalogEntryContent) {
+  const folder = entry.kind === "team" ? "teams" : "workflows";
+  return join(repoRoot, "examples", folder, entry.slug, "workflow.lock.json");
+}
+
+function displayName(source: string) {
+  if (source.startsWith("./skills/")) return source.slice("./skills/".length);
+  if (source.startsWith("catalog:")) return source.slice("catalog:".length);
+  return source;
 }
 
 describe("landing teams and skill hub data", () => {
@@ -38,13 +45,24 @@ describe("landing teams and skill hub data", () => {
     expect(catalogEntries[0]).toBe(startupTeam);
   });
 
-  test("mirrors every displayed package manifest skill roster", () => {
+  test("mirrors workflow manifests and the expanded team lock roster", () => {
     for (const entry of catalogEntries) {
+      if (entry.kind === "team") {
+        const lock = JSON.parse(readFileSync(lockPath(entry), "utf8")) as {
+          skills: Array<{ source: string; resolvedName: string; kind: "local" | "external" }>;
+        };
+        expect(entry.skills.map(({ name }) => name).sort()).toEqual(
+          lock.skills
+            .map(({ source, resolvedName, kind }) => (kind === "external" ? source : resolvedName))
+            .sort(),
+        );
+        continue;
+      }
       const manifest = JSON.parse(readFileSync(manifestPath(entry), "utf8")) as {
         skills: Array<{ source: string }>;
       };
       expect(entry.skills.map(({ name }) => name)).toEqual(
-        manifest.skills.map(({ source }) => localName(source)),
+        manifest.skills.map(({ source }) => displayName(source)),
       );
     }
   });
@@ -54,9 +72,9 @@ describe("landing teams and skill hub data", () => {
       coordinator: string;
       members: string[];
     };
-    expect(startupTeam.coordinator.skill).toBe(localName(manifest.coordinator));
+    expect(startupTeam.coordinator.skill).toBe(displayName(manifest.coordinator));
     expect(startupTeam.members.map(({ skill }) => skill)).toEqual(
-      manifest.members.map((source) => localName(source)),
+      manifest.members.map((source) => displayName(source)),
     );
   });
 
