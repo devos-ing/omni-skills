@@ -424,7 +424,7 @@ debugging, review, and verification.
 Skills:
 
 - `founding-engineer`: Set the implementation frame
-- `implement`: Implement the planned change
+- `mattpocock:implement`: Implement the planned change
 - `mattpocock:tdd`: Use test-first development
 - `mattpocock:diagnosing-bugs`: Diagnose failures
 - `mattpocock:code-review`: Review behavior and risk
@@ -434,7 +434,7 @@ Ordered skill path:
 
 1. Brief -> `founding-engineer`
    - Read the plan and acceptance criteria.
-2. Implement -> `implement`
+2. Implement -> `mattpocock:implement`
    - Ship the smallest correct slice.
 3. TDD -> `mattpocock:tdd`
    - Keep tests close to changed behavior.

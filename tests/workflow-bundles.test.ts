@@ -458,6 +458,54 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("deduplicates a legacy bare alias when a pinned canonical dependency is available", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-legacy-alias-"));
+    const childDir = join(rootDir, "child");
+    await mkdir(childDir, { recursive: true });
+    await writeFile(
+      join(childDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "legacy-child",
+        version: "1.0.0",
+        description: "Legacy child dependency.",
+        skills: [{ source: "implement" }],
+        steps: [{ id: "run", title: "Run", skill: "implement" }],
+      }),
+    );
+    await writeFile(
+      join(rootDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "canonical-parent",
+        version: "1.0.0",
+        description: "Canonical parent dependency.",
+        skills: [
+          { source: "./child" },
+          {
+            source: "mattpocock:implement",
+            repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+          },
+        ],
+        steps: [{ id: "run", title: "Run", skill: "mattpocock:implement" }],
+      }),
+    );
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(rootDir),
+      });
+      expect(graph.dependencies).toEqual([
+        {
+          source: "mattpocock:implement",
+          repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+        },
+      ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("rejects invalid manifest semantic versions during schema parsing", () => {
     expect(() =>
       WorkflowBundleManifestSchema.parse({
@@ -1533,6 +1581,13 @@ describe("workflow bundles", () => {
         stat(join(import.meta.dir, "..", "examples", "teams", "startup-team", "skills", role)),
       ).rejects.toThrow();
     }
+    expect(graph.dependencies.filter(({ source }) => source === "implement")).toHaveLength(0);
+    expect(graph.dependencies.filter(({ source }) => source === "mattpocock:implement")).toEqual([
+      {
+        source: "mattpocock:implement",
+        repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+      },
+    ]);
     await graph.cleanup?.();
     expect(skill).toContain("name: startup-goal");
     for (const heading of [

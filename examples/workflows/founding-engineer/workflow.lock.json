@@ -1,8 +1,19 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "founding-engineer",
   "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:12:50.563Z",
+  "generatedAt": "2026-07-14T09:18:44.589Z",
+  "workflows": [
+    {
+      "id": "workflow:founding-engineer@0.1.1",
+      "name": "founding-engineer",
+      "version": "0.1.1",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/founding-engineer",
@@ -11,10 +22,11 @@
       "hash": "sha256:31849f572dc09e4df212fe66981a04cb67749364441501526d0c48ebb0175490"
     },
     {
-      "source": "implement",
+      "source": "mattpocock:implement",
       "resolvedName": "implement",
       "kind": "external",
-      "hash": "sha256:16f51d5ecc0b385c98451eb9da8edc19bf16bd27d7c65321abdd26592b1df311"
+      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
+      "hash": "sha256:1ad478cef4ccf1cde4cfff91cd551cb781e21da4e6d4940ef4df64c209db35cc"
     },
     {
       "source": "mattpocock:tdd",

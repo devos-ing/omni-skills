@@ -268,9 +268,9 @@ npx omniskill@latest install founding-engineer
 
 Description：Implementation lane，聚焦 smallest correct change：tests、debugging、review、verification。
 
-Skills：`founding-engineer`、`implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`superpowers:verification-before-completion`。
+Skills：`founding-engineer`、`mattpocock:implement`、`mattpocock:tdd`、`mattpocock:diagnosing-bugs`、`mattpocock:code-review`、`superpowers:verification-before-completion`。
 
-Ordered skill path：Brief -> `founding-engineer`；Implement -> `implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`；Verify -> `superpowers:verification-before-completion`。
+Ordered skill path：Brief -> `founding-engineer`；Implement -> `mattpocock:implement`；TDD -> `mattpocock:tdd`；Debug -> `mattpocock:diagnosing-bugs`；Review -> `mattpocock:code-review`；Verify -> `superpowers:verification-before-completion`。
 
 ### QA Lead
 

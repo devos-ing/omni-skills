@@ -343,6 +343,10 @@ export interface WorkflowSkillInstallDependency {
   repo?: string;
 }
 
+const canonicalWorkflowSkillAliases: Record<string, string> = {
+  implement: "mattpocock:implement",
+};
+
 export interface WorkflowDependencyResolver {
   resolve(input: {
     dependency: WorkflowSkillInstallDependency;
@@ -948,8 +952,15 @@ export async function resolveWorkflowDependencyGraph(input: {
     const selected = selectedDependencies.get(dependencyId);
     return selected ? [selected] : [];
   });
-  const dependencies = selectedDependencyList.map(({ dependency }) => dependency);
-  const lockSources = selectedDependencyList.map(({ lockSource }) => lockSource);
+  const selectedSources = new Set(
+    selectedDependencyList.map(({ dependency }) => dependency.source),
+  );
+  const deduplicatedDependencyList = selectedDependencyList.filter(({ dependency }) => {
+    const canonicalSource = canonicalWorkflowSkillAliases[dependency.source];
+    return !canonicalSource || !selectedSources.has(canonicalSource);
+  });
+  const dependencies = deduplicatedDependencyList.map(({ dependency }) => dependency);
+  const lockSources = deduplicatedDependencyList.map(({ lockSource }) => lockSource);
 
   if (!input.ignoreLockValidation && input.bundle.lock?.schemaVersion === "0.2") {
     try {
