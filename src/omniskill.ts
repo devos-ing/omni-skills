@@ -15,6 +15,7 @@ import {
 } from "./cli-theme";
 import {
   type AgentProfileArtifact,
+  createOrchestrationRunStore,
   executeAgentProfilePlan,
   getInterfaceCraftInstalledSkillName,
   loadOrchestrationConfigPlan,
@@ -22,6 +23,7 @@ import {
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
   type OrchestrationDispatcher,
+  type OrchestrationRunStore,
   parseSkillInstallAgents,
   preflightAgentProfiles,
   resolveInstallSkillName,
@@ -33,6 +35,9 @@ import {
   type AgentProfileTarget,
   createWorkflowBundleScaffold,
   createWorkflowRemovalPlan,
+  type DispatchAttempt,
+  type DispatchReceipt,
+  type DispatchRequest,
   DispatchRuntimeSchema,
   executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
@@ -167,6 +172,7 @@ export interface ConfigureOmniskillCommandOptions {
   onboardPrompt?: OmniskillOnboardPrompt;
   onboardCommandRunner?: OmniskillOnboardCommandRunner;
   dispatchers?: Partial<Record<"codex" | "claude", OrchestrationDispatcher>>;
+  createRunStore?: (homeDir: string) => OrchestrationRunStore;
 }
 
 interface OmniskillInstallCommandOptions {
@@ -307,9 +313,11 @@ function configureDispatchCommand(
         capabilities: { [runtime]: available },
         readProfile: (path) => readFile(path, "utf8"),
       });
-      if (commandOptions.json) {
-        console.log(JSON.stringify(planSet, null, 2));
-      } else {
+      if (commandOptions.dryRun) {
+        if (commandOptions.json) {
+          console.log(JSON.stringify(planSet, null, 2));
+          return;
+        }
         console.log(success(`Orchestration dispatch plan: ${planSet.primary.profileId}`));
         console.log(keyValue("Runtime", planSet.primary.runtime));
         console.log(keyValue("Tier", planSet.primary.tier));
@@ -317,9 +325,60 @@ function configureDispatchCommand(
         console.log(keyValue("Effort", planSet.primary.effort));
         console.log(keyValue("Access", planSet.primary.access));
         console.log(keyValue("Evidence required", planSet.primary.evidenceRequired));
+        return;
       }
-      if (commandOptions.dryRun) return;
-      throw new Error("Dispatch execution requires receipt persistence; use --dry-run");
+      const request: DispatchRequest = {
+        workflow: workflowName,
+        role: commandOptions.role,
+        task,
+        cwd: options.rootDir,
+        homeDir,
+        runtime,
+        approveWorkspaceWrite: commandOptions.approveWorkspaceWrite,
+      };
+      const store = (
+        options.createRunStore ?? ((dir) => createOrchestrationRunStore({ homeDir: dir }))
+      )(homeDir);
+      const plannedReceipt = await store.create({ request, planSet });
+      if (!dispatcher) {
+        throw new Error(`Dispatch runtime unavailable: ${runtime}`);
+      }
+      const result = await dispatcher.dispatch(planSet.primary);
+      const attempt: DispatchAttempt = {
+        attemptNumber: 1,
+        candidateIndex: planSet.primary.candidateIndex,
+        profileId: planSet.primary.profileId,
+        model: planSet.primary.model,
+        status: result.status,
+        evidence: result.evidence,
+        ...(result.sessionId ? { sessionId: result.sessionId } : {}),
+        ...(result.failureCode ? { failureCode: result.failureCode } : {}),
+        ...(result.failureReason ? { failureReason: result.failureReason } : {}),
+      };
+      const receipt: DispatchReceipt = {
+        ...plannedReceipt,
+        status: result.status,
+        evidence: result.evidence,
+        consultationCount:
+          plannedReceipt.consultationCount + (result.status === "consultation_required" ? 1 : 0),
+        ...(result.sessionId ? { sessionId: result.sessionId } : {}),
+        ...(result.failureCode ? { failureCode: result.failureCode } : {}),
+        ...(result.failureReason ? { failureReason: result.failureReason } : {}),
+        updatedAt: new Date().toISOString(),
+      };
+      await store.appendAttempt(plannedReceipt.runId, attempt);
+      await store.finish(plannedReceipt.runId, receipt);
+      if (commandOptions.json) {
+        console.log(JSON.stringify(receipt, null, 2));
+      } else {
+        console.log(success(`Orchestration dispatch ${receipt.status}: ${receipt.runId}`));
+        console.log(keyValue("Profile", receipt.profileId));
+        console.log(keyValue("Model", receipt.model));
+        console.log(keyValue("Evidence", receipt.evidence));
+      }
+      if (result.status === "failed") {
+        throw new Error(result.failureReason ?? `Orchestration dispatch failed: ${receipt.runId}`);
+      }
     });
 }
 

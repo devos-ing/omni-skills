@@ -10,6 +10,7 @@ import {
   type OmniskillOnboardCommand,
 } from "../src/omniskill";
 import {
+  createOrchestrationRunStore,
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
   type SkillInstallResult,
@@ -43,6 +44,74 @@ function fakeSkillInstallResult(input: {
       },
     ],
   };
+}
+
+async function writeInstalledDispatchFixture(homeDir: string): Promise<{
+  profileId: string;
+  profilePath: string;
+}> {
+  const profileId = "omniskills-startup-team-cto";
+  const profilePath = join(homeDir, ".codex", "agents", `${profileId}.toml`);
+  const profileContent =
+    '# omniskills-managed: team=startup-team source=catalog:cto\nname = "omniskills-startup-team-cto"\n';
+  await mkdir(join(homeDir, ".omniskills", "workflows"), { recursive: true });
+  await mkdir(join(homeDir, ".codex", "agents"), { recursive: true });
+  await writeFile(profilePath, profileContent);
+  await writeFile(
+    join(homeDir, ".omniskills", "workflows", "startup-team.json"),
+    JSON.stringify({
+      schemaVersion: "0.1",
+      kind: "team",
+      name: "startup-team",
+      version: "0.3.0",
+      description: "Dispatch fixture.",
+      coordinator: "./skills/startup-goal",
+      members: ["catalog:cto"],
+      orchestration: {
+        roles: {
+          "./skills/startup-goal": {
+            tier: "deep",
+            access: "read-only",
+            consultation: "receive",
+          },
+          "catalog:cto": {
+            tier: "deep",
+            access: "read-only",
+            consultation: "request",
+          },
+        },
+      },
+      skills: [{ source: "./skills/startup-goal", entry: true }, { source: "catalog:cto" }],
+      steps: [{ id: "route", title: "Route", skill: "./skills/startup-goal" }],
+      source: { kind: "local", path: "/tmp/startup-team" },
+      installArtifacts: [
+        {
+          kind: "agent_profile",
+          source: "catalog:cto",
+          profileId,
+          agent: "codex",
+          status: "installed",
+          path: profilePath,
+          contentHash: hashAgentProfileContent(profileContent),
+          taskClass: "role",
+          tier: "deep",
+          model: "gpt-5.6",
+          effort: "high",
+          access: "read-only",
+          instructions: "You are the catalog:cto agent.",
+          consultation: "request",
+          limits: {
+            retryPerCandidate: 1,
+            reassignmentPerWorkItem: 1,
+            consultationsPerAgent: 2,
+          },
+          candidateIndex: 0,
+          candidateCount: 1,
+        },
+      ],
+    }),
+  );
+  return { profileId, profilePath };
 }
 
 async function writeGitWorkflowFixtureAt(
@@ -459,6 +528,81 @@ describe("omniskill command module", () => {
         }),
       );
       await expect(stat(join(homeDir, ".omniskills", "runs"))).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dispatch executes a verified profile and persists its receipt", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exec-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exec-home-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    try {
+      const { profileId } = await writeInstalledDispatchFixture(homeDir);
+      console.log = (...values: unknown[]) => logs.push(values.join(" "));
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            now: () => new Date("2026-07-15T00:00:00.000Z"),
+            createRunId: () => "run-1",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            available: async () => true,
+            dispatch: async () => ({
+              status: "completed",
+              evidence: "launch_configured",
+              sessionId: "thread-1",
+            }),
+            resume: async () => {
+              throw new Error("resume is not exercised by dispatch");
+            },
+          },
+        },
+      });
+
+      await program.parseAsync(
+        [
+          "dispatch",
+          "startup-team",
+          "--role",
+          "catalog:cto",
+          "--task",
+          "Review boundaries",
+          "--home",
+          homeDir,
+          "--json",
+        ],
+        { from: "user" },
+      );
+
+      const receipt = JSON.parse(logs.join("\n"));
+      expect(receipt).toEqual(
+        expect.objectContaining({
+          runId: "run-1",
+          status: "completed",
+          profileId,
+          evidence: "launch_configured",
+          sessionId: "thread-1",
+        }),
+      );
+      const runDir = join(homeDir, ".omniskills", "runs", "startup-team", "run-1");
+      expect(JSON.parse(await readFile(join(runDir, "receipt.json"), "utf8"))).toEqual(receipt);
+      expect((await readFile(join(runDir, "attempts.jsonl"), "utf8")).trim()).toContain(
+        '"status":"completed"',
+      );
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
