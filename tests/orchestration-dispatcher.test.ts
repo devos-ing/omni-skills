@@ -158,6 +158,21 @@ describe("Codex orchestration dispatcher", () => {
       sessionId: "thread-consult",
       consultation,
     });
+
+    const missingSession = dispatcherWith({
+      exitCode: 0,
+      stderr: "",
+      stdout: JSON.stringify({
+        type: "item.completed",
+        item: { type: "agent_message", text: JSON.stringify(consultation) },
+      }),
+    });
+    await expect(missingSession.dispatcher.dispatch(readOnlyPlan)).resolves.toEqual({
+      status: "failed",
+      evidence: "launch_configured",
+      failureCode: "runtime_failed",
+      failureReason: "Codex returned a consultation without a resumable session id",
+    });
   });
 
   test("classifies CLI upgrade and model availability failures", async () => {

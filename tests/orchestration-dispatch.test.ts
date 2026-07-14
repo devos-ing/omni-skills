@@ -147,6 +147,12 @@ describe("orchestration dispatch planning", () => {
     expect(
       hasRepeatedConsultationEvidence(prior, {
         ...prior,
+        evidence: [...prior.evidence, "Two public boundaries remain."],
+      }),
+    ).toBe(true);
+    expect(
+      hasRepeatedConsultationEvidence(prior, {
+        ...prior,
         evidence: ["The adapter now fails compatibility verification."],
       }),
     ).toBe(false);

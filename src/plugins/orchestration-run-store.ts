@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type {
-  DispatchAttempt,
-  DispatchPlanSet,
-  DispatchReceipt,
-  DispatchRequest,
+import {
+  type DispatchAttempt,
+  DispatchAttemptSchema,
+  type DispatchPlanSet,
+  DispatchPlanSetSchema,
+  type DispatchReceipt,
+  DispatchReceiptSchema,
+  type DispatchRequest,
+  DispatchRequestSchema,
 } from "../runtimes/omniskill";
 
 export interface StoredDispatchRun {
@@ -35,10 +39,53 @@ function assertSafeRunId(runId: string): void {
   }
 }
 
-async function atomicWriteJson(path: string, value: unknown): Promise<void> {
+async function atomicWriteText(path: string, value: string): Promise<void> {
   const temporaryPath = `${path}.tmp-${randomUUID()}`;
-  await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  await writeFile(temporaryPath, value, "utf8");
   await rename(temporaryPath, path);
+}
+
+async function atomicWriteJson(path: string, value: unknown): Promise<void> {
+  await atomicWriteText(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function parseJson(text: string): unknown {
+  return JSON.parse(text) as unknown;
+}
+
+async function withRunLock<T>(runDir: string, action: () => Promise<T>): Promise<T> {
+  const lockDir = join(runDir, ".attempts.lock");
+  for (let attempt = 0; attempt < 250; attempt += 1) {
+    try {
+      await mkdir(lockDir);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      const stale = await stat(lockDir)
+        .then((entry) => Date.now() - entry.mtimeMs > 30_000)
+        .catch((statError: unknown) => {
+          if ((statError as NodeJS.ErrnoException).code === "ENOENT") return false;
+          throw statError;
+        });
+      if (stale) {
+        await rm(lockDir, { recursive: true, force: true });
+        continue;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      continue;
+    }
+    try {
+      return await action();
+    } finally {
+      await rm(lockDir, { recursive: true, force: true });
+    }
+  }
+  throw new Error(`Timed out waiting for orchestration run lock: ${runDir}`);
+}
+
+function assertRunLink(runId: string, recordRunId: string, recordType: string): void {
+  if (recordRunId !== runId) {
+    throw new Error(`${recordType} run id ${recordRunId} does not match ${runId}`);
+  }
 }
 
 export function createOrchestrationRunStore(input: RunStoreOptions): OrchestrationRunStore {
@@ -82,6 +129,9 @@ export function createOrchestrationRunStore(input: RunStoreOptions): Orchestrati
         model: planSet.primary.model,
         effort: planSet.primary.effort,
         access: planSet.primary.access,
+        candidateIndex: planSet.primary.candidateIndex,
+        candidateCount: planSet.primary.candidateCount,
+        workspaceWriteApproved: planSet.primary.workspaceWriteApproved,
         evidence: "requested",
         adapter: "codex-cli",
         status: "planned",
@@ -100,12 +150,20 @@ export function createOrchestrationRunStore(input: RunStoreOptions): Orchestrati
 
     async appendAttempt(runId, attempt) {
       const runDir = await findRunDir(runId);
-      await appendFile(join(runDir, "attempts.jsonl"), `${JSON.stringify(attempt)}\n`, "utf8");
+      const attemptsPath = join(runDir, "attempts.jsonl");
+      const parsedAttempt = DispatchAttemptSchema.parse(attempt);
+      assertRunLink(runId, parsedAttempt.runId, "Dispatch attempt");
+      await withRunLock(runDir, async () => {
+        const current = await readFile(attemptsPath, "utf8");
+        await atomicWriteText(attemptsPath, `${current}${JSON.stringify(parsedAttempt)}\n`);
+      });
     },
 
     async finish(runId, receipt) {
       const runDir = await findRunDir(runId);
-      await atomicWriteJson(join(runDir, "receipt.json"), receipt);
+      const parsedReceipt = DispatchReceiptSchema.parse(receipt);
+      assertRunLink(runId, parsedReceipt.runId, "Dispatch receipt");
+      await atomicWriteJson(join(runDir, "receipt.json"), parsedReceipt);
     },
 
     async load(runId) {
@@ -116,14 +174,28 @@ export function createOrchestrationRunStore(input: RunStoreOptions): Orchestrati
         readFile(join(runDir, "attempts.jsonl"), "utf8"),
         readFile(join(runDir, "receipt.json"), "utf8"),
       ]);
+      const request = DispatchRequestSchema.parse(parseJson(requestJson));
+      const planSet = DispatchPlanSetSchema.parse(parseJson(planJson));
+      const attempts = attemptsJson
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((line) => DispatchAttemptSchema.parse(parseJson(line)));
+      const receipt = DispatchReceiptSchema.parse(parseJson(receiptJson));
+      assertRunLink(runId, receipt.runId, "Dispatch receipt");
+      for (const attempt of attempts) assertRunLink(runId, attempt.runId, "Dispatch attempt");
+      if (
+        request.workflow !== planSet.primary.workflow ||
+        request.workflow !== receipt.workflow ||
+        request.runtime !== planSet.primary.runtime ||
+        request.runtime !== receipt.runtime
+      ) {
+        throw new Error(`Orchestration run records are inconsistent: ${runId}`);
+      }
       return {
-        request: JSON.parse(requestJson) as DispatchRequest,
-        planSet: JSON.parse(planJson) as DispatchPlanSet,
-        attempts: attemptsJson
-          .split(/\r?\n/)
-          .filter(Boolean)
-          .map((line) => JSON.parse(line) as DispatchAttempt),
-        receipt: JSON.parse(receiptJson) as DispatchReceipt,
+        request,
+        planSet,
+        attempts,
+        receipt,
         runDir,
       };
     },

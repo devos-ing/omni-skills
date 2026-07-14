@@ -1235,7 +1235,7 @@ describe("omniskill command module", () => {
       );
       expect(JSON.parse(await readFile(receiptPath, "utf8"))).toEqual(
         expect.objectContaining({
-          status: "consultation_required",
+          status: "failed",
           failureCode: "human_escalation_required",
         }),
       );

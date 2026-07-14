@@ -3,6 +3,7 @@ import {
   type ConsultationDecision,
   type ConsultationRequest,
   ConsultationRequestSchema,
+  type DispatchFailureCode,
   type DispatchPlan,
 } from "../runtimes/omniskill";
 
@@ -11,11 +12,7 @@ export interface DispatchAttemptResult {
   evidence: "launch_configured" | "runtime_reported";
   sessionId?: string;
   runtimeModel?: string;
-  failureCode?:
-    | "runtime_upgrade_required"
-    | "model_unavailable"
-    | "runtime_mismatch"
-    | "runtime_failed";
+  failureCode?: DispatchFailureCode;
   failureReason?: string;
   consultation?: ConsultationRequest;
 }
@@ -122,11 +119,20 @@ function classifyResult(plan: DispatchPlan, result: SubprocessResult): DispatchA
   }
   const consultation = findConsultation(events);
   if (consultation) {
+    if (!sessionId) {
+      return {
+        status: "failed",
+        evidence,
+        failureCode: "runtime_failed",
+        failureReason: "Codex returned a consultation without a resumable session id",
+        ...(runtimeModel ? { runtimeModel } : {}),
+      };
+    }
     return {
       status: "consultation_required",
       evidence,
       consultation,
-      ...(sessionId ? { sessionId } : {}),
+      sessionId,
       ...(runtimeModel ? { runtimeModel } : {}),
     };
   }

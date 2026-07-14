@@ -35,6 +35,7 @@ import {
   type AgentProfileTarget,
   type ConsultationDecision,
   ConsultationDecisionSchema,
+  type ConsultationRequest,
   createDispatchAttemptSchedule,
   createWorkflowBundleScaffold,
   createWorkflowRemovalPlan,
@@ -375,6 +376,8 @@ function configureDispatchCommand(
           attemptsMade = index + 1;
           const previousCandidate = schedule[index - 1];
           const attempt: DispatchAttempt = {
+            runId: plannedReceipt.runId,
+            plan: selectedPlan,
             attemptNumber: index + 1,
             candidateIndex: selectedPlan.candidateIndex,
             profileId: selectedPlan.profileId,
@@ -389,6 +392,7 @@ function configureDispatchCommand(
             previousCandidate.candidateIndex !== selectedPlan.candidateIndex
               ? { fallbackFromAttempt: index }
               : {}),
+            createdAt: new Date().toISOString(),
           };
           await store.appendAttempt(plannedReceipt.runId, attempt);
           if (
@@ -404,8 +408,13 @@ function configureDispatchCommand(
           ...plannedReceipt,
           profileId: selectedPlan.profileId,
           profileHash: selectedPlan.profileHash,
+          tier: selectedPlan.tier,
           model: selectedPlan.model,
           effort: selectedPlan.effort,
+          access: selectedPlan.access,
+          candidateIndex: selectedPlan.candidateIndex,
+          candidateCount: selectedPlan.candidateCount,
+          workspaceWriteApproved: selectedPlan.workspaceWriteApproved,
           status: result.status,
           evidence: result.evidence,
           consultationCount:
@@ -517,19 +526,25 @@ async function runOmniskillDispatchResume(
   const nextAttemptNumber = stored.attempts.length + 1;
   if (decision === "escalate-to-human") {
     const attempt: DispatchAttempt = {
+      runId,
+      plan: currentPlan,
       attemptNumber: nextAttemptNumber,
       candidateIndex: currentPlan.candidateIndex,
       profileId: currentPlan.profileId,
       model: currentPlan.model,
-      status: "consultation_required",
+      status: "failed",
       evidence:
         stored.receipt.evidence === "requested" ? "launch_configured" : stored.receipt.evidence,
       sessionId: stored.receipt.sessionId,
+      failureCode: "human_escalation_required",
+      failureReason: commandOptions.message,
       resumeDecision: decision,
       ...(stored.receipt.consultation ? { consultation: stored.receipt.consultation } : {}),
+      createdAt: new Date().toISOString(),
     };
     const receipt: DispatchReceipt = {
       ...stored.receipt,
+      status: "failed",
       failureCode: "human_escalation_required",
       failureReason: commandOptions.message,
       updatedAt: new Date().toISOString(),
@@ -575,12 +590,16 @@ async function runOmniskillDispatchResume(
   const consultationLimitExceeded =
     result.status === "consultation_required" &&
     stored.receipt.consultationCount >= selectedPlan.limits.consultationsPerAgent;
+  const nextConsultation = result.consultation;
   const repeatedConsultationEvidence =
     result.status === "consultation_required" &&
-    result.consultation !== undefined &&
-    stored.receipt.consultation !== undefined &&
-    hasRepeatedConsultationEvidence(stored.receipt.consultation, result.consultation);
+    nextConsultation !== undefined &&
+    [stored.receipt.consultation, ...stored.attempts.map((attempt) => attempt.consultation)]
+      .filter((consultation): consultation is ConsultationRequest => consultation !== undefined)
+      .some((consultation) => hasRepeatedConsultationEvidence(consultation, nextConsultation));
   const attempt: DispatchAttempt = {
+    runId,
+    plan: selectedPlan,
     attemptNumber: nextAttemptNumber,
     candidateIndex: selectedPlan.candidateIndex,
     profileId: selectedPlan.profileId,
@@ -593,6 +612,7 @@ async function runOmniskillDispatchResume(
     ...(result.failureCode ? { failureCode: result.failureCode } : {}),
     ...(result.failureReason ? { failureReason: result.failureReason } : {}),
     ...(result.consultation ? { consultation: result.consultation } : {}),
+    createdAt: new Date().toISOString(),
   };
   const receipt: DispatchReceipt = {
     ...stored.receipt,
@@ -603,6 +623,9 @@ async function runOmniskillDispatchResume(
     model: selectedPlan.model,
     effort: selectedPlan.effort,
     access: selectedPlan.access,
+    candidateIndex: selectedPlan.candidateIndex,
+    candidateCount: selectedPlan.candidateCount,
+    workspaceWriteApproved: selectedPlan.workspaceWriteApproved,
     status: consultationLimitExceeded || repeatedConsultationEvidence ? "failed" : result.status,
     evidence: result.evidence,
     consultationCount:

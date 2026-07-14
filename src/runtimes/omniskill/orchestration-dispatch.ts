@@ -32,10 +32,134 @@ export const ConsultationDecisionSchema = z.enum([
   "escalate-to-human",
 ]);
 
+export const DispatchFailureCodeSchema = z.enum([
+  "consultation_limit_exceeded",
+  "consultation_repeated_evidence",
+  "human_escalation_required",
+  "model_unavailable",
+  "retry_exhausted",
+  "runtime_failed",
+  "runtime_mismatch",
+  "runtime_upgrade_required",
+]);
+
+const DispatchTierSchema = z.enum(["deep", "standard", "fast"]);
+const DispatchAccessSchema = z.enum(["read-only", "workspace-write"]);
+const DispatchStatusSchema = z.enum(["planned", "completed", "failed", "consultation_required"]);
+const AttemptStatusSchema = z.enum(["completed", "failed", "consultation_required"]);
+const DispatchLimitsSchema = z
+  .object({
+    retryPerCandidate: z.number().int().nonnegative(),
+    reassignmentPerWorkItem: z.number().int().nonnegative(),
+    consultationsPerAgent: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const DispatchRequestSchema = z
+  .object({
+    workflow: z.string().min(1),
+    role: z.string().min(1),
+    task: z.string(),
+    cwd: z.string().min(1),
+    homeDir: z.string().min(1),
+    runtime: DispatchRuntimeSchema,
+    approveWorkspaceWrite: z.boolean(),
+  })
+  .strict();
+
+export const DispatchPlanSchema = z
+  .object({
+    workflow: z.string().min(1),
+    role: z.string().min(1),
+    task: z.string(),
+    cwd: z.string().min(1),
+    homeDir: z.string().min(1),
+    profileId: z.string().min(1),
+    profilePath: z.string().min(1),
+    profileHash: z.string().min(1),
+    runtime: DispatchRuntimeSchema,
+    tier: DispatchTierSchema,
+    model: z.string().min(1),
+    effort: z.string().min(1),
+    access: DispatchAccessSchema,
+    instructions: z.string().min(1),
+    consultation: z.enum(["receive", "request", "none"]),
+    limits: DispatchLimitsSchema,
+    candidateIndex: z.number().int().nonnegative(),
+    candidateCount: z.number().int().positive(),
+    evidenceRequired: z.literal("launch_configured"),
+    workspaceWriteApproved: z.boolean(),
+  })
+  .strict();
+
+export const DispatchPlanSetSchema = z
+  .object({
+    primary: DispatchPlanSchema,
+    candidates: z.array(DispatchPlanSchema).min(1),
+  })
+  .strict();
+
+export const DispatchAttemptSchema = z
+  .object({
+    runId: z.string().min(1),
+    plan: DispatchPlanSchema,
+    attemptNumber: z.number().int().positive(),
+    candidateIndex: z.number().int().nonnegative(),
+    profileId: z.string().min(1),
+    model: z.string().min(1),
+    status: AttemptStatusSchema,
+    evidence: z.enum(["launch_configured", "runtime_reported"]),
+    sessionId: z.string().min(1).optional(),
+    failureCode: DispatchFailureCodeSchema.optional(),
+    failureReason: z.string().min(1).optional(),
+    fallbackFromAttempt: z.number().int().positive().optional(),
+    resumeDecision: ConsultationDecisionSchema.optional(),
+    decisionMessage: z.string().min(1).optional(),
+    consultation: ConsultationRequestSchema.optional(),
+    createdAt: z.string().datetime(),
+  })
+  .strict();
+
+export const DispatchReceiptSchema = z
+  .object({
+    schemaVersion: z.literal("0.1"),
+    runId: z.string().min(1),
+    workflow: z.string().min(1),
+    role: z.string().min(1),
+    profileId: z.string().min(1),
+    profileHash: z.string().min(1),
+    runtime: DispatchRuntimeSchema,
+    tier: DispatchTierSchema,
+    model: z.string().min(1),
+    effort: z.string().min(1),
+    access: DispatchAccessSchema,
+    candidateIndex: z.number().int().nonnegative(),
+    candidateCount: z.number().int().positive(),
+    workspaceWriteApproved: z.boolean(),
+    evidence: DispatchEvidenceLevelSchema,
+    adapter: z.literal("codex-cli"),
+    status: DispatchStatusSchema,
+    consultationCount: z.number().int().nonnegative(),
+    reassignmentCount: z.number().int().nonnegative(),
+    sessionId: z.string().min(1).optional(),
+    failureCode: DispatchFailureCodeSchema.optional(),
+    failureReason: z.string().min(1).optional(),
+    consultation: ConsultationRequestSchema.optional(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .strict();
+
 export type ConsultationRequest = z.infer<typeof ConsultationRequestSchema>;
 export type ConsultationDecision = z.infer<typeof ConsultationDecisionSchema>;
 export type DispatchRuntime = z.infer<typeof DispatchRuntimeSchema>;
 export type DispatchEvidenceLevel = z.infer<typeof DispatchEvidenceLevelSchema>;
+export type DispatchFailureCode = z.infer<typeof DispatchFailureCodeSchema>;
+export type DispatchRequest = z.infer<typeof DispatchRequestSchema>;
+export type DispatchPlan = z.infer<typeof DispatchPlanSchema>;
+export type DispatchPlanSet = z.infer<typeof DispatchPlanSetSchema>;
+export type DispatchAttempt = z.infer<typeof DispatchAttemptSchema>;
+export type DispatchReceipt = z.infer<typeof DispatchReceiptSchema>;
 
 export type OrchestrationDispatchErrorCode =
   | "workflow_not_installed"
@@ -58,89 +182,6 @@ export class OrchestrationDispatchError extends Error {
   }
 }
 
-export interface DispatchRequest {
-  workflow: string;
-  role: string;
-  task: string;
-  cwd: string;
-  homeDir: string;
-  runtime: DispatchRuntime;
-  approveWorkspaceWrite: boolean;
-}
-
-export interface DispatchPlan {
-  workflow: string;
-  role: string;
-  task: string;
-  cwd: string;
-  homeDir: string;
-  profileId: string;
-  profilePath: string;
-  profileHash: string;
-  runtime: DispatchRuntime;
-  tier: "deep" | "standard" | "fast";
-  model: string;
-  effort: string;
-  access: "read-only" | "workspace-write";
-  instructions: string;
-  consultation: "receive" | "request" | "none";
-  limits: {
-    retryPerCandidate: number;
-    reassignmentPerWorkItem: number;
-    consultationsPerAgent: number;
-  };
-  candidateIndex: number;
-  candidateCount: number;
-  evidenceRequired: "launch_configured";
-  workspaceWriteApproved: boolean;
-}
-
-export interface DispatchPlanSet {
-  primary: DispatchPlan;
-  candidates: DispatchPlan[];
-}
-
-export interface DispatchAttempt {
-  attemptNumber: number;
-  candidateIndex: number;
-  profileId: string;
-  model: string;
-  status: "completed" | "failed" | "consultation_required";
-  evidence: "launch_configured" | "runtime_reported";
-  sessionId?: string;
-  failureCode?: string;
-  failureReason?: string;
-  fallbackFromAttempt?: number;
-  resumeDecision?: ConsultationDecision;
-  decisionMessage?: string;
-  consultation?: ConsultationRequest;
-}
-
-export interface DispatchReceipt {
-  schemaVersion: "0.1";
-  runId: string;
-  workflow: string;
-  role: string;
-  profileId: string;
-  profileHash: string;
-  runtime: DispatchRuntime;
-  tier: "deep" | "standard" | "fast";
-  model: string;
-  effort: string;
-  access: "read-only" | "workspace-write";
-  evidence: DispatchEvidenceLevel;
-  adapter: "codex-cli";
-  status: "planned" | "completed" | "failed" | "consultation_required";
-  consultationCount: number;
-  reassignmentCount: number;
-  sessionId?: string;
-  failureCode?: string;
-  failureReason?: string;
-  consultation?: ConsultationRequest;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export function createDispatchAttemptSchedule(planSet: DispatchPlanSet): DispatchPlan[] {
   return planSet.candidates.flatMap((candidate) =>
     Array.from({ length: candidate.limits.retryPerCandidate + 1 }, () => candidate),
@@ -151,8 +192,8 @@ export function hasRepeatedConsultationEvidence(
   prior: ConsultationRequest,
   next: ConsultationRequest,
 ): boolean {
-  const priorEvidence = [...prior.evidence].sort();
-  const nextEvidence = [...next.evidence].sort();
+  const priorEvidence = [...new Set(prior.evidence)].sort();
+  const nextEvidence = [...new Set(next.evidence)].sort();
   return (
     priorEvidence.length === nextEvidence.length &&
     priorEvidence.every((item, index) => item === nextEvidence[index])
