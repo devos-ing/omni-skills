@@ -76,6 +76,8 @@ Compatibility aliases:
   exact skill artifact metadata for later removal
 - validate vendor-neutral team orchestration assignments and compile them into
   deterministic Codex TOML and Claude Markdown profile plans
+- require `steps[].phase: "implementation"` for every skill granted
+  orchestration `workspace-write` access
 - preserve managed agent-profile ownership hashes in workflow records so
   removal deletes unchanged generated profiles and keeps user-modified files
 - list installed Omniskills workflows and teams
@@ -113,6 +115,9 @@ plugin-cache skills, Matt Pocock installed skills, and external packages routed
 through the Skills CLI by `src/omniskill.ts`. Workflow manifests can keep
 the original step skill name in `skills[].source` and declare the installable
 Skills CLI package in `skills[].repo`.
+When a repo-backed skill is also an orchestration role and is not locally
+resolvable before bootstrap, `skills[].installedName` declares its validated
+target name. Once the skill exists, installer metadata must match that value.
 
 ## Paused Pony Trail Runtime
 

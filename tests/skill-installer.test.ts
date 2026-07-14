@@ -43,12 +43,24 @@ describe("skill installer", () => {
         "---\nname: actual-skill-name\ndescription: Test skill.\n---\n",
       );
 
-      await expect(resolveInstallSkillName(skillDir, { homeDir })).resolves.toBe(
-        "actual-skill-name",
-      );
+      await expect(
+        resolveInstallSkillName(skillDir, {
+          homeDir,
+          expectedName: "actual-skill-name",
+        }),
+      ).resolves.toBe("actual-skill-name");
+      await expect(
+        resolveInstallSkillName(skillDir, { homeDir, expectedName: "wrong-name" }),
+      ).rejects.toThrow("Installed skill name mismatch");
       await expect(resolveInstallSkillName("superpowers:brainstorming", { homeDir })).resolves.toBe(
         "superpowers-brainstorming",
       );
+      await expect(
+        resolveInstallSkillName("custom-review", {
+          homeDir,
+          expectedName: "custom-review-agent",
+        }),
+      ).resolves.toBe("custom-review-agent");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }

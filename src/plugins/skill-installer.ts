@@ -62,6 +62,12 @@ export interface ResolveInstallSkillSourceOptions {
   homeDir?: string | undefined;
 }
 
+export interface ResolveInstallSkillNameOptions extends ResolveInstallSkillSourceOptions {
+  expectedName?: string;
+}
+
+class SkillSourceNotFoundError extends Error {}
+
 export class MissingSuperpowersSkillError extends Error {
   constructor(input: { displayName: string; source: string }) {
     super(
@@ -331,32 +337,43 @@ export async function resolveInstallSkillSource(
     return resolvePathSkill(pathCandidate);
   }
 
-  throw new Error(`Skill source not found: ${sourceOrName}`);
+  throw new SkillSourceNotFoundError(`Skill source not found: ${sourceOrName}`);
 }
 
 export async function resolveInstallSkillName(
   sourceOrName: string,
-  options: ResolveInstallSkillSourceOptions = {},
+  options: ResolveInstallSkillNameOptions = {},
 ): Promise<string> {
+  let resolvedName: string;
   try {
-    return (await resolveInstallSkillSource(sourceOrName, options)).name;
+    resolvedName = (await resolveInstallSkillSource(sourceOrName, options)).name;
   } catch (error) {
     const mattPocockSkillName = parseMattPocockSkillSource(sourceOrName);
     if (error instanceof MissingMattPocockSkillError && mattPocockSkillName) {
-      return mattPocockSkillName;
+      resolvedName = mattPocockSkillName;
+    } else {
+      const superpowersSkill = supportedSuperpowersSkills.find(
+        (skill) => skill.source === sourceOrName,
+      );
+      const interfaceCraftSkillName = getInterfaceCraftInstalledSkillName(sourceOrName);
+      if (error instanceof MissingSuperpowersSkillError && superpowersSkill) {
+        resolvedName = superpowersSkill.installName;
+      } else if (error instanceof MissingInterfaceCraftSkillError && interfaceCraftSkillName) {
+        resolvedName = interfaceCraftSkillName;
+      } else if (error instanceof SkillSourceNotFoundError && options.expectedName) {
+        resolvedName = options.expectedName;
+      } else {
+        throw error;
+      }
     }
-    const superpowersSkill = supportedSuperpowersSkills.find(
-      (skill) => skill.source === sourceOrName,
-    );
-    if (error instanceof MissingSuperpowersSkillError && superpowersSkill) {
-      return superpowersSkill.installName;
-    }
-    const interfaceCraftSkillName = getInterfaceCraftInstalledSkillName(sourceOrName);
-    if (error instanceof MissingInterfaceCraftSkillError && interfaceCraftSkillName) {
-      return interfaceCraftSkillName;
-    }
-    throw error;
   }
+
+  if (options.expectedName && resolvedName !== options.expectedName) {
+    throw new Error(
+      `Installed skill name mismatch for ${sourceOrName}: expected ${options.expectedName}, resolved ${resolvedName}`,
+    );
+  }
+  return resolvedName;
 }
 
 async function resolveMattPocockSkill(

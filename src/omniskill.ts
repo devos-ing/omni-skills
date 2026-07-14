@@ -393,12 +393,13 @@ async function runOmniskillInstall(
       : undefined;
     const roleSkillNames = Object.fromEntries(
       await Promise.all(
-        Object.entries(preparedDependencies.roleSkillSources).map(
-          async ([source, installSource]) => [
-            source,
-            await resolveInstallSkillName(installSource, { homeDir }),
-          ],
-        ),
+        Object.entries(preparedDependencies.roleSkills).map(async ([source, roleSkill]) => [
+          source,
+          await resolveInstallSkillName(roleSkill.source, {
+            homeDir,
+            ...(roleSkill.installedName ? { expectedName: roleSkill.installedName } : {}),
+          }),
+        ]),
       ),
     );
     const plannedProfiles = configPlan

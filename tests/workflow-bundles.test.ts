@@ -607,6 +607,31 @@ describe("workflow bundles", () => {
     ).toThrow("Workflow skill source cannot contain control characters");
   });
 
+  test("validates explicit installed names for repo-backed skills", () => {
+    const manifest = WorkflowBundleManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "repo-backed-workflow",
+      version: "1.0.0",
+      description: "Repo-backed skill fixture.",
+      skills: [
+        {
+          source: "custom-review",
+          repo: "org/package",
+          installedName: "custom-review-agent",
+        },
+      ],
+      steps: [{ id: "run", title: "Run", skill: "custom-review" }],
+    });
+    expect(manifest.skills[0]?.installedName).toBe("custom-review-agent");
+
+    expect(() =>
+      WorkflowBundleManifestSchema.parse({
+        ...manifest,
+        skills: [{ ...manifest.skills[0], installedName: "../escape" }],
+      }),
+    ).toThrow();
+  });
+
   test("creates a transitive lock while expanding three local workflow levels", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-tree-"));
     const parentDir = join(rootDir, "parent");

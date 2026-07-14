@@ -28,6 +28,10 @@ const WorkflowSkillSchema = z.object({
       "Workflow skill source cannot contain control characters",
     ),
   repo: z.string().min(1).optional(),
+  installedName: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional(),
   optional: z.boolean().optional(),
   entry: z.boolean().optional(),
 });
@@ -441,6 +445,7 @@ export interface WorkflowBundleScaffold {
 export interface WorkflowSkillInstallDependency {
   source: string;
   repo?: string;
+  installedName?: string;
 }
 
 const canonicalWorkflowSkillAliases: Record<string, string> = {
@@ -472,7 +477,7 @@ export interface WorkflowDependencyGraph {
   displaySources: string[];
   workflows: WorkflowDependencyGraphWorkflow[];
   edges: WorkflowDependencyGraphEdge[];
-  roleSkillSources: Record<string, string>;
+  roleSkills: Record<string, WorkflowRoleSkillResolution>;
   cleanup?: () => Promise<void>;
 }
 
@@ -549,8 +554,13 @@ export interface WorkflowLoopMetadata {
 export interface PreparedWorkflowSkillInstallDependencies {
   dependencies: WorkflowSkillInstallDependency[];
   displaySources: string[];
-  roleSkillSources: Record<string, string>;
+  roleSkills: Record<string, WorkflowRoleSkillResolution>;
   cleanup?: () => Promise<void>;
+}
+
+export interface WorkflowRoleSkillResolution {
+  source: string;
+  installedName?: string;
 }
 
 export interface InstalledWorkflowBundle extends WorkflowBundleManifest {
@@ -859,6 +869,7 @@ export function getWorkflowSkillInstallDependencies(
     return {
       source,
       ...(skill.repo ? { repo: skill.repo } : {}),
+      ...(skill.installedName ? { installedName: skill.installedName } : {}),
     };
   });
 }
@@ -1123,7 +1134,7 @@ export async function resolveWorkflowDependencyGraph(input: {
     displaySources: getWorkflowDependencyDisplaySources(input.bundle, workflows, dependencies),
     workflows,
     edges,
-    roleSkillSources: getTeamRoleSkillSources({
+    roleSkills: getTeamRoleSkills({
       root: input.bundle,
       resolvedChildren,
       selectedByName,
@@ -1134,11 +1145,11 @@ export async function resolveWorkflowDependencyGraph(input: {
   };
 }
 
-function getTeamRoleSkillSources(input: {
+function getTeamRoleSkills(input: {
   root: WorkflowBundle;
   resolvedChildren: Map<string, WorkflowBundle>;
   selectedByName: Map<string, WorkflowBundle>;
-}): Record<string, string> {
+}): Record<string, WorkflowRoleSkillResolution> {
   const roles = input.root.manifest.orchestration?.roles;
   if (!roles) return {};
   const rootId = getCanonicalWorkflowIdentity(input.root);
@@ -1152,11 +1163,23 @@ function getTeamRoleSkillSources(input: {
         : null;
       const childEntry = child?.manifest.skills.find((skill) => skill.entry === true);
       if (child && childEntry) {
-        return [source, resolve(child.sourceDir, childEntry.source)];
+        return [
+          source,
+          {
+            source: resolve(child.sourceDir, childEntry.source),
+            ...(childEntry.installedName ? { installedName: childEntry.installedName } : {}),
+          },
+        ];
       }
+      const rootSkill = input.root.manifest.skills[skillIndex];
       return [
         source,
-        isLocalWorkflowSkillSource(source) ? resolve(input.root.sourceDir, source) : source,
+        {
+          source: isLocalWorkflowSkillSource(source)
+            ? resolve(input.root.sourceDir, source)
+            : source,
+          ...(rootSkill?.installedName ? { installedName: rootSkill.installedName } : {}),
+        },
       ];
     }),
   );
@@ -1421,7 +1444,7 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
     return {
       dependencies,
       displaySources: graph.displaySources,
-      roleSkillSources: graph.roleSkillSources,
+      roleSkills: graph.roleSkills,
       ...(graph.cleanup ? { cleanup: graph.cleanup } : {}),
     };
   }
@@ -1468,7 +1491,7 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
   return {
     dependencies: preparedDependencies,
     displaySources: graph.displaySources,
-    roleSkillSources: graph.roleSkillSources,
+    roleSkills: graph.roleSkills,
     cleanup: async () => {
       await rm(preparedRoot, { recursive: true, force: true });
       await graph.cleanup?.();

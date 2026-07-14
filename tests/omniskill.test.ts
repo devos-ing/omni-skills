@@ -53,6 +53,7 @@ async function writeGitWorkflowFixtureAt(
     team?: boolean;
     localTeamMember?: boolean;
     orchestration?: boolean;
+    repoBackedRole?: boolean;
   } = {},
 ): Promise<void> {
   const includeExtraSkill = options.extraSkill === true;
@@ -135,6 +136,15 @@ async function writeGitWorkflowFixtureAt(
                     access: "workspace-write",
                     consultation: "request",
                   },
+                  ...(options.repoBackedRole
+                    ? {
+                        "custom-review": {
+                          tier: "deep",
+                          access: "read-only",
+                          consultation: "request",
+                        },
+                      }
+                    : {}),
                 },
               },
             }
@@ -148,6 +158,15 @@ async function writeGitWorkflowFixtureAt(
             ? [{ source: options.localTeamMember ? "./skills/git-extra" : "./member-workflow" }]
             : []),
           ...(includeExtraSkill ? [{ source: "./skills/git-extra" }] : []),
+          ...(options.repoBackedRole
+            ? [
+                {
+                  source: "custom-review",
+                  repo: "org/package",
+                  installedName: "custom-review-agent",
+                },
+              ]
+            : []),
         ],
         steps: [
           {
@@ -273,6 +292,7 @@ describe("omniskill command module", () => {
       await writeGitWorkflowFixtureAt(bundleDir, {
         team: true,
         orchestration: true,
+        repoBackedRole: true,
       });
       await writeFile(
         join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
@@ -295,6 +315,7 @@ describe("omniskill command module", () => {
       expect(installCalls).toBe(0);
       expect(logs.join("\n")).toContain("Agent profiles:");
       expect(logs.join("\n")).toContain("omniskills-git-team-git-entry");
+      expect(logs.join("\n")).toContain("omniskills-git-team-custom-review");
       expect(logs.join("\n")).toContain("source=./skills/git-entry");
       expect(logs.join("\n")).toContain("taskClass=role");
       expect(logs.join("\n")).toContain("candidate=1/1");
