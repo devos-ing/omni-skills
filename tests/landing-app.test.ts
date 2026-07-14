@@ -130,10 +130,12 @@ describe("landing app source contract", () => {
     expect(card).toContain("border-[var(--rule)]");
     expect(`${page}\n${card}`).not.toMatch(/text-\[#191817\]\/([2-5]\d)/);
 
-    const registryIndex = page.indexOf('id="workflows"');
+    const teamIndex = page.indexOf("<FeaturedTeamSection");
+    const hubIndex = page.indexOf("<SkillHub");
     const demoIndex = page.indexOf('id="workflow-example"');
-    expect(registryIndex).toBeGreaterThan(-1);
-    expect(demoIndex).toBeLessThan(registryIndex);
+    expect(teamIndex).toBeGreaterThan(-1);
+    expect(hubIndex).toBeGreaterThan(teamIndex);
+    expect(demoIndex).toBeLessThan(teamIndex);
   });
 
   test("shows the workflow example before the registry and autoplays on viewport entry", () => {
@@ -153,15 +155,17 @@ describe("landing app source contract", () => {
     const reveal = readLandingFile("components/reveal.tsx");
     const page = readLandingFile("components/landing-page.tsx");
     const card = readLandingFile("components/workflow-card.tsx");
+    const featuredTeam = readLandingFile("components/featured-team-section.tsx");
     const demo = readLandingFile("components/workflow-run-demo.tsx");
     const globals = readLandingFile("app/globals.css");
-    const motionSources = `${reveal}\n${page}\n${card}\n${demo}\n${globals}`;
+    const motionSources = `${reveal}\n${page}\n${card}\n${featuredTeam}\n${demo}\n${globals}`;
 
     expect(reveal).toContain("IntersectionObserver");
     expect(reveal).toContain("data-reveal");
     expect(reveal).toContain("--reveal-index");
     expect(page).toContain("motion-masthead");
-    expect(page).toContain("motion-registry-row");
+    expect(featuredTeam).toContain("<Reveal");
+    expect(page).not.toContain("motion-registry-row");
     expect(card).toContain("motion-avatar");
     expect(demo).toContain("motion-workbench");
     expect(demo).toContain("motion-active-role");
@@ -291,13 +295,57 @@ describe("landing app source contract", () => {
     expect(card).not.toContain("aria-pressed");
   });
 
-  test("keeps workflow browsing route-only on the landing page", () => {
+  test("features Startup Team before the searchable Skill Hub", () => {
     const page = readLandingFile("components/landing-page.tsx");
+    const team = readLandingFile("components/featured-team-section.tsx");
+    const hub = readLandingFile("components/skill-hub.tsx");
 
-    expect(page).toContain("<WorkflowCard");
-    expect(page).toContain("Workflow Registry");
-    expect(page).toContain("filteredWorkflows.map");
-    expect(page).toContain("text-[var(--muted)]");
+    expect(page).toContain("<FeaturedTeamSection");
+    expect(page).toContain("<SkillHub");
+    expect(page).toContain("Explore teams & skills");
+    expect(team).toContain('id="workflows"');
+    expect(team).toContain("Pick an Omniskills team");
+    expect(team).toContain("View team");
+    expect(team).toContain("View team source");
+    expect(team).toContain("team.coordinator");
+    expect(team).toContain("team.members.map");
+    expect(hub).toContain('id="skill-hub"');
+    expect(hub).toContain("Explore the Skill Hub");
+    expect(page.indexOf("<FeaturedTeamSection")).toBeLessThan(page.indexOf("<SkillHub"));
+  });
+
+  test("implements keyboard-accessible Workflow and Skill tabs", () => {
+    const hub = readLandingFile("components/skill-hub.tsx");
+
+    expect(hub).toContain('role="tablist"');
+    expect(hub).toContain('role="tab"');
+    expect(hub).toContain('role="tabpanel"');
+    expect(hub).toContain("aria-selected");
+    expect(hub).toContain("aria-controls");
+    expect(hub).toContain('event.key === "ArrowRight"');
+    expect(hub).toContain('event.key === "ArrowLeft"');
+    expect(hub).toContain('event.key === "Home"');
+    expect(hub).toContain('event.key === "End"');
+    expect(hub).toContain('type="search"');
+    expect(hub).toContain('aria-live="polite"');
+    expect(hub).toContain("Clear workflow search");
+    expect(hub).toContain("Clear skill search");
+  });
+
+  test("keeps skill results source-only and unanimated while filtering", () => {
+    const page = readLandingFile("components/landing-page.tsx");
+    const row = readLandingFile("components/skill-row.tsx");
+    const hub = readLandingFile("components/skill-hub.tsx");
+
+    expect(row).toContain("View skill source");
+    expect(row).toContain("entry.usedBy");
+    expect(row).toContain('target="_blank"');
+    expect(row).toContain('rel="noreferrer"');
+    expect(row).not.toContain("installCommand");
+    expect(row).not.toContain("Copy");
+    expect(hub).not.toContain("<Reveal");
+    expect(hub).not.toContain("motion-registry-row");
+    expect(hub).not.toContain("editorial-control");
     expect(readLandingFile("components/workflow-card.tsx")).toContain("View workflow");
     expect(page).not.toContain("type WorkflowActivityMode");
     expect(page).not.toContain("Workflows Leaderboard");
@@ -499,14 +547,14 @@ describe("landing app source contract", () => {
     expect(page).toContain("[ok] QA");
 
     const demoIndex = page.indexOf("<WorkflowRunDemo");
-    const workflowsIndex = page.indexOf('id="workflows"');
+    const teamIndex = page.indexOf("<FeaturedTeamSection");
 
     expect(page).toContain("import { WorkflowRunDemo }");
     expect(page).not.toContain("import { FlowDiagram }");
     expect(page).not.toContain("workflowRun");
     expect(demoIndex).toBeGreaterThan(-1);
-    expect(workflowsIndex).toBeGreaterThan(-1);
-    expect(demoIndex).toBeLessThan(workflowsIndex);
+    expect(teamIndex).toBeGreaterThan(-1);
+    expect(demoIndex).toBeLessThan(teamIndex);
   });
 
   test("documents supported agents without a hero chip row", () => {
