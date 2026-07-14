@@ -15,6 +15,7 @@ import {
   type SkillInstallResult,
   SkillSourceNotFoundError,
 } from "../src/plugins";
+import { hashAgentProfileContent } from "../src/runtimes/omniskill/orchestration";
 import type { WorkflowGitCommand } from "../src/runtimes/omniskill/workflow-bundles";
 
 const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
@@ -227,6 +228,7 @@ describe("omniskill command module", () => {
       "remove",
       "deps",
       "onboard",
+      "dispatch",
       "loop",
       "bundle",
       "workflow",
@@ -326,6 +328,137 @@ describe("omniskill command module", () => {
       await expect(
         readFile(join(homeDir, ".omniskills", "workflows", "git-team.json"), "utf8"),
       ).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dispatch dry-run prints a verified plan without launching or writing run state", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-home-"));
+    const profileId = "omniskills-startup-team-cto";
+    const profilePath = join(homeDir, ".codex", "agents", `${profileId}.toml`);
+    const profileContent =
+      '# omniskills-managed: team=startup-team source=catalog:cto\nname = "omniskills-startup-team-cto"\n';
+    let dispatchCalls = 0;
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+
+    try {
+      await mkdir(join(homeDir, ".omniskills", "workflows"), { recursive: true });
+      await mkdir(join(homeDir, ".codex", "agents"), { recursive: true });
+      await writeFile(profilePath, profileContent);
+      await writeFile(
+        join(homeDir, ".omniskills", "workflows", "startup-team.json"),
+        JSON.stringify({
+          schemaVersion: "0.1",
+          kind: "team",
+          name: "startup-team",
+          version: "0.3.0",
+          description: "Dispatch fixture.",
+          coordinator: "./skills/startup-goal",
+          members: ["catalog:cto"],
+          orchestration: {
+            roles: {
+              "./skills/startup-goal": {
+                tier: "deep",
+                access: "read-only",
+                consultation: "receive",
+              },
+              "catalog:cto": {
+                tier: "deep",
+                access: "read-only",
+                consultation: "request",
+              },
+            },
+          },
+          skills: [{ source: "./skills/startup-goal", entry: true }, { source: "catalog:cto" }],
+          steps: [{ id: "route", title: "Route", skill: "./skills/startup-goal" }],
+          source: { kind: "local", path: "/tmp/startup-team" },
+          installArtifacts: [
+            {
+              kind: "agent_profile",
+              source: "catalog:cto",
+              profileId,
+              agent: "codex",
+              status: "installed",
+              path: profilePath,
+              contentHash: hashAgentProfileContent(profileContent),
+              taskClass: "role",
+              tier: "deep",
+              model: "gpt-5.6",
+              effort: "high",
+              access: "read-only",
+              instructions: "You are the catalog:cto agent.",
+              consultation: "request",
+              limits: {
+                retryPerCandidate: 1,
+                reassignmentPerWorkItem: 1,
+                consultationsPerAgent: 2,
+              },
+              candidateIndex: 0,
+              candidateCount: 1,
+            },
+          ],
+        }),
+      );
+      console.log = (...values: unknown[]) => logs.push(values.join(" "));
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch dry-run");
+        },
+        printSkillInstallResult: () => {},
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            available: async () => true,
+            dispatch: async () => {
+              dispatchCalls += 1;
+              throw new Error("dry-run must not dispatch");
+            },
+            resume: async () => {
+              throw new Error("dry-run must not resume");
+            },
+          },
+        },
+      });
+
+      await program.parseAsync(
+        [
+          "dispatch",
+          "startup-team",
+          "--role",
+          "catalog:cto",
+          "--task",
+          "Review boundaries",
+          "--runtime",
+          "codex",
+          "--home",
+          homeDir,
+          "--dry-run",
+          "--json",
+        ],
+        { from: "user" },
+      );
+
+      expect(dispatchCalls).toBe(0);
+      expect(JSON.parse(logs.join("\n"))).toEqual(
+        expect.objectContaining({
+          primary: expect.objectContaining({
+            profileId,
+            tier: "deep",
+            model: "gpt-5.6",
+            effort: "high",
+            access: "read-only",
+            evidenceRequired: "launch_configured",
+          }),
+        }),
+      );
+      await expect(stat(join(homeDir, ".omniskills", "runs"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

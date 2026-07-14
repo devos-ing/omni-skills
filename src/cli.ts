@@ -17,7 +17,13 @@ import {
   installExternalSkillDependencyWithSkillsCli,
   type OmniskillExternalSkillDependencyInstaller,
 } from "./omniskill";
-import { installAgentSkill, parseSkillInstallAgents, type SkillInstallResult } from "./plugins";
+import {
+  createCodexCliDispatcher,
+  installAgentSkill,
+  parseSkillInstallAgents,
+  type SkillInstallResult,
+} from "./plugins";
+import { runSubprocess } from "./process";
 
 type SkillChangeOperation = "install" | "update";
 
@@ -65,6 +71,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     installSkill,
     printSkillInstallResult,
     installExternalSkillDependency,
+    dispatchers: { codex: createCodexCliDispatcher(runSubprocess) },
   });
 
   const skillsCommand = program.command("skills").description("Manage agent skills.");

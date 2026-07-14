@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { cancel as clackCancel, confirm as clackConfirm, isCancel } from "@clack/prompts";
@@ -20,6 +21,7 @@ import {
   MissingInterfaceCraftSkillError,
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
+  type OrchestrationDispatcher,
   parseSkillInstallAgents,
   preflightAgentProfiles,
   resolveInstallSkillName,
@@ -31,13 +33,16 @@ import {
   type AgentProfileTarget,
   createWorkflowBundleScaffold,
   createWorkflowRemovalPlan,
+  DispatchRuntimeSchema,
   executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
   getWorkflowInvocationSkillName,
   installWorkflowBundle,
   listInstalledWorkflowBundles,
+  loadInstalledWorkflowBundle,
   loadWorkflowBundle,
   planAgentProfiles,
+  planOrchestrationDispatch,
   resolveWorkflowDependencyGraph,
   type WorkflowGitCommandRunner,
   type WorkflowInstallArtifact,
@@ -161,6 +166,7 @@ export interface ConfigureOmniskillCommandOptions {
   workflowGitCommandRunner?: WorkflowGitCommandRunner;
   onboardPrompt?: OmniskillOnboardPrompt;
   onboardCommandRunner?: OmniskillOnboardCommandRunner;
+  dispatchers?: Partial<Record<"codex" | "claude", OrchestrationDispatcher>>;
 }
 
 interface OmniskillInstallCommandOptions {
@@ -176,6 +182,18 @@ interface OmniskillRemoveCommandOptions {
   home: string;
   dryRun: boolean;
   yes: boolean;
+}
+
+interface OmniskillDispatchCommandOptions {
+  role: string;
+  task?: string;
+  taskFile?: string;
+  runtime: string;
+  home: string;
+  dir?: string;
+  approveWorkspaceWrite: boolean;
+  dryRun: boolean;
+  json: boolean;
 }
 
 type OmniskillLoopCommandName = "start" | "status" | "log" | "advance" | "summary";
@@ -237,7 +255,72 @@ function configureOmniskillCommands(
   configureRemoveCommand(command, options);
   configureDependencyCommand(command, options);
   configureOnboardCommand(command, options);
+  configureDispatchCommand(command, options);
   configureLoopCommand(command, options);
+}
+
+function configureDispatchCommand(
+  command: Command,
+  options: ConfigureOmniskillCommandOptions,
+): void {
+  command
+    .command("dispatch")
+    .description("Dispatch an installed Omniskills role through a verified runtime profile.")
+    .argument("<workflow-name>", "installed workflow or team name")
+    .requiredOption("--role <source>", "role source or support id")
+    .option("--task <text>", "task text")
+    .option("--task-file <path>", "read task text from a file")
+    .option("--runtime <runtime>", "codex or claude", "codex")
+    .option("--home <dir>", "home directory with Omniskills state", homedir())
+    .option("--dir <dir>", "override directory with installed workflow records")
+    .option("--approve-workspace-write", "approve the implementation write gate", false)
+    .option("--dry-run", "print the launch plan without starting a child", false)
+    .option("--json", "print machine-readable output", false)
+    .action(async (workflowName: string, commandOptions: OmniskillDispatchCommandOptions) => {
+      const hasTask = commandOptions.task !== undefined;
+      const hasTaskFile = commandOptions.taskFile !== undefined;
+      if (hasTask === hasTaskFile) {
+        throw new Error("Dispatch requires exactly one of --task or --task-file");
+      }
+      const homeDir = resolveHomePath(commandOptions.home);
+      const targetDir = commandOptions.dir
+        ? resolvePath(options.rootDir, commandOptions.dir)
+        : homeDir;
+      const runtime = DispatchRuntimeSchema.parse(commandOptions.runtime);
+      const dispatcher = options.dispatchers?.[runtime];
+      const available = dispatcher ? await dispatcher.available(options.rootDir) : false;
+      const task = commandOptions.taskFile
+        ? await readFile(resolvePath(options.rootDir, commandOptions.taskFile), "utf8")
+        : (commandOptions.task as string);
+      const installed = await loadInstalledWorkflowBundle({
+        rootDir: targetDir,
+        workflowName,
+      });
+      const planSet = await planOrchestrationDispatch({
+        workflow: installed.workflow,
+        role: commandOptions.role,
+        runtime,
+        task,
+        cwd: options.rootDir,
+        homeDir,
+        approveWorkspaceWrite: commandOptions.approveWorkspaceWrite,
+        capabilities: { [runtime]: available },
+        readProfile: (path) => readFile(path, "utf8"),
+      });
+      if (commandOptions.json) {
+        console.log(JSON.stringify(planSet, null, 2));
+      } else {
+        console.log(success(`Orchestration dispatch plan: ${planSet.primary.profileId}`));
+        console.log(keyValue("Runtime", planSet.primary.runtime));
+        console.log(keyValue("Tier", planSet.primary.tier));
+        console.log(keyValue("Model", planSet.primary.model));
+        console.log(keyValue("Effort", planSet.primary.effort));
+        console.log(keyValue("Access", planSet.primary.access));
+        console.log(keyValue("Evidence required", planSet.primary.evidenceRequired));
+      }
+      if (commandOptions.dryRun) return;
+      throw new Error("Dispatch execution requires receipt persistence; use --dry-run");
+    });
 }
 
 function configureAuthorCommands(

@@ -137,6 +137,7 @@ describe("cli", () => {
       "remove",
       "deps",
       "onboard",
+      "dispatch",
       "loop",
       "bundle",
       "workflow",
