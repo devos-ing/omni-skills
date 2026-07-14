@@ -262,13 +262,22 @@ function configureAuthorCommands(
           ? { runGitCommand: options.workflowGitCommandRunner }
           : {}),
       });
+      let graph: Awaited<ReturnType<typeof resolveWorkflowDependencyGraph>> | undefined;
       try {
+        graph = await resolveWorkflowDependencyGraph({
+          bundle,
+          ...(options.workflowGitCommandRunner
+            ? { runGitCommand: options.workflowGitCommandRunner }
+            : {}),
+          installedRootDir: options.rootDir,
+        });
         console.log(
           success(`Omniskills valid: ${bundle.manifest.name}@${bundle.manifest.version}`),
         );
         console.log(keyValue("Steps", String(bundle.manifest.steps.length)));
-        console.log(keyValue("Skills", String(bundle.manifest.skills.length)));
+        console.log(keyValue("Skills", String(graph.dependencies.length)));
       } finally {
+        await graph?.cleanup?.();
         await bundle.cleanup?.();
       }
     });

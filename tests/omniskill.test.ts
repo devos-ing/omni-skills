@@ -46,9 +46,15 @@ function fakeSkillInstallResult(input: {
 
 async function writeGitWorkflowFixtureAt(
   workflowDir: string,
-  options: { loop?: boolean; version?: string; extraSkill?: boolean; team?: boolean } = {},
+  options: {
+    loop?: boolean;
+    version?: string;
+    extraSkill?: boolean;
+    team?: boolean;
+    localTeamMember?: boolean;
+  } = {},
 ): Promise<void> {
-  const includeExtraSkill = options.extraSkill === true || options.team === true;
+  const includeExtraSkill = options.extraSkill === true;
   await mkdir(join(workflowDir, "skills", "git-entry"), { recursive: true });
   await writeFile(
     join(workflowDir, "skills", "git-entry", "SKILL.md"),
@@ -61,10 +67,14 @@ async function writeGitWorkflowFixtureAt(
       "# git-entry",
     ].join("\n"),
   );
-  if (includeExtraSkill) {
-    await mkdir(join(workflowDir, "skills", "git-extra"), { recursive: true });
+  if (includeExtraSkill || options.team) {
+    const extraSkillDir =
+      options.team && !options.localTeamMember
+        ? join(workflowDir, "member-workflow", "skills", "git-extra")
+        : join(workflowDir, "skills", "git-extra");
+    await mkdir(extraSkillDir, { recursive: true });
     await writeFile(
-      join(workflowDir, "skills", "git-extra", "SKILL.md"),
+      join(extraSkillDir, "SKILL.md"),
       [
         "---",
         "name: git-extra",
@@ -73,6 +83,23 @@ async function writeGitWorkflowFixtureAt(
         "",
         "# git-extra",
       ].join("\n"),
+    );
+  }
+  if (options.team && !options.localTeamMember) {
+    await writeFile(
+      join(workflowDir, "member-workflow", "workflow.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "git-member",
+          version: "1.0.0",
+          description: "Canonical member workflow.",
+          skills: [{ source: "./skills/git-extra", entry: true }],
+          steps: [{ id: "member", title: "Member", skill: "./skills/git-extra" }],
+        },
+        null,
+        2,
+      ),
     );
   }
   await writeFile(
@@ -85,7 +112,7 @@ async function writeGitWorkflowFixtureAt(
               kind: "team",
               name: "git-team",
               coordinator: "./skills/git-entry",
-              members: ["./skills/git-extra"],
+              members: [options.localTeamMember ? "./skills/git-extra" : "./member-workflow"],
             }
           : { name: "git-workflow" }),
         version: options.version ?? "0.1.0",
@@ -98,6 +125,9 @@ async function writeGitWorkflowFixtureAt(
             source: "./skills/git-entry",
             ...(options.loop || options.team ? { entry: true } : {}),
           },
+          ...(options.team
+            ? [{ source: options.localTeamMember ? "./skills/git-extra" : "./member-workflow" }]
+            : []),
           ...(includeExtraSkill ? [{ source: "./skills/git-extra" }] : []),
         ],
         steps: [
@@ -113,6 +143,15 @@ async function writeGitWorkflowFixtureAt(
                   id: "extra",
                   title: "Extra",
                   skill: "./skills/git-extra",
+                },
+              ]
+            : []),
+          ...(options.team
+            ? [
+                {
+                  id: "member",
+                  title: "Member",
+                  skill: options.localTeamMember ? "./skills/git-extra" : "./member-workflow",
                 },
               ]
             : []),
@@ -968,8 +1007,104 @@ describe("omniskill command module", () => {
       expect(output).toContain("Omniskills installed: git-team");
       expect(output).toContain("Next: $git-entry");
       expect(output).not.toContain("$startup-goal");
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-team.json")),
+      ).resolves.toBeDefined();
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-member.json")),
+      ).rejects.toThrow();
     } finally {
       console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("validate rejects a copied local team member", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-team-validate-"));
+    const bundleDir = join(rootDir, "git-team");
+    const program = new Command();
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, { team: true, localTeamMember: true });
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("validate must not install skills");
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await expect(program.parseAsync(["validate", bundleDir], { from: "user" })).rejects.toThrow(
+        "Team member must reference a child workflow",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("validate resolves team member workflows", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-team-validate-valid-"));
+    const bundleDir = join(rootDir, "git-team");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+    console.log = (...values: unknown[]) => logs.push(values.join(" "));
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, { team: true });
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("validate must not install skills");
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["validate", bundleDir], { from: "user" });
+
+      expect(stripAnsiLines(logs)).toContain("Omniskills valid: git-team@0.1.0");
+      expect(stripAnsiLines(logs)).toContain("Skills: 2");
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("all graph commands reject invalid team members before target writes", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-team-invalid-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-team-invalid-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    let installCalls = 0;
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, { team: true, localTeamMember: true });
+      const commandArgs = [
+        ["validate", bundleDir],
+        ["deps", bundleDir],
+        ["lock", bundleDir],
+        ["install", bundleDir, "--home", homeDir, "--agents", "codex"],
+      ];
+
+      for (const args of commandArgs) {
+        const program = new Command();
+        configureOmniskillCommand(program, {
+          rootDir,
+          installPrompt: { confirmInstall: async () => true },
+          installSkill: async () => {
+            installCalls += 1;
+            throw new Error("installSkill must not run for an invalid graph");
+          },
+          printSkillInstallResult: () => {},
+        });
+        await expect(program.parseAsync(args, { from: "user" })).rejects.toThrow(
+          "Team member must reference a child workflow",
+        );
+      }
+
+      expect(installCalls).toBe(0);
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-team.json")),
+      ).rejects.toThrow();
+      await expect(stat(join(bundleDir, "workflow.lock.json"))).rejects.toThrow();
+    } finally {
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });
     }
