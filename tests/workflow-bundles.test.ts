@@ -1941,6 +1941,7 @@ describe("workflow bundles", () => {
     const skillDir = join(bundleDir, "skills", "codex-input-preview");
     const skill = await readFile(join(skillDir, "SKILL.md"), "utf8");
     const metadata = await readFile(join(skillDir, "agents", "openai.yaml"), "utf8");
+    const renderer = await readFile(join(skillDir, "scripts", "render-preview.mjs"), "utf8");
 
     expect(bundle.manifest).toMatchObject({
       schemaVersion: "0.1",
@@ -1960,6 +1961,10 @@ describe("workflow bundles", () => {
     expect(skill).toContain("Return only after the PNG has been verified");
     expect(metadata).toContain('display_name: "Codex Input Preview"');
     expect(metadata).toContain("$codex-input-preview");
+    expect(renderer).toContain("export async function renderPreview");
+    expect(renderer).toContain('"--window-size=1200,675"');
+    expect(renderer).toContain("Expected a 1200 x 675 PNG");
+    expect(renderer).not.toMatch(/fetch\(|https?:\/\//);
   });
 
   test("rejects looped workflows without exactly one entry skill", async () => {
