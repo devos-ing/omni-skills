@@ -443,12 +443,27 @@ export interface WorkflowDependencyGraph {
 }
 
 export interface WorkflowInstallSkillArtifact {
+  kind?: "skill";
   source: string;
   skillName: string;
   agent: string;
   status: string;
   paths: string[];
 }
+
+export interface WorkflowInstallAgentProfileArtifact {
+  kind: "agent_profile";
+  source: string;
+  profileId: string;
+  agent: "codex" | "claude";
+  status: string;
+  path: string;
+  contentHash: string;
+}
+
+export type WorkflowInstallArtifact =
+  | WorkflowInstallSkillArtifact
+  | WorkflowInstallAgentProfileArtifact;
 
 export interface WorkflowRemovalArtifact {
   source: string;
@@ -498,7 +513,7 @@ export interface PreparedWorkflowSkillInstallDependencies {
 
 export interface InstalledWorkflowBundle extends WorkflowBundleManifest {
   source: WorkflowBundleSource;
-  installArtifacts?: WorkflowInstallSkillArtifact[];
+  installArtifacts?: WorkflowInstallArtifact[];
 }
 
 export interface WorkflowInstallResult {
@@ -667,7 +682,7 @@ export async function createWorkflowBundleScaffold(input: {
 export async function installWorkflowBundle(input: {
   rootDir: string;
   bundle: WorkflowBundle;
-  installArtifacts?: WorkflowInstallSkillArtifact[];
+  installArtifacts?: WorkflowInstallArtifact[];
 }): Promise<WorkflowInstallResult> {
   const workflow = createInstalledWorkflowBundle(input.bundle, input.installArtifacts ?? []);
   const workflowDir = join(input.rootDir, workflowStoreDir);
@@ -737,9 +752,22 @@ export async function createWorkflowRemovalPlan(input: {
   );
   const legacy = !installed.workflow.installArtifacts?.length;
   const skippedArtifacts: WorkflowRemovalSkippedArtifact[] = [];
+  const driftedProfilePaths = new Set<string>();
+  for (const artifact of installed.workflow.installArtifacts ?? []) {
+    if (isAgentProfileArtifact(artifact) && !(await profileMatchesInstalledHash(artifact))) {
+      driftedProfilePaths.add(artifact.path);
+      skippedArtifacts.push({
+        source: artifact.source,
+        reason: `Modified agent profile kept: ${artifact.path}`,
+      });
+    }
+  }
+
   const candidates = legacy
     ? inferLegacyRemovalArtifacts(installed.workflow, input.homeDir, skippedArtifacts)
-    : flattenInstallArtifacts(installed.workflow.installArtifacts ?? []);
+    : flattenInstallArtifacts(installed.workflow.installArtifacts ?? []).filter(
+        (artifact) => !driftedProfilePaths.has(artifact.path),
+      );
   const otherPathOwners = getArtifactPathOwners(otherWorkflows);
   const artifactsToRemove: WorkflowRemovalArtifact[] = [];
   const artifactsToKeep: WorkflowRemovalKeptArtifact[] = [];
@@ -1417,7 +1445,7 @@ function getWorkflowEntrySkill(manifest: WorkflowBundleManifest) {
 
 function createInstalledWorkflowBundle(
   bundle: WorkflowBundle,
-  installArtifacts: WorkflowInstallSkillArtifact[],
+  installArtifacts: WorkflowInstallArtifact[],
 ): InstalledWorkflowBundle {
   return {
     ...bundle.manifest,
@@ -1426,20 +1454,40 @@ function createInstalledWorkflowBundle(
   };
 }
 
-function flattenInstallArtifacts(
-  artifacts: WorkflowInstallSkillArtifact[],
-): WorkflowRemovalArtifact[] {
+function isAgentProfileArtifact(
+  artifact: WorkflowInstallArtifact,
+): artifact is WorkflowInstallAgentProfileArtifact {
+  return artifact.kind === "agent_profile";
+}
+
+function artifactPaths(artifact: WorkflowInstallArtifact): string[] {
+  return isAgentProfileArtifact(artifact) ? [artifact.path] : artifact.paths;
+}
+
+function flattenInstallArtifacts(artifacts: WorkflowInstallArtifact[]): WorkflowRemovalArtifact[] {
   return artifacts.flatMap((artifact) =>
     isRemovableInstallStatus(artifact.status)
-      ? artifact.paths.map((path) => ({
+      ? artifactPaths(artifact).map((path) => ({
           source: artifact.source,
-          skillName: artifact.skillName,
+          skillName: isAgentProfileArtifact(artifact) ? artifact.profileId : artifact.skillName,
           agent: artifact.agent,
           status: artifact.status,
           path,
         }))
       : [],
   );
+}
+
+async function profileMatchesInstalledHash(
+  artifact: WorkflowInstallAgentProfileArtifact,
+): Promise<boolean> {
+  try {
+    const content = await readFile(artifact.path, "utf8");
+    return `sha256:${createHash("sha256").update(content).digest("hex")}` === artifact.contentHash;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+    throw error;
+  }
 }
 
 function isRemovableInstallStatus(status: string): boolean {
@@ -1450,7 +1498,7 @@ function getArtifactPathOwners(workflows: InstalledWorkflowBundle[]): Map<string
   const owners = new Map<string, string[]>();
   for (const workflow of workflows) {
     for (const artifact of workflow.installArtifacts ?? []) {
-      for (const path of artifact.paths) {
+      for (const path of artifactPaths(artifact)) {
         const existing = owners.get(path) ?? [];
         existing.push(workflow.name);
         owners.set(path, existing);

@@ -2220,6 +2220,59 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("stores managed profile artifacts and preserves drift during removal", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-profile-artifact-"));
+    const bundle = await loadWorkflowBundle("examples/workflows/release-review");
+    const profilePath = join(rootDir, ".codex", "agents", "omniskills-release-review.toml");
+    const installedContent = 'name = "omniskills-release-review"\n';
+    const installedHash = `sha256:${createHash("sha256").update(installedContent).digest("hex")}`;
+
+    try {
+      await mkdir(join(rootDir, ".codex", "agents"), { recursive: true });
+      await writeFile(profilePath, installedContent);
+      const install = await installWorkflowBundle({
+        rootDir,
+        bundle,
+        installArtifacts: [
+          {
+            kind: "agent_profile",
+            source: "./skills/release-risk-review",
+            profileId: "omniskills-release-review",
+            agent: "codex",
+            status: "installed",
+            path: profilePath,
+            contentHash: installedHash,
+          },
+        ],
+      });
+      const installed = JSON.parse(await readFile(install.path, "utf8"));
+      expect(installed.installArtifacts[0].kind).toBe("agent_profile");
+
+      const cleanPlan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: bundle.manifest.name,
+      });
+      expect(cleanPlan.artifactsToRemove.map(({ path }) => path)).toEqual([profilePath]);
+
+      await writeFile(profilePath, "user-modified\n");
+      const plan = await createWorkflowRemovalPlan({
+        rootDir,
+        homeDir: rootDir,
+        workflowName: bundle.manifest.name,
+      });
+      expect(plan.artifactsToRemove).toEqual([]);
+      expect(plan.skippedArtifacts).toEqual([
+        {
+          source: "./skills/release-risk-review",
+          reason: `Modified agent profile kept: ${profilePath}`,
+        },
+      ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("plans removal from recorded workflow artifacts", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-plan-"));
     const bundle = await loadWorkflowBundle("examples/workflows/release-review");
