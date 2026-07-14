@@ -6,13 +6,13 @@
   "description": "Install a startup team as one goal-oriented Omniskills bundle: a startup-goal coordinator plus CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
   "coordinator": "./skills/startup-goal",
   "members": [
-    "./skills/ceo",
-    "./skills/cto",
-    "./skills/product-manager",
-    "./skills/web-design",
-    "./skills/engineering-manager",
-    "./skills/founding-engineer",
-    "./skills/qa-lead"
+    "catalog:ceo",
+    "catalog:cto",
+    "catalog:product-manager",
+    "catalog:web-design",
+    "catalog:engineering-manager",
+    "catalog:founding-engineer",
+    "catalog:qa-lead"
   ],
   "skills": [
     {
@@ -20,89 +20,29 @@
       "entry": true
     },
     {
-      "source": "./skills/ceo"
+      "source": "catalog:ceo"
     },
     {
-      "source": "./skills/cto"
+      "source": "catalog:cto"
     },
     {
-      "source": "./skills/product-manager"
+      "source": "catalog:product-manager"
     },
     {
-      "source": "./skills/web-design"
+      "source": "catalog:web-design"
     },
     {
-      "source": "./skills/engineering-manager"
+      "source": "catalog:engineering-manager"
     },
     {
-      "source": "./skills/founding-engineer"
+      "source": "catalog:founding-engineer"
     },
     {
-      "source": "./skills/qa-lead"
-    },
-    {
-      "source": "emilkowalski:emil-design-eng",
-      "repo": "emilkowalski/skills"
-    },
-    {
-      "source": "emilkowalski:animation-vocabulary",
-      "repo": "emilkowalski/skills"
-    },
-    {
-      "source": "emilkowalski:apple-design",
-      "repo": "emilkowalski/skills"
-    },
-    {
-      "source": "emilkowalski:review-animations",
-      "repo": "emilkowalski/skills"
+      "source": "catalog:qa-lead"
     },
     {
       "source": "superpowers:brainstorming",
       "repo": "obra/superpowers"
-    },
-    {
-      "source": "superpowers:writing-plans",
-      "repo": "obra/superpowers"
-    },
-    {
-      "source": "superpowers:verification-before-completion",
-      "repo": "obra/superpowers"
-    },
-    {
-      "source": "mattpocock:wayfinder",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:grill-with-docs",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:to-spec",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:to-tickets",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:codebase-design",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:domain-modeling",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:tdd",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:diagnosing-bugs",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
-    },
-    {
-      "source": "mattpocock:code-review",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
     },
     {
       "source": "mattpocock:implement",
@@ -127,33 +67,33 @@
     {
       "id": "strategy",
       "title": "Clarify company direction",
-      "skill": "./skills/ceo",
+      "skill": "catalog:ceo",
       "gate": "human_approval"
     },
     {
       "id": "product",
       "title": "Shape product scope",
-      "skill": "./skills/product-manager"
+      "skill": "catalog:product-manager"
     },
     {
       "id": "design",
       "title": "Set web interface direction and motion quality",
-      "skill": "./skills/web-design"
+      "skill": "catalog:web-design"
     },
     {
       "id": "technology",
       "title": "Set technical direction",
-      "skill": "./skills/cto"
+      "skill": "catalog:cto"
     },
     {
       "id": "delivery",
       "title": "Plan engineering execution",
-      "skill": "./skills/engineering-manager"
+      "skill": "catalog:engineering-manager"
     },
     {
       "id": "implementation",
       "title": "Frame the implementation slice",
-      "skill": "./skills/founding-engineer"
+      "skill": "catalog:founding-engineer"
     },
     {
       "id": "implement",
@@ -163,7 +103,7 @@
     {
       "id": "qa",
       "title": "Verify release readiness",
-      "skill": "./skills/qa-lead"
+      "skill": "catalog:qa-lead"
     }
   ]
 }

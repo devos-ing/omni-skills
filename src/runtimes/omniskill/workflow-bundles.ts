@@ -364,6 +364,7 @@ export interface WorkflowDependencyGraphEdge {
 
 export interface WorkflowDependencyGraph {
   dependencies: WorkflowSkillInstallDependency[];
+  lockSources: string[];
   displaySources: string[];
   workflows: WorkflowDependencyGraphWorkflow[];
   edges: WorkflowDependencyGraphEdge[];
@@ -533,7 +534,11 @@ export async function createWorkflowLockFile(
       generatedAt,
       workflows: createLockedWorkflowGraph(bundle.sourceDir, graph.workflows),
       edges: graph.edges,
-      skills: await createWorkflowLockSkillEntries(bundle.sourceDir, graph.dependencies),
+      skills: await createWorkflowLockSkillEntries(
+        bundle.sourceDir,
+        graph.dependencies,
+        graph.lockSources,
+      ),
     });
   } finally {
     await graph.cleanup?.();
@@ -862,7 +867,10 @@ export async function resolveWorkflowDependencyGraph(input: {
     );
   }
 
-  const selectedDependencies = new Map<string, WorkflowSkillInstallDependency>();
+  const selectedDependencies = new Map<
+    string,
+    { dependency: WorkflowSkillInstallDependency; lockSource: string }
+  >();
   const dependencyOrder: string[] = [];
   const workflows: WorkflowDependencyGraphWorkflow[] = [];
   const edges: WorkflowDependencyGraphEdge[] = [];
@@ -914,12 +922,17 @@ export async function resolveWorkflowDependencyGraph(input: {
       }
 
       const dependencyId = dependency.source;
-      const selectedDependency = selectedDependencies.get(dependencyId);
-      if (!selectedDependency) {
+      const selected = selectedDependencies.get(dependencyId);
+      const lockSource = getResolvedWorkflowSkillLockSource(
+        bundle,
+        dependency,
+        bundle === input.bundle,
+      );
+      if (!selected) {
         dependencyOrder.push(dependencyId);
-        selectedDependencies.set(dependencyId, dependency);
-      } else if (isPreferredWorkflowSkillDependency(dependency, selectedDependency)) {
-        selectedDependencies.set(dependencyId, dependency);
+        selectedDependencies.set(dependencyId, { dependency, lockSource });
+      } else if (isPreferredWorkflowSkillDependency(dependency, selected.dependency)) {
+        selectedDependencies.set(dependencyId, { dependency, lockSource });
       }
     }
   };
@@ -931,10 +944,12 @@ export async function resolveWorkflowDependencyGraph(input: {
     throw error;
   }
 
-  const dependencies = dependencyOrder.flatMap((dependencyId) => {
-    const dependency = selectedDependencies.get(dependencyId);
-    return dependency ? [dependency] : [];
+  const selectedDependencyList = dependencyOrder.flatMap((dependencyId) => {
+    const selected = selectedDependencies.get(dependencyId);
+    return selected ? [selected] : [];
   });
+  const dependencies = selectedDependencyList.map(({ dependency }) => dependency);
+  const lockSources = selectedDependencyList.map(({ lockSource }) => lockSource);
 
   if (!input.ignoreLockValidation && input.bundle.lock?.schemaVersion === "0.2") {
     try {
@@ -944,6 +959,7 @@ export async function resolveWorkflowDependencyGraph(input: {
         workflows,
         edges,
         dependencies,
+        lockSources,
       });
     } catch (error) {
       await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
@@ -953,6 +969,7 @@ export async function resolveWorkflowDependencyGraph(input: {
 
   return {
     dependencies,
+    lockSources,
     displaySources: getWorkflowDependencyDisplaySources(input.bundle, workflows, dependencies),
     workflows,
     edges,
@@ -960,6 +977,20 @@ export async function resolveWorkflowDependencyGraph(input: {
       ? { cleanup: async () => Promise.all(cleanups.map((cleanup) => cleanup())).then(() => {}) }
       : {}),
   };
+}
+
+function getResolvedWorkflowSkillLockSource(
+  bundle: WorkflowBundle,
+  dependency: WorkflowSkillInstallDependency,
+  isRoot: boolean,
+): string {
+  if (isRoot || bundle.source.kind !== "git" || !isAbsolute(dependency.source)) {
+    return dependency.source;
+  }
+  return `${getDisplayWorkflowIdentity(bundle)}#${getPortableLocalLockSource(
+    bundle.sourceDir,
+    dependency.source,
+  )}`;
 }
 
 function isPreferredWorkflowSkillDependency(
@@ -1536,13 +1567,18 @@ async function validateResolvedTransitiveWorkflowLock(input: {
   workflows: WorkflowDependencyGraphWorkflow[];
   edges: WorkflowDependencyGraphEdge[];
   dependencies: WorkflowSkillInstallDependency[];
+  lockSources: string[];
 }): Promise<void> {
   const resolvedWorkflows = createLockedWorkflowGraph(input.rootDir, input.workflows);
   const lockedWorkflows = input.lock.workflows.map((workflow, index) => ({
     ...workflow,
     source: index === 0 ? validateLockedRootSource(workflow.source) : workflow.source,
   }));
-  const resolvedSkills = await createWorkflowLockSkillEntries(input.rootDir, input.dependencies);
+  const resolvedSkills = await createWorkflowLockSkillEntries(
+    input.rootDir,
+    input.dependencies,
+    input.lockSources,
+  );
   const matches =
     JSON.stringify(lockedWorkflows) === JSON.stringify(resolvedWorkflows) &&
     JSON.stringify(input.lock.edges) === JSON.stringify(input.edges) &&
@@ -1590,14 +1626,20 @@ function getPortableLockedWorkflowSource(
 async function createWorkflowLockSkillEntries(
   rootDir: string,
   dependencies: WorkflowSkillInstallDependency[],
+  lockSources?: string[],
 ): Promise<WorkflowSkillLockEntry[]> {
   return Promise.all(
-    dependencies.map(async (skill) => {
+    dependencies.map(async (skill, index) => {
       const isLocal = isAbsolute(skill.source);
-      const lockSource = isLocal ? getPortableLocalLockSource(rootDir, skill.source) : skill.source;
+      const selectedLockSource = lockSources?.[index];
+      const lockSource =
+        selectedLockSource && isAbsolute(selectedLockSource)
+          ? getPortableLocalLockSource(rootDir, selectedLockSource)
+          : (selectedLockSource ??
+            (isLocal ? getPortableLocalLockSource(rootDir, skill.source) : skill.source));
       return {
         source: lockSource,
-        resolvedName: getWorkflowLockResolvedName(lockSource),
+        resolvedName: isLocal ? basename(skill.source) : getWorkflowLockResolvedName(lockSource),
         kind: isLocal ? "local" : "external",
         ...(skill.repo ? { repo: skill.repo } : {}),
         hash: isLocal
