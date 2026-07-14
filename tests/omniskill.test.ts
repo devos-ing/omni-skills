@@ -131,9 +131,9 @@ async function writeInstalledDispatchFixture(
             path: coordinatorProfilePath,
             contentHash: hashAgentProfileContent(coordinatorProfileContent),
             taskClass: "role",
-            tier: "deep",
-            model: "gpt-5.6",
-            effort: "high",
+            tier: "standard",
+            model: "gpt-5.4",
+            effort: "medium",
             access: "read-only",
             instructions: "You are the startup-goal coordinator.",
             consultation: "receive",
@@ -157,7 +157,7 @@ async function writeInstalledDispatchFixture(
       orchestration: {
         roles: {
           "./skills/startup-goal": {
-            tier: "deep",
+            tier: options.coordinator ? "standard" : "deep",
             access: "read-only",
             consultation: "receive",
           },
@@ -1041,6 +1041,26 @@ describe("omniskill command module", () => {
 
       const reassignProgram = new Command();
       configure(reassignProgram);
+      const sameRoleProgram = new Command();
+      configure(sameRoleProgram);
+      await expect(
+        sameRoleProgram.parseAsync(
+          [
+            "dispatch",
+            "resume",
+            "run-reassign",
+            "--decision",
+            "reassign",
+            "--role",
+            "catalog:cto",
+            "--message",
+            "Keep the same owner.",
+            "--home",
+            homeDir,
+          ],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("different role");
       await reassignProgram.parseAsync(
         [
           "dispatch",
@@ -1075,6 +1095,9 @@ describe("omniskill command module", () => {
         expect.objectContaining({
           status: "consultation_required",
           role: "./skills/startup-goal",
+          tier: "standard",
+          access: "read-only",
+          model: "gpt-5.4",
           reassignmentCount: 1,
           consultationCount: 2,
         }),

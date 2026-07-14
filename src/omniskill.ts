@@ -477,6 +477,9 @@ async function runOmniskillDispatchResume(
     options.createRunStore ?? ((dir) => createOrchestrationRunStore({ homeDir: dir }))
   )(homeDir);
   const stored = await store.load(runId);
+  if (decision === "reassign" && commandOptions.role === stored.receipt.role) {
+    throw new Error("Dispatch reassign requires a different role");
+  }
   if (
     stored.receipt.status !== "consultation_required" ||
     stored.receipt.failureCode === "human_escalation_required" ||
@@ -596,8 +599,10 @@ async function runOmniskillDispatchResume(
     role: selectedPlan.role,
     profileId: selectedPlan.profileId,
     profileHash: selectedPlan.profileHash,
+    tier: selectedPlan.tier,
     model: selectedPlan.model,
     effort: selectedPlan.effort,
+    access: selectedPlan.access,
     status: consultationLimitExceeded || repeatedConsultationEvidence ? "failed" : result.status,
     evidence: result.evidence,
     consultationCount:

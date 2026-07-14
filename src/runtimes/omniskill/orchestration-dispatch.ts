@@ -151,9 +151,11 @@ export function hasRepeatedConsultationEvidence(
   prior: ConsultationRequest,
   next: ConsultationRequest,
 ): boolean {
+  const priorEvidence = [...prior.evidence].sort();
+  const nextEvidence = [...next.evidence].sort();
   return (
-    prior.evidence.length === next.evidence.length &&
-    prior.evidence.every((item, index) => item === next.evidence[index])
+    priorEvidence.length === nextEvidence.length &&
+    priorEvidence.every((item, index) => item === nextEvidence[index])
   );
 }
 

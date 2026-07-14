@@ -133,11 +133,17 @@ describe("orchestration dispatch planning", () => {
       type: "consultation_request" as const,
       trigger: "ambiguity" as const,
       current_task: "Review boundaries",
-      evidence: ["Two public boundaries remain."],
+      evidence: ["Two public boundaries remain.", "Both pass the current contract."],
       decision_needed: "Choose one boundary.",
       recommendation: "Keep the adapter.",
     };
     expect(hasRepeatedConsultationEvidence(prior, { ...prior })).toBe(true);
+    expect(
+      hasRepeatedConsultationEvidence(prior, {
+        ...prior,
+        evidence: [...prior.evidence].reverse(),
+      }),
+    ).toBe(true);
     expect(
       hasRepeatedConsultationEvidence(prior, {
         ...prior,
