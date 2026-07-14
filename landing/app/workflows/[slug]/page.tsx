@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyableInstallCommand } from "../../../components/copyable-install-command";
 import { WorkflowAvatar } from "../../../components/workflow-avatar";
-import { catalogEntries, getLocalSkillSourceUrl } from "../../../lib/landing-content";
+import { catalogEntries, getSkillSourceUrl } from "../../../lib/landing-content";
 
 interface WorkflowPageProps {
   params: Promise<{
@@ -25,7 +25,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
     notFound();
   }
 
-  const entrySkillSourceUrl = getLocalSkillSourceUrl(workflow, workflow.entrySkill);
+  const entrySkillSourceUrl = getSkillSourceUrl(workflow, workflow.entrySkill);
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-[#191817]">
@@ -103,7 +103,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
 
           <div className="space-y-3">
             {workflow.diagramSteps.map((step, index) => {
-              const skillSourceUrl = getLocalSkillSourceUrl(workflow, step.skill);
+              const skillSourceUrl = getSkillSourceUrl(workflow, step.skill);
               return (
                 <div key={`${step.label}-${step.skill}`} className="relative flex gap-3">
                   <div className="flex flex-col items-center">

@@ -1,7 +1,7 @@
 import {
   type CatalogEntryContent,
   catalogEntries,
-  getLocalSkillSourceUrl,
+  getSkillSourceUrl,
   githubUrl,
   type WorkflowSkill,
 } from "./landing-content";
@@ -75,8 +75,8 @@ function sourceFor(
   );
   const sourceUrl =
     localSourceOverrides[name] ??
-    (standalone ? getLocalSkillSourceUrl(standalone, name) : null) ??
-    getLocalSkillSourceUrl(packageEntry, skill.name);
+    (standalone ? getSkillSourceUrl(standalone, name) : null) ??
+    getSkillSourceUrl(packageEntry, skill.name);
 
   if (!sourceUrl) return null;
   return { name, provider: "devos-ing/omni-skills", sourceUrl };

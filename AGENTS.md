@@ -53,8 +53,11 @@ Author or user request
 
 - An Omniskills bundle is a deployable skills set with a `workflow.json`,
   optional `workflow.lock.json`, README, and optional local skills. Omitted
-  `kind` means workflow; first-class teams declare `kind: "team"` plus a local
-  declared `coordinator` and unique local declared `members`.
+  `kind` means workflow. A first-class team declares `kind: "team"`; its
+  `coordinator` is one declared local entry skill, and every `members[]` source
+  must be declared in `skills[]` and resolve to a child workflow with exactly
+  one local entry skill. Child dependencies expand recursively, while only the
+  root team install record is written.
 - `startup-team` under `examples/teams/startup-team` is the primary public team.
   Role workflows such as `cto`, `product-manager`, and `founding-engineer`
   remain independently installable public examples.
