@@ -16,7 +16,17 @@ const canonicalExamplesWorkflowPath = "examples/workflows";
 const workflowAliasPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const WorkflowSkillSchema = z.object({
-  source: z.string().min(1),
+  source: z
+    .string()
+    .min(1)
+    .refine(
+      (source) =>
+        [...source].every((character) => {
+          const code = character.charCodeAt(0);
+          return code > 31 && code !== 127;
+        }),
+      "Workflow skill source cannot contain control characters",
+    ),
   repo: z.string().min(1).optional(),
   optional: z.boolean().optional(),
   entry: z.boolean().optional(),
@@ -462,7 +472,7 @@ export interface WorkflowDependencyGraph {
   displaySources: string[];
   workflows: WorkflowDependencyGraphWorkflow[];
   edges: WorkflowDependencyGraphEdge[];
-  roleSkillNames: Record<string, string>;
+  roleSkillSources: Record<string, string>;
   cleanup?: () => Promise<void>;
 }
 
@@ -539,7 +549,7 @@ export interface WorkflowLoopMetadata {
 export interface PreparedWorkflowSkillInstallDependencies {
   dependencies: WorkflowSkillInstallDependency[];
   displaySources: string[];
-  roleSkillNames: Record<string, string>;
+  roleSkillSources: Record<string, string>;
   cleanup?: () => Promise<void>;
 }
 
@@ -1113,7 +1123,7 @@ export async function resolveWorkflowDependencyGraph(input: {
     displaySources: getWorkflowDependencyDisplaySources(input.bundle, workflows, dependencies),
     workflows,
     edges,
-    roleSkillNames: getTeamRoleSkillNames({
+    roleSkillSources: getTeamRoleSkillSources({
       root: input.bundle,
       resolvedChildren,
       selectedByName,
@@ -1124,7 +1134,7 @@ export async function resolveWorkflowDependencyGraph(input: {
   };
 }
 
-function getTeamRoleSkillNames(input: {
+function getTeamRoleSkillSources(input: {
   root: WorkflowBundle;
   resolvedChildren: Map<string, WorkflowBundle>;
   selectedByName: Map<string, WorkflowBundle>;
@@ -1141,9 +1151,13 @@ function getTeamRoleSkillNames(input: {
         ? (input.selectedByName.get(discovered.manifest.name) ?? discovered)
         : null;
       const childEntry = child?.manifest.skills.find((skill) => skill.entry === true);
-      if (childEntry) return [source, basename(childEntry.source)];
-      if (source.includes(":")) return [source, source.slice(source.indexOf(":") + 1)];
-      return [source, basename(source)];
+      if (child && childEntry) {
+        return [source, resolve(child.sourceDir, childEntry.source)];
+      }
+      return [
+        source,
+        isLocalWorkflowSkillSource(source) ? resolve(input.root.sourceDir, source) : source,
+      ];
     }),
   );
 }
@@ -1407,7 +1421,7 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
     return {
       dependencies,
       displaySources: graph.displaySources,
-      roleSkillNames: graph.roleSkillNames,
+      roleSkillSources: graph.roleSkillSources,
       ...(graph.cleanup ? { cleanup: graph.cleanup } : {}),
     };
   }
@@ -1454,7 +1468,7 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
   return {
     dependencies: preparedDependencies,
     displaySources: graph.displaySources,
-    roleSkillNames: graph.roleSkillNames,
+    roleSkillSources: graph.roleSkillSources,
     cleanup: async () => {
       await rm(preparedRoot, { recursive: true, force: true });
       await graph.cleanup?.();

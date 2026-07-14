@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   installAgentSkill,
   parseSkillInstallAgents,
+  resolveInstallSkillName,
   resolveInstallSkillSource,
   type SkillInstallAgent,
 } from "../src/plugins/skill-installer";
@@ -32,6 +33,26 @@ async function writeSuperpowersSkill(
 }
 
 describe("skill installer", () => {
+  test("resolves canonical and frontmatter-derived installed skill names", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-name-metadata-"));
+    const skillDir = join(homeDir, "different-folder");
+    try {
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(
+        join(skillDir, "SKILL.md"),
+        "---\nname: actual-skill-name\ndescription: Test skill.\n---\n",
+      );
+
+      await expect(resolveInstallSkillName(skillDir, { homeDir })).resolves.toBe(
+        "actual-skill-name",
+      );
+      await expect(resolveInstallSkillName("superpowers:brainstorming", { homeDir })).resolves.toBe(
+        "superpowers-brainstorming",
+      );
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
   test("resolves the bundled pony trail skill by name", async () => {
     const source = await resolveInstallSkillSource("pony-trail");
 

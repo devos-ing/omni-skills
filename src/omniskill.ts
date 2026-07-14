@@ -22,6 +22,7 @@ import {
   MissingSuperpowersSkillError,
   parseSkillInstallAgents,
   preflightAgentProfiles,
+  resolveInstallSkillName,
   type SkillInstallResult,
 } from "./plugins";
 import { runSubprocess } from "./process";
@@ -390,13 +391,23 @@ async function runOmniskillInstall(
     const configPlan = bundle.manifest.orchestration
       ? await loadOrchestrationConfigPlan({ homeDir })
       : undefined;
+    const roleSkillNames = Object.fromEntries(
+      await Promise.all(
+        Object.entries(preparedDependencies.roleSkillSources).map(
+          async ([source, installSource]) => [
+            source,
+            await resolveInstallSkillName(installSource, { homeDir }),
+          ],
+        ),
+      ),
+    );
     const plannedProfiles = configPlan
       ? planAgentProfiles({
           manifest: bundle.manifest,
           config: configPlan.config,
           homeDir,
           targets: orchestrationTargets(installAgents),
-          roleSkillNames: preparedDependencies.roleSkillNames,
+          roleSkillNames,
         })
       : [];
     const installedWorkflow = (await listInstalledWorkflowBundles({ rootDir: targetDir })).find(

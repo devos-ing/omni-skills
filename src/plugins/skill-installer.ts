@@ -334,6 +334,31 @@ export async function resolveInstallSkillSource(
   throw new Error(`Skill source not found: ${sourceOrName}`);
 }
 
+export async function resolveInstallSkillName(
+  sourceOrName: string,
+  options: ResolveInstallSkillSourceOptions = {},
+): Promise<string> {
+  try {
+    return (await resolveInstallSkillSource(sourceOrName, options)).name;
+  } catch (error) {
+    const mattPocockSkillName = parseMattPocockSkillSource(sourceOrName);
+    if (error instanceof MissingMattPocockSkillError && mattPocockSkillName) {
+      return mattPocockSkillName;
+    }
+    const superpowersSkill = supportedSuperpowersSkills.find(
+      (skill) => skill.source === sourceOrName,
+    );
+    if (error instanceof MissingSuperpowersSkillError && superpowersSkill) {
+      return superpowersSkill.installName;
+    }
+    const interfaceCraftSkillName = getInterfaceCraftInstalledSkillName(sourceOrName);
+    if (error instanceof MissingInterfaceCraftSkillError && interfaceCraftSkillName) {
+      return interfaceCraftSkillName;
+    }
+    throw error;
+  }
+}
+
 async function resolveMattPocockSkill(
   skillName: string,
   options: ResolveInstallSkillSourceOptions,

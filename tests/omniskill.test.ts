@@ -274,6 +274,10 @@ describe("omniskill command module", () => {
         team: true,
         orchestration: true,
       });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
       configureOmniskillCommand(program, {
         rootDir,
         installSkill: async () => {
@@ -319,11 +323,15 @@ describe("omniskill command module", () => {
         team: true,
         orchestration: true,
       });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
       configureOmniskillCommand(program, {
         rootDir,
         installPrompt: { confirmInstall: async () => true },
         installSkill: async (input) => {
-          const skillName = input.source.endsWith("git-extra") ? "git-extra" : "git-entry";
+          const skillName = input.source.endsWith("git-extra") ? "actual-git-extra" : "git-entry";
           return {
             skillInstall: fakeSkillInstallResult({
               source: input.source,
@@ -371,7 +379,7 @@ describe("omniskill command module", () => {
           join(homeDir, ".codex", "agents", "omniskills-git-team-member-workflow.toml"),
           "utf8",
         ),
-      ).resolves.toContain("load and follow the installed `$git-extra` skill");
+      ).resolves.toContain("load and follow the installed `$actual-git-extra` skill");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });
