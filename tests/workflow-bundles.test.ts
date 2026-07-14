@@ -69,6 +69,32 @@ const validTeamManifest = {
     { source: "catalog:member-workflow" },
     { source: "external-review" },
   ],
+  orchestration: {
+    roles: {
+      "./skills/coordinator": {
+        tier: "deep",
+        access: "read-only",
+        consultation: "receive",
+      },
+      "catalog:member-workflow": {
+        tier: "deep",
+        access: "read-only",
+        consultation: "request",
+      },
+      "external-review": {
+        tier: "standard",
+        access: "workspace-write",
+        consultation: "request",
+      },
+    },
+    support: {
+      explorer: {
+        tier: "fast",
+        access: "read-only",
+        consultation: "request",
+      },
+    },
+  },
   steps: [
     { id: "route", title: "Route work", skill: "./skills/coordinator" },
     { id: "review", title: "Review work", skill: "catalog:member-workflow" },
@@ -1148,6 +1174,12 @@ describe("workflow bundles", () => {
     expect(team.kind).toBe("team");
     expect(team.coordinator).toBe("./skills/coordinator");
     expect(team.members).toEqual(["catalog:member-workflow"]);
+    expect(team.orchestration?.roles["./skills/coordinator"]).toEqual({
+      tier: "deep",
+      access: "read-only",
+      consultation: "receive",
+    });
+    expect(team.orchestration?.support?.explorer?.tier).toBe("fast");
     expect(legacy.kind).toBeUndefined();
     expect(getWorkflowInvocationSkillName(team)).toBe("coordinator");
     expect(getWorkflowInvocationSkillName(legacy)).toBeNull();
@@ -1194,6 +1226,60 @@ describe("workflow bundles", () => {
       {
         manifest: { ...validTeamManifest, members: ["./skills/coordinator"] },
         message: "Team coordinator cannot also be a member: ./skills/coordinator",
+      },
+    ];
+
+    for (const invalidCase of invalidCases) {
+      expect(() => WorkflowBundleManifestSchema.parse(invalidCase.manifest)).toThrow(
+        invalidCase.message,
+      );
+    }
+  });
+
+  test("rejects invalid team orchestration contracts", () => {
+    const invalidCases = [
+      {
+        manifest: {
+          ...validTeamManifest,
+          orchestration: {
+            ...validTeamManifest.orchestration,
+            roles: {
+              ...validTeamManifest.orchestration.roles,
+              missing: {
+                tier: "deep",
+                access: "read-only",
+                consultation: "request",
+              },
+            },
+          },
+        },
+        message: "Team orchestration references unknown skill: missing",
+      },
+      {
+        manifest: {
+          ...validTeamManifest,
+          orchestration: {
+            ...validTeamManifest.orchestration,
+            roles: {
+              ...validTeamManifest.orchestration.roles,
+              "./skills/coordinator": {
+                tier: "deep",
+                access: "read-only",
+                consultation: "request",
+              },
+            },
+          },
+        },
+        message: "Team orchestration coordinator must receive consultations",
+      },
+      {
+        manifest: {
+          ...validTeamManifest,
+          kind: "workflow",
+          coordinator: undefined,
+          members: undefined,
+        },
+        message: "Workflow manifests cannot declare orchestration",
       },
     ];
 

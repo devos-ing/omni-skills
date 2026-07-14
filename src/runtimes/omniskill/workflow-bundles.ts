@@ -47,6 +47,21 @@ const WorkflowLoopSchema = z.object({
   stop_when: z.array(z.string().min(1)).min(1).optional(),
 });
 
+const WorkflowOrchestrationAssignmentSchema = z.object({
+  tier: z.enum(["deep", "standard", "fast"]),
+  access: z.enum(["read-only", "workspace-write"]),
+  consultation: z.enum(["receive", "request", "none"]),
+});
+
+const WorkflowOrchestrationSchema = z.object({
+  roles: z
+    .record(z.string().min(1), WorkflowOrchestrationAssignmentSchema)
+    .refine((roles) => Object.keys(roles).length > 0, "Team orchestration must declare roles"),
+  support: z
+    .record(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/), WorkflowOrchestrationAssignmentSchema)
+    .optional(),
+});
+
 export const WorkflowBundleManifestSchema = z
   .object({
     schemaVersion: z.literal("0.1"),
@@ -56,6 +71,7 @@ export const WorkflowBundleManifestSchema = z
     description: z.string().min(1),
     coordinator: z.string().min(1).optional(),
     members: z.array(z.string().min(1)).optional(),
+    orchestration: WorkflowOrchestrationSchema.optional(),
     loop: WorkflowLoopSchema.optional(),
     skills: z.array(WorkflowSkillSchema).min(1),
     steps: z.array(WorkflowStepSchema).min(1),
@@ -83,6 +99,57 @@ export const WorkflowBundleManifestSchema = z
 
     const skillSources = new Set(manifest.skills.map((skill) => skill.source));
     const effectiveKind = manifest.kind ?? "workflow";
+
+    if (manifest.orchestration && effectiveKind !== "team") {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Workflow manifests cannot declare orchestration",
+        path: ["orchestration"],
+      });
+    }
+
+    if (manifest.orchestration && effectiveKind === "team") {
+      for (const source of Object.keys(manifest.orchestration.roles)) {
+        if (!skillSources.has(source)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Team orchestration references unknown skill: ${source}`,
+            path: ["orchestration", "roles", source],
+          });
+        }
+      }
+
+      if (
+        manifest.coordinator &&
+        manifest.orchestration.roles[manifest.coordinator]?.consultation !== "receive"
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Team orchestration coordinator must receive consultations",
+          path: ["orchestration", "roles", manifest.coordinator, "consultation"],
+        });
+      }
+
+      for (const [source, assignment] of Object.entries(manifest.orchestration.roles)) {
+        if (source !== manifest.coordinator && assignment.consultation === "receive") {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Only the team coordinator can receive consultations: ${source}`,
+            path: ["orchestration", "roles", source, "consultation"],
+          });
+        }
+      }
+
+      for (const [source, assignment] of Object.entries(manifest.orchestration.support ?? {})) {
+        if (assignment.consultation === "receive") {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Only the team coordinator can receive consultations: ${source}`,
+            path: ["orchestration", "support", source, "consultation"],
+          });
+        }
+      }
+    }
 
     if (effectiveKind === "team") {
       if (!manifest.coordinator) {
