@@ -61,6 +61,14 @@ export const WorkflowBundleManifestSchema = z
     steps: z.array(WorkflowStepSchema).min(1),
   })
   .superRefine((manifest, context) => {
+    if (!parseWorkflowSemver(manifest.version)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid workflow semantic version: ${manifest.version}`,
+        path: ["version"],
+      });
+    }
+
     const stepIds = new Set<string>();
     for (const [index, step] of manifest.steps.entries()) {
       if (stepIds.has(step.id)) {
@@ -232,13 +240,51 @@ const WorkflowSkillLockEntrySchema = z.object({
   hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
 });
 
-export const WorkflowLockFileSchema = z.object({
+const LegacyWorkflowLockFileSchema = z.object({
   schemaVersion: z.literal("0.1"),
   workflow: z.string().min(1),
   workflowVersion: z.string().min(1),
   generatedAt: z.string().datetime(),
   skills: z.array(WorkflowSkillLockEntrySchema).min(1),
 });
+
+const LockedWorkflowSourceSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("root") }),
+  z.object({ kind: z.literal("local"), path: z.string().min(1) }),
+  z.object({
+    kind: z.literal("git"),
+    url: z.string().min(1),
+    commit: z.string().min(1),
+    subdirectory: z.string().min(1).optional(),
+  }),
+]);
+
+const WorkflowDependencyGraphWorkflowSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  version: z.string().min(1),
+  source: LockedWorkflowSourceSchema,
+});
+
+const WorkflowDependencyGraphEdgeSchema = z.object({
+  from: z.string().min(1),
+  to: z.string().min(1),
+});
+
+const TransitiveWorkflowLockFileSchema = z.object({
+  schemaVersion: z.literal("0.2"),
+  workflow: z.string().min(1),
+  workflowVersion: z.string().min(1),
+  generatedAt: z.string().datetime(),
+  workflows: z.array(WorkflowDependencyGraphWorkflowSchema).min(1),
+  edges: z.array(WorkflowDependencyGraphEdgeSchema),
+  skills: z.array(WorkflowSkillLockEntrySchema).min(1),
+});
+
+export const WorkflowLockFileSchema = z.union([
+  LegacyWorkflowLockFileSchema,
+  TransitiveWorkflowLockFileSchema,
+]);
 
 export type WorkflowSkillLockEntry = z.infer<typeof WorkflowSkillLockEntrySchema>;
 export type WorkflowLockFile = z.infer<typeof WorkflowLockFileSchema>;
@@ -294,6 +340,33 @@ export interface WorkflowSkillInstallDependency {
   repo?: string;
 }
 
+export interface WorkflowDependencyResolver {
+  resolve(input: {
+    dependency: WorkflowSkillInstallDependency;
+    parent: WorkflowBundle;
+  }): Promise<WorkflowBundle | null>;
+}
+
+export interface WorkflowDependencyGraphWorkflow {
+  id: string;
+  name: string;
+  version: string;
+  source: WorkflowBundleSource;
+}
+
+export interface WorkflowDependencyGraphEdge {
+  from: string;
+  to: string;
+}
+
+export interface WorkflowDependencyGraph {
+  dependencies: WorkflowSkillInstallDependency[];
+  displaySources: string[];
+  workflows: WorkflowDependencyGraphWorkflow[];
+  edges: WorkflowDependencyGraphEdge[];
+  cleanup?: () => Promise<void>;
+}
+
 export interface WorkflowInstallSkillArtifact {
   source: string;
   skillName: string;
@@ -344,6 +417,7 @@ export interface WorkflowLoopMetadata {
 
 export interface PreparedWorkflowSkillInstallDependencies {
   dependencies: WorkflowSkillInstallDependency[];
+  displaySources: string[];
   cleanup?: () => Promise<void>;
 }
 
@@ -363,12 +437,14 @@ export async function loadWorkflowBundle(
     cwd?: string;
     runGitCommand?: WorkflowGitCommandRunner;
     tempDir?: string;
+    commit?: string;
   } = {},
 ): Promise<WorkflowBundle> {
   const resolvedSource = await resolveWorkflowBundleSource(source, {
     cwd: options.cwd ?? process.cwd(),
     ...(options.runGitCommand ? { runGitCommand: options.runGitCommand } : {}),
     ...(options.tempDir ? { tempDir: options.tempDir } : {}),
+    ...(options.commit ? { commit: options.commit } : {}),
   });
   const manifestPath = resolvedSource.sourceDir.endsWith(workflowFileName)
     ? resolvedSource.sourceDir
@@ -427,40 +503,43 @@ export async function loadWorkflowLockFile(
 
 export async function createWorkflowLockFile(
   bundle: WorkflowBundle,
-  options: { generatedAt?: Date | string } = {},
+  options: {
+    generatedAt?: Date | string;
+    runGitCommand?: WorkflowGitCommandRunner;
+    tempDir?: string;
+    installedRootDir?: string;
+  } = {},
 ): Promise<WorkflowLockFile> {
   const generatedAt =
     typeof options.generatedAt === "string"
       ? options.generatedAt
       : (options.generatedAt ?? new Date()).toISOString();
 
-  return WorkflowLockFileSchema.parse({
-    schemaVersion: "0.1",
-    workflow: bundle.manifest.name,
-    workflowVersion: bundle.manifest.version,
-    generatedAt,
-    skills: await Promise.all(
-      bundle.manifest.skills.map(async (skill) => {
-        const isLocal = isLocalWorkflowSkillSource(skill.source);
-        const entry = {
-          source: skill.source,
-          resolvedName: getWorkflowLockResolvedName(skill.source),
-          kind: isLocal ? "local" : "external",
-          ...(skill.repo ? { repo: skill.repo } : {}),
-          hash: isLocal
-            ? await hashLocalWorkflowSkill(resolve(bundle.sourceDir, skill.source))
-            : hashExternalWorkflowSkill(skill.source, skill.repo),
-        } satisfies WorkflowSkillLockEntry;
-
-        return entry;
-      }),
-    ),
+  const graph = await resolveWorkflowDependencyGraph({
+    bundle,
+    ignoreLockValidation: true,
+    ...(options.runGitCommand ? { runGitCommand: options.runGitCommand } : {}),
+    ...(options.tempDir ? { tempDir: options.tempDir } : {}),
+    ...(options.installedRootDir ? { installedRootDir: options.installedRootDir } : {}),
   });
+  try {
+    return WorkflowLockFileSchema.parse({
+      schemaVersion: "0.2",
+      workflow: bundle.manifest.name,
+      workflowVersion: bundle.manifest.version,
+      generatedAt,
+      workflows: createLockedWorkflowGraph(bundle.sourceDir, graph.workflows),
+      edges: graph.edges,
+      skills: await createWorkflowLockSkillEntries(bundle.sourceDir, graph.dependencies),
+    });
+  } finally {
+    await graph.cleanup?.();
+  }
 }
 
 export async function writeWorkflowLockFile(
   bundle: WorkflowBundle,
-  options: { generatedAt?: Date | string } = {},
+  options: Parameters<typeof createWorkflowLockFile>[1] = {},
 ): Promise<{ lock: WorkflowLockFile; path: string }> {
   const lock = await createWorkflowLockFile(bundle, options);
   const path = join(bundle.sourceDir, workflowLockFileName);
@@ -635,6 +714,389 @@ export function getWorkflowSkillInstallDependencies(
   });
 }
 
+export async function resolveWorkflowDependencyGraph(input: {
+  bundle: WorkflowBundle;
+  resolver?: WorkflowDependencyResolver;
+  runGitCommand?: WorkflowGitCommandRunner;
+  tempDir?: string;
+  installedRootDir?: string;
+  ignoreLockValidation?: boolean;
+}): Promise<WorkflowDependencyGraph> {
+  const resolver =
+    input.resolver ??
+    createDefaultWorkflowDependencyResolver({
+      ...(!input.ignoreLockValidation && input.bundle.lock ? { lock: input.bundle.lock } : {}),
+      ...(input.runGitCommand ? { runGitCommand: input.runGitCommand } : {}),
+      ...(input.tempDir ? { tempDir: input.tempDir } : {}),
+      ...(input.installedRootDir ? { installedRootDir: input.installedRootDir } : {}),
+    });
+  const discovered = new Map<string, WorkflowBundle>();
+  const resolvedChildren = new Map<string, WorkflowBundle>();
+  const selectedByName = new Map<string, WorkflowBundle>();
+  const cleanups: Array<() => Promise<void>> = [];
+
+  const discover = async (bundle: WorkflowBundle, active: WorkflowBundle[]): Promise<void> => {
+    assertValidWorkflowSemver(bundle);
+    const canonicalId = getCanonicalWorkflowIdentity(bundle);
+    const cycleIndex = active.findIndex(
+      (candidate) => getCanonicalWorkflowIdentity(candidate) === canonicalId,
+    );
+    if (cycleIndex >= 0) {
+      throw new Error(
+        `Workflow dependency cycle: ${[
+          ...active.slice(cycleIndex).map(getDisplayWorkflowIdentity),
+          getDisplayWorkflowIdentity(bundle),
+        ].join(" -> ")}`,
+      );
+    }
+    if (discovered.has(canonicalId)) {
+      return;
+    }
+    discovered.set(canonicalId, bundle);
+
+    const selected = selectedByName.get(bundle.manifest.name);
+    if (
+      !selected ||
+      compareWorkflowSemver(bundle.manifest.version, selected.manifest.version) > 0
+    ) {
+      selectedByName.set(bundle.manifest.name, bundle);
+    }
+
+    const nextActive = [...active, bundle];
+    for (const [index, dependency] of getWorkflowSkillInstallDependencies(bundle).entries()) {
+      const child = await resolver.resolve({ dependency, parent: bundle });
+      if (!child) {
+        continue;
+      }
+      resolvedChildren.set(`${canonicalId}\n${index}`, child);
+      if (child.cleanup) {
+        cleanups.push(child.cleanup);
+      }
+      await discover(child, nextActive);
+    }
+  };
+
+  try {
+    await discover(input.bundle, []);
+  } catch (error) {
+    await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
+    throw error;
+  }
+
+  if (
+    !input.ignoreLockValidation &&
+    input.bundle.lock?.schemaVersion === "0.1" &&
+    discovered.size > 1
+  ) {
+    await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
+    throw new Error(
+      "Legacy workflow lock 0.1 cannot represent nested workflows; run omniskill lock to regenerate workflow.lock.json",
+    );
+  }
+
+  const selectedDependencies = new Map<string, WorkflowSkillInstallDependency>();
+  const dependencyOrder: string[] = [];
+  const workflows: WorkflowDependencyGraphWorkflow[] = [];
+  const edges: WorkflowDependencyGraphEdge[] = [];
+  const seenWorkflows = new Set<string>();
+  const seenEdges = new Set<string>();
+
+  const visit = async (bundle: WorkflowBundle, active: WorkflowBundle[]): Promise<void> => {
+    const canonicalId = getCanonicalWorkflowIdentity(bundle);
+    const cycleIndex = active.findIndex(
+      (candidate) => getCanonicalWorkflowIdentity(candidate) === canonicalId,
+    );
+    if (cycleIndex >= 0) {
+      throw new Error(
+        `Workflow dependency cycle: ${[
+          ...active.slice(cycleIndex).map(getDisplayWorkflowIdentity),
+          getDisplayWorkflowIdentity(bundle),
+        ].join(" -> ")}`,
+      );
+    }
+    if (seenWorkflows.has(canonicalId)) {
+      return;
+    }
+    seenWorkflows.add(canonicalId);
+    workflows.push({
+      id: getDisplayWorkflowIdentity(bundle),
+      name: bundle.manifest.name,
+      version: bundle.manifest.version,
+      source: bundle.source,
+    });
+
+    const nextActive = [...active, bundle];
+    for (const [index, dependency] of getWorkflowSkillInstallDependencies(bundle).entries()) {
+      const discoveredChild = resolvedChildren.get(`${canonicalId}\n${index}`);
+      const child = discoveredChild
+        ? (selectedByName.get(discoveredChild.manifest.name) ?? discoveredChild)
+        : null;
+      if (child) {
+        const edge = {
+          from: getDisplayWorkflowIdentity(bundle),
+          to: getDisplayWorkflowIdentity(child),
+        };
+        const edgeId = `${edge.from}\n${edge.to}`;
+        if (!seenEdges.has(edgeId)) {
+          seenEdges.add(edgeId);
+          edges.push(edge);
+        }
+        await visit(child, nextActive);
+        continue;
+      }
+
+      const dependencyId = dependency.source;
+      const selectedDependency = selectedDependencies.get(dependencyId);
+      if (!selectedDependency) {
+        dependencyOrder.push(dependencyId);
+        selectedDependencies.set(dependencyId, dependency);
+      } else if (isPreferredWorkflowSkillDependency(dependency, selectedDependency)) {
+        selectedDependencies.set(dependencyId, dependency);
+      }
+    }
+  };
+
+  try {
+    await visit(input.bundle, []);
+  } catch (error) {
+    await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
+    throw error;
+  }
+
+  const dependencies = dependencyOrder.flatMap((dependencyId) => {
+    const dependency = selectedDependencies.get(dependencyId);
+    return dependency ? [dependency] : [];
+  });
+
+  if (!input.ignoreLockValidation && input.bundle.lock?.schemaVersion === "0.2") {
+    try {
+      await validateResolvedTransitiveWorkflowLock({
+        lock: input.bundle.lock,
+        rootDir: input.bundle.sourceDir,
+        workflows,
+        edges,
+        dependencies,
+      });
+    } catch (error) {
+      await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
+      throw error;
+    }
+  }
+
+  return {
+    dependencies,
+    displaySources: getWorkflowDependencyDisplaySources(input.bundle, workflows, dependencies),
+    workflows,
+    edges,
+    ...(cleanups.length > 0
+      ? { cleanup: async () => Promise.all(cleanups.map((cleanup) => cleanup())).then(() => {}) }
+      : {}),
+  };
+}
+
+function isPreferredWorkflowSkillDependency(
+  candidate: WorkflowSkillInstallDependency,
+  selected: WorkflowSkillInstallDependency,
+): boolean {
+  const candidateVersion = getWorkflowSkillDependencySemver(candidate.repo);
+  const selectedVersion = getWorkflowSkillDependencySemver(selected.repo);
+  if (!candidateVersion) {
+    return false;
+  }
+  if (!selectedVersion) {
+    return true;
+  }
+  return compareWorkflowSemver(candidateVersion, selectedVersion) > 0;
+}
+
+function getWorkflowSkillDependencySemver(repo: string | undefined): string | null {
+  if (!repo) {
+    return null;
+  }
+  const separatorIndex = repo.lastIndexOf("@");
+  if (separatorIndex <= 0 || separatorIndex === repo.length - 1) {
+    return null;
+  }
+  const candidate = repo.slice(separatorIndex + 1);
+  return parseWorkflowSemver(candidate) ? candidate : null;
+}
+
+function getWorkflowDependencyDisplaySources(
+  root: WorkflowBundle,
+  workflows: WorkflowDependencyGraphWorkflow[],
+  dependencies: WorkflowSkillInstallDependency[],
+): string[] {
+  if (workflows.length > 1) {
+    return dependencies.map((dependency) => dependency.source);
+  }
+  const rootDependencies = getWorkflowSkillInstallDependencies(root);
+  return dependencies.map((dependency) => {
+    const index = rootDependencies.findIndex(
+      (candidate) => candidate.source === dependency.source && candidate.repo === dependency.repo,
+    );
+    return root.manifest.skills[index]?.source ?? dependency.source;
+  });
+}
+
+function assertValidWorkflowSemver(bundle: WorkflowBundle): void {
+  if (!parseWorkflowSemver(bundle.manifest.version)) {
+    throw new Error(
+      `Workflow ${bundle.manifest.name} declares invalid semantic version: ${bundle.manifest.version}`,
+    );
+  }
+}
+
+function compareWorkflowSemver(left: string, right: string): number {
+  const leftVersion = parseWorkflowSemver(left);
+  const rightVersion = parseWorkflowSemver(right);
+  if (!leftVersion || !rightVersion) {
+    throw new Error(`Cannot compare invalid workflow semantic versions: ${left}, ${right}`);
+  }
+  for (const index of [0, 1, 2] as const) {
+    const difference = leftVersion.core[index] - rightVersion.core[index];
+    if (difference !== 0) {
+      return difference;
+    }
+  }
+  if (leftVersion.prerelease === rightVersion.prerelease) {
+    return 0;
+  }
+  if (!leftVersion.prerelease) {
+    return 1;
+  }
+  if (!rightVersion.prerelease) {
+    return -1;
+  }
+  return leftVersion.prerelease.localeCompare(rightVersion.prerelease, undefined, {
+    numeric: true,
+  });
+}
+
+function parseWorkflowSemver(
+  version: string,
+): { core: [number, number, number]; prerelease: string } | null {
+  const match =
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(
+      version,
+    );
+  if (!match) {
+    return null;
+  }
+  const prerelease = match[4] ?? "";
+  const prereleaseIdentifiers = prerelease ? prerelease.split(".") : [];
+  if (
+    prereleaseIdentifiers.some(
+      (identifier) =>
+        identifier.length === 0 || (/^\d+$/.test(identifier) && /^0\d+/.test(identifier)),
+    )
+  ) {
+    return null;
+  }
+  return {
+    core: [Number(match[1]), Number(match[2]), Number(match[3])],
+    prerelease,
+  };
+}
+
+function createDefaultWorkflowDependencyResolver(options: {
+  lock?: WorkflowLockFile;
+  runGitCommand?: WorkflowGitCommandRunner;
+  tempDir?: string;
+  installedRootDir?: string;
+}): WorkflowDependencyResolver {
+  return {
+    async resolve({ dependency, parent }) {
+      if (dependency.source.startsWith("catalog:")) {
+        const alias = dependency.source.slice("catalog:".length);
+        if (!alias) {
+          throw new Error("Catalog workflow dependency must include an alias");
+        }
+        const lockedCommit = getLockedWorkflowCommit(options.lock, alias);
+        return loadWorkflowBundle(alias, {
+          cwd: parent.sourceDir,
+          ...(options.runGitCommand ? { runGitCommand: options.runGitCommand } : {}),
+          ...(options.tempDir ? { tempDir: options.tempDir } : {}),
+          ...(lockedCommit ? { commit: lockedCommit } : {}),
+        });
+      }
+      if (dependency.source.startsWith("installed:")) {
+        const workflowName = dependency.source.slice("installed:".length);
+        if (!workflowName) {
+          throw new Error("Installed workflow dependency must include a workflow name");
+        }
+        if (!options.installedRootDir) {
+          throw new Error(
+            `Installed workflow dependency requires installedRootDir: ${dependency.source}`,
+          );
+        }
+        const installed = await loadInstalledWorkflowBundle({
+          rootDir: options.installedRootDir,
+          workflowName,
+        });
+        const recordedSource = installed.workflow.source;
+        return loadWorkflowBundle(
+          recordedSource.kind === "local" ? recordedSource.path : recordedSource.url,
+          {
+            cwd: parent.sourceDir,
+            ...(options.runGitCommand ? { runGitCommand: options.runGitCommand } : {}),
+            ...(options.tempDir ? { tempDir: options.tempDir } : {}),
+            ...(recordedSource.kind === "git" && recordedSource.commit
+              ? { commit: recordedSource.commit }
+              : {}),
+          },
+        );
+      }
+      if (parseGitWorkflowSource(dependency.source)) {
+        const lockedCommit = getLockedWorkflowCommit(options.lock, dependency.source);
+        return loadWorkflowBundle(dependency.source, {
+          cwd: parent.sourceDir,
+          ...(options.runGitCommand ? { runGitCommand: options.runGitCommand } : {}),
+          ...(options.tempDir ? { tempDir: options.tempDir } : {}),
+          ...(lockedCommit ? { commit: lockedCommit } : {}),
+        });
+      }
+      const candidate = isAbsolute(dependency.source)
+        ? dependency.source
+        : resolve(parent.sourceDir, dependency.source);
+      const manifestPath = candidate.endsWith(workflowFileName)
+        ? candidate
+        : join(candidate, workflowFileName);
+      if (!existsSync(manifestPath)) {
+        return null;
+      }
+      return loadWorkflowBundle(candidate, { cwd: parent.sourceDir });
+    },
+  };
+}
+
+function getLockedWorkflowCommit(
+  lock: WorkflowLockFile | undefined,
+  source: string,
+): string | null {
+  if (lock?.schemaVersion !== "0.2") {
+    return null;
+  }
+  const locked = lock.workflows.find(
+    (workflow) =>
+      workflow.source.kind === "git" &&
+      (workflow.source.url === source || workflow.name === source),
+  );
+  return locked?.source.kind === "git" ? locked.source.commit : null;
+}
+
+function getCanonicalWorkflowIdentity(bundle: WorkflowBundle): string {
+  if (bundle.source.kind === "local") {
+    return `local:${resolve(bundle.sourceDir)}`;
+  }
+  const url = new URL(bundle.source.url);
+  url.hash = "";
+  return `git:${url.toString()}#${bundle.source.subdirectory ?? ""}@${bundle.source.commit ?? ""}`;
+}
+
+function getDisplayWorkflowIdentity(bundle: WorkflowBundle): string {
+  return `workflow:${bundle.manifest.name}@${bundle.manifest.version}`;
+}
+
 export function createWorkflowLoopMetadata(bundle: WorkflowBundle): WorkflowLoopMetadata | null {
   if (!bundle.manifest.loop) {
     return null;
@@ -663,10 +1125,22 @@ export function createWorkflowLoopMetadata(bundle: WorkflowBundle): WorkflowLoop
 export async function getPreparedWorkflowSkillInstallDependencies(input: {
   bundle: WorkflowBundle;
   tempDir?: string;
+  runGitCommand?: WorkflowGitCommandRunner;
+  installedRootDir?: string;
 }): Promise<PreparedWorkflowSkillInstallDependencies> {
-  const dependencies = getWorkflowSkillInstallDependencies(input.bundle);
+  const graph = await resolveWorkflowDependencyGraph({
+    bundle: input.bundle,
+    ...(input.runGitCommand ? { runGitCommand: input.runGitCommand } : {}),
+    ...(input.tempDir ? { tempDir: input.tempDir } : {}),
+    ...(input.installedRootDir ? { installedRootDir: input.installedRootDir } : {}),
+  });
+  const dependencies = graph.dependencies;
   if (!input.bundle.manifest.loop) {
-    return { dependencies };
+    return {
+      dependencies,
+      displaySources: graph.displaySources,
+      ...(graph.cleanup ? { cleanup: graph.cleanup } : {}),
+    };
   }
 
   const entrySkill = getWorkflowEntrySkill(input.bundle.manifest);
@@ -674,7 +1148,8 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
     throw new Error("Looped workflow entry skill could not be resolved");
   }
 
-  const entryIndex = input.bundle.manifest.skills.findIndex((skill) => skill.entry === true);
+  const entrySource = resolve(input.bundle.sourceDir, entrySkill.source);
+  const entryIndex = dependencies.findIndex((dependency) => dependency.source === entrySource);
   const sourceDependency = dependencies[entryIndex];
   if (!sourceDependency) {
     throw new Error("Looped workflow entry dependency could not be resolved");
@@ -709,7 +1184,11 @@ export async function getPreparedWorkflowSkillInstallDependencies(input: {
 
   return {
     dependencies: preparedDependencies,
-    cleanup: () => rm(preparedRoot, { recursive: true, force: true }),
+    displaySources: graph.displaySources,
+    cleanup: async () => {
+      await rm(preparedRoot, { recursive: true, force: true });
+      await graph.cleanup?.();
+    },
   };
 }
 
@@ -938,30 +1417,41 @@ function validateWorkflowLockFile(input: {
       `workflowVersion is ${input.lock.workflowVersion}, expected ${input.manifest.version}`,
     );
   }
-  if (input.lock.skills.length !== input.manifest.skills.length) {
-    issues.push(
-      `skills length is ${input.lock.skills.length}, expected ${input.manifest.skills.length}`,
-    );
-  }
-
-  for (const [index, skill] of input.manifest.skills.entries()) {
-    const lockedSkill = input.lock.skills[index];
-    if (!lockedSkill) {
-      continue;
-    }
-    if (lockedSkill.source !== skill.source) {
-      issues.push(`skills[${index}].source is ${lockedSkill.source}, expected ${skill.source}`);
-    }
-    if (lockedSkill.repo !== skill.repo) {
+  if (input.lock.schemaVersion === "0.1") {
+    if (input.lock.skills.length !== input.manifest.skills.length) {
       issues.push(
-        `skills[${index}].repo is ${lockedSkill.repo ?? "<none>"}, expected ${
-          skill.repo ?? "<none>"
-        }`,
+        `skills length is ${input.lock.skills.length}, expected ${input.manifest.skills.length}`,
       );
     }
-    const expectedKind = isLocalWorkflowSkillSource(skill.source) ? "local" : "external";
-    if (lockedSkill.kind !== expectedKind) {
-      issues.push(`skills[${index}].kind is ${lockedSkill.kind}, expected ${expectedKind}`);
+
+    for (const [index, skill] of input.manifest.skills.entries()) {
+      const lockedSkill = input.lock.skills[index];
+      if (!lockedSkill) {
+        continue;
+      }
+      if (lockedSkill.source !== skill.source) {
+        issues.push(`skills[${index}].source is ${lockedSkill.source}, expected ${skill.source}`);
+      }
+      if (lockedSkill.repo !== skill.repo) {
+        issues.push(
+          `skills[${index}].repo is ${lockedSkill.repo ?? "<none>"}, expected ${
+            skill.repo ?? "<none>"
+          }`,
+        );
+      }
+      const expectedKind = isLocalWorkflowSkillSource(skill.source) ? "local" : "external";
+      if (lockedSkill.kind !== expectedKind) {
+        issues.push(`skills[${index}].kind is ${lockedSkill.kind}, expected ${expectedKind}`);
+      }
+    }
+  } else {
+    const rootWorkflow = input.lock.workflows[0];
+    if (
+      !rootWorkflow ||
+      rootWorkflow.name !== input.manifest.name ||
+      rootWorkflow.version !== input.manifest.version
+    ) {
+      issues.push("transitive workflow graph does not start with the manifest workflow");
     }
   }
 
@@ -970,6 +1460,92 @@ function validateWorkflowLockFile(input: {
       `Workflow lock file does not match manifest: ${input.path}\n${issues.join("\n")}`,
     );
   }
+}
+
+async function validateResolvedTransitiveWorkflowLock(input: {
+  lock: Extract<WorkflowLockFile, { schemaVersion: "0.2" }>;
+  rootDir: string;
+  workflows: WorkflowDependencyGraphWorkflow[];
+  edges: WorkflowDependencyGraphEdge[];
+  dependencies: WorkflowSkillInstallDependency[];
+}): Promise<void> {
+  const resolvedWorkflows = createLockedWorkflowGraph(input.rootDir, input.workflows);
+  const lockedWorkflows = input.lock.workflows.map((workflow, index) => ({
+    ...workflow,
+    source: index === 0 ? validateLockedRootSource(workflow.source) : workflow.source,
+  }));
+  const resolvedSkills = await createWorkflowLockSkillEntries(input.rootDir, input.dependencies);
+  const matches =
+    JSON.stringify(lockedWorkflows) === JSON.stringify(resolvedWorkflows) &&
+    JSON.stringify(input.lock.edges) === JSON.stringify(input.edges) &&
+    JSON.stringify(input.lock.skills) === JSON.stringify(resolvedSkills);
+  if (!matches) {
+    throw new Error("Transitive workflow lock does not match resolved dependency graph");
+  }
+}
+
+function validateLockedRootSource(source: z.infer<typeof LockedWorkflowSourceSchema>): {
+  kind: "root";
+} {
+  if (source.kind === "root" || (source.kind === "local" && source.path === ".")) {
+    return { kind: "root" };
+  }
+  throw new Error("Transitive workflow lock has an invalid root source");
+}
+
+function createLockedWorkflowGraph(
+  rootDir: string,
+  workflows: WorkflowDependencyGraphWorkflow[],
+): Array<z.infer<typeof WorkflowDependencyGraphWorkflowSchema>> {
+  return workflows.map((workflow, index) => ({
+    ...workflow,
+    source:
+      index === 0
+        ? { kind: "root" as const }
+        : getPortableLockedWorkflowSource(rootDir, workflow.source),
+  }));
+}
+
+function getPortableLockedWorkflowSource(
+  rootDir: string,
+  source: WorkflowBundleSource,
+): z.infer<typeof LockedWorkflowSourceSchema> {
+  if (source.kind === "git") {
+    if (!source.commit) {
+      throw new Error(`Locked child workflow git source is missing an exact commit: ${source.url}`);
+    }
+    return { ...source, commit: source.commit };
+  }
+  return { kind: "local", path: getPortableLocalLockSource(rootDir, source.path) };
+}
+
+async function createWorkflowLockSkillEntries(
+  rootDir: string,
+  dependencies: WorkflowSkillInstallDependency[],
+): Promise<WorkflowSkillLockEntry[]> {
+  return Promise.all(
+    dependencies.map(async (skill) => {
+      const isLocal = isAbsolute(skill.source);
+      const lockSource = isLocal ? getPortableLocalLockSource(rootDir, skill.source) : skill.source;
+      return {
+        source: lockSource,
+        resolvedName: getWorkflowLockResolvedName(lockSource),
+        kind: isLocal ? "local" : "external",
+        ...(skill.repo ? { repo: skill.repo } : {}),
+        hash: isLocal
+          ? await hashLocalWorkflowSkill(skill.source)
+          : hashExternalWorkflowSkill(skill.source, skill.repo),
+      } satisfies WorkflowSkillLockEntry;
+    }),
+  );
+}
+
+function getPortableLocalLockSource(rootDir: string, source: string): string {
+  const relativeSource = normalizeLockPath(relative(rootDir, source));
+  if (!relativeSource) {
+    return ".";
+  }
+  return relativeSource.startsWith("..") ? relativeSource : `./${relativeSource}`;
 }
 
 function getWorkflowLockResolvedName(source: string): string {
@@ -1134,6 +1710,7 @@ async function resolveWorkflowBundleSource(
     cwd: string;
     runGitCommand?: WorkflowGitCommandRunner;
     tempDir?: string;
+    commit?: string;
   },
 ): Promise<ResolvedWorkflowBundleSource> {
   const aliasSource = parseWorkflowAliasSource(source);
@@ -1251,6 +1828,7 @@ async function cloneGitWorkflowSource(
     cwd: string;
     runGitCommand?: WorkflowGitCommandRunner;
     tempDir?: string;
+    commit?: string;
   },
 ): Promise<ResolvedWorkflowBundleSource> {
   const tempRoot = await mkdtemp(join(options.tempDir ?? tmpdir(), "omniskill-git-"));
@@ -1258,16 +1836,31 @@ async function cloneGitWorkflowSource(
   const cleanup = () => rm(tempRoot, { recursive: true, force: true });
 
   try {
-    await runRequiredGitCommand(
-      {
-        executable: "git",
-        args: ["clone", "--depth", "1", source.cloneUrl, checkoutDir],
-        cwd: options.cwd,
-        env: process.env,
-      },
-      options.runGitCommand,
-      `Public git workflow source could not be fetched: ${source.url}`,
-    );
+    if (options.commit) {
+      for (const command of [
+        { args: ["init", checkoutDir], cwd: options.cwd },
+        { args: ["remote", "add", "origin", source.cloneUrl], cwd: checkoutDir },
+        { args: ["fetch", "--depth", "1", "origin", options.commit], cwd: checkoutDir },
+        { args: ["checkout", "--detach", options.commit], cwd: checkoutDir },
+      ]) {
+        await runRequiredGitCommand(
+          { executable: "git", args: command.args, cwd: command.cwd, env: process.env },
+          options.runGitCommand,
+          `Locked git workflow commit could not be fetched: ${source.url}@${options.commit}`,
+        );
+      }
+    } else {
+      await runRequiredGitCommand(
+        {
+          executable: "git",
+          args: ["clone", "--depth", "1", source.cloneUrl, checkoutDir],
+          cwd: options.cwd,
+          env: process.env,
+        },
+        options.runGitCommand,
+        `Public git workflow source could not be fetched: ${source.url}`,
+      );
+    }
 
     const commitResult = await runOptionalGitCommand(
       {
@@ -1279,6 +1872,11 @@ async function cloneGitWorkflowSource(
       options.runGitCommand,
     );
     const commit = commitResult.exitCode === 0 ? commitResult.stdout.trim() : undefined;
+    if (options.commit && commit !== options.commit) {
+      throw new Error(
+        `Locked git workflow commit mismatch: expected ${options.commit}, resolved ${commit ?? "<none>"}`,
+      );
+    }
     const sourceDir = source.subdirectory ? join(checkoutDir, source.subdirectory) : checkoutDir;
 
     return {

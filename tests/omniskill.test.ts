@@ -300,6 +300,77 @@ describe("omniskill command module", () => {
     await rm(homeDir, { recursive: true, force: true });
   });
 
+  test("install resolves a nested repository before target writes", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-nested-repository-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-nested-repository-home-"));
+    const parentDir = join(rootDir, "parent");
+    const source = "file:///virtual/child.git";
+    const events: string[] = [];
+    const program = new Command();
+    await mkdir(parentDir, { recursive: true });
+    await writeFile(
+      join(parentDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "parent",
+        version: "1.0.0",
+        description: "Parent workflow.",
+        skills: [{ source }],
+        steps: [{ id: "child", title: "Child", skill: source }],
+      }),
+    );
+
+    try {
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        workflowGitCommandRunner: async (command) => {
+          events.push(`git:${command.args[0]}`);
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await mkdir(join(checkoutDir, "skills", "child"), { recursive: true });
+            await writeFile(join(checkoutDir, "skills", "child", "SKILL.md"), "# child\n");
+            await writeFile(
+              join(checkoutDir, "workflow.json"),
+              JSON.stringify({
+                schemaVersion: "0.1",
+                name: "child",
+                version: "1.0.0",
+                description: "Child workflow.",
+                skills: [{ source: "./skills/child" }],
+                steps: [{ id: "run", title: "Run", skill: "./skills/child" }],
+              }),
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+        installSkill: async (input) => {
+          events.push(`install:${input.source}`);
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName: "child",
+              destination: join(homeDir, ".agents", "skills", "child"),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["install", parentDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      expect(events.slice(0, 2)).toEqual(["git:clone", "git:rev-parse"]);
+      expect(events[2]).toContain("install:");
+      expect(events[2]).toContain("skills/child");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("install writes the workflow record to the global home by default", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "omniskill-default-root-"));
     const homeDir = await mkdtemp(join(tmpdir(), "omniskill-default-home-"));
@@ -1109,6 +1180,64 @@ describe("omniskill command module", () => {
         "- ./skills/git-entry",
       ]);
       await expect(stat(checkoutDir)).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("deps expands nested workflows into installable leaf skills", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-nested-deps-"));
+    const parentDir = join(rootDir, "parent");
+    const childDir = join(parentDir, "child");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    const program = new Command();
+    const writeBundle = async (bundleDir: string, name: string, extraSource?: string) => {
+      await mkdir(join(bundleDir, "skills", name), { recursive: true });
+      await writeFile(join(bundleDir, "skills", name, "SKILL.md"), `# ${name}\n`);
+      const sources = [`./skills/${name}`, ...(extraSource ? [extraSource] : [])];
+      await writeFile(
+        join(bundleDir, "workflow.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            name,
+            version: "1.0.0",
+            description: `${name} workflow.`,
+            skills: sources.map((source) => ({ source })),
+            steps: sources.map((source, index) => ({
+              id: `step-${index}`,
+              title: `Step ${index}`,
+              skill: source,
+            })),
+          },
+          null,
+          2,
+        ),
+      );
+    };
+
+    console.log = (...values: unknown[]) => logs.push(values.join(" "));
+    try {
+      await writeBundle(parentDir, "parent", "./child");
+      await writeBundle(childDir, "child", "shared-review");
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by this deps test");
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await program.parseAsync(["deps", parentDir], { from: "user" });
+
+      expect(stripAnsiLines(logs)).toEqual([
+        "Omniskills dependencies: parent",
+        `- ${join(parentDir, "skills", "parent")}`,
+        `- ${join(childDir, "skills", "child")}`,
+        "- shared-review",
+      ]);
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });

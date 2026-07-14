@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,9 +18,11 @@ import {
   listInstalledWorkflowBundles,
   loadWorkflowBundle,
   loadWorkflowLockFile,
+  resolveWorkflowDependencyGraph,
   WorkflowBundleManifestSchema,
   type WorkflowGitCommand,
   type WorkflowInstallSkillArtifact,
+  WorkflowLockFileSchema,
   workflowLockFileName,
   writeWorkflowLockFile,
 } from "../src/runtimes/omniskill/workflow-bundles";
@@ -119,6 +122,649 @@ describe("workflow bundles", () => {
     await expect(loadWorkflowBundle("product_dev")).rejects.toThrow(
       "Unsupported Omniskills source: product_dev",
     );
+  });
+
+  test("validates a transitive lock with transport-independent root identity", async () => {
+    const repositoryUrl = pathToFileURL(join(import.meta.dir, "..")).toString();
+    const bundle = await loadWorkflowBundle(`${repositoryUrl}#examples/workflows/skill-tree-demo`);
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({ bundle });
+      expect(graph.workflows.map((workflow) => workflow.name)).toEqual(["skill-tree-demo", "cto"]);
+    } finally {
+      await bundle.cleanup?.();
+    }
+  });
+
+  test("rejects a tampered root source in a transitive lock", async () => {
+    const bundle = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "skill-tree-demo"),
+    );
+    const lock = bundle.lock;
+    if (lock?.schemaVersion !== "0.2") {
+      throw new Error("Expected the skill-tree demo to have a transitive lock");
+    }
+    const rootWorkflow = lock.workflows[0];
+    if (!rootWorkflow) {
+      throw new Error("Expected the transitive lock to have a root workflow");
+    }
+    bundle.lock = {
+      ...lock,
+      workflows: [
+        { ...rootWorkflow, source: { kind: "local", path: "./tampered-root" } },
+        ...lock.workflows.slice(1),
+      ],
+    };
+
+    await expect(resolveWorkflowDependencyGraph({ bundle })).rejects.toThrow(
+      "Transitive workflow lock has an invalid root source",
+    );
+  });
+
+  test("selects the highest leaf repository semver for one logical skill", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-leaf-version-"));
+    await writeFile(
+      join(rootDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "leaf-version",
+        version: "1.0.0",
+        description: "Leaf version selection.",
+        skills: [
+          { source: "shared", repo: "org/pkg@1.0.0" },
+          { source: "shared", repo: "org/pkg@2.0.0" },
+        ],
+        steps: [{ id: "run", title: "Run", skill: "shared" }],
+      }),
+    );
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(rootDir),
+      });
+      expect(graph.dependencies).toEqual([{ source: "shared", repo: "org/pkg@2.0.0" }]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("selects a versioned leaf over an unversioned default in either mixed leaf order", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-mixed-leaf-version-"));
+
+    try {
+      for (const [index, repos] of [
+        ["org/pkg@2.0.0", "org/pkg"],
+        ["org/pkg", "org/pkg@2.0.0"],
+      ].entries()) {
+        const bundleDir = join(rootDir, String(index));
+        await mkdir(bundleDir, { recursive: true });
+        await writeFile(
+          join(bundleDir, "workflow.json"),
+          JSON.stringify({
+            schemaVersion: "0.1",
+            name: `mixed-leaf-version-${index}`,
+            version: "1.0.0",
+            description: "Mixed leaf version selection.",
+            skills: repos.map((repo) => ({ source: "shared", repo })),
+            steps: [{ id: "run", title: "Run", skill: "shared" }],
+          }),
+        );
+
+        const graph = await resolveWorkflowDependencyGraph({
+          bundle: await loadWorkflowBundle(bundleDir),
+        });
+        expect(graph.dependencies).toEqual([{ source: "shared", repo: "org/pkg@2.0.0" }]);
+      }
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects invalid manifest semantic versions during schema parsing", () => {
+    expect(() =>
+      WorkflowBundleManifestSchema.parse({
+        schemaVersion: "0.1",
+        name: "invalid-version",
+        version: "not-semver",
+        description: "Invalid version.",
+        skills: [{ source: "leaf" }],
+        steps: [{ id: "run", title: "Run", skill: "leaf" }],
+      }),
+    ).toThrow("Invalid workflow semantic version: not-semver");
+  });
+
+  test("creates a transitive lock while expanding three local workflow levels", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-tree-"));
+    const parentDir = join(rootDir, "parent");
+    const childDir = join(parentDir, "child");
+    const grandchildDir = join(childDir, "grandchild");
+
+    const writeBundle = async (
+      bundleDir: string,
+      name: string,
+      skills: Array<{ source: string; repo?: string }>,
+    ) => {
+      await mkdir(join(bundleDir, "skills", name), { recursive: true });
+      await writeFile(join(bundleDir, "skills", name, "SKILL.md"), `# ${name}\n`);
+      const directSkills = [{ source: `./skills/${name}` }, ...skills];
+      await writeFile(
+        join(bundleDir, "workflow.json"),
+        `${JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            name,
+            version: "1.0.0",
+            description: `${name} workflow.`,
+            skills: directSkills,
+            steps: directSkills.map((skill, index) => ({
+              id: `step-${index}`,
+              title: `Step ${index}`,
+              skill: skill.source,
+            })),
+          },
+          null,
+          2,
+        )}\n`,
+      );
+    };
+
+    await writeBundle(parentDir, "parent", [
+      { source: "./child" },
+      { source: "shared-review", repo: "example/shared@1.0.0" },
+    ]);
+    await writeBundle(childDir, "child", [
+      { source: "./grandchild" },
+      { source: "shared-review", repo: "example/shared@1.0.0" },
+    ]);
+    await writeBundle(grandchildDir, "grandchild", [
+      { source: "shared-review", repo: "example/shared@1.0.0" },
+    ]);
+
+    try {
+      const bundle = await loadWorkflowBundle(parentDir);
+      const graph = await resolveWorkflowDependencyGraph({ bundle });
+
+      expect(graph.dependencies).toEqual([
+        { source: join(parentDir, "skills", "parent") },
+        { source: join(childDir, "skills", "child") },
+        { source: join(grandchildDir, "skills", "grandchild") },
+        { source: "shared-review", repo: "example/shared@1.0.0" },
+      ]);
+      expect(graph.workflows.map((workflow) => workflow.name)).toEqual([
+        "parent",
+        "child",
+        "grandchild",
+      ]);
+      expect(graph.edges).toEqual([
+        { from: "workflow:parent@1.0.0", to: "workflow:child@1.0.0" },
+        { from: "workflow:child@1.0.0", to: "workflow:grandchild@1.0.0" },
+      ]);
+      const lock = await createWorkflowLockFile(bundle, {
+        generatedAt: "2026-07-14T00:00:00.000Z",
+      });
+      expect(lock.schemaVersion).toBe("0.2");
+      if (lock.schemaVersion !== "0.2") {
+        throw new Error("Expected a transitive workflow lock");
+      }
+      expect(lock.workflows.map(({ name, version }) => `${name}@${version}`)).toEqual([
+        "parent@1.0.0",
+        "child@1.0.0",
+        "grandchild@1.0.0",
+      ]);
+      expect(lock.edges).toEqual(graph.edges);
+      expect(lock.skills.map((skill) => skill.source)).toEqual([
+        "./skills/parent",
+        "./child/skills/child",
+        "./child/grandchild/skills/grandchild",
+        "shared-review",
+      ]);
+      await graph.cleanup?.();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects recursive workflow cycles with the full active path", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-cycle-"));
+    const firstDir = join(rootDir, "first");
+    const secondDir = join(firstDir, "second");
+    await mkdir(firstDir, { recursive: true });
+    await mkdir(secondDir, { recursive: true });
+    const manifest = (name: string, source: string) => ({
+      schemaVersion: "0.1",
+      name,
+      version: "1.0.0",
+      description: `${name} workflow.`,
+      skills: [{ source }],
+      steps: [{ id: "run", title: "Run", skill: source }],
+    });
+    await writeFile(
+      join(firstDir, "workflow.json"),
+      JSON.stringify(manifest("first", "./second"), null, 2),
+    );
+    await writeFile(
+      join(secondDir, "workflow.json"),
+      JSON.stringify(manifest("second", ".."), null, 2),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(firstDir);
+      await expect(resolveWorkflowDependencyGraph({ bundle })).rejects.toThrow(
+        "Workflow dependency cycle: workflow:first@1.0.0 -> workflow:second@1.0.0 -> workflow:first@1.0.0",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("selects the highest child workflow semver and replaces the losing subtree", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-dependency-version-"));
+    const parentDir = join(rootDir, "parent");
+    const lowDir = join(parentDir, "low");
+    const highDir = join(parentDir, "high");
+    const writeManifest = async (
+      bundleDir: string,
+      name: string,
+      version: string,
+      sources: string[],
+    ) => {
+      await mkdir(bundleDir, { recursive: true });
+      await writeFile(
+        join(bundleDir, "workflow.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            name,
+            version,
+            description: `${name} workflow.`,
+            skills: sources.map((source) => ({ source })),
+            steps: sources.map((source, index) => ({
+              id: `step-${index}`,
+              title: `Step ${index}`,
+              skill: source,
+            })),
+          },
+          null,
+          2,
+        ),
+      );
+    };
+    await writeManifest(parentDir, "parent", "1.0.0", ["./low", "./high"]);
+    await writeManifest(lowDir, "shared-child", "1.2.0", ["low-only-skill"]);
+    await writeManifest(highDir, "shared-child", "1.10.0", ["high-only-skill"]);
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(parentDir),
+      });
+
+      expect(graph.workflows.map(({ name, version }) => `${name}@${version}`)).toEqual([
+        "parent@1.0.0",
+        "shared-child@1.10.0",
+      ]);
+      expect(graph.dependencies).toEqual([{ source: "high-only-skill" }]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("expands a repository child workflow from a subdirectory and records its commit", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-repository-child-"));
+    const parentDir = join(rootDir, "parent");
+    const source = "https://github.com/acme/workflows.git#packages/child";
+    const commands: WorkflowGitCommand[] = [];
+    await mkdir(parentDir, { recursive: true });
+    await writeFile(
+      join(parentDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "parent",
+        version: "1.0.0",
+        description: "Parent workflow.",
+        skills: [{ source }],
+        steps: [{ id: "child", title: "Child", skill: source }],
+      }),
+    );
+
+    try {
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(parentDir),
+        runGitCommand: async (command) => {
+          commands.push(command);
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            const childDir = join(checkoutDir, "packages", "child");
+            await mkdir(join(childDir, "skills", "child"), { recursive: true });
+            await writeFile(join(childDir, "skills", "child", "SKILL.md"), "# child\n");
+            await writeFile(
+              join(childDir, "workflow.json"),
+              JSON.stringify({
+                schemaVersion: "0.1",
+                name: "child",
+                version: "2.0.0",
+                description: "Repository child.",
+                skills: [{ source: "./skills/child" }],
+                steps: [{ id: "run", title: "Run", skill: "./skills/child" }],
+              }),
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      });
+
+      expect(commands.map((command) => command.args[0])).toEqual(["clone", "rev-parse"]);
+      expect(graph.workflows[1]).toMatchObject({
+        name: "child",
+        version: "2.0.0",
+        source: { kind: "git", url: source, commit: "abc123", subdirectory: "packages/child" },
+      });
+      expect(graph.dependencies).toHaveLength(1);
+      expect(graph.dependencies[0]?.source).toContain("packages/child/skills/child");
+      await graph.cleanup?.();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("expands catalog and installed child workflow sources", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-source-adapters-"));
+    const catalogParentDir = join(rootDir, "catalog-parent");
+    const installedParentDir = join(rootDir, "installed-parent");
+    const installedChildDir = join(rootDir, "installed-child");
+    const writeManifest = async (
+      bundleDir: string,
+      name: string,
+      version: string,
+      source: string,
+    ) => {
+      await mkdir(bundleDir, { recursive: true });
+      await writeFile(
+        join(bundleDir, "workflow.json"),
+        JSON.stringify({
+          schemaVersion: "0.1",
+          name,
+          version,
+          description: `${name} workflow.`,
+          skills: [{ source }],
+          steps: [{ id: "run", title: "Run", skill: source }],
+        }),
+      );
+    };
+    await writeManifest(catalogParentDir, "catalog-parent", "1.0.0", "catalog:catalog-child");
+    await writeManifest(
+      installedParentDir,
+      "installed-parent",
+      "1.0.0",
+      "installed:installed-child",
+    );
+    await writeManifest(installedChildDir, "installed-child", "3.0.0", "installed-leaf");
+    await installWorkflowBundle({
+      rootDir,
+      bundle: await loadWorkflowBundle(installedChildDir),
+    });
+
+    try {
+      const catalogGraph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(catalogParentDir),
+        runGitCommand: async (command) => {
+          if (command.args[0] === "clone") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await writeManifest(
+              join(checkoutDir, "examples", "workflows", "catalog-child"),
+              "catalog-child",
+              "2.0.0",
+              "catalog-leaf",
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
+          return { stdout: "catalog-commit\n", stderr: "", exitCode: 0 };
+        },
+      });
+      const installedGraph = await resolveWorkflowDependencyGraph({
+        bundle: await loadWorkflowBundle(installedParentDir),
+        installedRootDir: rootDir,
+      });
+      const installedLock = await createWorkflowLockFile(
+        await loadWorkflowBundle(installedParentDir),
+        { installedRootDir: rootDir, generatedAt: "2026-07-14T00:00:00.000Z" },
+      );
+
+      expect(catalogGraph.dependencies).toEqual([{ source: "catalog-leaf" }]);
+      expect(installedGraph.dependencies).toEqual([{ source: "installed-leaf" }]);
+      expect(catalogGraph.workflows.map((workflow) => workflow.name)).toEqual([
+        "catalog-parent",
+        "catalog-child",
+      ]);
+      expect(installedGraph.workflows.map((workflow) => workflow.name)).toEqual([
+        "installed-parent",
+        "installed-child",
+      ]);
+      expect(installedLock.schemaVersion).toBe("0.2");
+      if (installedLock.schemaVersion === "0.2") {
+        expect(installedLock.workflows.map((workflow) => workflow.name)).toEqual([
+          "installed-parent",
+          "installed-child",
+        ]);
+      }
+      await catalogGraph.cleanup?.();
+      await installedGraph.cleanup?.();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("reuses a locked git child commit without default-branch lookup", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-locked-child-"));
+    const parentDir = join(rootDir, "parent");
+    const source = "https://github.com/acme/child.git";
+    const lockedCommit = "0123456789abcdef";
+    const commands: WorkflowGitCommand[] = [];
+    await mkdir(parentDir, { recursive: true });
+    await writeFile(
+      join(parentDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "parent",
+        version: "1.0.0",
+        description: "Parent workflow.",
+        skills: [{ source }],
+        steps: [{ id: "child", title: "Child", skill: source }],
+      }),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(parentDir);
+      const leafHash = createHash("sha256")
+        .update("omniskill-workflow-lock-external-skill-v0.1\n")
+        .update("source:child-leaf\n")
+        .update("repo:\n")
+        .digest("hex");
+      bundle.lock = WorkflowLockFileSchema.parse({
+        schemaVersion: "0.2",
+        workflow: "parent",
+        workflowVersion: "1.0.0",
+        generatedAt: "2026-07-14T00:00:00.000Z",
+        workflows: [
+          {
+            id: "workflow:parent@1.0.0",
+            name: "parent",
+            version: "1.0.0",
+            source: { kind: "local", path: "." },
+          },
+          {
+            id: "workflow:child@2.0.0",
+            name: "child",
+            version: "2.0.0",
+            source: { kind: "git", url: source, commit: lockedCommit },
+          },
+        ],
+        edges: [{ from: "workflow:parent@1.0.0", to: "workflow:child@2.0.0" }],
+        skills: [
+          {
+            source: "child-leaf",
+            resolvedName: "child-leaf",
+            kind: "external",
+            hash: `sha256:${leafHash}`,
+          },
+        ],
+      });
+
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle,
+        runGitCommand: async (command) => {
+          commands.push(command);
+          if (command.args[0] === "init") {
+            const checkoutDir = command.args.at(-1) ?? "";
+            await mkdir(checkoutDir, { recursive: true });
+            await writeFile(
+              join(checkoutDir, "workflow.json"),
+              JSON.stringify({
+                schemaVersion: "0.1",
+                name: "child",
+                version: "2.0.0",
+                description: "Locked child.",
+                skills: [{ source: "child-leaf" }],
+                steps: [{ id: "run", title: "Run", skill: "child-leaf" }],
+              }),
+            );
+          }
+          return {
+            stdout: command.args[0] === "rev-parse" ? `${lockedCommit}\n` : "",
+            stderr: "",
+            exitCode: 0,
+          };
+        },
+      });
+
+      expect(commands.map((command) => command.args[0])).toEqual([
+        "init",
+        "remote",
+        "fetch",
+        "checkout",
+        "rev-parse",
+      ]);
+      expect(commands.find((command) => command.args[0] === "fetch")?.args).toContain(lockedCommit);
+      expect(graph.workflows[1]?.source).toMatchObject({ commit: lockedCommit });
+      await graph.cleanup?.();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a legacy lock for a nested workflow with a regeneration error", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-legacy-nested-lock-"));
+    const parentDir = join(rootDir, "parent");
+    const childDir = join(parentDir, "child");
+    await mkdir(childDir, { recursive: true });
+    const manifest = (name: string, source: string) => ({
+      schemaVersion: "0.1",
+      name,
+      version: "1.0.0",
+      description: `${name} workflow.`,
+      skills: [{ source }],
+      steps: [{ id: "run", title: "Run", skill: source }],
+    });
+    await writeFile(
+      join(parentDir, "workflow.json"),
+      JSON.stringify(manifest("parent", "./child")),
+    );
+    await writeFile(
+      join(childDir, "workflow.json"),
+      JSON.stringify(manifest("child", "child-leaf")),
+    );
+    await writeFile(
+      join(parentDir, workflowLockFileName),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        workflow: "parent",
+        workflowVersion: "1.0.0",
+        generatedAt: "2026-07-14T00:00:00.000Z",
+        skills: [
+          {
+            source: "./child",
+            resolvedName: "child",
+            kind: "local",
+            hash: `sha256:${"a".repeat(64)}`,
+          },
+        ],
+      }),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(parentDir);
+      await expect(resolveWorkflowDependencyGraph({ bundle })).rejects.toThrow(
+        "Legacy workflow lock 0.1 cannot represent nested workflows; run omniskill lock",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a stale transitive lock leaf fingerprint", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-stale-transitive-lock-"));
+    const bundleDir = join(rootDir, "locked");
+    await mkdir(join(bundleDir, "skills", "locked"), { recursive: true });
+    await writeFile(join(bundleDir, "skills", "locked", "SKILL.md"), "# locked\n");
+    await writeFile(
+      join(bundleDir, "workflow.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "locked",
+        version: "1.0.0",
+        description: "Locked workflow.",
+        skills: [{ source: "./skills/locked" }],
+        steps: [{ id: "run", title: "Run", skill: "./skills/locked" }],
+      }),
+    );
+
+    try {
+      const bundle = await loadWorkflowBundle(bundleDir);
+      const lock = await createWorkflowLockFile(bundle, {
+        generatedAt: "2026-07-14T00:00:00.000Z",
+      });
+      if (lock.schemaVersion !== "0.2") {
+        throw new Error("Expected a transitive lock");
+      }
+      const lockedSkill = lock.skills[0];
+      if (!lockedSkill) {
+        throw new Error("Expected a locked skill");
+      }
+      lock.skills[0] = { ...lockedSkill, hash: `sha256:${"f".repeat(64)}` };
+      bundle.lock = lock;
+
+      await expect(resolveWorkflowDependencyGraph({ bundle })).rejects.toThrow(
+        "Transitive workflow lock does not match resolved dependency graph",
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects invalid semantic prerelease identifiers", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-invalid-semver-"));
+    try {
+      for (const version of ["1.0.0-alpha..1", "1.0.0-alpha.01"]) {
+        const bundleDir = join(rootDir, version.replaceAll(".", "-"));
+        await mkdir(bundleDir, { recursive: true });
+        await writeFile(
+          join(bundleDir, "workflow.json"),
+          JSON.stringify({
+            schemaVersion: "0.1",
+            name: "invalid-version",
+            version,
+            description: "Invalid version workflow.",
+            skills: [{ source: "leaf" }],
+            steps: [{ id: "run", title: "Run", skill: "leaf" }],
+          }),
+        );
+        await expect(loadWorkflowBundle(bundleDir)).rejects.toThrow(
+          `Invalid workflow semantic version: ${version}`,
+        );
+      }
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
   });
 
   test("parses first-class team metadata while legacy manifests remain workflows", () => {

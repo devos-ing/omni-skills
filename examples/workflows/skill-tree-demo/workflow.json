@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "skill-tree-demo",
+  "version": "0.1.0",
+  "description": "Demonstrates a parent that declares one direct child workflow.",
+  "skills": [
+    {
+      "source": "./skills/skill-tree-demo",
+      "entry": true
+    },
+    {
+      "source": "../cto"
+    }
+  ],
+  "steps": [
+    {
+      "id": "coordinate",
+      "title": "Coordinate the skill tree",
+      "skill": "./skills/skill-tree-demo"
+    },
+    {
+      "id": "architecture",
+      "title": "Run the CTO child workflow",
+      "skill": "../cto"
+    }
+  ]
+}
