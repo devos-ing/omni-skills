@@ -20,6 +20,14 @@ import { hashAgentProfileContent } from "../src/runtimes/omniskill/orchestration
 import type { WorkflowGitCommand } from "../src/runtimes/omniskill/workflow-bundles";
 
 const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
+const testCodexModelCatalog = async () => [
+  {
+    slug: "gpt-5.5",
+    visibility: "list",
+    priority: 0,
+    supportedReasoningEfforts: ["low", "medium", "high"] as const,
+  },
+];
 
 function fakeSkillInstallResult(input: {
   source: string;
@@ -419,6 +427,7 @@ describe("omniskill command module", () => {
     const logs: string[] = [];
     const originalLog = console.log;
     let installCalls = 0;
+    let catalogCalls = 0;
     const program = new Command();
 
     console.log = (...values: unknown[]) => logs.push(values.join(" "));
@@ -439,6 +448,17 @@ describe("omniskill command module", () => {
           throw new Error("dry-run must not install skills");
         },
         printSkillInstallResult: () => {},
+        codexModelCatalog: async () => {
+          catalogCalls += 1;
+          return [
+            {
+              slug: "gpt-5.5",
+              visibility: "list",
+              priority: 0,
+              supportedReasoningEfforts: ["low", "medium", "high"],
+            },
+          ];
+        },
       });
 
       await program.parseAsync(
@@ -447,12 +467,14 @@ describe("omniskill command module", () => {
       );
 
       expect(installCalls).toBe(0);
+      expect(catalogCalls).toBe(1);
       expect(logs.join("\n")).toContain("Agent profiles:");
       expect(logs.join("\n")).toContain("omniskills-git-team-git-entry");
       expect(logs.join("\n")).toContain("omniskills-git-team-custom-review");
       expect(logs.join("\n")).toContain("source=./skills/git-entry");
       expect(logs.join("\n")).toContain("taskClass=role");
       expect(logs.join("\n")).toContain("candidate=1/1");
+      expect(logs.join("\n")).toContain("model=gpt-5.5");
       expect(logs.join("\n")).toContain("ownership=unowned");
       await expect(
         readFile(join(homeDir, ".omniskills", "orchestration.json"), "utf8"),
@@ -460,6 +482,97 @@ describe("omniskill command module", () => {
       await expect(
         readFile(join(homeDir, ".omniskills", "workflows", "git-team.json"), "utf8"),
       ).rejects.toThrow();
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("stops a Codex orchestration install before writes when model discovery fails", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-catalog-failure-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-catalog-failure-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    let installCalls = 0;
+    const program = new Command();
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, {
+        team: true,
+        orchestration: true,
+      });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async () => {
+          installCalls += 1;
+          throw new Error("model discovery must run before skill installation");
+        },
+        printSkillInstallResult: () => {},
+        codexModelCatalog: async () => {
+          throw new Error("Codex catalog unavailable");
+        },
+      });
+
+      await expect(
+        program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+          from: "user",
+        }),
+      ).rejects.toThrow("Codex catalog unavailable");
+      expect(installCalls).toBe(0);
+      await expect(stat(join(homeDir, ".omniskills", "orchestration.json"))).rejects.toThrow();
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "git-team.json")),
+      ).rejects.toThrow();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("skips Codex model discovery for a Claude-only orchestration install", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-claude-only-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-claude-only-home-"));
+    const bundleDir = join(rootDir, "git-team");
+    const logs: string[] = [];
+    const originalLog = console.log;
+    let catalogCalls = 0;
+    const program = new Command();
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, {
+        team: true,
+        orchestration: true,
+      });
+      await writeFile(
+        join(bundleDir, "member-workflow", "skills", "git-extra", "SKILL.md"),
+        "---\nname: actual-git-extra\ndescription: Actual member entry skill.\n---\n",
+      );
+      console.log = (...values: unknown[]) => logs.push(values.join(" "));
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("dry-run must not install skills");
+        },
+        printSkillInstallResult: () => {},
+        codexModelCatalog: async () => {
+          catalogCalls += 1;
+          throw new Error("Claude-only install must not discover Codex models");
+        },
+      });
+
+      await program.parseAsync(
+        ["install", bundleDir, "--home", homeDir, "--agents", "claude", "--dry-run"],
+        { from: "user" },
+      );
+
+      expect(catalogCalls).toBe(0);
+      expect(logs.join("\n")).toContain("target=claude");
+      expect(logs.join("\n")).toContain("model=opus");
     } finally {
       console.log = originalLog;
       await rm(rootDir, { recursive: true, force: true });
@@ -1415,6 +1528,7 @@ describe("omniskill command module", () => {
           };
         },
         printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
         installExternalSkillDependency: async (input) => {
           externalInstalls.push(input);
         },
@@ -1482,6 +1596,7 @@ describe("omniskill command module", () => {
           };
         },
         printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
         installExternalSkillDependency: async () => {},
       });
 
@@ -1533,6 +1648,7 @@ describe("omniskill command module", () => {
           };
         },
         printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
       });
 
       await program.parseAsync(
@@ -1562,7 +1678,7 @@ describe("omniskill command module", () => {
       );
       await expect(
         readFile(join(homeDir, ".codex", "agents", "omniskills-git-team-git-entry.toml"), "utf8"),
-      ).resolves.toContain('model = "gpt-5.6"');
+      ).resolves.toContain('model = "gpt-5.5"');
       await expect(
         readFile(join(homeDir, ".claude", "agents", "omniskills-git-team-git-entry.md"), "utf8"),
       ).resolves.toContain("model: opus");

@@ -19,6 +19,7 @@ import {
 } from "./omniskill";
 import {
   createCodexCliDispatcher,
+  createCodexModelCatalogProvider,
   installAgentSkill,
   parseSkillInstallAgents,
   type SkillInstallResult,
@@ -71,6 +72,7 @@ export function buildProgram(options: BuildProgramOptions = {}): Command {
     installSkill,
     printSkillInstallResult,
     installExternalSkillDependency,
+    codexModelCatalog: createCodexModelCatalogProvider(runSubprocess),
     dispatchers: { codex: createCodexCliDispatcher(runSubprocess) },
   });
 

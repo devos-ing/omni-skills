@@ -15,6 +15,7 @@ import {
 } from "./cli-theme";
 import {
   type AgentProfileArtifact,
+  type CodexModelCatalogProvider,
   createOrchestrationRunStore,
   executeAgentProfilePlan,
   getInterfaceCraftInstalledSkillName,
@@ -33,6 +34,7 @@ import {
 import { runSubprocess } from "./process";
 import {
   type AgentProfileTarget,
+  type CodexModelCapability,
   type ConsultationDecision,
   ConsultationDecisionSchema,
   type ConsultationRequest,
@@ -177,6 +179,7 @@ export interface ConfigureOmniskillCommandOptions {
   workflowGitCommandRunner?: WorkflowGitCommandRunner;
   onboardPrompt?: OmniskillOnboardPrompt;
   onboardCommandRunner?: OmniskillOnboardCommandRunner;
+  codexModelCatalog?: CodexModelCatalogProvider;
   dispatchers?: Partial<Record<"codex" | "claude", OrchestrationDispatcher>>;
   createRunStore?: (homeDir: string) => OrchestrationRunStore;
 }
@@ -832,8 +835,16 @@ async function runOmniskillInstall(
       source: preparedDependencies?.displaySources[index] ?? dependency.source,
       ...(dependency.repo ? { repo: dependency.repo } : {}),
     }));
+    const profileTargets = orchestrationTargets(installAgents);
+    const codexCatalog =
+      bundle.manifest.orchestration && profileTargets.includes("codex")
+        ? await requireCodexModelCatalog(options.codexModelCatalog, options.rootDir)
+        : undefined;
     const configPlan = bundle.manifest.orchestration
-      ? await loadOrchestrationConfigPlan({ homeDir })
+      ? await loadOrchestrationConfigPlan({
+          homeDir,
+          ...(codexCatalog ? { codexCatalog } : {}),
+        })
       : undefined;
     const roleSkillNames = Object.fromEntries(
       await Promise.all(
@@ -851,7 +862,7 @@ async function runOmniskillInstall(
           manifest: bundle.manifest,
           config: configPlan.config,
           homeDir,
-          targets: orchestrationTargets(installAgents),
+          targets: profileTargets,
           roleSkillNames,
         })
       : [];
@@ -1045,6 +1056,16 @@ function orchestrationTargets(
   return agents.filter(
     (agent): agent is AgentProfileTarget => agent === "codex" || agent === "claude",
   );
+}
+
+async function requireCodexModelCatalog(
+  provider: CodexModelCatalogProvider | undefined,
+  cwd: string,
+): Promise<CodexModelCapability[]> {
+  if (!provider) {
+    throw new Error("Codex model discovery is unavailable; update the Omniskills CLI.");
+  }
+  return provider(cwd);
 }
 
 function formatInstallSkillPlan(skill: OmniskillInstallSkillPlan): string {
