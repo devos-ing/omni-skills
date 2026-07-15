@@ -1843,6 +1843,11 @@ describe("workflow bundles", () => {
     expect(skill).toContain("one role-scoped subagent per selected role");
     expect(skill).toContain("omniskill dispatch");
     expect(skill).toContain("launch_configured");
+    expect(skill).toContain("`evidenceCapability`");
+    expect(skill).toContain("adapter");
+    expect(skill).toContain("Actual evidence comes only from the dispatch receipt");
+    expect(skill).toContain("receipt's actual evidence");
+    expect(skill).not.toContain("If preflight cannot produce at least");
     expect(skill).toContain("Generic `spawn_agent` is unverified");
     expect(skill).toContain("Unavailable dispatch");
     expect(skill).toContain("accountable decision log");

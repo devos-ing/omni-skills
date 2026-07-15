@@ -110,6 +110,10 @@ directory multiple times.
 filesystem boundary. It plans the shared `~/.omniskills/orchestration.json`
 configuration, classifies create/update/conflict states, writes profile batches
 with rollback, and leaves team routing rules in the Omniskills runtime.
+For Codex targets, installation discovers the signed-in identity's visible
+models through the read-only `codex debug models` plugin seam. Exact legacy
+generated configuration may migrate to catalog-derived defaults; custom
+configuration is validated but never rewritten automatically.
 
 `src/runtimes/omniskill/orchestration-dispatch.ts` owns verified installed-profile
 selection, approval checks, candidate schedules, consultation contracts, and
@@ -118,7 +122,9 @@ capability checks, argument construction, JSONL classification, and session
 resume. `src/plugins/orchestration-run-store.ts` atomically persists request,
 plan, attempt, and receipt state. `src/omniskill.ts` remains the thin command
 orchestrator across those boundaries. Generic native subagent creation is not
-treated as verified model-selection evidence.
+treated as verified model-selection evidence. Dry-run plans disclose adapter
+and evidence capability only; actual launch evidence exists only in attempts
+and receipts.
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed

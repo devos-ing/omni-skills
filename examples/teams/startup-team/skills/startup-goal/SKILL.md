@@ -54,10 +54,13 @@ Present the route plan and wait for explicit approval before dispatch. Every run
 Show active roles, responsibilities, expected outputs, and verification before
 execution. Before disclosing model or effort, run an `omniskill dispatch`
 preflight for each selected role with `--dry-run --json`. Use only the returned
-profile, tier, runtime, model, effort, access, adapter, and evidence level.
+profile, tier, runtime, model, effort, access, adapter, and
+`evidenceCapability`.
 Generic `spawn_agent` is unverified and cannot satisfy a startup-team tier
-assignment. If preflight cannot produce at least `launch_configured` evidence,
-show the prepared role brief under `Unavailable dispatch` and stop.
+assignment. Accept preflight only when the adapter is present and
+`evidenceCapability` is at least `launch_configured`.
+Actual evidence comes only from the dispatch receipt; dry-run does not prove
+that a launch occurred.
 
 After preflight and any required approval, dispatch one role-scoped subagent per selected role.
 Give it the matching role skill plus: goal, current task, prior handoff,
@@ -71,6 +74,10 @@ execution phase, then hand the result to `qa-lead`.
 
 Wait for all selected roles. Show each completed output with its accountable
 role, receipt evidence, risk, and next handoff.
+
+After execution, require the receipt's actual evidence to be at least
+`launch_configured`. If capability preflight or receipt evidence fails, show
+the prepared role brief under `Unavailable dispatch` and stop.
 
 ## Orchestration policy
 
