@@ -150,20 +150,14 @@ function configArg(key: string, value: string): string {
   return `${key}=${JSON.stringify(value)}`;
 }
 
-function configuredExecArgs(plan: DispatchPlan): string[] {
+function configuredModelArgs(plan: DispatchPlan): string[] {
   return [
-    "--json",
-    "--skip-git-repo-check",
-    "-C",
-    plan.cwd,
     "-m",
     plan.model,
     "-c",
     configArg("model_reasoning_effort", plan.effort),
     "-c",
     configArg("developer_instructions", plan.instructions),
-    "-s",
-    plan.access,
   ];
 }
 
@@ -188,7 +182,17 @@ export function createCodexCliDispatcher(
         plan,
         await runCommand({
           executable: "codex",
-          args: ["exec", ...configuredExecArgs(plan), "-"],
+          args: [
+            "exec",
+            "--json",
+            "--skip-git-repo-check",
+            "-C",
+            plan.cwd,
+            ...configuredModelArgs(plan),
+            "-s",
+            plan.access,
+            "-",
+          ],
           cwd: plan.cwd,
           stdin: plan.task,
           onStdoutLine: streamEvent,
@@ -200,7 +204,17 @@ export function createCodexCliDispatcher(
         input.plan,
         await runCommand({
           executable: "codex",
-          args: ["exec", "resume", input.sessionId, ...configuredExecArgs(input.plan), "-"],
+          args: [
+            "exec",
+            "resume",
+            input.sessionId,
+            "--json",
+            "--skip-git-repo-check",
+            ...configuredModelArgs(input.plan),
+            "-c",
+            configArg("sandbox_mode", input.plan.access),
+            "-",
+          ],
           cwd: input.plan.cwd,
           stdin: JSON.stringify({ decision: input.decision, message: input.message }),
           onStdoutLine: streamEvent,
