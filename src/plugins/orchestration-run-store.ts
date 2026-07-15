@@ -133,7 +133,7 @@ export function createOrchestrationRunStore(input: RunStoreOptions): Orchestrati
         candidateCount: planSet.primary.candidateCount,
         workspaceWriteApproved: planSet.primary.workspaceWriteApproved,
         evidence: "requested",
-        adapter: "codex-cli",
+        adapter: planSet.primary.adapter,
         status: "planned",
         consultationCount: 0,
         reassignmentCount: 0,

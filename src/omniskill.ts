@@ -40,6 +40,7 @@ import {
   createWorkflowBundleScaffold,
   createWorkflowRemovalPlan,
   type DispatchAttempt,
+  type DispatchCapability,
   type DispatchReceipt,
   type DispatchRequest,
   DispatchRuntimeSchema,
@@ -242,6 +243,18 @@ interface WorkflowLoopRuntimeModule {
   }): Promise<number>;
 }
 
+async function getDispatcherCapability(
+  dispatcher: OrchestrationDispatcher | undefined,
+  cwd: string,
+): Promise<DispatchCapability | undefined> {
+  if (!dispatcher) return undefined;
+  return {
+    available: await dispatcher.available(cwd),
+    adapter: dispatcher.adapter,
+    evidenceCapability: dispatcher.evidenceCapability,
+  };
+}
+
 export function configureOmniskillCommand(
   program: Command,
   options: ConfigureOmniskillCommandOptions,
@@ -315,7 +328,7 @@ function configureDispatchCommand(
           : homeDir;
         const runtime = DispatchRuntimeSchema.parse(commandOptions.runtime);
         const dispatcher = options.dispatchers?.[runtime];
-        const available = dispatcher ? await dispatcher.available(options.rootDir) : false;
+        const capability = await getDispatcherCapability(dispatcher, options.rootDir);
         const task = commandOptions.taskFile
           ? await readFile(resolvePath(options.rootDir, commandOptions.taskFile), "utf8")
           : (commandOptions.task as string);
@@ -331,7 +344,7 @@ function configureDispatchCommand(
           cwd: options.rootDir,
           homeDir,
           approveWorkspaceWrite: commandOptions.approveWorkspaceWrite,
-          capabilities: { [runtime]: available },
+          capabilities: capability ? { [runtime]: capability } : {},
           readProfile: (path) => readFile(path, "utf8"),
         });
         if (commandOptions.dryRun) {
@@ -345,7 +358,8 @@ function configureDispatchCommand(
           console.log(keyValue("Model", planSet.primary.model));
           console.log(keyValue("Effort", planSet.primary.effort));
           console.log(keyValue("Access", planSet.primary.access));
-          console.log(keyValue("Evidence required", planSet.primary.evidenceRequired));
+          console.log(keyValue("Adapter", planSet.primary.adapter));
+          console.log(keyValue("Evidence capability", planSet.primary.evidenceCapability));
           return;
         }
         const request: DispatchRequest = {
@@ -497,7 +511,7 @@ async function runOmniskillDispatchResume(
     throw new Error(`Orchestration run is not awaiting consultation: ${runId}`);
   }
   const dispatcher = options.dispatchers?.[stored.request.runtime];
-  const available = dispatcher ? await dispatcher.available(stored.request.cwd) : false;
+  const capability = await getDispatcherCapability(dispatcher, stored.request.cwd);
   const installed = await loadInstalledWorkflowBundle({
     rootDir: targetDir,
     workflowName: stored.request.workflow,
@@ -510,7 +524,7 @@ async function runOmniskillDispatchResume(
     cwd: stored.request.cwd,
     homeDir,
     approveWorkspaceWrite: stored.request.approveWorkspaceWrite,
-    capabilities: { [stored.request.runtime]: available },
+    capabilities: capability ? { [stored.request.runtime]: capability } : {},
     readProfile: (path) => readFile(path, "utf8"),
   });
   const currentPlan = currentPlanSet.candidates.find(
@@ -573,7 +587,7 @@ async function runOmniskillDispatchResume(
       cwd: stored.request.cwd,
       homeDir,
       approveWorkspaceWrite: stored.request.approveWorkspaceWrite,
-      capabilities: { [stored.request.runtime]: true },
+      capabilities: capability ? { [stored.request.runtime]: capability } : {},
       readProfile: (path) => readFile(path, "utf8"),
     });
     selectedPlan = reassignedPlanSet.primary;

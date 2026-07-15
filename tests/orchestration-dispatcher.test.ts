@@ -32,7 +32,8 @@ const readOnlyPlan: DispatchPlan = {
   },
   candidateIndex: 0,
   candidateCount: 1,
-  evidenceRequired: "launch_configured",
+  adapter: "codex-cli",
+  evidenceCapability: "launch_configured",
   workspaceWriteApproved: false,
 };
 
@@ -57,6 +58,13 @@ function dispatcherWith(result: SubprocessResult): {
 }
 
 describe("Codex orchestration dispatcher", () => {
+  test("advertises its adapter and strongest designed evidence capability", () => {
+    const { dispatcher } = dispatcherWith({ exitCode: 0, stderr: "", stdout: "" });
+
+    expect(dispatcher.adapter).toBe("codex-cli");
+    expect(dispatcher.evidenceCapability).toBe("launch_configured");
+  });
+
   test("launches with explicit model, effort, sandbox, instructions, and stdin", async () => {
     const { dispatcher, commands } = dispatcherWith({
       exitCode: 0,

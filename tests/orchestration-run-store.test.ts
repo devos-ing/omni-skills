@@ -47,7 +47,8 @@ function dispatchFixture(homeDir: string): {
     },
     candidateIndex: 0,
     candidateCount: 1,
-    evidenceRequired: "launch_configured",
+    adapter: "codex-cli",
+    evidenceCapability: "launch_configured",
     workspaceWriteApproved: false,
   };
   return { request, planSet: { primary, candidates: [primary] } };
@@ -70,6 +71,7 @@ describe("orchestration run store", () => {
           candidateIndex: 0,
           candidateCount: 1,
           workspaceWriteApproved: false,
+          adapter: "codex-cli",
         }),
       );
       const attempt: DispatchAttempt = {

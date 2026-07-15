@@ -18,7 +18,9 @@ export interface DispatchAttemptResult {
 }
 
 export interface OrchestrationDispatcher {
-  runtime: "codex";
+  readonly runtime: "codex";
+  readonly adapter: "codex-cli";
+  readonly evidenceCapability: "launch_configured";
   available(cwd: string): Promise<boolean>;
   dispatch(plan: DispatchPlan): Promise<DispatchAttemptResult>;
   resume(input: {
@@ -158,6 +160,8 @@ export function createCodexCliDispatcher(
   };
   return {
     runtime: "codex",
+    adapter: "codex-cli",
+    evidenceCapability: "launch_configured",
     async available(cwd) {
       const result = await runCommand({ executable: "codex", args: ["--version"], cwd });
       return result.exitCode === 0;

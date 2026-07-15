@@ -547,6 +547,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => {
               dispatchCalls += 1;
@@ -578,7 +580,8 @@ describe("omniskill command module", () => {
       );
 
       expect(dispatchCalls).toBe(0);
-      expect(JSON.parse(logs.join("\n"))).toEqual(
+      const planSet = JSON.parse(logs.join("\n"));
+      expect(planSet).toEqual(
         expect.objectContaining({
           primary: expect.objectContaining({
             profileId,
@@ -586,10 +589,12 @@ describe("omniskill command module", () => {
             model: "gpt-5.6",
             effort: "high",
             access: "read-only",
-            evidenceRequired: "launch_configured",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
           }),
         }),
       );
+      expect(planSet.primary).not.toHaveProperty("evidenceRequired");
       await expect(stat(join(homeDir, ".omniskills", "runs"))).rejects.toThrow();
     } finally {
       console.log = originalLog;
@@ -623,6 +628,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => ({
               status: "completed",
@@ -698,6 +705,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async (plan) => {
               models.push(plan.model);
@@ -795,6 +804,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => ({
               status: "failed",
@@ -872,6 +883,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => ({
               status: "consultation_required",
@@ -990,6 +1003,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async (plan) => {
               dispatchedRoles.push(plan.role);
@@ -1167,6 +1182,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => ({
               status: "consultation_required",
@@ -1286,6 +1303,8 @@ describe("omniskill command module", () => {
         dispatchers: {
           codex: {
             runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
             available: async () => true,
             dispatch: async () => ({
               status: "consultation_required",

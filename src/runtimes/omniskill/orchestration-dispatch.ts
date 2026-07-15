@@ -12,6 +12,14 @@ export const DispatchEvidenceLevelSchema = z.enum([
   "launch_configured",
   "runtime_reported",
 ]);
+export const DispatchAdapterSchema = z.enum(["codex-cli"]);
+export const DispatchCapabilitySchema = z
+  .object({
+    available: z.boolean(),
+    adapter: DispatchAdapterSchema,
+    evidenceCapability: z.literal("launch_configured"),
+  })
+  .strict();
 export const MAX_DISPATCH_TASK_BYTES = 64 * 1024;
 
 export const ConsultationRequestSchema = z
@@ -87,7 +95,8 @@ export const DispatchPlanSchema = z
     limits: DispatchLimitsSchema,
     candidateIndex: z.number().int().nonnegative(),
     candidateCount: z.number().int().positive(),
-    evidenceRequired: z.literal("launch_configured"),
+    adapter: DispatchAdapterSchema,
+    evidenceCapability: z.literal("launch_configured"),
     workspaceWriteApproved: z.boolean(),
   })
   .strict();
@@ -154,6 +163,7 @@ export type ConsultationRequest = z.infer<typeof ConsultationRequestSchema>;
 export type ConsultationDecision = z.infer<typeof ConsultationDecisionSchema>;
 export type DispatchRuntime = z.infer<typeof DispatchRuntimeSchema>;
 export type DispatchEvidenceLevel = z.infer<typeof DispatchEvidenceLevelSchema>;
+export type DispatchCapability = z.infer<typeof DispatchCapabilitySchema>;
 export type DispatchFailureCode = z.infer<typeof DispatchFailureCodeSchema>;
 export type DispatchRequest = z.infer<typeof DispatchRequestSchema>;
 export type DispatchPlan = z.infer<typeof DispatchPlanSchema>;
@@ -250,13 +260,14 @@ export async function planOrchestrationDispatch(input: {
   cwd: string;
   homeDir: string;
   approveWorkspaceWrite: boolean;
-  capabilities: Partial<Record<DispatchRuntime, boolean>>;
+  capabilities: Partial<Record<DispatchRuntime, DispatchCapability>>;
   readProfile(path: string): Promise<string>;
 }): Promise<DispatchPlanSet> {
   if (Buffer.byteLength(input.task, "utf8") > MAX_DISPATCH_TASK_BYTES) {
     dispatchError("task_too_large", `Dispatch task exceeds ${MAX_DISPATCH_TASK_BYTES} UTF-8 bytes`);
   }
-  if (!input.capabilities[input.runtime]) {
+  const capability = input.capabilities[input.runtime];
+  if (!capability?.available) {
     dispatchError("runtime_unavailable", `Dispatch runtime unavailable: ${input.runtime}`);
   }
   const assignment = getAssignment(input.workflow, input.role);
@@ -353,7 +364,8 @@ export async function planOrchestrationDispatch(input: {
       limits: artifact.limits,
       candidateIndex: artifact.candidateIndex,
       candidateCount: artifact.candidateCount,
-      evidenceRequired: "launch_configured",
+      adapter: capability.adapter,
+      evidenceCapability: capability.evidenceCapability,
       workspaceWriteApproved: artifact.access === "workspace-write",
     });
   }

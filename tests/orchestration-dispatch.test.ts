@@ -16,6 +16,11 @@ import {
 
 const homeDir = "/tmp/orchestration-dispatch-home";
 const cwd = "/tmp/orchestration-dispatch-project";
+const codexCapability = {
+  available: true,
+  adapter: "codex-cli",
+  evidenceCapability: "launch_configured",
+} as const;
 
 function profile(
   input: {
@@ -179,7 +184,7 @@ describe("orchestration dispatch planning", () => {
       cwd,
       homeDir,
       approveWorkspaceWrite: false,
-      capabilities: { codex: true, claude: false },
+      capabilities: { codex: codexCapability },
       readProfile: async (path) => contentByPath.get(path) ?? "",
     });
 
@@ -190,9 +195,11 @@ describe("orchestration dispatch planning", () => {
         model: "gpt-5.6",
         effort: "high",
         access: "read-only",
-        evidenceRequired: "launch_configured",
+        adapter: "codex-cli",
+        evidenceCapability: "launch_configured",
       }),
     );
+    expect(planSet.primary).not.toHaveProperty("evidenceRequired");
     expect(
       planSet.candidates.map(({ model, candidateIndex }) => ({ model, candidateIndex })),
     ).toEqual([
@@ -221,7 +228,7 @@ describe("orchestration dispatch planning", () => {
       cwd,
       homeDir,
       approveWorkspaceWrite: false,
-      capabilities: { codex: true, claude: false },
+      capabilities: { codex: codexCapability },
       readProfile: async () => valid.content,
     };
 
@@ -268,7 +275,7 @@ describe("orchestration dispatch planning", () => {
         planOrchestrationDispatch({
           ...base,
           workflow: installedWorkflow([valid.artifact]),
-          capabilities: { codex: false, claude: false },
+          capabilities: { codex: { ...codexCapability, available: false } },
         }),
       "runtime_unavailable",
     );
@@ -288,7 +295,7 @@ describe("orchestration dispatch planning", () => {
       task: "Implement the approved slice.",
       cwd,
       homeDir,
-      capabilities: { codex: true, claude: false },
+      capabilities: { codex: codexCapability },
       readProfile: async () => implementation.content,
     };
 
