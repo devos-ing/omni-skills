@@ -416,7 +416,10 @@ function configureDispatchCommand(
             break;
           }
         }
-        const exhausted = result.status === "failed" && attemptsMade === schedule.length;
+        const exhausted =
+          result.status === "failed" &&
+          result.failureCode === "model_unavailable" &&
+          attemptsMade === schedule.length;
         const receipt: DispatchReceipt = {
           ...plannedReceipt,
           profileId: selectedPlan.profileId,

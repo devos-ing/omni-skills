@@ -1047,6 +1047,94 @@ describe("omniskill command module", () => {
     }
   });
 
+  test("dispatch preserves a terminal runtime failure after model fallbacks", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-mixed-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-mixed-home-"));
+    const originalLog = console.log;
+    const program = new Command();
+    let attempts = 0;
+
+    try {
+      await writeInstalledDispatchFixture(homeDir, { fallback: true });
+      console.log = () => {};
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by mixed dispatch failure");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            createRunId: () => "run-mixed-failure",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
+            available: async () => true,
+            dispatch: async () => {
+              attempts += 1;
+              return attempts < 4
+                ? {
+                    status: "failed",
+                    evidence: "launch_configured",
+                    failureCode: "model_unavailable",
+                    failureReason: "model unavailable",
+                  }
+                : {
+                    status: "failed",
+                    evidence: "launch_configured",
+                    failureCode: "runtime_failed",
+                    failureReason: "task failed after launch",
+                  };
+            },
+            resume: async () => {
+              throw new Error("resume is not exercised by mixed dispatch failure");
+            },
+          },
+        },
+      });
+
+      await expect(
+        program.parseAsync(
+          [
+            "dispatch",
+            "startup-team",
+            "--role",
+            "catalog:cto",
+            "--task",
+            "Review boundaries",
+            "--home",
+            homeDir,
+            "--json",
+          ],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("task failed after launch");
+
+      expect(attempts).toBe(4);
+      const receipt = JSON.parse(
+        await readFile(
+          join(homeDir, ".omniskills", "runs", "startup-team", "run-mixed-failure", "receipt.json"),
+          "utf8",
+        ),
+      );
+      expect(receipt).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          failureCode: "runtime_failed",
+          failureReason: "task failed after launch",
+        }),
+      );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("dispatch resume re-verifies and continues a suspended Codex session", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-resume-root-"));
     const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-resume-home-"));
