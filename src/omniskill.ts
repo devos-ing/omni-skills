@@ -412,11 +412,7 @@ function configureDispatchCommand(
             createdAt: new Date().toISOString(),
           };
           await store.appendAttempt(plannedReceipt.runId, attempt);
-          if (
-            result.status !== "failed" ||
-            result.failureCode === "runtime_mismatch" ||
-            result.failureCode === "runtime_upgrade_required"
-          ) {
+          if (result.status !== "failed" || result.failureCode !== "model_unavailable") {
             break;
           }
         }

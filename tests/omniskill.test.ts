@@ -894,6 +894,85 @@ describe("omniskill command module", () => {
     }
   });
 
+  test("dispatch does not retry an arbitrary runtime failure", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-runtime-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-runtime-home-"));
+    const originalLog = console.log;
+    const models: string[] = [];
+    const program = new Command();
+
+    try {
+      await writeInstalledDispatchFixture(homeDir, { fallback: true });
+      console.log = () => {};
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("install is not exercised by dispatch runtime failure");
+        },
+        printSkillInstallResult: () => {},
+        createRunStore: (storeHomeDir) =>
+          createOrchestrationRunStore({
+            homeDir: storeHomeDir,
+            createRunId: () => "run-runtime-failure",
+          }),
+        dispatchers: {
+          codex: {
+            runtime: "codex",
+            adapter: "codex-cli",
+            evidenceCapability: "launch_configured",
+            available: async () => true,
+            dispatch: async (plan) => {
+              models.push(plan.model);
+              return {
+                status: "failed",
+                evidence: "launch_configured",
+                failureCode: "runtime_failed",
+                failureReason: "task may have started before the runtime failed",
+              };
+            },
+            resume: async () => {
+              throw new Error("resume is not exercised by dispatch runtime failure");
+            },
+          },
+        },
+      });
+
+      await expect(
+        program.parseAsync(
+          [
+            "dispatch",
+            "startup-team",
+            "--role",
+            "catalog:cto",
+            "--task",
+            "Review boundaries",
+            "--home",
+            homeDir,
+            "--json",
+          ],
+          { from: "user" },
+        ),
+      ).rejects.toThrow("task may have started before the runtime failed");
+
+      expect(models).toEqual(["gpt-5.6"]);
+      const runDir = join(homeDir, ".omniskills", "runs", "startup-team", "run-runtime-failure");
+      expect(
+        (await readFile(join(runDir, "attempts.jsonl"), "utf8")).trim().split("\n"),
+      ).toHaveLength(1);
+      expect(JSON.parse(await readFile(join(runDir, "receipt.json"), "utf8"))).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          failureCode: "runtime_failed",
+          model: "gpt-5.6",
+        }),
+      );
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("dispatch fails closed after exhausting configured candidate attempts", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exhaust-root-"));
     const homeDir = await mkdtemp(join(tmpdir(), "omniskill-dispatch-exhaust-home-"));
