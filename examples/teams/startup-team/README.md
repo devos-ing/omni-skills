@@ -6,9 +6,9 @@ role skills for CEO, CTO, product manager, web-design lead, engineering manager,
 founding engineer, and QA lead, with the companion skills those roles expect.
 
 The flow starts with `superpowers:brainstorming` as a one-question-at-a-time
-requirements interview. The role bench should only run after the user approves
-the requirement brief, so vague startup asks become clear goals, constraints,
-success criteria, and role briefs before subagents fan out.
+requirements interview. The coordinator prepares role handoffs only after the
+user approves the requirement brief, so vague startup asks become clear goals,
+constraints, success criteria, and manual briefs before execution.
 
 Install it from the repo root:
 
@@ -40,27 +40,14 @@ Preview every skill and profile destination without writing:
 bun run dev -- install examples/teams/startup-team --dry-run
 ```
 
-After installation, preflight a read-only role without creating run state:
+Automatic role launch is disabled. The coordinator selects roles and prepares
+manual briefs labeled `Prepared, not executed`, then stops. Run those briefs in
+separate user-controlled tasks and return completed outputs to `$startup-goal`
+for combination.
 
-```bash
-omniskill dispatch startup-team --role catalog:cto --task "Review the architecture" --runtime codex --home ~ --dry-run --json
-```
-
-Remove `--dry-run` to execute. An implementation role with `workspace-write`
-access also requires `--approve-workspace-write`. Dispatch receipts are stored
-under `~/.omniskills/runs/<workflow>/<run-id>/` with the request, full candidate
-plan, append-only attempts, and final receipt. `launch_configured` proves the
-requested model and effort were passed to the runtime; `runtime_reported` is
-stronger evidence emitted by a runtime event.
-
-Resume a structured consultation without changing the verified profile:
-
-```bash
-omniskill dispatch resume <run-id> --decision continue --message "Keep the compatibility adapter" --home ~
-```
-
-Codex CLI execution is supported. Claude profiles are generated and validated,
-but Claude dispatch execution is currently unsupported and fails closed.
+Installation still creates managed Codex and Claude profiles and preserves
+model-role configuration. Profile generation does not launch a role or create
+run state.
 
 Profiles are namespaced with `omniskills-startup-team-`. Reinstall updates only
 unchanged managed profiles; removal keeps user-modified profiles and always
@@ -72,7 +59,6 @@ The existing removal contract is unchanged:
 omniskill remove startup-team --home ~ --dry-run
 ```
 
-The skill cannot change the model of an already-running root session. Fallback
-and consultation are visible orchestration protocols, not provider-level
-guarantees. Codex receives a live smoke check in this repository; Claude output
-is statically validated unless Claude Code is installed separately.
+The skill cannot change the model of an already-running root session. Codex
+receives a live profile smoke check in this repository; Claude output is
+statically validated unless Claude Code is installed separately.

@@ -1723,7 +1723,7 @@ describe("workflow bundles", () => {
     expect(skill).toContain("If a companion skill is unavailable");
   });
 
-  test("startup team entry skill dispatches role subagents and combines results", async () => {
+  test("startup team entry skill prepares role handoffs and combines supplied results", async () => {
     const canonicalMembers = [
       "catalog:ceo",
       "catalog:cto",
@@ -1829,7 +1829,7 @@ describe("workflow bundles", () => {
       "## 1. Clarify",
       "## 2. Approve",
       "## 3. Route",
-      "## 4. Dispatch",
+      "## 4. Prepare handoffs",
       "## 5. Combine",
     ]) {
       expect(skill).toContain(heading);
@@ -1840,22 +1840,14 @@ describe("workflow bundles", () => {
     expect(skill).toContain("Present the route plan and wait for explicit approval");
     expect(skill).toContain("Every run must show");
     expect(skill).toContain("Skipped roles, including `none`");
-    expect(skill).toContain("one role-scoped subagent per selected role");
-    expect(skill).toContain("omniskill dispatch");
-    expect(skill).toContain("launch_configured");
-    expect(skill).toContain("`evidenceCapability`");
-    expect(skill).toContain("adapter");
-    expect(skill).toContain("Actual evidence comes only from the dispatch receipt");
-    expect(skill).toContain("receipt's actual evidence");
-    expect(skill).not.toContain("If preflight cannot produce at least");
-    expect(skill).toContain("Generic `spawn_agent` is unverified");
-    expect(skill).toContain("Unavailable dispatch");
+    expect(skill).toContain("Prepared, not executed");
+    expect(skill).toContain("Automatic role launch is disabled");
+    expect(skill).toContain("Stop after presenting the handoffs");
     expect(skill).toContain("accountable decision log");
     expect(skill).toContain("web-design");
     expect(skill).toContain("`founding-engineer`: implementation framing and execution handoff");
-    expect(skill).toContain("When `founding-engineer` is selected, it must not edit files");
-    expect(skill).toContain("dispatch `implement` with that handoff as the only");
-    expect(skill).toContain("then hand the result to `qa-lead`");
+    expect(skill).not.toContain("omniskill dispatch");
+    expect(skill).not.toContain("spawn_agent");
 
     for (const { role } of startupRoleContracts) {
       const roleSkill = await readStartupRoleSkill(role);

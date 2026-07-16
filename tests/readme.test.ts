@@ -69,23 +69,19 @@ describe("README source contract", () => {
     );
   });
 
-  test("documents verified startup-team dispatch and durable receipts", () => {
+  test("documents manual startup-team execution while preserving configuration", () => {
     const readme = readRepoFile("examples/teams/startup-team/README.md");
 
     for (const contract of [
-      "omniskill dispatch startup-team",
-      "--dry-run",
-      "--approve-workspace-write",
-      "launch_configured",
-      "runtime_reported",
-      ".omniskills/runs/",
-      "dispatch resume",
-      "Claude",
-      "unsupported",
+      "Automatic role launch is disabled",
+      "Prepared, not executed",
       "omniskill remove startup-team",
     ]) {
       expect(readme).toContain(contract);
     }
+    expect(readme).not.toContain("omniskill dispatch");
+    expect(readme).not.toContain("dispatch resume");
+    expect(readme).not.toContain(".omniskills/runs/");
   });
 
   test("documents action-only goal loops", () => {

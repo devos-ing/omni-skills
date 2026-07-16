@@ -40,10 +40,11 @@ Primary commands:
 - `skills install [source]`
 - `skills update [source]`
 
-Orchestration dispatch is temporarily disabled at CLI registration because the
-execution path can cause increasing memory usage. Workflow and team bundles
-and profile metadata remain available. Existing dispatch run files are
-preserved but cannot be started or resumed through the CLI.
+Agent launch is disabled and excluded from the production CLI dependency graph
+because the execution path can cause increasing memory usage. Workflow and team
+bundles, generated profile metadata, and `setup-model-routing` remain available.
+Existing dispatch run files are preserved but cannot be started or resumed
+through the CLI.
 
 Compatibility aliases:
 
@@ -118,13 +119,10 @@ models through the read-only `codex debug models` plugin seam. Exact legacy
 generated configuration may migrate to catalog-derived defaults; custom
 configuration is validated but never rewritten automatically.
 
-`src/runtimes/omniskill/orchestration-dispatch.ts`,
-`src/plugins/orchestration-dispatcher.ts`, and
-`src/plugins/orchestration-run-store.ts` retain verified profile selection,
-adapter, consultation, retry, and persisted-run behavior for rollback and
-diagnosis. They are dormant because the public command registrar does not
-attach `dispatch` or `dispatch resume`; `src/omniskill.ts` remains the boundary
-that controls availability.
+The dispatch runtime, Codex adapter, and run-store source files remain in the
+repository for rollback and diagnosis. Production barrel files do not export
+them, and the shipped CLI does not import them. Direct focused tests preserve
+their behavior without making agent launch available.
 
 Supported sources include bundled skills, local skill directories, Superpowers
 plugin-cache skills, Matt Pocock installed skills, and external packages routed
