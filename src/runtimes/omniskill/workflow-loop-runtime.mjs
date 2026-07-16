@@ -598,7 +598,11 @@ function parseJsonOption(value, name) {
 
 async function readJsonInput(context, inline, file, command) {
   if (inline && file) {
-    throw new Error("Pass only one inline JSON value or JSON file");
+    throw new Error(
+      command === "start"
+        ? "Pass only one of --input or --input-file"
+        : "Pass only one of --metadata or --metadata-file",
+    );
   }
   if (inline) {
     return parseJsonOption(inline, command === "start" ? "--input" : "--metadata");

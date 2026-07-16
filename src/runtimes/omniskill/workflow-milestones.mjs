@@ -57,7 +57,7 @@ const EvidenceItemSchema = z.discriminatedUnion("classification", [
       risk: z.enum(["low", "high"]),
       source: NonEmptyString,
     })
-    .strict(),
+    .passthrough(),
   z
     .object({
       claim: NonEmptyString,
@@ -65,7 +65,7 @@ const EvidenceItemSchema = z.discriminatedUnion("classification", [
       risk: z.enum(["low", "high"]),
       supports: z.array(NonEmptyString).min(1),
     })
-    .strict(),
+    .passthrough(),
   z
     .object({
       claim: NonEmptyString,
@@ -74,7 +74,7 @@ const EvidenceItemSchema = z.discriminatedUnion("classification", [
       consequence: NonEmptyString,
       validationAction: NonEmptyString,
     })
-    .strict(),
+    .passthrough(),
 ]);
 
 const RoleOutputSchema = z
@@ -214,6 +214,7 @@ function createMilestoneRecord(item, status = "pending") {
     status,
     stage: "preparing",
     repairCount: 0,
+    repairPending: false,
     targetedReviewCount: 0,
     inputPacket: null,
     roleOutputs: [],
@@ -274,7 +275,12 @@ export function recordMilestoneEvent(original, event) {
       item.inputPacket = metadata;
       break;
     case "role_output":
-      item.roleOutputs.push(metadata);
+      if (item.repairPending) {
+        const index = item.roleOutputs.findLastIndex((output) => output.role === metadata.role);
+        if (index < 0) item.roleOutputs.push(metadata);
+        else item.roleOutputs[index] = metadata;
+        item.repairPending = false;
+      } else item.roleOutputs.push(metadata);
       break;
     case "evidence_gap":
       if (item.evidenceGaps.some((gap) => gap.name === metadata.name))
@@ -292,6 +298,7 @@ export function recordMilestoneEvent(original, event) {
     case "repair_request":
       if (item.repairCount >= 1) throw new Error("Only one output repair is allowed per milestone");
       item.repairCount += 1;
+      item.repairPending = true;
       break;
     case "targeted_review":
       if (item.targetedReviewCount >= 1)
@@ -479,7 +486,7 @@ export function buildMilestoneSummary(state) {
     "",
     "## User Outcome Replay",
     "### Approved Requirements",
-    ...formatItems(outcomeItems.filter((item) => item.gapType === "approved_requirement")),
+    ...formatItems(outcomeItems.filter((item) => item.gapType !== "new_wish")),
     "",
     "### New Wishes",
     ...formatItems(outcomeItems.filter((item) => item.gapType === "new_wish")),

@@ -35,6 +35,7 @@ export interface MilestoneRecord extends MilestoneInput {
   status: "pending" | "active" | "accepted" | "skipped";
   stage: MilestoneStage;
   repairCount: number;
+  repairPending: boolean;
   targetedReviewCount: number;
   evidenceGaps: Array<{ name: string; critical: boolean; reason: string }>;
   scopeChanges: Array<{ requested: string; approved: boolean; impact: string }>;

@@ -537,6 +537,23 @@ describe("loop runtime", () => {
     );
 
     try {
+      const conflictingInput = await runRuntime(
+        [
+          "start",
+          "--run",
+          "conflict",
+          "--input",
+          JSON.stringify(startInput),
+          "--input-file",
+          inputPath,
+          "--json",
+        ],
+        homeDir,
+        manifestPath,
+      );
+      expect(conflictingInput.exitCode).toBe(1);
+      expect(conflictingInput.stderr).toContain("Pass only one of --input or --input-file");
+
       const started = parseJsonOutput(
         await runRuntime(
           ["start", "--run", "milestone", "--input-file", inputPath, "--json"],

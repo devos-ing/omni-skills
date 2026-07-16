@@ -62,6 +62,7 @@ const roleOutput = {
       classification: "verified",
       risk: "high",
       source: "approved brief",
+      observedAt: "2026-07-16",
     },
   ],
   risks: [],
@@ -353,6 +354,43 @@ describe("workflow milestones", () => {
     );
   });
 
+  test("replaces a repaired role output so resolved evidence can proceed", () => {
+    let state = createMilestoneState(input, NOW);
+    state = recordMilestoneEvent(state, { type: "input_packet", metadata: inputPacket });
+    state = advanceMilestoneState(state, NOW);
+    state = recordMilestoneEvent(state, {
+      type: "role_output",
+      metadata: {
+        ...roleOutput,
+        evidence: [
+          {
+            claim: "Users understand the copy",
+            classification: "assumed",
+            risk: "high",
+            consequence: "Onboarding remains unclear",
+            validationAction: "Replay onboarding",
+          },
+        ],
+      },
+    });
+    state = recordMilestoneEvent(state, {
+      type: "repair_request",
+      metadata: { reason: "Verify the high-risk claim" },
+    });
+    state = recordMilestoneEvent(state, {
+      type: "evidence_gap",
+      metadata: { name: "onboarding replay", critical: true, reason: "Replay unavailable" },
+    });
+    state = recordMilestoneEvent(state, {
+      type: "evidence_resolved",
+      metadata: { name: "onboarding replay", resolution: "Replay attached" },
+    });
+    state = recordMilestoneEvent(state, { type: "role_output", metadata: roleOutput });
+
+    expect(state.milestones[0]?.roleOutputs).toHaveLength(1);
+    expect(() => advanceMilestoneState(state, NOW)).not.toThrow();
+  });
+
   test("projects available decisions and complete evidence summaries", () => {
     let state = advanceToPlanApproval(createMilestoneState(input, NOW));
     expect(getMilestoneView(state).availableDecisions).toEqual([
@@ -400,6 +438,7 @@ describe("workflow milestones", () => {
     ]) {
       expect(summary).toContain(heading);
     }
+    expect(summary).toContain("Complete first action: met");
   });
 
   test("validates outcome replay packets with Zod", () => {
