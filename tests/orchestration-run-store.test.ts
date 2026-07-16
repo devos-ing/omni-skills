@@ -9,7 +9,7 @@ import type {
   DispatchPlanSet,
   DispatchReceipt,
   DispatchRequest,
-} from "../src/runtimes/omniskill";
+} from "../src/runtimes/omniskill/orchestration-dispatch";
 
 function dispatchFixture(homeDir: string): {
   request: DispatchRequest;

@@ -5,7 +5,7 @@ import {
   ConsultationRequestSchema,
   type DispatchFailureCode,
   type DispatchPlan,
-} from "../runtimes/omniskill";
+} from "../runtimes/omniskill/orchestration-dispatch";
 
 export interface DispatchAttemptResult {
   status: "completed" | "failed" | "consultation_required";

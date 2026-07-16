@@ -10,7 +10,7 @@ import {
   DispatchReceiptSchema,
   type DispatchRequest,
   DispatchRequestSchema,
-} from "../runtimes/omniskill";
+} from "../runtimes/omniskill/orchestration-dispatch";
 
 export interface StoredDispatchRun {
   request: DispatchRequest;
