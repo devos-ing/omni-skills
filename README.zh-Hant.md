@@ -10,9 +10,13 @@ Omniskills 是給 AI agents 使用的 many-skill bank：安裝一個 workflow sk
 tree，帶著目標呼叫一個 entry skill，就能把適合當前問題的 roles、playbooks、verification
 habits 交給你的 agent。核心很簡單：3x your ability，而不用手動切換每個 specialist skill。
 
-當你想把 company-building goal 交給多個 role workflows 推進，而不是手動 juggling 每個 skill
-時，先從 Startup Team 開始：CEO、CTO、Product Manager、Web Design、Engineering Manager、Founding
-Engineer、QA Lead。
+Startup Team 會把一個已核准的 startup goal 拆成一次一個、可檢查的功能里程碑；每個
+plan 都在 implementation 前審核，結果通過 verification 後，再以使用者結果重演重建原始的
+expectations、needs、wishes 與 journey，最後才進入 feature acceptance。證據帳本會清楚區分
+Verified、Inferred、Assumed。所有 handoffs 都是 manual 且標記為 `Prepared, not executed`，
+不代表 browser 或 CLI 已自動啟動 agent。
+
+`Prepare -> Plan -> Plan approval -> Implement -> Verify -> User Outcome Replay -> Feature acceptance`
 
 
 ## 快速開始
@@ -59,7 +63,7 @@ npx omniskill@latest install qa-lead
 
 | Omniskills workflow | Entry skill | 用途 |
 | --- | --- | --- |
-| Startup Team | `$startup-goal` | 由 coordinator 將 company-building goal 分派給 strategy、product、interface design、architecture、delivery、implementation、QA role subagents。 |
+| Startup Team | `$startup-goal` | 一次推進一個有證據支持的功能里程碑，經過 plan approval、implementation、verification、使用者結果重演與 feature acceptance。 |
 | CEO | `$ceo` | Direction、hard tradeoffs、fundraising/customer framing、company decisions。 |
 | CTO | `$cto` | Architecture、domain model、platform direction、engineering risk。 |
 | Product Manager | `$product-manager` | Product discovery、PRDs、acceptance criteria、roadmap tradeoffs、issue slicing。 |

@@ -216,6 +216,25 @@ describe("landing app source contract", () => {
     expect(traditionalChinese).toContain("npx omniskill@latest install startup-team");
   });
 
+  test("describes the evidence-backed startup milestone lifecycle", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+
+    expect(content).toContain("feature milestone");
+    expect(content).toContain("Evidence Ledger");
+    expect(content).toContain("User Outcome Replay");
+    for (const label of [
+      "Prepare",
+      "Plan",
+      "Plan approval",
+      "Implement",
+      "Verify",
+      "User Outcome Replay",
+      "Feature acceptance",
+    ]) {
+      expect(content).toContain(`label: "${label}"`);
+    }
+  });
+
   test("does not define placeholder workflow activity or install metrics", () => {
     const content = readLandingFile("lib/landing-content.ts");
 
@@ -250,8 +269,8 @@ describe("landing app source contract", () => {
     expect(content).toContain(
       '{ name: "web-design", description: "Interface direction and motion quality" }',
     );
-    expect(content).toContain('label: "Design"');
-    expect(content).toContain('skill: "web-design"');
+    expect(content).toContain('label: "Plan approval"');
+    expect(content).toContain('label: "User Outcome Replay"');
     expect(content).toContain('slug: "founding-engineer"');
     expect(content).toContain('slug: "haaland"');
     expect(content).toContain('slug: "codex-input-preview"');
@@ -267,9 +286,8 @@ describe("landing app source contract", () => {
     expect(content).toContain("Simulated Codex composer preview — not a live Codex session.");
     expect(content).toContain("Create one profile-icon meme concept");
     expect(content).not.toContain("Generate meme angles");
-    expect(content).toContain('label: "Implementation frame"');
-    expect(content).toContain('skill: "founding-engineer"');
-    expect(content).toContain("Execute the planned change with tests and review.");
+    expect(content).toContain('label: "Feature acceptance"');
+    expect(content).toContain("Execute only the approved milestone slice.");
   });
 
   test("mirrors the expanded startup-team roster and canonical member sources", () => {

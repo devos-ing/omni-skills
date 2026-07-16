@@ -69,6 +69,23 @@ describe("README source contract", () => {
     );
   });
 
+  test("documents evidence-backed startup feature milestones in both languages", () => {
+    for (const content of [readReadme(), readRepoFile("docs/landing-content.md")]) {
+      expect(content).toContain("feature milestone");
+      expect(content).toContain("Evidence Ledger");
+      expect(content).toContain("User Outcome Replay");
+    }
+
+    for (const content of [
+      readRepoFile("README.zh-Hant.md"),
+      readRepoFile("docs/landing-content.zh-Hant.md"),
+    ]) {
+      expect(content).toContain("功能里程碑");
+      expect(content).toContain("證據帳本");
+      expect(content).toContain("使用者結果重演");
+    }
+  });
+
   test("documents manual startup-team execution while preserving configuration", () => {
     const readme = readRepoFile("examples/teams/startup-team/README.md");
 

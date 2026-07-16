@@ -9,7 +9,18 @@ tree, call one entry skill with a goal, and give your agent the right roles,
 playbooks, and verification habits for the problem in front of it. The point is
 simple: 3x your ability without manually juggling every specialist skill.
 
-Start with Startup Team when you want to move a company-building goal through a coordinated role bench instead of manually juggling every skill: CEO, CTO, Product Manager, Web Design, Engineering Manager, Founding Engineer, and QA Lead.
+Start with Startup Team to break one approved startup goal into evidence-backed
+feature milestones, review each plan before implementation, verify the result,
+and replay the user's expectations, needs, wishes, and journey before
+acceptance. Each Evidence Ledger distinguishes Verified, Inferred, and Assumed
+claims. Handoffs stay manual and are marked `Prepared, not executed`; the flow
+does not imply a browser or CLI agent launch.
+
+The installed bench still includes CEO, CTO, Product Manager, Web Design,
+Engineering Manager, Founding Engineer, and QA Lead; the active milestone uses
+only the roles it needs.
+
+`Prepare -> Plan -> Plan approval -> Implement -> Verify -> User Outcome Replay -> Feature acceptance`
 
 ## Quick Start
 
@@ -56,7 +67,7 @@ copy the install command.
 
 | Omniskills workflow | Entry skill | What it helps with |
 | --- | --- | --- |
-| Startup Team | `$startup-goal` | Coordinate a company-building goal across strategy, product, interface design, architecture, delivery, implementation, and QA role subagents. |
+| Startup Team | `$startup-goal` | Move one evidence-backed feature milestone at a time through plan approval, implementation, verification, User Outcome Replay, and feature acceptance. |
 | CEO | `$ceo` | Direction, hard tradeoffs, fundraising/customer framing, and company decisions. |
 | CTO | `$cto` | Architecture, domain model, platform direction, and engineering risk. |
 | Product Manager | `$product-manager` | Product discovery, PRDs, acceptance criteria, roadmap tradeoffs, and issue slicing. |

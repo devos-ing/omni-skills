@@ -158,12 +158,13 @@ connect them.
 npx omniskill@latest install startup-team
 ```
 
-Description: Move one startup goal from direction to delivery with a
-coordinator that brings in strategy, product, design, engineering, and QA only
-when the work needs them.
+Description: Break one approved startup goal into evidence-backed feature
+milestones, review each plan before implementation, verify the result, and
+replay the user's expectations, needs, wishes, and journey before acceptance.
 
-Coordinator: `$startup-goal` — Clarifies the brief, selects the needed roles,
-and combines their outputs.
+Coordinator: `$startup-goal` — Controls the Goal Tunnel and Evidence Ledger,
+prepares manual handoffs marked Prepared, not executed, and holds both human
+approval gates. No browser or CLI agent launch is implied.
 
 Members:
 
@@ -206,26 +207,24 @@ Skills:
 - `mattpocock:code-review`: Review behavior and risk
 - `mattpocock:implement`: Execute the implementation slice
 
-Ordered skill path:
+Ordered milestone path:
 
-1. Route -> `startup-goal`
-   - Dispatch the needed role subagents for the next decision.
-2. Strategy -> `ceo`
-   - Clarify company direction and tradeoffs.
-3. Product -> `product-manager`
-   - Shape customer value, PRD, and issue slices.
-4. Design -> `web-design`
-   - Set responsive interface direction and motion quality.
-5. Technology -> `cto`
-   - Set architecture and technical risk boundaries.
-6. Delivery -> `engineering-manager`
-   - Sequence execution and quality gates.
-7. Implementation frame -> `founding-engineer`
-   - Prepare the smallest correct implementation slice.
-8. Implement -> `mattpocock:implement`
-   - Execute the planned change with tests and review.
-9. QA -> `qa-lead`
-   - Check release readiness and residual risk.
+`Prepare -> Plan -> Plan approval -> Implement -> Verify -> User Outcome Replay -> Feature acceptance`
+
+1. Prepare -> `startup-goal`
+   - Define the Goal Tunnel, feature milestone, role inputs, and acceptance criteria.
+2. Plan -> `startup-goal`
+   - Validate role outputs and the Evidence Ledger without prescribing expert methods.
+3. Plan approval -> `startup-goal`
+   - Wait for explicit human approval of the implementation boundary.
+4. Implement -> `mattpocock:implement`
+   - Execute only the approved milestone slice.
+5. Verify -> `qa-lead`
+   - Record acceptance evidence, regressions, untested areas, and residual risk.
+6. User Outcome Replay -> `startup-goal`
+   - Reconstruct expectations, needs, wishes, and journey after QA.
+7. Feature acceptance -> `startup-goal`
+   - Wait for explicit human acceptance before activating the next milestone.
 
 ## Skill Hub
 

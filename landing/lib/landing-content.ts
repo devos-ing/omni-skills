@@ -90,12 +90,13 @@ export const startupTeam: TeamCardContent = {
   slug: "startup-team",
   name: "Startup Team",
   description:
-    "Move one startup goal from direction to delivery with a coordinator that brings in strategy, product, design, engineering, and QA only when the work needs them.",
+    "Break one approved startup goal into evidence-backed feature milestones, review each plan before implementation, verify the result, and replay the user's expectations, needs, wishes, and journey before acceptance.",
   entrySkill: "startup-goal",
   coordinator: {
     name: "Startup Goal",
     skill: "startup-goal",
-    description: "Clarifies the brief, selects the needed roles, and combines their outputs.",
+    description:
+      "Controls the Goal Tunnel and Evidence Ledger, prepares manual handoffs marked Prepared, not executed, and holds both human approval gates. No browser or CLI agent launch is implied.",
   },
   members: [
     { name: "CEO", skill: "ceo", description: "Company direction and tradeoffs" },
@@ -177,49 +178,40 @@ export const startupTeam: TeamCardContent = {
   ],
   diagramSteps: [
     {
-      label: "Route",
+      label: "Prepare",
       skill: "startup-goal",
-      description: "Dispatch the needed role subagents for the next decision.",
+      description:
+        "Define the Goal Tunnel, feature milestone, role inputs, and acceptance criteria.",
     },
     {
-      label: "Strategy",
-      skill: "ceo",
-      description: "Clarify company direction and tradeoffs.",
+      label: "Plan",
+      skill: "startup-goal",
+      description: "Validate role outputs and the Evidence Ledger without prescribing methods.",
     },
     {
-      label: "Product",
-      skill: "product-manager",
-      description: "Shape customer value, PRD, and issue slices.",
-    },
-    {
-      label: "Design",
-      skill: "web-design",
-      description: "Set responsive interface direction and motion quality.",
-    },
-    {
-      label: "Technology",
-      skill: "cto",
-      description: "Set architecture and technical risk boundaries.",
-    },
-    {
-      label: "Delivery",
-      skill: "engineering-manager",
-      description: "Sequence execution and quality gates.",
-    },
-    {
-      label: "Implementation frame",
-      skill: "founding-engineer",
-      description: "Prepare the smallest correct implementation slice.",
+      label: "Plan approval",
+      skill: "startup-goal",
+      description: "Wait for explicit human approval of the implementation boundary.",
     },
     {
       label: "Implement",
       skill: "mattpocock:implement",
-      description: "Execute the planned change with tests and review.",
+      description: "Execute only the approved milestone slice.",
     },
     {
-      label: "QA",
+      label: "Verify",
       skill: "qa-lead",
-      description: "Check release readiness and residual risk.",
+      description: "Record acceptance evidence, regressions, untested areas, and residual risk.",
+    },
+    {
+      label: "User Outcome Replay",
+      skill: "startup-goal",
+      description: "Reconstruct expectations, needs, wishes, and journey after QA.",
+    },
+    {
+      label: "Feature acceptance",
+      skill: "startup-goal",
+      description: "Wait for human acceptance before activating the next milestone.",
     },
   ],
 };
