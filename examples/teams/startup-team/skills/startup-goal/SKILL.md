@@ -1,80 +1,119 @@
 ---
 name: startup-goal
-description: "Use when preparing startup-goal handoffs across CEO, CTO, product manager, engineering manager, founding engineer, and QA lead roles."
+description: "Use when moving an approved startup goal through evidence-backed, reviewable feature milestones."
 ---
 
 # Startup Goal
 
-Coordinate only the startup roles needed to move an approved goal into a verified
-result. Keep decisions, handoffs, and approval gates visible.
+Move one approved feature milestone at a time from direction through plan,
+implementation, QA, user-outcome evaluation, and acceptance. The coordinator
+controls direction, scope, packet interfaces, evidence quality, state
+transitions, and human gates. It must not prescribe a role's framework, tool,
+optional method, research process, or conclusion.
 
-## 1. Clarify
+## 1. Clarify and approve the goal tunnel
 
-If no approved requirement brief exists, treat the request as a hypothesis. Ask
-one material question at a time, choosing the unknown most likely to change
-scope, routing, or risk. Continue until goal, customer, problem, scope,
-non-goals, constraints, success criteria, artifacts, and verification are clear.
+Build the **Goal Tunnel** from the user's goal, target user, problem, desired
+outcome, scope, non-goals, constraints, permissions, success criteria, and
+explicit assumptions. Ask one material question at a time when an unknown could
+change scope, routing, or risk. The coordinator may compare later work with this
+tunnel, but it may not expand or rewrite it without human approval.
 
-Short commands such as `run it` or `continue` do not bypass unresolved material
-questions.
+## 2. Decompose feature milestones
 
-## 2. Approve
+Propose ordered, user-visible milestones. Each needs an ID, title, feature
+outcome, accountable outcome role, dependencies, and acceptance criteria.
+Choose the smallest safe role set for the active milestone and show skipped
+roles with evidence and re-entry conditions. Work on only one milestone at a
+time; wait for plan approval before implementation and feature acceptance
+before activating the next milestone.
 
-Present a compact brief covering goal, customer, problem, scope, non-goals,
-constraints, success criteria, assumptions, verification, and approval gates. Do
-not route or prepare handoffs until the user gives explicit approval.
+## 3. Prepare role input packets
 
-## 3. Route
+Every selected expert receives the same **Input Packet** interface:
 
-Choose the smallest safe role set:
+- approved Goal Tunnel and current feature outcome;
+- accountable outcome role and decision required;
+- available source or repository context;
+- constraints and permissions;
+- expected artifact and acceptance criteria;
+- prior approved decisions that may not be silently reopened.
 
-- `ceo`: strategy, positioning, pricing, funding, or go/no-go tradeoffs.
-- `product-manager`: customer value, scope, acceptance, or issue slicing.
-- `web-design`: customer-facing hierarchy, responsive interaction,
-  accessibility, or motion.
-- `cto`: architecture, domain boundaries, or technical risk.
-- `engineering-manager`: sequencing, ownership, or quality gates.
-- `founding-engineer`: implementation framing and execution handoff.
-- `qa-lead`: acceptance, regression, or release verification.
+Describe what the role must achieve, not how it must think. Label every manual
+handoff `Prepared, not executed` and stop until the user supplies the completed
+role output.
 
-Use broad coverage when uncertainty spans several areas. A narrow route is valid
-only for small, reversible work with clear scope and verification. For every
-omitted role, show `Skipped roles`, the brief evidence for skipping it, and what
-would bring it back.
+## 4. Validate role output packets
 
-Present the route plan and wait for explicit approval before preparing handoffs. Every run must show:
+Require an **Output Packet** with recommendation, alternatives considered,
+Evidence Ledger, risks, unresolved questions, verification method, and
+recommended next action. Reject only missing fields, unsupported material
+claims, goal drift, or unverifiable acceptance conditions. A conforming packet
+must not be rejected because the role chose a different method or conclusion.
 
-- Active roles and expected outputs.
-- Skipped roles, including `none`, with evidence and re-entry conditions.
-- Completed outputs and accountable roles.
-- Verification evidence.
+Allow one repair for an invalid output. If a material conflict remains, allow
+one targeted review by the role accountable for that decision, preserve both
+positions, then escalate to the human instead of averaging them.
 
-## 4. Prepare handoffs
+## 5. Enforce evidence and approval gates
 
-Automatic role launch is disabled. Do not call a dispatch command or any other
-agent-launch API.
+Classify every material claim in the **Evidence Ledger**:
 
-For every selected role, prepare a handoff containing the matching role skill,
-goal, current task, prior handoff, expected output, approval gate, constraints,
-and verification bar. Label every handoff `Prepared, not executed`.
+- **Verified:** cite a URL, repository path, command output, user artifact, or
+  observed dataset; include the observation or publication date when freshness
+  matters.
+- **Inferred:** name the supporting evidence and explain the reasoning link.
+- **Assumed:** disclose that it is unverified, the consequence if false, and a
+  concrete validation action.
 
-When `founding-engineer` is selected, prepare its implementation frame as a
-read-only handoff. Prepare a separate `implement` execution handoff and a final
-`qa-lead` verification handoff, but do not execute any of them.
+High-impact or uncertain claims must be Verified before plan approval. Keep
+conflicting or stale evidence visible. Low-risk assumptions may proceed only
+when explicit and testable. Missing critical evidence blocks the milestone;
+never invent support. Present the plan boundary, evidence, risks, assumptions,
+and acceptance criteria, then wait for explicit human plan approval.
 
-Stop after presenting the handoffs. Continue only when the user supplies
-completed role outputs in a later interaction. A prepared handoff is not
-evidence that a role ran.
+## 6. Prepare implementation and QA handoffs
+
+After plan approval, prepare a separate `mattpocock:implement` handoff limited to
+the approved plan. Record its implementation result: summary, changed files,
+and verification commands. Then prepare a `qa-lead` handoff for acceptance,
+regression, release risk, and verification evidence. A QA failure permits one
+bounded rework inside the approved plan; a new requirement returns to planning.
+
+## 7. Reconstruct and evaluate the user outcome
+
+After QA passes, prepare the accountable outcome role handoff for a **User
+Outcome Replay**. The coordinator validates the returned interface; it does not
+perform the role's content analysis.
+
+The evaluator recreates the original user or customer, their expectations,
+required needs, non-required wishes, and intended journey steps from the Goal
+Tunnel and Input Packet. It then marks each item `met`, `partially_met`, `unmet`,
+or `not_evaluated`, cites the original requirement and result evidence, records
+friction and journey deviations, distinguishes a missed approved requirement
+from a newly discovered wish, and recommends accept, rework, or a later
+milestone. A new wish is not a retroactive requirement.
+
+## 8. Carry accepted context forward
+
+At feature acceptance, retain the Goal Tunnel, approved decisions, accepted
+artifacts, evidence, unresolved risks, User Outcome Replay, and later-milestone
+wishes. Activate the next dependency-ready milestone without silently reopening
+accepted decisions. A scope change requires human approval and invalidates only
+affected downstream plans.
 
 ## Manual execution policy
 
-Do not disclose a runtime, model, effort, adapter, evidence capability,
-receipt, or run ID because no launch occurred. Human approval of a route
-authorizes handoff preparation only; it does not authorize automatic execution.
+Automatic role launch is disabled. Do not call an agent-launch or dispatch API.
+Human approval authorizes only the next declared lifecycle transition. Never
+claim that a prepared handoff ran, and do not disclose a model, runtime,
+receipt, or run ID for work that was not launched.
+Stop after presenting the handoffs and wait for completed outputs from the user.
 
-## 5. Combine
+## Loop limits
 
-Combine only completed role outputs that the user supplies in a later
-interaction. Produce one accountable decision log that names the owner of each
-decision, unresolved risks, verification evidence, and the recommended next
-action. Stop at every human approval gate.
+- One active milestone at a time.
+- One repair and one targeted review per milestone before human escalation.
+- No forced transition past plan approval or feature acceptance.
+- Stop for unavailable critical evidence, material goal drift, exhausted review
+  limits, or any decision requiring new authority.

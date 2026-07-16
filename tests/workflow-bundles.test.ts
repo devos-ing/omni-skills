@@ -1782,7 +1782,7 @@ describe("workflow bundles", () => {
     expect(skill).toContain("If a companion skill is unavailable");
   });
 
-  test("startup team entry skill prepares role handoffs and combines supplied results", async () => {
+  test("startup team entry skill stages evidence-backed feature milestones", async () => {
     const canonicalMembers = [
       "catalog:ceo",
       "catalog:cto",
@@ -1812,30 +1812,37 @@ describe("workflow bundles", () => {
     expect(bundle.manifest).toMatchObject({
       kind: "team",
       name: "startup-team",
-      version: "0.3.0",
+      version: "0.5.0",
       coordinator: "./skills/startup-goal",
       members: canonicalMembers,
+      loop: {
+        execution: "action-only",
+        type: "milestone_based",
+        milestone: {
+          coordinator: "./skills/startup-goal",
+          implementer: "mattpocock:implement",
+          verifier: "catalog:qa-lead",
+        },
+      },
     });
     expect(
       bundle.manifest.skills.find((candidate) => candidate.source === bundle.manifest.coordinator),
     ).toEqual({ source: "./skills/startup-goal", entry: true });
-    expect(bundle.lock?.workflow).toBe("startup-team");
-    expect(bundle.lock?.workflowVersion).toBe("0.3.0");
+    expect(bundle.lock).toBeUndefined();
 
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
-      ["requirements", "superpowers:brainstorming", "human_approval"],
-      ["route", "./skills/startup-goal", "human_approval"],
-      ["strategy", "catalog:ceo", "human_approval"],
-      ["product", "catalog:product-manager", null],
-      ["design", "catalog:web-design", null],
-      ["technology", "catalog:cto", null],
-      ["delivery", "catalog:engineering-manager", null],
-      ["implementation", "catalog:founding-engineer", null],
-      ["implement", "mattpocock:implement", null],
-      ["qa", "catalog:qa-lead", null],
+      ["preparing", "./skills/startup-goal", null],
+      ["planning", "./skills/startup-goal", null],
+      ["awaiting_plan_approval", "./skills/startup-goal", "human_approval"],
+      ["implementing", "mattpocock:implement", null],
+      ["rework", "mattpocock:implement", null],
+      ["verifying", "catalog:qa-lead", null],
+      ["evaluating", "./skills/startup-goal", null],
+      ["awaiting_acceptance", "./skills/startup-goal", "human_approval"],
     ]);
-    expect(bundle.manifest.steps[0]?.instruction).toContain(
-      "Interview the user one question at a time",
+    expect(bundle.manifest.steps.every((step) => Boolean(step.instruction))).toBe(true);
+    expect(bundle.manifest.steps.find((step) => step.id === "evaluating")?.instruction).toContain(
+      "prepare the accountable outcome role handoff",
     );
     expect(bundle.manifest.skills).toEqual([
       { source: "./skills/startup-goal", entry: true },
@@ -1885,26 +1892,36 @@ describe("workflow bundles", () => {
     await graph.cleanup?.();
     expect(skill).toContain("name: startup-goal");
     for (const heading of [
-      "## 1. Clarify",
-      "## 2. Approve",
-      "## 3. Route",
-      "## 4. Prepare handoffs",
-      "## 5. Combine",
+      "## 1. Clarify and approve the goal tunnel",
+      "## 2. Decompose feature milestones",
+      "## 3. Prepare role input packets",
+      "## 4. Validate role output packets",
+      "## 5. Enforce evidence and approval gates",
+      "## 6. Prepare implementation and QA handoffs",
+      "## 7. Reconstruct and evaluate the user outcome",
+      "## 8. Carry accepted context forward",
+      "## Manual execution policy",
+      "## Loop limits",
     ]) {
       expect(skill).toContain(heading);
     }
-    expect(skill).toContain("one material question at a time");
-    expect(skill).toContain("explicit approval");
-    expect(skill).toContain("smallest safe role set");
-    expect(skill).toContain("Present the route plan and wait for explicit approval");
-    expect(skill).toContain("Every run must show");
-    expect(skill).toContain("Skipped roles, including `none`");
+    for (const contract of [
+      "Goal Tunnel",
+      "Input Packet",
+      "Output Packet",
+      "Evidence Ledger",
+      "Verified",
+      "Inferred",
+      "Assumed",
+      "User Outcome Replay",
+    ]) {
+      expect(skill).toContain(contract);
+    }
+    expect(skill).toContain("must not prescribe");
     expect(skill).toContain("Prepared, not executed");
     expect(skill).toContain("Automatic role launch is disabled");
-    expect(skill).toContain("Stop after presenting the handoffs");
-    expect(skill).toContain("accountable decision log");
-    expect(skill).toContain("web-design");
-    expect(skill).toContain("`founding-engineer`: implementation framing and execution handoff");
+    expect(skill).toContain("one repair");
+    expect(skill).toContain("one targeted review");
     expect(skill).not.toContain("omniskill dispatch");
     expect(skill).not.toContain("spawn_agent");
 
