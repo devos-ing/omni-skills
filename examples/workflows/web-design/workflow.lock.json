@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "web-design",
-  "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-13T08:13:33.839Z",
+  "workflowVersion": "0.2.0",
+  "generatedAt": "2026-07-16T11:07:33.379Z",
+  "workflows": [
+    {
+      "id": "workflow:web-design@0.2.0",
+      "name": "web-design",
+      "version": "0.2.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/web-design",
       "resolvedName": "web-design",
       "kind": "local",
-      "hash": "sha256:5cd02b629f13409c04a8f28f92909aeae7ca7d392eba6b95587876b662814f88"
+      "hash": "sha256:7c430fd13ca1f01841f4da9dac4e62402c2db432b27909475d5f11adff588488"
     },
     {
       "source": "emilkowalski:emil-design-eng",

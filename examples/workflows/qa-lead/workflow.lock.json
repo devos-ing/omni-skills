@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "qa-lead",
-  "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:12:50.622Z",
+  "workflowVersion": "0.2.0",
+  "generatedAt": "2026-07-16T11:07:48.868Z",
+  "workflows": [
+    {
+      "id": "workflow:qa-lead@0.2.0",
+      "name": "qa-lead",
+      "version": "0.2.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/qa-lead",
       "resolvedName": "qa-lead",
       "kind": "local",
-      "hash": "sha256:a9c4e9f241b612ab0c4302bb847b5c0232c32210b599b616c6c388f3b899b647"
+      "hash": "sha256:7560f9837f16a770f47b2520a30d1d69d8aa8e37d47019698a70b35887da8297"
     },
     {
       "source": "mattpocock:code-review",

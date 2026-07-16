@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "qa-lead",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Act as the startup QA lead for release risk, acceptance checks, regression focus, and verification evidence.",
   "skills": [
     {
@@ -27,21 +27,6 @@
       "title": "Set the release-risk frame",
       "skill": "./skills/qa-lead",
       "gate": "human_approval"
-    },
-    {
-      "id": "review",
-      "title": "Review acceptance and risk",
-      "skill": "mattpocock:code-review"
-    },
-    {
-      "id": "debug",
-      "title": "Diagnose failures and reproduction gaps",
-      "skill": "mattpocock:diagnosing-bugs"
-    },
-    {
-      "id": "verify",
-      "title": "Verify before completion",
-      "skill": "superpowers:verification-before-completion"
     }
   ]
 }

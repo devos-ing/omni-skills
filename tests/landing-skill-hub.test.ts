@@ -87,10 +87,7 @@ describe("landing teams and skill hub data", () => {
     expect(cto?.sourceUrl).toContain("/examples/workflows/cto/skills/cto/SKILL.md");
 
     const implement = skills.find(({ name }) => name === "mattpocock:implement");
-    expect(implement?.usedBy.map(({ name }) => name)).toEqual([
-      "Startup Team",
-      "Founding Engineer",
-    ]);
+    expect(implement?.usedBy.map(({ name }) => name)).toEqual(["Startup Team"]);
     expect(implement?.sourceUrl).toBe(
       "https://github.com/mattpocock/skills/blob/v1.1.0/skills/engineering/implement/SKILL.md",
     );

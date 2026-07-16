@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "web-design",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Act as the web-design lead for interface direction, interaction craft, responsive behavior, and rigorous animation review.",
   "skills": [
     {
@@ -31,21 +31,6 @@
       "title": "Frame the interface direction",
       "skill": "./skills/web-design",
       "gate": "human_approval"
-    },
-    {
-      "id": "motion-vocabulary",
-      "title": "Name the intended motion",
-      "skill": "emilkowalski:animation-vocabulary"
-    },
-    {
-      "id": "craft-review",
-      "title": "Review interface craft",
-      "skill": "emilkowalski:emil-design-eng"
-    },
-    {
-      "id": "animation-review",
-      "title": "Review animations strictly",
-      "skill": "emilkowalski:review-animations"
     }
   ]
 }

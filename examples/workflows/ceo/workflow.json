@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1",
   "name": "ceo",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Act as the startup CEO for direction, tradeoffs, investor/customer framing, and company-level decisions.",
   "skills": [
     {
@@ -22,17 +22,6 @@
       "id": "ceo-brief",
       "title": "Set the executive frame",
       "skill": "./skills/ceo",
-      "gate": "human_approval"
-    },
-    {
-      "id": "decision-map",
-      "title": "Map the decision and uncertainties",
-      "skill": "mattpocock:wayfinder"
-    },
-    {
-      "id": "grill-direction",
-      "title": "Stress-test the company direction",
-      "skill": "mattpocock:grill-with-docs",
       "gate": "human_approval"
     }
   ]

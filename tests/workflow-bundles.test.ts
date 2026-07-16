@@ -28,25 +28,21 @@ import {
 } from "../src/runtimes/omniskill/workflow-bundles";
 
 const startupRoleContracts = [
-  { role: "ceo", phrases: ["company-level decision", "smallest evidence-gathering step"] },
-  { role: "product-manager", phrases: ["Write acceptance criteria", "visible product progress"] },
-  { role: "cto", phrases: ["technical trajectory", "verification gate"] },
+  { role: "ceo", phrases: ["company-level decision", "reversibility", "evidence-gathering"] },
+  { role: "product-manager", phrases: ["customer outcome", "must-have", "acceptance criteria"] },
+  { role: "cto", phrases: ["architecture decision", "technical risk", "verification gate"] },
   {
     role: "engineering-manager",
-    phrases: ["smallest shippable outcome", "verifiable state"],
+    phrases: ["smallest shippable sequence", "ownership", "proportional quality gates"],
   },
   {
     role: "founding-engineer",
-    phrases: ["smallest correct change", "smallest useful verification loop"],
+    phrases: ["read-only implementation frame", "affected seams", "test strategy"],
   },
-  { role: "qa-lead", phrases: ["Restate the user-facing behavior", "Separate verified facts"] },
+  { role: "qa-lead", phrases: ["acceptance evidence", "untested areas", "residual risk"] },
   {
     role: "web-design",
-    phrases: [
-      "Review all changed animation with `interface-craft:motion-review`",
-      "Before | After | Why",
-      "**Approve** or **Block**",
-    ],
+    phrases: ["information hierarchy", "responsive", "accessibility", "motion changed"],
   },
 ] as const;
 
@@ -1768,18 +1764,19 @@ describe("workflow bundles", () => {
       { source: "emilkowalski:apple-design", repo: "emilkowalski/skills" },
       { source: "emilkowalski:review-animations", repo: "emilkowalski/skills" },
     ]);
-    expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
-      ["design-brief", "./skills/web-design", "human_approval"],
-      ["motion-vocabulary", "emilkowalski:animation-vocabulary", null],
-      ["craft-review", "emilkowalski:emil-design-eng", null],
-      ["animation-review", "emilkowalski:review-animations", null],
-    ]);
-    expect(skill).toContain("## Required Companion Skills");
-    expect(skill).toContain("interface-craft:design-engineering");
-    expect(skill).toContain("interface-craft:motion-review");
-    expect(skill).toContain("Before | After | Why");
-    expect(skill).toContain("**Approve** or **Block**");
-    expect(skill).toContain("If a companion skill is unavailable");
+    expect(bundle.manifest.version).toBe("0.2.0");
+    expect(bundle.manifest.steps.map((step) => step.skill)).toEqual(["./skills/web-design"]);
+    expect(skill).toContain("## Optional Methods");
+    for (const source of [
+      "emilkowalski:emil-design-eng",
+      "emilkowalski:animation-vocabulary",
+      "emilkowalski:apple-design",
+      "emilkowalski:review-animations",
+    ]) {
+      expect(skill).toContain(source);
+    }
+    expect(skill).not.toContain("interface-craft:");
+    expect(skill).toContain("motion changed");
   });
 
   test("startup team entry skill stages evidence-backed feature milestones", async () => {
@@ -1927,7 +1924,14 @@ describe("workflow bundles", () => {
 
     for (const { role } of startupRoleContracts) {
       const roleSkill = await readStartupRoleSkill(role);
-      for (const contract of ["## Required Companion Skills", "## Operating Mode"]) {
+      for (const contract of [
+        "## Inputs",
+        "## Outputs",
+        "## Optional Methods",
+        "## Domain Principles",
+        "## Escalate When",
+        "Evidence Ledger",
+      ]) {
         expect(roleSkill).toContain(contract);
       }
     }
@@ -1936,31 +1940,48 @@ describe("workflow bundles", () => {
   test("canonical startup role skills define role-specific operating modes", async () => {
     for (const contract of startupRoleContracts) {
       const skill = await readStartupRoleSkill(contract.role);
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "workflows", contract.role),
+      );
 
       expect(skill).toContain(`name: ${contract.role}`);
-      expect(skill).toContain("## Required Companion Skills");
-      expect(skill).toContain("If a companion skill is unavailable");
-      expect(skill).toContain("## Operating Mode");
+      expect(bundle.manifest.version).toBe("0.2.0");
+      expect(bundle.manifest.steps.map((step) => step.skill)).toEqual([
+        `./skills/${contract.role}`,
+      ]);
+      expect(skill).toContain("## Inputs");
+      expect(skill).toContain("## Outputs");
+      expect(skill).toContain("## Optional Methods");
+      expect(skill).toContain("## Domain Principles");
+      expect(skill).toContain("## Escalate When");
+      expect(skill).toContain("Evidence Ledger");
+      expect(skill).not.toContain("## Required Companion Skills");
+      expect(skill).not.toContain("If a companion skill is unavailable");
       for (const phrase of contract.phrases) {
-        expect(skill).toContain(phrase);
+        expect(skill.toLowerCase()).toContain(phrase.toLowerCase());
       }
     }
   });
 
   test("startup team separates implementation framing from execution", async () => {
     const skill = await readStartupRoleSkill("founding-engineer");
+    const bundle = await loadWorkflowBundle(
+      join(import.meta.dir, "..", "examples", "workflows", "founding-engineer"),
+    );
 
     for (const phrase of [
-      "smallest correct change",
-      "focused tests",
-      "smallest useful verification loop",
-      "Debug from evidence",
-      "commands run",
+      "read-only implementation frame",
+      "affected seams",
+      "test strategy",
+      "risks",
+      "Do not edit files or run implementation commands",
     ]) {
-      expect(skill).toContain(phrase);
+      expect(skill.toLowerCase()).toContain(phrase.toLowerCase());
     }
-    expect(skill).toContain("before editing");
-    expect(skill).not.toContain("Do not edit files or run implementation commands");
+    expect(bundle.manifest.skills.map((dependency) => dependency.source)).not.toContain(
+      "mattpocock:implement",
+    );
+    expect(bundle.manifest.steps.map((step) => step.skill)).toEqual(["./skills/founding-engineer"]);
   });
 
   test("haaland workflow stays one-step and unconditional", async () => {

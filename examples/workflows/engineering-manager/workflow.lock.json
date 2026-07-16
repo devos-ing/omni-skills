@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "engineering-manager",
-  "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-11T16:12:50.560Z",
+  "workflowVersion": "0.2.0",
+  "generatedAt": "2026-07-16T11:07:41.182Z",
+  "workflows": [
+    {
+      "id": "workflow:engineering-manager@0.2.0",
+      "name": "engineering-manager",
+      "version": "0.2.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/engineering-manager",
       "resolvedName": "engineering-manager",
       "kind": "local",
-      "hash": "sha256:83e32c2d3a29d869085cb4735a6c1c8259e1b68acb6a92ddc2f42d9c331a8291"
+      "hash": "sha256:131b5b93a8e804064c8a2e9784cbf2f034f42be2bc380b57251d7d99924d1928"
     },
     {
       "source": "superpowers:writing-plans",

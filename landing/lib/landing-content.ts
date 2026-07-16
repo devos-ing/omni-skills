@@ -460,7 +460,6 @@ export const workflows: WorkflowCardContent[] = [
     installCommand: "npx omniskill@latest install founding-engineer",
     skills: [
       { name: "founding-engineer", description: "Set the implementation frame" },
-      { name: "mattpocock:implement", description: "Implement the planned change" },
       { name: "mattpocock:tdd", description: "Use test-first development" },
       { name: "mattpocock:diagnosing-bugs", description: "Diagnose failures" },
       { name: "mattpocock:code-review", description: "Review behavior and risk" },

@@ -1,42 +1,45 @@
 ---
 name: web-design
-description: "Use when leading web interface direction, interaction craft, responsive behavior, and animation review."
+description: "Use when leading web interface direction, interaction craft, responsive behavior, accessibility, and animation review."
 ---
 
 # Web Design
 
-Use this role when a product decision needs an implementable web-interface
-direction and an independent review of visual craft and motion.
+Provide an implementable interface direction and an independent craft judgment
+without prescribing a fixed design process.
 
-## Required Companion Skills
+## Inputs
 
-- `interface-craft:design-engineering` for interface and motion judgment.
-- `interface-craft:motion-vocabulary` for naming the requested motion precisely.
-- `interface-craft:fluid-interface-design` for gesture and fluid-motion principles when relevant.
-- `interface-craft:motion-review` for the strict animation review.
+- Approved goal tunnel and current milestone outcome.
+- Decision required, constraints, permissions, and prior approved decisions.
+- Available source and repository context.
+- Expected artifact and acceptance criteria.
 
-If a companion skill is unavailable, stop and tell the user which dependency is
-missing.
+## Outputs
 
-## Operating Mode
+- Information hierarchy, interaction states, and alternatives considered.
+- Responsive and accessibility behavior, including motion purpose and frequency when relevant.
+- Evidence Ledger with Verified, Inferred, and Assumed claims.
+- Risks, unresolved questions, verification method, and next action.
 
-1. State the target user, job, information hierarchy, interaction states,
-   responsive constraints, and accessibility expectations.
-2. Decide whether every proposed motion has a purpose; remove frequent or
-   decorative motion without a user benefit.
-3. Name the interaction and motion before asking engineering to implement it.
-4. Use `interface-craft:design-engineering` to review component feedback, density,
-   hierarchy, and responsive states against the approved direction.
-5. Use `interface-craft:fluid-interface-design` when gestures or fluid physical interactions
-   are part of the approved direction.
-6. Review all changed animation with `interface-craft:motion-review`. Return
-   its required `Before | After | Why` table and finish with an explicit
-   **Approve** or **Block** verdict. A Block is a release gate for the reviewed
-   motion.
+## Optional Methods
 
-## Role Output
+- Use `emilkowalski:emil-design-eng` for interface and motion judgment.
+- Use `emilkowalski:animation-vocabulary` when motion needs a precise name.
+- Use `emilkowalski:apple-design` when gestures or fluid physical interaction materially affect the direction.
+- Use `emilkowalski:review-animations` only when motion changed; return its `Before | After | Why` findings and **Approve** or **Block** verdict.
 
-- Direction: target user, job, hierarchy, interaction states, and constraints.
-- Motion: intended interaction, purpose, frequency, and accessibility behavior.
-- Handoff: implementation-ready visual and responsive requirements.
-- Review: the animation findings table and explicit verdict.
+Use a method only when it materially helps the output. Missing an optional
+method does not block the role.
+
+## Domain Principles
+
+Start from the user's job and hierarchy. Make every state responsive and
+accessible, give motion a user benefit, and remove decorative or frequent
+motion that competes with the task.
+
+## Escalate When
+
+- The input is materially ambiguous or conflicts with an approved decision.
+- A high-risk claim lacks reliable evidence.
+- The requested output would expand scope or permissions.
