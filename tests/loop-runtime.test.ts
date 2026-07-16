@@ -545,17 +545,27 @@ describe("loop runtime", () => {
         ),
       ) as {
         milestone: { stage: string; milestone: { id: string } };
-        actions: Array<{ description: string }>;
+        actions: Array<{ type: string; command?: string; description: string }>;
       };
       expect(started.milestone).toMatchObject({ stage: "preparing", milestone: { id: "copy" } });
       expect(
         started.actions.some((action) => action.description.includes("Prepared, not executed")),
       ).toBe(true);
+      expect(started.actions.find((action) => action.type === "log_event")?.command).toContain(
+        "--type input_packet",
+      );
 
       const resumed = parseJsonOutput(
         await runRuntime(["status", "--latest", "--json"], homeDir, manifestPath),
       ) as { runId: string; milestone: { stage: string } };
       expect(resumed).toMatchObject({ runId: "milestone", milestone: { stage: "preparing" } });
+
+      const textStatus = await runRuntime(["status", "--run", "milestone"], homeDir, manifestPath);
+      expect(textStatus.exitCode).toBe(0);
+      expect(textStatus.stdout).toContain("Milestone: copy - Clarify copy");
+      expect(textStatus.stdout).toContain("Stage: preparing");
+      expect(textStatus.stdout).toContain("Evidence gaps: none");
+      expect(textStatus.stdout).toContain("Available decisions: none");
 
       const logged = parseJsonOutput(
         await runRuntime(
@@ -572,8 +582,69 @@ describe("loop runtime", () => {
           homeDir,
           manifestPath,
         ),
-      ) as { event: { metadata: { expectedArtifact: string } } };
+      ) as {
+        event: { metadata: { expectedArtifact: string } };
+        actions: Array<{ type: string; command?: string }>;
+      };
       expect(logged.event.metadata.expectedArtifact).toBe("Updated onboarding copy");
+      expect(logged.actions.find((action) => action.type === "log_event")?.command).toContain(
+        "--type input_packet",
+      );
+
+      const evidenceGap = parseJsonOutput(
+        await runRuntime(
+          [
+            "log",
+            "--run",
+            "milestone",
+            "--type",
+            "evidence_gap",
+            "--metadata",
+            JSON.stringify({
+              name: "founder interviews",
+              critical: true,
+              reason: "Source unavailable",
+            }),
+            "--json",
+          ],
+          homeDir,
+          manifestPath,
+        ),
+      ) as { actions: unknown[] };
+      expect(evidenceGap.actions).toBeArray();
+      expect(
+        parseJsonOutput(await runRuntime(["status", "--latest", "--json"], homeDir, manifestPath)),
+      ).toMatchObject({ status: "needs_evidence", runId: "milestone" });
+
+      parseJsonOutput(
+        await runRuntime(
+          [
+            "log",
+            "--run",
+            "milestone",
+            "--type",
+            "evidence_resolved",
+            "--metadata",
+            JSON.stringify({
+              name: "founder interviews",
+              resolution: "Interview notes attached",
+            }),
+            "--json",
+          ],
+          homeDir,
+          manifestPath,
+        ),
+      );
+      const planning = parseJsonOutput(
+        await runRuntime(["advance", "--run", "milestone", "--json"], homeDir, manifestPath),
+      ) as {
+        milestone: { stage: string };
+        actions: Array<{ type: string; command?: string }>;
+      };
+      expect(planning.milestone.stage).toBe("planning");
+      expect(planning.actions.find((action) => action.type === "log_event")?.command).toContain(
+        "--type role_output",
+      );
 
       const forced = await runRuntime(
         ["advance", "--run", "milestone", "--to", "implementing", "--force", "--reason", "skip"],
@@ -585,6 +656,29 @@ describe("loop runtime", () => {
     } finally {
       await rm(homeDir, { recursive: true, force: true });
       await rm(fixtureDir, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps goal-based latest selection limited to active runs", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "goal-loop-blocked-home-"));
+    try {
+      parseJsonOutput(await runRuntime(["start", "--run", "blocked", "--json"], homeDir));
+      const statePath = join(
+        homeDir,
+        ".omniskills",
+        "runs",
+        "grilled-product-dev",
+        "blocked",
+        "state.json",
+      );
+      const state = JSON.parse(await readFile(statePath, "utf8"));
+      await writeFile(statePath, JSON.stringify({ ...state, status: "blocked" }));
+
+      const latest = await runRuntime(["status", "--latest", "--json"], homeDir);
+      expect(latest.exitCode).toBe(1);
+      expect(latest.stderr).toContain("No active runs found for grilled-product-dev");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
     }
   });
 });

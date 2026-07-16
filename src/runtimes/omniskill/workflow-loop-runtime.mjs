@@ -26,6 +26,8 @@ const eventTypes = new Set([
   "complete",
   "input_packet",
   "role_output",
+  "evidence_gap",
+  "evidence_resolved",
   "repair_request",
   "targeted_review",
   "plan_decision",
@@ -33,7 +35,19 @@ const eventTypes = new Set([
   "verification_result",
   "outcome_replay",
   "acceptance_decision",
+  "scope_change",
 ]);
+
+const milestoneStageEvent = {
+  preparing: "input_packet",
+  planning: "role_output",
+  awaiting_plan_approval: "plan_decision",
+  implementing: "implementation_result",
+  rework: "implementation_result",
+  verifying: "verification_result",
+  evaluating: "outcome_replay",
+  awaiting_acceptance: "acceptance_decision",
+};
 
 export async function runWorkflowLoopCli(input = {}) {
   const stdout = input.stdout ?? ((value) => process.stdout.write(value));
@@ -177,6 +191,10 @@ async function logEventCommand(context, options) {
       : {};
   if (state.milestone) {
     state.milestone = recordMilestoneEvent(state.milestone, { type, metadata });
+    const view = getMilestoneView(state.milestone);
+    state.status = view.status;
+    state.currentStep = view.stage;
+    state.currentStepIndex = context.manifest.steps.findIndex((item) => item.id === view.stage);
   }
   const step = options.step ?? state.currentStep;
   await appendEvent(context, runId, {
@@ -365,6 +383,13 @@ function buildActions(context, state) {
     ];
   }
 
+  const expectedEvent = state.milestone
+    ? milestoneStageEvent[getMilestoneView(state.milestone).stage]
+    : "phase_result";
+  const logCommand = state.milestone
+    ? `${formatCommand(context, "log")} --run ${state.runId} --type ${expectedEvent} --metadata-file path/to/${expectedEvent}.json`
+    : `${formatCommand(context, "log")} --run ${state.runId} --type phase_result --message "..."`;
+
   return [
     {
       type: "run_phase",
@@ -377,8 +402,10 @@ function buildActions(context, state) {
     },
     {
       type: "log_event",
-      command: `${formatCommand(context, "log")} --run ${state.runId} --type phase_result --message "..."`,
-      description: "Record what happened before advancing.",
+      command: logCommand,
+      description: state.milestone
+        ? `Record the required ${expectedEvent} packet before advancing.`
+        : "Record what happened before advancing.",
     },
     ...(step.verify
       ? [
@@ -486,7 +513,8 @@ async function latestActiveRunId(context) {
     }
     try {
       const state = await readState(context, entry.name);
-      if (state.status !== "complete") {
+      const selectable = state.milestone ? state.status !== "complete" : state.status === "active";
+      if (selectable) {
         states.push(state);
       }
     } catch {
@@ -635,6 +663,25 @@ function writeOutput(context, payload) {
     lines.push(`Instruction: ${step.instruction}`);
     if (step.verify) {
       lines.push(`Verify: ${formatVerifyRule(step.verify)}`);
+    }
+    if (payload.milestone) {
+      const milestone = payload.milestone.milestone;
+      lines.push(milestone ? `Milestone: ${milestone.id} - ${milestone.title}` : "Milestone: none");
+      lines.push(`Stage: ${payload.milestone.stage ?? "complete"}`);
+      lines.push(
+        `Evidence gaps: ${
+          payload.milestone.evidenceGaps.length
+            ? payload.milestone.evidenceGaps.map((gap) => gap.name).join(", ")
+            : "none"
+        }`,
+      );
+      lines.push(
+        `Available decisions: ${
+          payload.milestone.availableDecisions.length
+            ? payload.milestone.availableDecisions.join(", ")
+            : "none"
+        }`,
+      );
     }
   } else if (payload.instruction) {
     lines.push(`Instruction: ${payload.instruction}`);
