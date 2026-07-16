@@ -463,4 +463,93 @@ describe("loop runtime", () => {
       await rm(homeDir, { recursive: true, force: true });
     }
   });
+
+  test("runs and resumes an action-only milestone workflow", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "milestone-loop-home-"));
+    const fixtureDir = await mkdtemp(join(tmpdir(), "milestone-loop-workflow-"));
+    const manifestPath = join(fixtureDir, "workflow.json");
+    const startInput = {
+      goalTunnel: {
+        goal: "Improve onboarding",
+        user: "A new founder",
+        problem: "The first action is unclear",
+        outcome: "The first action completes",
+        scope: ["onboarding"],
+        nonGoals: ["billing"],
+        constraints: ["manual execution"],
+        successCriteria: ["first action completes"],
+        assumptions: [],
+      },
+      milestones: [
+        {
+          id: "copy",
+          title: "Clarify copy",
+          outcome: "The next action is clear",
+          accountableRole: "product-manager",
+          dependencies: [],
+          acceptanceCriteria: ["next action is explicit"],
+        },
+      ],
+    };
+    await writeFile(
+      manifestPath,
+      JSON.stringify({
+        name: "milestone-fixture",
+        loop: { type: "milestone_based", goal: "Improve onboarding" },
+        steps: [
+          { id: "preparing", title: "Prepare", skill: "coordinator" },
+          { id: "planning", title: "Plan", skill: "coordinator" },
+          {
+            id: "awaiting_plan_approval",
+            title: "Approve plan",
+            skill: "coordinator",
+            gate: "human_approval",
+          },
+          { id: "implementing", title: "Implement", skill: "implement" },
+          { id: "rework", title: "Rework", skill: "implement" },
+          { id: "verifying", title: "Verify", skill: "qa" },
+          { id: "evaluating", title: "Evaluate", skill: "coordinator" },
+          {
+            id: "awaiting_acceptance",
+            title: "Accept",
+            skill: "coordinator",
+            gate: "human_approval",
+          },
+        ],
+      }),
+    );
+
+    try {
+      const started = parseJsonOutput(
+        await runRuntime(
+          ["start", "--run", "milestone", "--input", JSON.stringify(startInput), "--json"],
+          homeDir,
+          manifestPath,
+        ),
+      ) as {
+        milestone: { stage: string; milestone: { id: string } };
+        actions: Array<{ description: string }>;
+      };
+      expect(started.milestone).toMatchObject({ stage: "preparing", milestone: { id: "copy" } });
+      expect(
+        started.actions.some((action) => action.description.includes("Prepared, not executed")),
+      ).toBe(true);
+
+      const resumed = parseJsonOutput(
+        await runRuntime(["status", "--latest", "--json"], homeDir, manifestPath),
+      ) as { runId: string; milestone: { stage: string } };
+      expect(resumed).toMatchObject({ runId: "milestone", milestone: { stage: "preparing" } });
+
+      const forced = await runRuntime(
+        ["advance", "--run", "milestone", "--to", "implementing", "--force", "--reason", "skip"],
+        homeDir,
+        manifestPath,
+      );
+      expect(forced.exitCode).toBe(1);
+      expect(forced.stderr).toContain("Milestone runs cannot bypass lifecycle transitions");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+      await rm(fixtureDir, { recursive: true, force: true });
+    }
+  });
 });

@@ -3,6 +3,13 @@ import { access, appendFile, mkdir, readdir, readFile, writeFile } from "node:fs
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  advanceMilestoneState,
+  buildMilestoneSummary,
+  createMilestoneState,
+  getMilestoneView,
+  recordMilestoneEvent,
+} from "./workflow-milestones.mjs";
 
 const commandNames = new Set(["start", "status", "log", "advance", "summary"]);
 const eventTypes = new Set([
@@ -110,6 +117,20 @@ async function startRun(context, options) {
     startedAt: now.toISOString(),
     updatedAt: now.toISOString(),
   };
+  if (context.manifest.loop?.type === "milestone_based") {
+    if (!options.input) {
+      throw new Error(
+        "start requires --input <json> or --input-file <path> for milestone-based loops",
+      );
+    }
+    state.schemaVersion = "0.2";
+    state.milestone = createMilestoneState(
+      parseJsonOption(options.input, "--input"),
+      now.toISOString(),
+    );
+    state.currentStep = "preparing";
+    state.currentStepIndex = context.manifest.steps.findIndex((step) => step.id === "preparing");
+  }
 
   await mkdir(runDir, { recursive: true });
   await writeState(context, state);
@@ -149,6 +170,9 @@ async function logEventCommand(context, options) {
 
   const state = await readState(context, runId);
   const metadata = options.metadata ? parseJsonOption(options.metadata, "--metadata") : {};
+  if (state.milestone) {
+    state.milestone = recordMilestoneEvent(state.milestone, { type, metadata });
+  }
   const step = options.step ?? state.currentStep;
   await appendEvent(context, runId, {
     timestamp: new Date().toISOString(),
@@ -172,6 +196,35 @@ async function advanceRun(context, options) {
   const state = await readState(context, runId);
   const now = new Date().toISOString();
   const previousStep = getCurrentStep(context, state);
+
+  if (state.milestone) {
+    if (options.to || options.force) {
+      throw new Error("Milestone runs cannot bypass lifecycle transitions");
+    }
+    state.milestone = advanceMilestoneState(state.milestone, now);
+    const view = getMilestoneView(state.milestone);
+    state.status = view.status;
+    state.currentStep = view.stage;
+    state.currentStepIndex = context.manifest.steps.findIndex((step) => step.id === view.stage);
+    state.updatedAt = now;
+    if (view.status === "complete") {
+      state.currentStep = null;
+      state.completedAt = now;
+    }
+    await writeState(context, state);
+    await appendEvent(context, runId, {
+      timestamp: now,
+      type: view.status === "complete" ? "complete" : "advance",
+      step: state.currentStep,
+      message:
+        view.status === "complete"
+          ? `Completed ${context.workflowName}`
+          : `Advanced to ${view.stage}`,
+      metadata: { milestone: view.milestone?.id ?? null },
+    });
+    writeOutput(context, buildStatusPayload(context, state));
+    return;
+  }
 
   if (options.to) {
     if (options.force !== true) {
@@ -277,6 +330,7 @@ function buildStatusPayload(context, state, extra = {}) {
       : null,
     instruction: step?.instruction ?? "Workflow is complete.",
     goal: buildGoalPayload(context),
+    ...(state.milestone ? { milestone: getMilestoneView(state.milestone) } : {}),
     actions: buildActions(context, state),
   };
 }
@@ -312,7 +366,9 @@ function buildActions(context, state) {
       step: step.id,
       skill: step.skill,
       instruction: step.instruction ?? "",
-      description: "Use the named skill and perform the phase work yourself.",
+      description: state.milestone
+        ? "Prepared, not executed. Perform this phase in a user-controlled task."
+        : "Use the named skill and perform the phase work yourself.",
     },
     {
       type: "log_event",
@@ -379,6 +435,7 @@ function buildSummary(context, state, events) {
       .map((action) => `- ${action.type}: ${action.description}`)
       .join("\n"),
     "",
+    ...(state.milestone ? [buildMilestoneSummary(state.milestone), ""] : []),
   ].join("\n");
 }
 
@@ -424,7 +481,7 @@ async function latestActiveRunId(context) {
     }
     try {
       const state = await readState(context, entry.name);
-      if (state.status === "active") {
+      if (state.status !== "complete") {
         states.push(state);
       }
     } catch {
@@ -445,6 +502,9 @@ async function latestActiveRunId(context) {
 function getCurrentStep(context, state) {
   if (state.status === "complete") {
     return null;
+  }
+  if (state.milestone) {
+    return context.manifest.steps.find((step) => step.id === state.currentStep) ?? null;
   }
   return context.manifest.steps[state.currentStepIndex] ?? null;
 }
