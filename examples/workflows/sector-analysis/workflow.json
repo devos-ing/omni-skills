@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "sector-analysis",
+  "version": "0.1.0",
+  "description": "Analyze leadership, rotation, relative strength, and earnings or policy sensitivity across sectors.",
+  "skills": [{ "source": "./skills/sector-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run sector-analysis",
+      "skill": "./skills/sector-analysis"
+    }
+  ]
+}

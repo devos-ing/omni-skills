@@ -26,7 +26,7 @@ describe("landing app source contract", () => {
 
     expect(pkg.private).toBe(true);
     expect(pkg.scripts?.dev).toBe("next dev");
-    expect(pkg.scripts?.build).toBe("next build");
+    expect(pkg.scripts?.build).toBe("next build --webpack");
     expect(pkg.scripts?.typecheck).toBe("next typegen && tsc --noEmit");
     expect(pkg.dependencies?.next).toBe("16.2.0");
     expect(pkg.dependencies?.react).toBe("19.2.7");
@@ -73,56 +73,85 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("npx omniskill@latest omniskill");
   });
 
-  test("leads with the power-your-ability positioning", () => {
+  test("defines the audience-first Startup Team landing contract", () => {
     const page = readLandingFile("components/landing-page.tsx");
     const content = readLandingFile("lib/landing-content.ts");
 
-    expect(page).toContain("Power your ability.");
-    expect(page).toContain("Install the workflow.");
-    expect(page).toContain("many-skill bank");
-    expect(page).toContain("3x your ability");
-    expect(page).toContain("npx omniskill@latest install startup-team");
-    expect(page).toContain("Workflow in motion");
-    expect(page).toContain("See startup-goal coordinate the work.");
-    expect(page).not.toContain("How it works + Agent run demo");
-    expect(page).not.toContain("One entry skill. Many specialist skills.");
-    expect(page).not.toContain('href="#how-it-works"');
-    expect(page).not.toContain('id="how-it-works"');
-    expect(page).not.toContain("<FlowDiagram");
-    expect(page).not.toContain("lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]");
-    expect(page).not.toContain("xl:grid-cols-[22rem_minmax(0,1fr)]");
-    expect(content).toContain("Install a many-skill bank");
-    expect(content).toContain("Call one entry skill with a goal");
-    expect(content).toContain("Compound specialist judgment");
-    expect(content).toContain("3x your ability without manual skill juggling");
+    for (const label of ["Solo Founders", "Developers", "Startup Teams"]) {
+      expect(content).toContain(`label: "${label}"`);
+    }
+    for (const agent of [
+      "Cursor",
+      "Codex",
+      "Claude",
+      "OpenCode",
+      "Hermes",
+      "OpenClaw",
+      "GitHub Copilot",
+    ]) {
+      expect(content).toContain(`name: "${agent}"`);
+    }
+    for (const capability of [
+      "Strategy & validation",
+      "Product requirements",
+      "Interface design",
+      "Architecture & implementation",
+      "QA & release verification",
+      "Approval gates & handoffs",
+    ]) {
+      expect(content).toContain(`title: "${capability}"`);
+    }
+    expect(content).toContain('headline: "Build with a startup team of agents."');
+    expect(content).toContain('label: "Simulated run"');
+    expect(page).toContain("<FeaturedTeamSection");
+    expect(page).toContain("<SkillHub");
+    expect(page).not.toContain("install count");
+    expect(page).not.toContain("active users");
   });
 
-  test("uses Vercel Geist Sans as the landing app font", () => {
+  test("loads Vercel Geist Sans and Mono from the official package", () => {
     const layout = readLandingFile("app/layout.tsx");
     const globals = readLandingFile("app/globals.css");
     const design = readLandingFile("design.md");
+    const pkg = JSON.parse(readLandingFile("package.json")) as {
+      dependencies?: Record<string, string>;
+    };
 
-    expect(layout).toContain('import { Geist } from "next/font/google"');
-    expect(layout).toContain("const geistSans = Geist");
-    expect(layout).toContain('variable: "--font-geist-sans"');
-    expect(layout).toContain("className={geistSans.variable}");
-    expect(globals).toContain('var(--font-geist-sans), "Geist Sans"');
-    expect(design).toContain("Vercel Geist Sans");
+    expect(layout).not.toContain("next/font/google");
+    expect(layout).toContain('import { GeistSans } from "geist/font/sans"');
+    expect(layout).toContain('import { GeistMono } from "geist/font/mono"');
+    expect(layout).toContain("GeistSans.variable");
+    expect(layout).toContain("GeistMono.variable");
+    expect(globals).toContain("font-family: var(--font-geist-sans)");
+    expect(globals).toContain("font-family: var(--font-geist-mono)");
+    expect(pkg.dependencies?.geist).toBeDefined();
+    expect(design).toContain("official Vercel `geist` package");
   });
 
-  test("uses readable editorial tokens and a registry-first hierarchy", () => {
+  test("uses the AgentKey-derived cool technical system and fixed product hierarchy", () => {
     const globals = readLandingFile("app/globals.css");
     const page = readLandingFile("components/landing-page.tsx");
     const card = readLandingFile("components/workflow-card.tsx");
 
     expect(globals).toContain("color-scheme: light");
-    expect(globals).toContain("background: #f6f4ef");
-    expect(globals).toContain("--body: #4f4b46");
-    expect(globals).toContain("--muted: #716e68");
-    expect(globals).toContain("--rule: #dedbd3");
+    expect(globals).toContain("background: #fafafa");
+    expect(globals).toContain("--surface: #ffffff");
+    expect(globals).toContain("--ink");
+    expect(globals).toContain("--body: #6b7280");
+    expect(globals).toContain("--muted: #9ca3af");
+    expect(globals).toContain("--rule: #e6e6e6");
+    expect(globals).toContain("--accent: #207480");
+    expect(globals).toContain("--dark: #26202f");
+    expect(globals).not.toContain("--accent: #e64b2e");
+    expect(globals).toContain(".editorial-heading");
+    expect(globals).toContain(".agent-logo-grid");
+    expect(globals).toContain(".audience-product-grid");
+    expect(globals).toContain(".capability-grid");
+    expect(globals).toContain(".why-layout");
+    expect(globals).toContain(".site-rail");
+    expect(globals).toContain("overflow-x: clip");
     expect(globals).toContain("@media (hover: hover) and (pointer: fine)");
     expect(globals).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(page).toContain("bg-[#f6f4ef]");
     expect(page).toContain("text-[var(--body)]");
     expect(page).toContain("text-[var(--muted)]");
     expect(page).toContain("editorial-control");
@@ -131,25 +160,70 @@ describe("landing app source contract", () => {
     expect(card).toContain("border-[var(--rule)]");
     expect(`${page}\n${card}`).not.toMatch(/text-\[#191817\]\/([2-5]\d)/);
 
+    const heroIndex = page.indexOf("<StartupTeamHero");
+    const audienceIndex = page.indexOf("<AudienceShowcase");
+    const agentsIndex = page.indexOf("<SupportedAgentStrip");
+    const capabilityIndex = page.indexOf("<CapabilityGrid");
+    const whyIndex = page.indexOf("<WhyOmniskills");
     const teamIndex = page.indexOf("<FeaturedTeamSection");
     const hubIndex = page.indexOf("<SkillHub");
-    const demoIndex = page.indexOf('id="workflow-example"');
-    expect(teamIndex).toBeGreaterThan(-1);
-    expect(hubIndex).toBeGreaterThan(teamIndex);
-    expect(demoIndex).toBeLessThan(teamIndex);
+    const stepsIndex = page.indexOf("<HowStartupTeamWorks");
+    const faqIndex = page.indexOf("<LandingFaq");
+    const finalIndex = page.indexOf("<FinalInstallCta");
+    const indexes = [
+      heroIndex,
+      audienceIndex,
+      agentsIndex,
+      capabilityIndex,
+      whyIndex,
+      teamIndex,
+      hubIndex,
+      stepsIndex,
+      faqIndex,
+      finalIndex,
+    ];
+    expect(indexes.every((value) => value >= 0)).toBe(true);
+    expect(
+      indexes.every(
+        (value, index) => index === 0 || (indexes[index - 1] ?? Number.NEGATIVE_INFINITY) < value,
+      ),
+    ).toBe(true);
   });
 
   test("shows the workflow example before the registry and autoplays on viewport entry", () => {
-    const page = readLandingFile("components/landing-page.tsx");
+    const audience = readLandingFile("components/audience-showcase.tsx");
     const demo = readLandingFile("components/workflow-run-demo.tsx");
 
-    expect(page).toContain('id="workflow-example"');
+    expect(audience).toContain('id="showcase"');
+    expect(audience).toContain("<WorkflowRunDemo");
     expect(demo).toContain("IntersectionObserver");
     expect(demo).toContain("hasEnteredViewport");
     expect(demo).not.toContain("Play example");
     expect(demo).not.toContain("hasStarted");
     expect(demo).not.toContain("TYPE_DELAY");
     expect(demo).not.toContain('behavior: prefersReducedMotion ? "auto" : "smooth"');
+  });
+
+  test("uses Shopify-style spacing and a credible assistant conversation", () => {
+    const globals = readLandingFile("app/globals.css");
+    const demo = readLandingFile("components/workflow-run-demo.tsx");
+
+    expect(globals).toContain("--space-100: 4px");
+    expect(globals).toContain("--space-400: 16px");
+    expect(globals).toContain("--space-600: 24px");
+    expect(globals).toContain("--space-800: 32px");
+    expect(globals).toContain("--font-size-body: 14px");
+    expect(globals).toContain("--font-size-caption: 12px");
+    expect(globals).toContain(".chat-shell");
+    expect(globals).toContain(".chat-message");
+    expect(globals).toContain(".chat-tool-row");
+    expect(globals).toContain(".chat-composer");
+    expect(demo).toContain('aria-label="Simulated agent conversation"');
+    expect(demo).toContain("chat-user-message");
+    expect(demo).toContain("chat-assistant-message");
+    expect(demo).toContain("chat-tool-row");
+    expect(demo).toContain("chat-composer");
+    expect(demo).toContain("Simulated conversation");
   });
 
   test("uses finite, accessible product-demo motion", () => {
@@ -161,18 +235,23 @@ describe("landing app source contract", () => {
     const globals = readLandingFile("app/globals.css");
     const motionSources = `${reveal}\n${page}\n${card}\n${featuredTeam}\n${demo}\n${globals}`;
 
-    expect(reveal).toContain("IntersectionObserver");
     expect(reveal).toContain("data-reveal");
     expect(reveal).toContain("--reveal-index");
-    expect(page).toContain("motion-masthead");
+    expect(reveal).not.toContain('useState<RevealState>("visible")');
+    expect(page).toContain("<StartupTeamHero");
     expect(featuredTeam).toContain("<Reveal");
     expect(page).not.toContain("motion-registry-row");
     expect(card).toContain("motion-avatar");
     expect(demo).toContain("motion-workbench");
-    expect(demo).toContain("motion-active-role");
+    expect(demo).toContain("orchestration-lane");
     expect(globals).toContain("animation-iteration-count: 1");
     expect(globals).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(globals).not.toContain("capability-settle");
+    expect(globals).toContain(".motion-workbench");
+    expect(globals).toContain(".audience-product-grid");
     expect(motionSources).not.toMatch(/transition(?:-property)?:\s*all|transition-all/);
+    expect(motionSources).not.toContain("transition: all");
+    expect(motionSources).not.toContain("animation-iteration-count: infinite");
     expect(motionSources).not.toContain("scale(0)");
     expect(motionSources).not.toMatch(/animation[^;{]*(?:width|height|top|left|margin|padding)/);
   });
@@ -180,15 +259,13 @@ describe("landing app source contract", () => {
   test("documents the reference-derived registry design", () => {
     const design = readLandingFile("design.md");
 
-    expect(design).toContain("https://www.context.store");
-    expect(design).toContain("Omniskills Teams");
+    expect(design).toContain("https://agentkey.app/");
+    expect(design).toContain("AgentKey-like");
+    expect(design).toContain("Teams and Skill Hub");
     expect(design).toContain("Skill Hub");
-    expect(design).toContain("landing/components/featured-team-section.tsx");
-    expect(design).toContain("landing/components/skill-hub.tsx");
-    expect(design).toContain("landing/components/skill-row.tsx");
-    expect(design).toContain("hide activity, rank, and install counts");
-    expect(design).toContain("copyable");
-    expect(design).toContain("landing/components/workflow-card.tsx");
+    expect(design).toContain("Show fake users, stars, rankings, activity, install counts");
+    expect(design).toContain("copy `npx omniskill@latest install startup-team`");
+    expect(design).toContain("landing/components/landing-page.tsx");
     expect(design).not.toContain("Workflows Leaderboard");
     expect(design).not.toContain("All Time");
     expect(design).not.toContain("Trending");
@@ -196,7 +273,7 @@ describe("landing app source contract", () => {
     expect(design).not.toContain("dependency-free mini bar/sparkline");
   });
 
-  test("documents the featured team and Skill Hub in both content mirrors", () => {
+  test("documents the three-team control tower in both content mirrors", () => {
     const design = readLandingFile("design.md");
     const english = readFileSync(join(repoRoot, "docs", "landing-content.md"), "utf8");
     const traditionalChinese = readFileSync(
@@ -204,16 +281,40 @@ describe("landing app source contract", () => {
       "utf8",
     );
 
-    for (const document of [design, english, traditionalChinese]) {
-      expect(document).toContain("Pick an Omniskills team");
+    for (const document of [english, traditionalChinese]) {
+      for (const value of [
+        "Orchestration for Codex",
+        "One goal. A team of agents. One verified result.",
+        "Example run · hardcoded preview",
+        "Build a landing page",
+        "Research a stock",
+        "Research the market",
+        "$startup-goal",
+        "$finance-research",
+        "$market-research",
+        "npx omniskill@latest install startup-team",
+        "bun run dev -- install examples/teams/finance-team",
+        "bun run dev -- install examples/teams/market-team",
+      ]) {
+        expect(document).toContain(value);
+      }
+      expect(document).toContain("Pick the team for the goal");
       expect(document).toContain("Explore the Skill Hub");
       expect(document).toContain("Workflows");
       expect(document).toContain("Skills");
       expect(document).toContain("View skill source");
       expect(document).not.toContain("Heading: Pick an Omniskills workflow");
     }
-    expect(english).toContain("npx omniskill@latest install startup-team");
-    expect(traditionalChinese).toContain("npx omniskill@latest install startup-team");
+    expect(english).toContain("not published through `omniskill@latest` yet");
+    expect(traditionalChinese).toContain("尚未透過 `omniskill@latest` 發布");
+    for (const value of [
+      "Startup Team leads",
+      "simulated agent window",
+      "Mobile",
+      "reduced-motion",
+    ]) {
+      expect(design).toContain(value);
+    }
   });
 
   test("describes the evidence-backed startup milestone lifecycle", () => {
@@ -227,12 +328,46 @@ describe("landing app source contract", () => {
       "Plan",
       "Plan approval",
       "Implement",
+      "Rework if needed",
       "Verify",
       "User Outcome Replay",
       "Feature acceptance",
     ]) {
       expect(content).toContain(`label: "${label}"`);
     }
+  });
+
+  test("presents the latest startup lifecycle without public dispatch claims", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+    const demo = readLandingFile("components/workflow-run-demo.tsx");
+
+    expect(content).toContain('label: "Rework if needed"');
+    expect(content).toContain("npx omniskill@latest setup-model-routing");
+    expect(content).toContain(
+      "https://github.com/mattpocock/skills/blob/d574778f94cf620fcc8ce741584093bc650a61d3/skills/engineering/implement/SKILL.md",
+    );
+    expect(content).toContain("Prepare selected specialist handoffs");
+    expect(content).not.toContain("Dispatch selected analysts");
+
+    expect(demo).toContain('dispatch: "Starting selected roles"');
+    expect(demo).toContain("The coordinator can launch the selected roles.");
+    expect(demo).not.toContain("The coordinator can dispatch the selected skills.");
+    expect(demo).toContain("Simulated conversation");
+  });
+
+  test("renders precise Startup Team safety and CLI compatibility guidance", () => {
+    const content = readLandingFile("lib/landing-content.ts");
+    const faq = readLandingFile("components/landing-faq.tsx");
+
+    expect(content).toContain("checked-in schema 0.2 lock");
+    expect(content).toContain("exact-commit external locators");
+    expect(content).toContain("same checkout");
+    expect(content).toContain("recorded ownership");
+    expect(content).toContain("mixed ownership fails closed");
+    expect(content).toContain("Finance Team and Market Team remain lockless local previews");
+    expect(content).toContain("Use install as the public install command.");
+    expect(content).toContain("bundle and workflow remain compatibility aliases.");
+    expect(faq).toContain("{item.answer}");
   });
 
   test("does not define placeholder workflow activity or install metrics", () => {
@@ -243,7 +378,6 @@ describe("landing app source contract", () => {
     expect(content).not.toContain("displayMetrics");
     expect(content).not.toContain("sourceLabel");
     expect(content).not.toContain("installCount");
-    expect(content).not.toContain("activity:");
     expect(content).not.toContain("rank");
     expect(content).not.toContain("workflow telemetry");
     expect(content).not.toContain('"allTime"');
@@ -290,35 +424,36 @@ describe("landing app source contract", () => {
     expect(content).toContain("Execute only the approved milestone slice.");
   });
 
-  test("mirrors the expanded startup-team roster and canonical member sources", () => {
+  test("mirrors the expanded startup-team roster and same-checkout member sources", () => {
     const content = readLandingFile("lib/landing-content.ts");
     const startupCardStart = content.indexOf('slug: "startup-team"');
-    const nextCardStart = content.indexOf('slug: "ceo"', startupCardStart);
+    const nextCardStart = content.indexOf('slug: "finance-team"', startupCardStart);
     const startupCard = content.slice(startupCardStart, nextCardStart);
     const manifest = JSON.parse(
       readFileSync(join(repoRoot, "examples", "teams", "startup-team", "workflow.json"), "utf8"),
-    ) as { members: string[] };
-    const lock = JSON.parse(
-      readFileSync(
-        join(repoRoot, "examples", "teams", "startup-team", "workflow.lock.json"),
-        "utf8",
-      ),
-    ) as { skills: Array<{ source: string; resolvedName: string; kind: "local" | "external" }> };
+    ) as { members: string[]; skills: Array<{ source: string }> };
     const memberSkills = startupTeam.members.map(({ skill }) => skill);
-    const expectedNames = lock.skills.map(({ source, resolvedName, kind }) =>
-      kind === "external" ? source : resolvedName,
-    );
+    const expectedNames = startupTeam.skills.map(({ name }) => name);
 
     expect(startupCardStart).toBeGreaterThan(-1);
     expect(nextCardStart).toBeGreaterThan(startupCardStart);
-    expect(manifest.members).toEqual(memberSkills.map((skill) => `catalog:${skill}`));
+    expect(manifest.members).toEqual(memberSkills.map((skill) => `../../workflows/${skill}`));
     expect(startupTeam.localSkillNames).toEqual(["startup-goal"]);
     for (const skill of memberSkills) {
       expect(startupTeam.skillSourceUrls?.[skill]).toBe(
         `${githubUrl}/blob/main/examples/workflows/${skill}/skills/${skill}/SKILL.md`,
       );
     }
-    expect(expectedNames).toHaveLength(25);
+    expect(manifest.members).not.toContain(
+      "../../workflows/setup-model-routing/skills/setup-model-routing",
+    );
+    expect(manifest.skills.map(({ source }) => source)).toContain(
+      "../../workflows/setup-model-routing/skills/setup-model-routing",
+    );
+    expect(startupTeam.skillSourceUrls?.["setup-model-routing"]).toBe(
+      `${githubUrl}/blob/main/examples/workflows/setup-model-routing/skills/setup-model-routing/SKILL.md`,
+    );
+    expect(expectedNames).toHaveLength(manifest.skills.length);
     for (const name of expectedNames) {
       expect(startupCard).toContain(`name: "${name}"`);
     }
@@ -359,7 +494,7 @@ describe("landing app source contract", () => {
     expect(card).not.toContain("aria-pressed");
   });
 
-  test("features Startup Team before the searchable Skill Hub", () => {
+  test("features all three teams before the searchable Skill Hub", () => {
     const page = readLandingFile("components/landing-page.tsx");
     const team = readLandingFile("components/featured-team-section.tsx");
     const hub = readLandingFile("components/skill-hub.tsx");
@@ -367,15 +502,17 @@ describe("landing app source contract", () => {
 
     expect(page).toContain("<FeaturedTeamSection");
     expect(page).toContain("<SkillHub");
-    expect(page).toContain("Explore teams & skills");
+    expect(page).toContain("<FeaturedTeamSection teams={teams}");
     expect(team).toContain('id="workflows"');
-    expect(team).toContain("team.coordinator");
-    expect(team).toContain("`$${team.coordinator.skill}`");
-    expect(team).toContain("team.members.map");
+    expect(team).toContain("const [startupTeam, ...companionTeams] = teams");
+    expect(team).toContain("startupTeam.coordinator");
+    expect(team).toContain("`$${startupTeam.coordinator.skill}`");
+    expect(team).toContain("startupTeam.members.map");
+    expect(team).toContain("companionTeams.map");
     expect(team).not.toContain("tracking-[-0.025em]");
     expect(team).toContain("featuredTeamSectionContent");
     expect(content).toContain("export const featuredTeamSectionContent");
-    expect(content).toContain("Pick an Omniskills team");
+    expect(content).toContain("Pick the team for the goal");
     expect(content).toContain("View team source");
     expect(team).not.toContain("Start with a coordinated team");
     expect(hub).toContain('id="skill-hub"');
@@ -466,8 +603,9 @@ describe("landing app source contract", () => {
     expect(content).toContain(
       "npx omniskill@latest loop status grilled-product-dev --latest --json",
     );
-    expect(content).toContain("resumable, action-only workflow state");
-    expect(page).toContain("Watch a real startup situation");
+    expect(page).toContain("resumable");
+    expect(page).toContain("action-only state");
+    expect(content).toContain("Simulated run");
     expect(content).not.toContain("executes tools");
     expect(content).not.toContain("runs live workflows in the browser");
   });
@@ -511,7 +649,8 @@ describe("landing app source contract", () => {
     const installCopyable = readLandingFile("components/copyable-install-command.tsx");
 
     expect(copyable).toContain('"use client"');
-    expect(copyable).toContain("navigator.clipboard.writeText(command)");
+    expect(copyable).toContain("await copyText(command, navigator.clipboard)");
+    expect(copyable).toContain("Select and copy command");
     expect(copyable).toContain("Copied");
     expect(copyable).toContain("Copy");
     expect(installCopyable).toContain('label="install command"');
@@ -531,7 +670,8 @@ describe("landing app source contract", () => {
     const genericCopyable = readLandingFile("components/copyable-command.tsx");
     expect(genericCopyable).toContain("label: string");
     expect(genericCopyable).toContain("copyLabel: string");
-    expect(genericCopyable).toContain("navigator.clipboard.writeText(command)");
+    expect(genericCopyable).toContain("await copyText(command, navigator.clipboard)");
+    expect(genericCopyable).toContain("Select and copy command");
     expect(genericCopyable).toMatch(/aria-label=\{`\$\{copyLabel\}:/);
     expect(genericCopyable).toContain('aria-live="polite"');
 
@@ -542,17 +682,20 @@ describe("landing app source contract", () => {
 
   test("makes every visible landing command click-to-copy", () => {
     const landingPage = readLandingFile("components/landing-page.tsx");
+    const hero = readLandingFile("components/startup-team-hero.tsx");
+    const finalCta = readLandingFile("components/final-install-cta.tsx");
     const terminal = readLandingFile("components/terminal-block.tsx");
     const copyable = readLandingFile("components/copyable-command.tsx");
 
-    expect(landingPage).toContain("const heroInstallCommand =");
-    expect(landingPage).toContain("copyText={heroInstallCommand}");
-    expect(landingPage).toContain('copyLabel="Copy startup-team install command"');
-    expect(landingPage).toContain("copiedCommandIndex");
-    expect(landingPage).toContain("navigator.clipboard.writeText(command.command)");
+    expect(hero).toContain("copyText={content.installCommand}");
+    expect(hero).toContain('copyLabel="Copy Startup Team install command"');
+    expect(finalCta).toContain("copyText={command}");
+    expect(finalCta).toContain('copyLabel="Copy Startup Team install command"');
+    expect(landingPage).toContain("copyFeedback");
+    expect(landingPage).toContain("await copyText(command.command, navigator.clipboard)");
     expect(landingPage).toContain("aria-label={`Copy command:");
     expect(landingPage).toContain("command.command}`}");
-    expect(landingPage).toContain('{copiedCommandIndex === index ? "Copied" : "Copy"}');
+    expect(landingPage).toContain("Select and copy command");
 
     expect(terminal).toContain("copyLabel?: string");
     expect(terminal).toContain("aria-label={copyLabel ?? `Copy command:");
@@ -580,97 +723,67 @@ describe("landing app source contract", () => {
     expect(landingPage).toContain("aria-label={`Open GitHub repository,");
   });
 
-  test("renders a parallel startup-goal chat with case and checkpoint rails", () => {
+  test("matches the approved navigation and keeps FAQ answers in server markup", () => {
+    const landingPage = readLandingFile("components/landing-page.tsx");
+    const faq = readLandingFile("components/landing-faq.tsx");
+
+    expect(landingPage).toContain('href="#showcase"');
+    expect(landingPage).toContain('href="#capabilities"');
+    expect(landingPage).toContain('href="#why"');
+    expect(landingPage).toContain('href="#workflows"');
+    expect(landingPage).toContain('href="#faq"');
+    expect(landingPage).toContain('href="#install"');
+    expect(faq).toContain("<details");
+    expect(faq).toContain("<summary");
+    expect(faq).not.toContain("hidden={!expanded}");
+  });
+
+  test("renders an accessible control-tower orchestration demo", () => {
     const demo = readLandingFile("components/workflow-run-demo.tsx");
+    const content = readLandingFile("lib/landing-content.ts");
     const page = readLandingFile("components/landing-page.tsx");
+    const audience = readLandingFile("components/audience-showcase.tsx");
 
     expect(demo).toContain("export function WorkflowRunDemo");
-    expect(demo).toContain("const WORKFLOW_CASES");
-    expect(demo).toContain("Idea to v1");
-    expect(demo).toContain("Pivot or focus");
-    expect(demo).toContain("Customer request");
-    expect(demo).toContain(
-      "/startup-goal I have an AI bookkeeping idea; help me choose the wedge and ship a v1 in two weeks",
-    );
-    expect(demo).toContain(
-      "/startup-goal activation is weak; should we rebuild onboarding, narrow ICP, or add concierge setup?",
-    );
-    expect(demo).toContain(
-      "/startup-goal customers keep asking for team seats; turn that into a safe release plan",
-    );
-    expect(demo).toContain("interface WorkflowCase");
-    expect(demo).toContain("coordinator: SkillStep");
-    expect(demo).toContain("roles: SkillStep[]");
-    expect(demo).toContain("roles: readonly [SkillStep, ...SkillStep[]]");
-    expect(demo).toContain("type RunPhase =");
-    expect(demo).toContain('kind: "collecting"; returnedRoleCount: number');
-    expect(demo).toContain("const renderedPhase = prefersReducedMotion ? COMPLETE_PHASE : phase");
-    expect(demo).toContain("phase.returnedRoleCount >= roleCount");
-    expect(demo).toContain("const CHECKPOINTS");
-    expect(demo).toContain("Brief approval");
-    expect(demo).toContain("Route agents");
-    expect(demo).toContain("Collect outputs");
-    expect(demo).toContain("Combined answer");
-    expect(demo).toContain("CaseRail");
-    expect(demo).toContain("ChatTranscript");
-    expect(demo).toContain("CheckpointRail");
-    expect(demo).toContain("started working");
-    expect(demo).toContain("SkillSourceLink");
-    expect(demo).toContain("getCheckpointStatus");
-    expect(demo).toContain("getRoleStatus");
-    expect(demo).toContain('aria-live="polite"');
-    expect(demo).toContain("aria-pressed={isSelected}");
-    expect(demo).toContain("examples/teams/startup-team/skills/startup-goal/SKILL.md");
-    expect(demo).toMatch(
-      /\$\{ROLE_WORKFLOW_SOURCE_ROOT\}\/\$\{skill\}\/skills\/\$\{skill\}\/SKILL\.md/,
-    );
-    expect(demo).not.toMatch(/examples\/teams\/startup-team\/skills\/\$\{skill\}\/SKILL\.md/);
-    expect(demo).toContain('target="_blank"');
-    expect(demo).toContain('rel="noreferrer"');
-    expect(demo).toContain("lg:grid-cols-[13rem_minmax(0,1fr)_13rem]");
-    expect(demo).toContain("sm:grid-cols-3");
-    expect(demo).toContain('behavior: "auto"');
+    expect(demo).toContain("orchestrationCases");
+    expect(demo).toContain('role="tablist"');
+    expect(demo).toContain('role="tab"');
+    expect(demo).toContain("ArrowRight");
+    expect(demo).toContain("ArrowLeft");
+    expect(demo).toContain("Home");
+    expect(demo).toContain("End");
     expect(demo).toContain("IntersectionObserver");
-    expect(demo).toContain("hasEnteredViewport");
+    expect(demo).toContain("document.visibilityState");
+    expect(demo).toContain('aria-live="polite"');
+    expect(content).toContain("Example run · hardcoded preview");
+    expect(demo).toContain("previewLabel");
+    expect(demo).toContain("parallelLanes");
+    expect(demo).toContain("gatedLanes");
     expect(demo).toContain("Replay");
     expect(demo).toContain("setTimeout");
     expect(demo).toContain("clearTimeout");
-    expect(demo).not.toContain("Run calls");
-    expect(demo).not.toContain("Selected skill");
-    expect(demo).not.toContain("selectedStepIndex");
-    expect(demo).not.toContain("const [coordinator, ...roles] = input.steps");
-    expect(demo).not.toContain("completedSteps");
-    expect(demo).not.toContain("processPoints");
-    expect(demo).not.toContain("selected-skill-preview");
-    expect(demo).not.toContain("$openspec-delivery");
-    expect(demo).not.toContain("installCount");
-    expect(demo).not.toContain("displayMetrics");
+    expect(demo).not.toContain("Idea to v1");
+    expect(demo).not.toContain("Pivot or focus");
+    expect(demo).not.toContain("Customer request");
 
-    expect(page).toContain("Workflow in motion");
-    expect(page).toContain("See startup-goal coordinate the work.");
-    expect(page).toContain("Watch a real startup situation");
-    expect(page).toContain("[ok] CEO");
-    expect(page).toContain("[ok] QA");
-
-    const demoIndex = page.indexOf("<WorkflowRunDemo");
+    const audienceIndex = page.indexOf("<AudienceShowcase");
     const teamIndex = page.indexOf("<FeaturedTeamSection");
 
-    expect(page).toContain("import { WorkflowRunDemo }");
-    expect(page).not.toContain("import { FlowDiagram }");
-    expect(page).not.toContain("workflowRun");
-    expect(demoIndex).toBeGreaterThan(-1);
+    expect(audience).toContain("import { WorkflowRunDemo }");
+    expect(audience).toContain("<WorkflowRunDemo");
+    expect(audienceIndex).toBeGreaterThan(-1);
     expect(teamIndex).toBeGreaterThan(-1);
-    expect(demoIndex).toBeLessThan(teamIndex);
+    expect(audienceIndex).toBeLessThan(teamIndex);
   });
 
-  test("documents supported agents without a hero chip row", () => {
-    const page = readLandingFile("components/landing-page.tsx");
+  test("documents supported agents with logo and neutral text tiles", () => {
+    const strip = readLandingFile("components/supported-agent-strip.tsx");
     const content = readLandingFile("lib/landing-content.ts");
 
     const logoAgents = [
-      ["claude", "agent-logos/claude.svg"],
-      ["codex", "agent-logos/openai.svg"],
       ["cursor", "agent-logos/cursor.svg"],
+      ["codex", "agent-logos/openai.svg"],
+      ["claude", "agent-logos/claude.svg"],
       ["github-copilot", "agent-logos/github-copilot.svg"],
     ] as const;
 
@@ -679,9 +792,18 @@ describe("landing app source contract", () => {
       expect(content).toContain(`logoSrc: "/${logoPath}"`);
       expect(existsSync(join(landingRoot, "public", logoPath))).toBe(true);
     }
+    for (const agent of ["OpenCode", "Hermes", "OpenClaw"]) {
+      expect(content).toContain(`name: "${agent}"`);
+    }
     expect(content).toContain('name: "GitHub Copilot"');
-    expect(page).toContain("Claude, Codex, Cursor, opencode, and GitHub Copilot");
-    expect(page).not.toContain("WebkitMask");
+    expect(content).toContain("Supported Agents");
+    expect(content).toContain(
+      "Skills install across these agents. Host-managed internal role execution depends on the agent environment; public CLI dispatch is disabled.",
+    );
+    expect(strip).toContain("agent.logoSrc");
+    expect(strip).toContain("agent-logo-fallback");
+    expect(strip).toContain("{agent.name}");
+    expect(strip).not.toContain("WebkitMask");
   });
 
   test("keeps attribution with the landing source", () => {

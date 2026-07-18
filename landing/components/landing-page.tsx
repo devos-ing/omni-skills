@@ -1,14 +1,34 @@
 "use client";
 
-import { ArrowRight, Check, Copy, Github, Zap } from "lucide-react";
+import { ArrowRight, Check, Copy, Github } from "lucide-react";
 import { useMemo, useState } from "react";
-import { commands, githubUrl, startupTeam, workflows } from "../lib/landing-content";
+import { copyText } from "../lib/clipboard";
+import {
+  agents,
+  audienceStories,
+  capabilities,
+  commands,
+  faqItems,
+  githubUrl,
+  startupLandingContent,
+  startupSteps,
+  startupTeam,
+  teams,
+  whyFeatures,
+  workflows,
+} from "../lib/landing-content";
 import { skillHubEntries } from "../lib/skill-hub";
+import { AudienceShowcase } from "./audience-showcase";
+import { CapabilityGrid } from "./capability-grid";
 import { FeaturedTeamSection } from "./featured-team-section";
-import { Reveal } from "./reveal";
+import { FinalInstallCta } from "./final-install-cta";
+import { HowStartupTeamWorks } from "./how-startup-team-works";
+import { LandingFaq } from "./landing-faq";
 import { type HubTab, SkillHub } from "./skill-hub";
+import { OmniskillsMark, StartupTeamHero } from "./startup-team-hero";
+import { SupportedAgentStrip } from "./supported-agent-strip";
 import { TerminalBlock } from "./terminal-block";
-import { WorkflowRunDemo } from "./workflow-run-demo";
+import { WhyOmniskills } from "./why-omniskills";
 
 interface LandingPageProps {
   githubStarsLabel?: string;
@@ -17,7 +37,10 @@ interface LandingPageProps {
 export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   const [activeCommand, setActiveCommand] = useState(0);
   const [activeHubTab, setActiveHubTab] = useState<HubTab>("workflows");
-  const [copiedCommandIndex, setCopiedCommandIndex] = useState<number | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<{
+    index: number;
+    status: "copied" | "failed";
+  } | null>(null);
   const [query, setQuery] = useState("");
 
   const filteredWorkflows = useMemo(() => {
@@ -54,100 +77,65 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
   }, [query]);
 
   const active = commands[activeCommand] ?? commands[0];
-  const heroInstallCommand = commands[0]?.command ?? "npx omniskill@latest install startup-team";
 
-  function copyCommand(command: (typeof commands)[number], index: number) {
+  async function copyCommand(command: (typeof commands)[number], index: number) {
     setActiveCommand(index);
-    void navigator.clipboard.writeText(command.command);
-    setCopiedCommandIndex(index);
-    window.setTimeout(() => {
-      setCopiedCommandIndex((current) => (current === index ? null : current));
-    }, 1600);
+    const copied = await copyText(command.command, navigator.clipboard);
+    setCopyFeedback({ index, status: copied ? "copied" : "failed" });
+    if (copied) {
+      window.setTimeout(() => {
+        setCopyFeedback((current) => (current?.index === index ? null : current));
+      }, 1600);
+    }
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f6f4ef] text-[var(--ink)]">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-        <a href="#top" className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent)] text-white">
-            <Zap size={14} />
-          </span>
-          <span className="text-sm font-semibold text-[var(--ink)]">Omniskills</span>
-        </a>
-        <div className="flex items-center gap-4 text-sm text-[var(--body)] sm:gap-6">
-          <a href="#workflows" className="transition-colors hover:text-[var(--ink)]">
-            Teams &amp; skills
+    <main className="site-shell min-h-screen overflow-hidden text-[var(--ink)]">
+      <div className="site-rail site-rail-left" aria-hidden="true" />
+      <div className="site-rail site-rail-right" aria-hidden="true" />
+      <header className="site-header">
+        <nav className="site-nav" aria-label="Main navigation">
+          <a href="#top" className="site-brand">
+            <OmniskillsMark compact />
+            <span>Omniskills</span>
           </a>
-          <a href="#install" className="transition-colors hover:text-[var(--ink)]">
-            Install
-          </a>
-          <a
-            href={githubUrl}
-            aria-label={`Open GitHub repository, ${githubStarsLabel}`}
-            className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--ink)]"
-          >
-            <Github size={15} />
-            <span className="hidden sm:inline">{githubStarsLabel}</span>
-          </a>
-        </div>
-      </nav>
-
-      <section id="top" className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pb-20 sm:pt-20">
-        <Reveal className="motion-masthead" index={0}>
-          <p className="mb-5 max-w-xl text-sm font-medium text-[var(--muted)]">
-            Workflow skill trees for Claude, Codex, Cursor, opencode, and GitHub Copilot.
-          </p>
-        </Reveal>
-        <Reveal className="motion-masthead" index={1}>
-          <h1 className="max-w-[13ch] text-[clamp(2.75rem,7vw,5.75rem)] font-semibold leading-[0.98] tracking-[-0.04em] text-[var(--ink)]">
-            Power your ability. Install the workflow.
-          </h1>
-        </Reveal>
-        <Reveal className="motion-masthead" index={2}>
-          <p className="mt-7 max-w-[62ch] text-base leading-7 text-[var(--body)] sm:text-lg sm:leading-8">
-            Omniskills is a many-skill bank for AI agents. Install one workflow skill tree, call one
-            entry skill with a goal, and give your agent the roles, playbooks, and verification
-            habits that 3x your ability.
-          </p>
-        </Reveal>
-        <Reveal className="motion-masthead" index={3}>
-          <div className="mt-9 grid max-w-3xl gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <TerminalBlock
-              compact
-              copyText={heroInstallCommand}
-              copyLabel="Copy startup-team install command"
-              lines={[{ prefix: "$", text: heroInstallCommand }]}
-            />
+          <div className="site-nav-links">
+            <a href="#showcase">Showcase</a>
+            <a href="#capabilities">Capabilities</a>
+            <a href="#why">Why Omniskills</a>
+            <a href="#workflows">Teams &amp; Skills</a>
+            <a href="#faq">FAQ</a>
+          </div>
+          <div className="site-nav-actions">
             <a
-              href="#workflows"
-              className="editorial-control inline-flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white hover:bg-[var(--accent-pressed)]"
+              href={githubUrl}
+              aria-label={`Open GitHub repository, ${githubStarsLabel}`}
+              className="nav-github"
             >
-              {"Explore teams & skills"}
-              <ArrowRight size={14} />
+              <Github size={15} />
+              <span>{githubStarsLabel}</span>
+            </a>
+            <a href="#install" className="nav-install">
+              Install team
             </a>
           </div>
-        </Reveal>
-      </section>
+        </nav>
+      </header>
 
-      <section
-        id="workflow-example"
-        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
-      >
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-          Workflow in motion
-        </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-[var(--ink)]">
-          See startup-goal coordinate the work.
-        </h2>
-        <p className="mb-8 mt-4 max-w-2xl text-sm leading-6 text-[var(--body)]">
-          Watch a real startup situation move through{" "}
-          <code className="font-medium text-[var(--ink)]">/startup-goal</code>: intake, approval,
-          role routing, handoffs, and one combined next action.
-        </p>
-        <WorkflowRunDemo />
-      </section>
-
-      <FeaturedTeamSection team={startupTeam} />
+      <StartupTeamHero
+        content={startupLandingContent}
+        githubStarsLabel={githubStarsLabel}
+        githubUrl={githubUrl}
+      />
+      <AudienceShowcase stories={audienceStories} />
+      <SupportedAgentStrip
+        agents={agents}
+        label={startupLandingContent.supportedAgentsLabel}
+        compatibility={startupLandingContent.compatibility}
+      />
+      <CapabilityGrid items={capabilities} />
+      <WhyOmniskills features={whyFeatures} />
+      <FeaturedTeamSection teams={teams} />
       <SkillHub
         activeTab={activeHubTab}
         query={query}
@@ -156,11 +144,9 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         onTabChange={setActiveHubTab}
         onQueryChange={setQuery}
       />
+      <HowStartupTeamWorks steps={startupSteps} />
 
-      <section
-        id="install"
-        className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16 sm:py-20"
-      >
+      <section id="install" className="landing-section utility-section">
         <div className="grid items-start gap-12 lg:grid-cols-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -197,12 +183,16 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
                       </code>
                     </span>
                     <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-[var(--body)]">
-                      {copiedCommandIndex === index ? (
+                      {copyFeedback?.index === index && copyFeedback.status === "copied" ? (
                         <Check size={12} className="text-emerald-700" />
                       ) : (
                         <Copy size={12} />
                       )}
-                      {copiedCommandIndex === index ? "Copied" : "Copy"}
+                      {copyFeedback?.index === index
+                        ? copyFeedback.status === "copied"
+                          ? "Copied"
+                          : "Select and copy command"
+                        : "Copy"}
                     </span>
                   </span>
                 </button>
@@ -251,7 +241,7 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-16">
+      <section className="landing-section utility-section author-section">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.8fr)] lg:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -280,33 +270,25 @@ export function LandingPage({ githubStarsLabel = "Stars" }: LandingPageProps) {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl border-t border-[var(--rule)] px-5 py-8">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--body)]">
-            <span className="flex h-5 w-5 items-center justify-center rounded bg-[var(--accent)]">
-              <Zap size={10} className="text-white" />
-            </span>
-            Omniskills
+      <LandingFaq items={faqItems} />
+      <div className="closing-band">
+        <FinalInstallCta
+          command={startupLandingContent.installCommand}
+          sourceUrl={startupTeam.sourceUrl}
+        />
+        <footer className="site-footer">
+          <div className="site-footer-brand">
+            <OmniskillsMark compact />
+            <span>Omniskills</span>
           </div>
-          <div className="flex items-center gap-6 text-xs font-medium text-[var(--muted)]">
-            <a href={githubUrl} className="transition-colors hover:text-[var(--ink)]">
-              GitHub
-            </a>
-            <a
-              href={`${githubUrl}/blob/main/README.md`}
-              className="transition-colors hover:text-[var(--ink)]"
-            >
-              Docs
-            </a>
-            <a
-              href={`${githubUrl}/blob/main/docs/workflow-author-guide.md`}
-              className="transition-colors hover:text-[var(--ink)]"
-            >
-              Author Guide
-            </a>
+          <p>Composable teams and workflows for agent environments.</p>
+          <div className="site-footer-links">
+            <a href={githubUrl}>GitHub</a>
+            <a href={`${githubUrl}/blob/main/README.md`}>Docs</a>
+            <a href={`${githubUrl}/blob/main/docs/workflow-author-guide.md`}>Author Guide</a>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </main>
   );
 }

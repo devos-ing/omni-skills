@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "valuation-analysis",
+  "version": "0.1.0",
+  "description": "Build explicit base, bull, and bear valuation scenarios with sensitivity, catalysts, and expectation risk.",
+  "skills": [{ "source": "./skills/valuation-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run valuation-analysis",
+      "skill": "./skills/valuation-analysis"
+    }
+  ]
+}

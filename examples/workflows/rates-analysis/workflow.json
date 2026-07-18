@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "rates-analysis",
+  "version": "0.1.0",
+  "description": "Analyze yield-curve shape, real and nominal rates, credit conditions, and market transmission.",
+  "skills": [{ "source": "./skills/rates-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run rates-analysis",
+      "skill": "./skills/rates-analysis"
+    }
+  ]
+}

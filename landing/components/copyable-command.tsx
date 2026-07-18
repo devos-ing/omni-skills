@@ -2,6 +2,7 @@
 
 import { Check, Copy, Terminal } from "lucide-react";
 import { useState } from "react";
+import { copyText } from "../lib/clipboard";
 
 interface CopyableCommandProps {
   command: string;
@@ -10,12 +11,12 @@ interface CopyableCommandProps {
 }
 
 export function CopyableCommand({ command, label, copyLabel }: CopyableCommandProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
 
-  function handleCopy() {
-    void navigator.clipboard.writeText(command);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+  async function handleCopy() {
+    const copied = await copyText(command, navigator.clipboard);
+    setCopyStatus(copied ? "copied" : "failed");
+    if (copied) window.setTimeout(() => setCopyStatus("idle"), 1600);
   }
 
   return (
@@ -34,8 +35,16 @@ export function CopyableCommand({ command, label, copyLabel }: CopyableCommandPr
           aria-live="polite"
           className="inline-flex items-center gap-1.5 rounded-md border border-[var(--rule)] px-2.5 py-1.5 text-xs font-medium text-[var(--body)] transition-colors hover:text-[var(--ink)]"
         >
-          {copied ? <Check size={13} className="text-emerald-300" /> : <Copy size={13} />}
-          {copied ? "Copied" : "Copy"}
+          {copyStatus === "copied" ? (
+            <Check size={13} className="text-emerald-300" />
+          ) : (
+            <Copy size={13} />
+          )}
+          {copyStatus === "copied"
+            ? "Copied"
+            : copyStatus === "failed"
+              ? "Select and copy command"
+              : "Copy"}
         </span>
       </div>
       <code className="block break-words font-mono text-sm leading-6 text-[var(--ink)]">

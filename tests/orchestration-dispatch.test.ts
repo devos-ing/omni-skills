@@ -29,6 +29,7 @@ function profile(
     candidateIndex?: number;
     candidateCount?: number;
     model?: string;
+    modelRole?: "planning" | "implementation" | "verification";
     access?: "read-only" | "workspace-write";
     path?: string;
     content?: string;
@@ -51,6 +52,7 @@ function profile(
       contentHash: hashAgentProfileContent(content),
       taskClass: "role",
       tier: source === "mattpocock:implement" ? "standard" : "deep",
+      ...(input.modelRole ? { modelRole: input.modelRole } : {}),
       model: input.model ?? "gpt-5.6",
       effort: source === "mattpocock:implement" ? "medium" : "high",
       access: input.access ?? "read-only",
@@ -69,6 +71,7 @@ function profile(
 
 function installedWorkflow(
   profiles: WorkflowInstallAgentProfileArtifact[],
+  options: { labeled?: boolean } = {},
 ): InstalledWorkflowBundle {
   const manifest = WorkflowBundleManifestSchema.parse({
     schemaVersion: "0.1",
@@ -82,16 +85,19 @@ function installedWorkflow(
       roles: {
         "./skills/startup-goal": {
           tier: "deep",
+          ...(options.labeled ? { modelRole: "planning" } : {}),
           access: "read-only",
           consultation: "receive",
         },
         "catalog:cto": {
           tier: "deep",
+          ...(options.labeled ? { modelRole: "planning" } : {}),
           access: "read-only",
           consultation: "request",
         },
         "mattpocock:implement": {
           tier: "standard",
+          ...(options.labeled ? { modelRole: "implementation" } : {}),
           access: "workspace-write",
           consultation: "request",
         },
@@ -161,6 +167,48 @@ describe("orchestration dispatch planning", () => {
         evidence: ["The adapter now fails compatibility verification."],
       }),
     ).toBe(false);
+  });
+
+  test("plans labeled model-role evidence and fails closed for Claude", async () => {
+    const labeledProfile = profile({ modelRole: "planning" });
+    const contentByPath = new Map([[labeledProfile.artifact.path, labeledProfile.content]]);
+    const workflow = installedWorkflow([labeledProfile.artifact], { labeled: true });
+
+    const planSet = await planOrchestrationDispatch({
+      workflow,
+      role: "catalog:cto",
+      runtime: "codex",
+      task: "Review the service boundary.",
+      cwd,
+      homeDir,
+      approveWorkspaceWrite: false,
+      capabilities: { codex: codexCapability },
+      readProfile: async (path) => contentByPath.get(path) ?? "",
+    });
+
+    expect(planSet.primary).toEqual(
+      expect.objectContaining({
+        role: "catalog:cto",
+        modelRole: "planning",
+        evidenceCapability: "launch_configured",
+      }),
+    );
+
+    await expectDispatchError(
+      () =>
+        planOrchestrationDispatch({
+          workflow,
+          role: "catalog:cto",
+          runtime: "claude",
+          task: "Review the service boundary.",
+          cwd,
+          homeDir,
+          approveWorkspaceWrite: false,
+          capabilities: { claude: { ...codexCapability } },
+          readProfile: async (path) => contentByPath.get(path) ?? "",
+        }),
+      "model_role_runtime_unsupported",
+    );
   });
 
   test("plans ordered verified read-only candidates from installed artifacts", async () => {

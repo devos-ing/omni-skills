@@ -3,7 +3,14 @@ import { access, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:
 import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type SkillInstallAgent = "claude" | "copilot" | "codex" | "cursor" | "opencode";
+export type SkillInstallAgent =
+  | "claude"
+  | "copilot"
+  | "codex"
+  | "cursor"
+  | "hermes"
+  | "openclaw"
+  | "opencode";
 
 export type SkillInstallStatus =
   | "installed"
@@ -27,6 +34,8 @@ export interface SkillInstallTargetResult {
   destination: string;
   artifactPaths: string[];
   status: SkillInstallStatus;
+  /** The dependency bootstrap positively established this target as newly created. */
+  createdByBootstrap?: boolean;
 }
 
 export interface SkillInstallResult {
@@ -45,6 +54,8 @@ export interface InstallAgentSkillInput {
   force?: boolean;
   operation?: SkillInstallOperation;
   refreshExisting?: boolean;
+  refreshExistingArtifactPaths?: string[];
+  forceExistingArtifactPaths?: string[];
 }
 
 export interface ResolveInstallSkillSourceOptions {
@@ -165,6 +176,8 @@ const agentSkillTargets: Record<
   copilot: { kind: "directory", path: [".agents", "skills"] },
   codex: { kind: "directory", path: [".agents", "skills"] },
   cursor: { kind: "cursor_rule", path: [".cursor", "rules"] },
+  hermes: { kind: "directory", path: [".hermes", "skills"] },
+  openclaw: { kind: "directory", path: [".agents", "skills"] },
   opencode: { kind: "directory", path: [".agents", "skills"] },
 };
 
@@ -178,45 +191,67 @@ export async function installAgentSkill(
   const targets: SkillInstallTargetResult[] = [];
   const operation = input.operation ?? "install";
   const refreshExisting = operation === "update" || input.refreshExisting === true;
-  const handledDestinations = new Map<string, SkillInstallStatus>();
+  const refreshExistingArtifactPaths = input.refreshExistingArtifactPaths
+    ? new Set(input.refreshExistingArtifactPaths)
+    : null;
+  const forceExistingArtifactPaths = input.forceExistingArtifactPaths
+    ? new Set(input.forceExistingArtifactPaths)
+    : null;
+  const plannedTargets = await Promise.all(
+    input.agents.map(async (agent) => {
+      const artifactPaths = getSkillInstallArtifactPaths(input.homeDir, agent, source.name);
+      return {
+        agent,
+        artifactPaths,
+        existingArtifactPaths: (
+          await Promise.all(
+            artifactPaths.map(async (path) => ({ path, exists: await pathExists(path) })),
+          )
+        )
+          .filter(({ exists }) => exists)
+          .map(({ path }) => path),
+      };
+    }),
+  );
 
-  for (const agent of input.agents) {
-    const destination = getSkillDestination(input.homeDir, agent, source.name);
-    const mirrorDestinations = getSkillMirrorDestinations(input.homeDir, agent, source.name);
-    const artifactPaths = [destination, ...mirrorDestinations];
-    const handledStatus = handledDestinations.get(destination);
-    if (handledStatus) {
-      if (
-        !input.dryRun &&
-        handledStatus !== "skipped_exists" &&
-        handledStatus !== "already_present"
-      ) {
-        for (const mirrorDestination of mirrorDestinations) {
-          await refreshSkillTarget({ agent, source, destination: mirrorDestination });
-        }
+  const installPlans = await Promise.all(
+    plannedTargets.map(async ({ agent, artifactPaths, existingArtifactPaths }) => {
+      const [destination, ...mirrorDestinations] = artifactPaths;
+      if (!destination) {
+        throw new Error(`No skill install destination configured for ${agent}`);
       }
-      targets.push({ agent, destination, artifactPaths, status: handledStatus });
-      continue;
-    }
 
-    const exists = await pathExists(destination);
-    const matchesSource =
-      exists && refreshExisting
-        ? await skillTargetsMatchSource({
-            agent,
-            source,
-            destinations: [destination, ...mirrorDestinations],
-          })
-        : false;
-    const status = getInstallStatus({
-      exists,
-      dryRun: input.dryRun ?? false,
-      force: input.force ?? false,
-      operation,
-      refreshExisting,
-      matchesSource,
-    });
+      const exists = existingArtifactPaths.length > 0;
+      const shouldRefreshExisting =
+        refreshExisting &&
+        (!refreshExistingArtifactPaths ||
+          existingArtifactPaths.every((path) => refreshExistingArtifactPaths.has(path)));
+      const shouldForceExisting =
+        (input.force ?? false) &&
+        (!forceExistingArtifactPaths ||
+          existingArtifactPaths.every((path) => forceExistingArtifactPaths.has(path)));
+      const matchesSource =
+        exists && shouldRefreshExisting && !shouldForceExisting
+          ? await skillTargetsMatchSource({
+              agent,
+              source,
+              destinations: [destination, ...mirrorDestinations],
+            })
+          : false;
+      const status = getInstallStatus({
+        exists,
+        dryRun: input.dryRun ?? false,
+        force: shouldForceExisting,
+        operation,
+        refreshExisting: shouldRefreshExisting && !shouldForceExisting,
+        matchesSource,
+      });
 
+      return { agent, artifactPaths, destination, mirrorDestinations, status };
+    }),
+  );
+
+  for (const { agent, artifactPaths, destination, mirrorDestinations, status } of installPlans) {
     if (!input.dryRun && status !== "skipped_exists" && status !== "already_present") {
       await refreshSkillTarget({ agent, source, destination });
       for (const mirrorDestination of mirrorDestinations) {
@@ -224,7 +259,6 @@ export async function installAgentSkill(
       }
     }
 
-    handledDestinations.set(destination, status);
     targets.push({ agent, destination, artifactPaths, status });
   }
 
@@ -523,6 +557,19 @@ function getSkillDestination(homeDir: string, agent: SkillInstallAgent, skillNam
   return join(homeDir, ...target.path, skillName);
 }
 
+/**
+ * Returns every filesystem artifact that one agent target owns for a skill.
+ * Callers can snapshot these paths before a bootstrap invokes an external installer.
+ */
+export function getSkillInstallArtifactPaths(
+  homeDir: string,
+  agent: SkillInstallAgent,
+  skillName: string,
+): string[] {
+  const destination = getSkillDestination(homeDir, agent, skillName);
+  return [destination, ...getSkillMirrorDestinations(homeDir, agent, skillName)];
+}
+
 function getSkillMirrorDestinations(
   homeDir: string,
   agent: SkillInstallAgent,
@@ -718,6 +765,8 @@ function isSkillInstallAgent(agent: string): agent is SkillInstallAgent {
     agent === "copilot" ||
     agent === "codex" ||
     agent === "cursor" ||
+    agent === "hermes" ||
+    agent === "openclaw" ||
     agent === "opencode"
   );
 }
@@ -743,7 +792,7 @@ function looksLikePath(value: string): boolean {
 }
 
 function formatSuperpowersInstallCommand(source: string): string {
-  return `omniskill skills install ${source} --agents codex,claude,cursor,copilot,opencode --home ~`;
+  return `omniskill skills install ${source} --agents codex,claude,cursor,copilot,hermes,openclaw,opencode --home ~`;
 }
 
 async function pathExists(path: string): Promise<boolean> {

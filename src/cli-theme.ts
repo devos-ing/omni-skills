@@ -105,7 +105,7 @@ export function rootHelpBanner(): string {
     label("Start:"),
     `  ${commandText("omniskill init release-review")}`,
     `  ${commandText("omniskill validate ./release-review")}`,
-    `  ${commandText("omniskill install openspec-superpowers")}`,
+    `  ${commandText("omniskill install openspec-delivery")}`,
     `  ${commandText("omniskill install ./release-review")}`,
     "",
     label("Inspect:"),

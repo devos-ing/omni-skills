@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "0.2",
+  "workflow": "release-review",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-17T16:23:46.307Z",
+  "workflows": [
+    {
+      "id": "workflow:release-review@0.1.0",
+      "name": "release-review",
+      "version": "0.1.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
+  "skills": [
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:1c1eba0a93ff82e0d3af1e040cbbabae5ba7f8aa1ea3f9f92b10db759ffa1087"
+    },
+    {
+      "source": "./skills/release-risk-review",
+      "resolvedName": "release-risk-review",
+      "kind": "local",
+      "hash": "sha256:a8d0b4179e6ce9c607dd11948092b0206497a2c114718814703efd1c341e7ffd"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:c18b038bea9b9d89b95f4779ee98e44d1b14360b5b818b40d4b2cce8a5ad1b35"
+    }
+  ]
+}

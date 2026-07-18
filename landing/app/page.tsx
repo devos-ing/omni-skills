@@ -1,23 +1,11 @@
 import { LandingPage } from "../components/landing-page";
+import { formatGithubStarsLabel } from "../lib/github-stars";
 
 const githubRepositoryApiUrl = "https://api.github.com/repos/devos-ing/omni-skills";
 const githubStarsFallbackLabel = "Stars";
 
 interface GitHubRepositoryMetadata {
   stargazers_count?: unknown;
-}
-
-export function formatGithubStarsLabel(stars: number): string {
-  if (stars >= 1000) {
-    const compact = new Intl.NumberFormat("en", {
-      maximumFractionDigits: 1,
-      notation: "compact",
-    }).format(stars);
-
-    return `${compact.toLowerCase()} stars`;
-  }
-
-  return `${stars.toLocaleString("en")} stars`;
 }
 
 async function fetchGithubStarsLabel(): Promise<string> {

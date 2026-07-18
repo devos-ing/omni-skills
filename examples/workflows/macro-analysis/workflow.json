@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "macro-analysis",
+  "version": "0.1.0",
+  "description": "Analyze growth, inflation, policy, liquidity, and the event calendar for a defined market horizon.",
+  "skills": [{ "source": "./skills/macro-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run macro-analysis",
+      "skill": "./skills/macro-analysis"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "company-analysis",
+  "version": "0.1.0",
+  "description": "Analyze a public company's business, competitive position, filings, management claims, and material events from auditable sources.",
+  "skills": [{ "source": "./skills/company-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run company-analysis",
+      "skill": "./skills/company-analysis"
+    }
+  ]
+}

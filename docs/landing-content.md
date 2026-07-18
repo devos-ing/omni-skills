@@ -10,18 +10,17 @@ Component-local page copy also comes from `landing/components/landing-page.tsx`,
 
 ## Hero
 
-Eyebrow: Works with Claude, Codex, Cursor, opencode, and GitHub Copilot.
+Eyebrow: Orchestration for Codex.
 
 Headline:
 
 ```text
-Power your ability.
-Install the workflow.
+One goal. A team of agents. One verified result.
 ```
 
-Body: Omniskills is a many-skill bank for AI agents. Install one workflow
-skill tree, call one entry skill with a goal, and give your agent the roles,
-playbooks, and verification habits that 3x your ability.
+Body: Turn Codex into a coordinated team. One entry skill clarifies the goal,
+routes the right specialists, brings their work back together, and verifies the
+result. Claude, Cursor, opencode, and GitHub Copilot remain supported too.
 
 Primary command preview:
 
@@ -29,7 +28,7 @@ Primary command preview:
 npx omniskill@latest install startup-team
 ```
 
-Primary action: Explore teams & skills.
+Primary action: Watch a team run.
 
 ## Supported Agents
 
@@ -42,107 +41,81 @@ Primary action: Explore teams & skills.
 - Cursor
   - id: `cursor`
   - logo: `/agent-logos/cursor.svg`
-- opencode
+- OpenCode
   - id: `opencode`
+- Hermes
+  - id: `hermes`
+- OpenClaw
+  - id: `openclaw`
 - GitHub Copilot
   - id: `github-copilot`
   - logo: `/agent-logos/github-copilot.svg`
 
 ## How It Works
 
-Section label: How it works.
+Section label: How orchestration works.
 
-Heading: One entry skill. Many specialist skills.
+1. Install a real team
+   - One Omniskills manifest installs a coordinator, specialist roles, and the source-linked playbooks that connect them.
+2. Give the coordinator one goal
+   - Call one entry skill. It clarifies scope, waits for approval, and routes only the roles the goal needs.
+3. Verify before feature acceptance
+   - Implementation and any bounded rework return evidence to QA, then User Outcome Replay checks the verified result before the final human gate.
 
-1. Install a many-skill bank
+### Two human gates
 
-   A workflow manifest defines the callable entry skill plus every local or
-   external specialist skill it needs.
+You approve the plan and accept the feature. The milestone stops before
+implementation and again after QA and User Outcome Replay. Scope changes return
+to planning instead of becoming invisible assumptions.
 
-2. Call one entry skill with a goal
+## FAQ
 
-   Users invoke a single skill, such as $startup-goal, and the workflow routes
-   the goal through the right roles.
+### How are Startup Team installs and local research previews kept safe?
 
-3. Compound specialist judgment
+Startup Team carries a checked-in schema 0.2 lock with exact-commit external
+locators, and its declared members resolve from the same checkout. Managed
+refreshes require recorded ownership; mixed ownership fails closed. Finance Team
+and Market Team remain lockless local previews.
 
-   Strategy, product, architecture, delivery, implementation, and QA roles stay
-   aligned so the agent can 3x your ability without manual skill juggling.
-   Looped workflows can track resumable, action-only workflow state through the
-   CLI.
+### Which CLI command installs a workflow or team?
 
-## Workflow Run Demo
+Use install as the public install command. bundle and workflow remain
+compatibility aliases.
 
-Section label: Try it live.
+## Control Tower Demo
 
-Heading: Watch the workflow run.
+Section label: Control tower.
 
-Body: Simulate calling `$startup-goal` and see each role skill return its part
-of the combined answer.
+Heading: Watch Codex orchestrate a real team.
 
-Prompt:
+Disclosure: `Example run · hardcoded preview`. The cases are deterministic
+previews of real installable manifests, not live agent or market-data sessions.
 
-```text
-> $startup-goal help me launch this product from idea to shipped v1
-```
+Cases:
 
-Demo steps:
-
-1. Route Goal
-   - skill: `startup-goal`
-   - lines:
-     - Reading goal: launch this product from idea to shipped v1
-     - Selecting the role skills needed for the next decision
-     - Dispatching CEO, CTO, PM, EM, founding engineer, and QA lead
-     - Startup Goal route assembled
-2. Strategy
-   - skill: `ceo`
-   - lines:
-     - Clarifying customer, wedge, and first painful workflow
-     - Choosing launch learning over broad platform scope
-     - Naming the hard tradeoff: speed before breadth
-     - CEO strategy frame returned
-3. Product Scope
-   - skill: `product-manager`
-   - lines:
-     - Translating strategy into user problem and v1 promise
-     - Writing acceptance criteria for the first useful demo
-     - Slicing launch work into docs, onboarding, and feedback loop
-     - PM scope and issue slices returned
-4. Architecture
-   - skill: `cto`
-   - lines:
-     - Checking the workflow manifest and install path
-     - Flagging integration risk around external skill dependencies
-     - Keeping the entry skill thin and role coordination explicit
-     - CTO architecture guardrails returned
-5. Implementation
-   - skill: `founding-engineer`
-   - lines:
-     - Finding the smallest implementation slice
-     - Updating the manifest, README, and landing source contract
-     - Running focused tests before the repo gate
-     - Verified implementation path returned
-6. QA Review
-   - skill: `qa-lead`
-   - lines:
-     - Checking acceptance against the original startup goal
-     - Scanning for stale startup-team and OpenSpec-facing examples
-     - Separating verified facts from residual launch risk
-     - Combined startup answer ready
-
-Completion copy: Workflow complete - all 6 role steps returned. Startup answer
-ready.
+1. Build a landing page — `$startup-goal`
+   - Coordinator activity: Launch selected installed roles.
+   - Product, design, and engineering planning run in parallel.
+   - Implementation and QA run as sequential gates before the verified result.
+   - Implement source: `https://github.com/mattpocock/skills/blob/d574778f94cf620fcc8ce741584093bc650a61d3/skills/engineering/implement/SKILL.md`.
+2. Research a stock — `$finance-research`
+   - Coordinator activity: Prepare selected specialist handoffs.
+   - Company, financial, and valuation specialists work in parallel.
+   - `$risk-analysis` challenges the thesis, sources, and invalidation conditions.
+3. Research the market — `$market-research`
+   - Coordinator activity: Prepare selected specialist handoffs.
+   - Macro, rates, market-structure, and sector specialists work in parallel.
+   - `$risk-analysis` verifies contradictory signals, triggers, and invalidation.
 
 ## Omniskills Teams
 
 Section label: Omniskills Teams.
 
-Heading: Pick an Omniskills team.
+Heading: Pick the team for the goal.
 
-Body: Start with a coordinated team when one role is not enough. One install
-gives your agent a coordinator, specialist roles, and the playbooks that
-connect them.
+Body: Install a real coordinator and its specialist roles together. Startup
+Team ships product work; Finance Team researches public companies; Market Team
+builds a sourced regime view.
 
 ### Startup Team
 
@@ -158,13 +131,15 @@ connect them.
 npx omniskill@latest install startup-team
 ```
 
-Description: Break one approved startup goal into evidence-backed feature
-milestones, review each plan before implementation, verify the result, and
-replay the user's expectations, needs, wishes, and journey before acceptance.
+Description: Move one approved startup feature at a time through plan approval,
+implementation, conditional rework, QA, User Outcome Replay, and human feature
+acceptance.
 
 Coordinator: `$startup-goal` — Controls the Goal Tunnel and Evidence Ledger,
-prepares manual handoffs marked Prepared, not executed, and holds both human
-approval gates. No browser or CLI agent launch is implied.
+runs selected installed roles as internal subagents with bounded stage packets,
+and holds both human approval gates. Prepared, not executed is the fallback when
+the host launch capability or role profile is unavailable; public CLI dispatch
+stays disabled.
 
 Members:
 
@@ -189,27 +164,13 @@ Skills:
 - `engineering-manager`: Delivery sequencing and quality gates
 - `founding-engineer`: Implementation framing and handoff
 - `qa-lead`: Acceptance checks and release risk
-- `emilkowalski:emil-design-eng`: Polish interface implementation
-- `emilkowalski:animation-vocabulary`: Name and select motion patterns
-- `emilkowalski:apple-design`: Apply Apple design principles
-- `emilkowalski:review-animations`: Review motion quality
 - `superpowers:brainstorming`: Explore options before scope locks
-- `superpowers:writing-plans`: Create executable plans
-- `superpowers:verification-before-completion`: Verify before claiming done
-- `mattpocock:wayfinder`: Map decisions and uncertainty
-- `mattpocock:grill-with-docs`: Stress-test direction
-- `mattpocock:to-spec`: Write product requirements
-- `mattpocock:to-tickets`: Slice work into issues
-- `mattpocock:codebase-design`: Review codebase boundaries
-- `mattpocock:domain-modeling`: Name domain concepts
-- `mattpocock:tdd`: Build with tests where practical
-- `mattpocock:diagnosing-bugs`: Diagnose failures from evidence
-- `mattpocock:code-review`: Review behavior and risk
 - `mattpocock:implement`: Execute the implementation slice
+- `setup-model-routing`: Configure global Codex model roles
 
 Ordered milestone path:
 
-`Prepare -> Plan -> Plan approval -> Implement -> Verify -> User Outcome Replay -> Feature acceptance`
+`Prepare -> Plan -> Plan approval -> Implement -> Rework if needed -> Verify -> User Outcome Replay -> Feature acceptance`
 
 1. Prepare -> `startup-goal`
    - Define the Goal Tunnel, feature milestone, role inputs, and acceptance criteria.
@@ -219,12 +180,56 @@ Ordered milestone path:
    - Wait for explicit human approval of the implementation boundary.
 4. Implement -> `mattpocock:implement`
    - Execute only the approved milestone slice.
-5. Verify -> `qa-lead`
+5. Rework if needed -> `mattpocock:implement`
+   - Make one bounded in-scope repair, then return fresh evidence to QA.
+6. Verify -> `qa-lead`
    - Record acceptance evidence, regressions, untested areas, and residual risk.
-6. User Outcome Replay -> `startup-goal`
+7. User Outcome Replay -> `startup-goal`
    - Reconstruct expectations, needs, wishes, and journey after QA.
-7. Feature acceptance -> `startup-goal`
+8. Feature acceptance -> `startup-goal`
    - Wait for explicit human acceptance before activating the next milestone.
+
+Distribution and safety: Startup Team carries a checked-in schema `0.2` lock,
+uses exact-commit external locators, and resolves every declared member from the
+same checkout. Managed refreshes require recorded ownership of existing paths;
+mixed ownership fails closed. Finance Team and Market Team remain lockless local
+previews.
+
+### Finance Team (local preview)
+
+- slug: `finance-team`
+- entry skill: `$finance-research`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/finance-team`
+- repository-local install:
+
+```bash
+bun run dev -- install examples/teams/finance-team
+```
+
+Coordinator: `$finance-research`. Members: `$company-analysis`,
+`$financial-analysis`, `$valuation-analysis`, and shared `$risk-analysis`.
+This alias is not published through `omniskill@latest` yet. The coordinator
+prepares manual specialist handoffs, returns `Prepared, not executed`, and
+combines only completed outputs. Uses host browsing and public sources, requires
+no market-data API, and does not provide personalized investment advice.
+
+### Market Team (local preview)
+
+- slug: `market-team`
+- entry skill: `$market-research`
+- source: `https://github.com/devos-ing/omni-skills/tree/main/examples/teams/market-team`
+- repository-local install:
+
+```bash
+bun run dev -- install examples/teams/market-team
+```
+
+Coordinator: `$market-research`. Members: `$macro-analysis`, `$rates-analysis`,
+`$market-structure`, `$sector-analysis`, and shared `$risk-analysis`. Uses host
+browsing and public sources, requires no market-data API, and does not provide
+personalized investment advice. This alias is not published through
+`omniskill@latest` yet. The coordinator prepares manual specialist handoffs,
+returns `Prepared, not executed`, and combines only completed outputs.
 
 ## Skill Hub
 
@@ -237,7 +242,7 @@ Tabs:
 
 - Workflows
   - Search placeholder: Search workflows, entry skills, or tags...
-  - Results exclude Startup Team because it is featured above.
+  - Results exclude Startup, Finance, and Market teams because they are featured above.
   - Each result opens its workflow detail route through `View workflow`.
   - Empty state: No workflows match the current query; `Clear search` resets it.
 - Skills
@@ -254,8 +259,8 @@ package relationships remain visible.
 
 ### Workflows
 
-The independently installable workflow catalog starts below. Startup Team is
-not repeated here.
+The independently installable workflow catalog starts below. Featured teams
+are not repeated here.
 
 ### CEO
 
@@ -406,7 +411,7 @@ Ordered skill path:
 ### Founding Engineer
 
 - slug: `founding-engineer`
-- tag: Build
+- tag: Plan
 - entry skill: `$founding-engineer`
 - avatar seed: `sha256:2c1ee7f8710c90004a958f81aa84321fad2efc83d8839fede97689f6ebf1b078`
 - accent: `text-[#c83c24]`
@@ -417,32 +422,30 @@ Ordered skill path:
 npx omniskill@latest install founding-engineer
 ```
 
-Description: Implementation lane for the smallest correct change: tests,
-debugging, review, and verification.
+Description: Read-only implementation frame: identify seams, tests, failure
+evidence, review risk, and a handoff to a separate implementer. It does not edit
+files or run implementation commands.
 
 Skills:
 
-- `founding-engineer`: Set the implementation frame
-- `mattpocock:implement`: Implement the planned change
-- `mattpocock:tdd`: Use test-first development
-- `mattpocock:diagnosing-bugs`: Diagnose failures
-- `mattpocock:code-review`: Review behavior and risk
-- `superpowers:verification-before-completion`: Verify completion
+- `founding-engineer`: Set the read-only implementation frame
+- `mattpocock:tdd`: Identify required test seams
+- `mattpocock:diagnosing-bugs`: Frame failure evidence
+- `mattpocock:code-review`: Identify behavior and review risk
+- `superpowers:verification-before-completion`: Define completion checks
 
 Ordered skill path:
 
 1. Brief -> `founding-engineer`
    - Read the plan and acceptance criteria.
-2. Implement -> `mattpocock:implement`
-   - Ship the smallest correct slice.
-3. TDD -> `mattpocock:tdd`
-   - Keep tests close to changed behavior.
-4. Debug -> `mattpocock:diagnosing-bugs`
-   - Debug from evidence when checks fail.
-5. Review -> `mattpocock:code-review`
-   - Review risks and behavior.
-6. Verify -> `superpowers:verification-before-completion`
-   - Run final checks before handoff.
+2. Tests -> `mattpocock:tdd`
+   - Identify tests that keep evidence close to changed behavior.
+3. Diagnose -> `mattpocock:diagnosing-bugs`
+   - Specify the evidence needed if checks fail.
+4. Review -> `mattpocock:code-review`
+   - Identify risks and behavior to review.
+5. Checks -> `superpowers:verification-before-completion`
+   - Define final checks for the implementation handoff.
 
 ### QA Lead
 
@@ -560,6 +563,12 @@ npx omniskill@latest install startup-team
 
 ```bash
 npx omniskill@latest deps startup-team
+```
+
+### Configure model routing
+
+```bash
+npx omniskill@latest setup-model-routing
 ```
 
 ### Lock skill fingerprints

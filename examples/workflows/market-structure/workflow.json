@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "market-structure",
+  "version": "0.1.0",
+  "description": "Analyze breadth, volatility, concentration, positioning proxies, and technical confirmation.",
+  "skills": [{ "source": "./skills/market-structure", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run market-structure",
+      "skill": "./skills/market-structure"
+    }
+  ]
+}

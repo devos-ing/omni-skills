@@ -28,9 +28,9 @@ roles with evidence and re-entry conditions. Work on only one milestone at a
 time; wait for plan approval before implementation and feature acceptance
 before activating the next milestone.
 
-## 3. Prepare role input packets
+## 3. Execute roles through bounded packets
 
-Every selected expert receives the same **Input Packet** interface:
+Give every selected expert the same bounded **Input Packet** interface:
 
 - approved Goal Tunnel and current feature outcome;
 - accountable outcome role and decision required;
@@ -39,9 +39,16 @@ Every selected expert receives the same **Input Packet** interface:
 - expected artifact and acceptance criteria;
 - prior approved decisions that may not be silently reopened.
 
-Describe what the role must achieve, not how it must think. Label every manual
-handoff `Prepared, not executed` and stop until the user supplies the completed
-role output.
+Describe what the role must achieve, not how it must think. When the host exposes
+an internal agent-launch capability and the installed startup-team role profile
+is available, launch the smallest safe role set as internal subagents inside the
+current task and wait for its completed Output Packet. Independent planning
+roles may run in parallel; dependent review and repair work must wait for its
+input.
+
+If the launch capability or requested profile is unavailable, return the same
+bounded Input Packet labeled `Prepared, not executed`, name the unavailable
+capability, and stop without implying that the role ran.
 
 ## 4. Validate role output packets
 
@@ -72,19 +79,22 @@ when explicit and testable. Missing critical evidence blocks the milestone;
 never invent support. Present the plan boundary, evidence, risks, assumptions,
 and acceptance criteria, then wait for explicit human plan approval.
 
-## 6. Prepare implementation and QA handoffs
+## 6. Execute implementation and QA roles
 
-After plan approval, prepare a separate `mattpocock:implement` handoff limited to
-the approved plan. Record its implementation result: summary, changed files,
-and verification commands. Then prepare a `qa-lead` handoff for acceptance,
-regression, release risk, and verification evidence. A QA failure permits one
+After plan approval, launch the configured `mattpocock:implement` profile with a
+stage-specific packet limited to the approved plan, then wait for and validate
+its result: summary, changed files, and verification commands. Next launch the
+configured `qa-lead` profile with the approved acceptance criteria, changed
+artifacts, and verification evidence; wait for and validate its acceptance,
+regression, release-risk, and verification packet. A QA failure permits one
 bounded rework inside the approved plan; a new requirement returns to planning.
 
 ## 7. Reconstruct and evaluate the user outcome
 
-After QA passes, prepare the accountable outcome role handoff for a **User
-Outcome Replay**. The coordinator validates the returned interface; it does not
-perform the role's content analysis.
+After QA passes, launch the installed profile for the accountable outcome role
+with the original requirements and verified result evidence, then wait for its
+**User Outcome Replay**. The coordinator validates the returned interface; it
+does not perform the role's content analysis.
 
 The evaluator recreates the original user or customer, their expectations,
 required needs, non-required wishes, and intended journey steps from the Goal
@@ -102,13 +112,21 @@ wishes. Activate the next dependency-ready milestone without silently reopening
 accepted decisions. A scope change requires human approval and invalidates only
 affected downstream plans.
 
-## Manual execution policy
+## Internal role execution policy
 
-Automatic role launch is disabled. Do not call an agent-launch or dispatch API.
-Human approval authorizes only the next declared lifecycle transition. Never
-claim that a prepared handoff ran, and do not disclose a model, runtime,
-receipt, or run ID for work that was not launched.
-Stop after presenting the handoffs and wait for completed outputs from the user.
+Use the host's internal agent-launch capability and the installed
+`omniskills-startup-team-*` profiles. Do not call the removed public CLI
+dispatcher, reconnect its dormant runtime, or create a separate user-owned
+task. Give each role only its bounded, stage-specific packet and wait for its
+completed Output Packet.
+
+Human approval authorizes only the next declared lifecycle transition. Stop at
+plan approval and feature acceptance. Launch no implementation before plan
+approval and activate no later milestone before feature acceptance.
+
+When internal launch is unavailable, label the handoff `Prepared, not executed`.
+Never claim that a fallback handoff ran, and do not invent a model, runtime,
+receipt, run ID, or result.
 
 ## Loop limits
 

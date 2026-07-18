@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 const canonicalUrl = "https://github.com/devos-ing/omni-skills";
-const title = "Omniskills - Install AI Agent Workflows as Callable Skills";
+const title = "Startup Team for AI Agents | Omniskills";
 const description =
-  "Install complete AI-agent workflows as callable skills with one Omniskills command.";
+  "Install a coordinated startup skill set for strategy, product, design, engineering, and QA in Codex, Claude, Cursor, OpenCode, Hermes, OpenClaw, and GitHub Copilot.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(canonicalUrl),

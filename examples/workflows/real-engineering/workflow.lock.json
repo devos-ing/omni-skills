@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "real-engineering",
   "workflowVersion": "0.1.1",
-  "generatedAt": "2026-07-14T10:05:11.979Z",
+  "generatedAt": "2026-07-17T16:23:46.331Z",
   "workflows": [
     {
       "id": "workflow:real-engineering@0.1.1",
@@ -25,50 +25,50 @@
       "source": "superpowers:brainstorming",
       "resolvedName": "superpowers-brainstorming",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:1c1eba0a93ff82e0d3af1e040cbbabae5ba7f8aa1ea3f9f92b10db759ffa1087"
     },
     {
       "source": "superpowers:writing-plans",
       "resolvedName": "superpowers-writing-plans",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
     },
     {
       "source": "superpowers:verification-before-completion",
       "resolvedName": "superpowers-verification-before-completion",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:26401a7561086d127295b4267e19ccbc44a8b0d04ca519723a8a70301ae6efdf"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:c18b038bea9b9d89b95f4779ee98e44d1b14360b5b818b40d4b2cce8a5ad1b35"
     },
     {
       "source": "mattpocock:grill-with-docs",
       "resolvedName": "grill-with-docs",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:a7e2ffc2e216483f140c486c5e1b5e3e66d6ca7cf47980357069b21887645069"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:e66c375b2cfede6816c802ae0b8d8bf8c02f5e40a6f0bdb8737c8fff19636c17"
     },
     {
       "source": "mattpocock:tdd",
       "resolvedName": "tdd",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:eab427de166cfaf4270e836894e605677fccf1a8d6db9c249fb3c800bcda40d7"
     },
     {
       "source": "mattpocock:codebase-design",
       "resolvedName": "codebase-design",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:452bfb044551a8177528b7df68e204e6a77b8a7f89daa741ef659f652c441376"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:45f1f27c670c4065170eb689a04235e84982f87f133f537f55b12329ff5fec1a"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
       "resolvedName": "diagnosing-bugs",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0ce16c85852384eae72203418ea0d45145b86b8a04bb6a9d3693def451e08b89"
     }
   ]
 }

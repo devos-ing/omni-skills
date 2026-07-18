@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { metadata } from "../app/metadata";
 
 const canonicalUrl = "https://github.com/devos-ing/omni-skills";
-const seoTitle = "Omniskills - Install AI Agent Workflows as Callable Skills";
+const seoTitle = "Startup Team for AI Agents | Omniskills";
 const seoDescription =
-  "Install complete AI-agent workflows as callable skills with one Omniskills command.";
+  "Install a coordinated startup skill set for strategy, product, design, engineering, and QA in Codex, Claude, Cursor, OpenCode, Hermes, OpenClaw, and GitHub Copilot.";
 
 describe("landing metadata", () => {
   test("describes Omniskills for search and social previews", () => {

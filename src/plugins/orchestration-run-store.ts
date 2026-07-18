@@ -126,6 +126,7 @@ export function createOrchestrationRunStore(input: RunStoreOptions): Orchestrati
         profileHash: planSet.primary.profileHash,
         runtime: planSet.primary.runtime,
         tier: planSet.primary.tier,
+        ...(planSet.primary.modelRole ? { modelRole: planSet.primary.modelRole } : {}),
         model: planSet.primary.model,
         effort: planSet.primary.effort,
         access: planSet.primary.access,

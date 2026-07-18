@@ -566,7 +566,14 @@ describe("loop runtime", () => {
       };
       expect(started.milestone).toMatchObject({ stage: "preparing", milestone: { id: "copy" } });
       expect(
-        started.actions.some((action) => action.description.includes("Prepared, not executed")),
+        started.actions.some((action) =>
+          action.description.includes("Prepare the bounded stage packet without launching a role"),
+        ),
+      ).toBe(true);
+      expect(
+        started.actions.every(
+          (action) => !action.description.includes("Launch the configured internal role"),
+        ),
       ).toBe(true);
       expect(started.actions.find((action) => action.type === "log_event")?.command).toContain(
         "--type input_packet",
@@ -656,12 +663,148 @@ describe("loop runtime", () => {
         await runRuntime(["advance", "--run", "milestone", "--json"], homeDir, manifestPath),
       ) as {
         milestone: { stage: string };
-        actions: Array<{ type: string; command?: string }>;
+        actions: Array<{ type: string; command?: string; description: string }>;
       };
       expect(planning.milestone.stage).toBe("planning");
+      expect(
+        planning.actions.some((action) =>
+          action.description.includes("Launch the configured internal role"),
+        ),
+      ).toBe(true);
+      expect(
+        planning.actions.some((action) =>
+          action.description.includes("Prepared, not executed fallback"),
+        ),
+      ).toBe(true);
       expect(planning.actions.find((action) => action.type === "log_event")?.command).toContain(
         "--type role_output",
       );
+
+      parseJsonOutput(
+        await runRuntime(
+          [
+            "log",
+            "--run",
+            "milestone",
+            "--type",
+            "role_output",
+            "--metadata",
+            JSON.stringify({
+              role: "product-manager",
+              recommendation: "Lead with the first action",
+              alternatives: ["Long tutorial"],
+              evidence: [
+                {
+                  claim: "Current copy is unclear",
+                  classification: "verified",
+                  risk: "high",
+                  source: "approved brief",
+                  observedAt: "2026-07-17",
+                },
+              ],
+              risks: [],
+              unresolvedQuestions: [],
+              verificationMethod: "Replay onboarding",
+              nextAction: "Approve plan",
+            }),
+            "--json",
+          ],
+          homeDir,
+          manifestPath,
+        ),
+      );
+      const planGate = parseJsonOutput(
+        await runRuntime(["advance", "--run", "milestone", "--json"], homeDir, manifestPath),
+      ) as {
+        milestone: { stage: string };
+        actions: Array<{ type: string; description: string }>;
+      };
+      expect(planGate.milestone.stage).toBe("awaiting_plan_approval");
+      expect(
+        planGate.actions.some((action) =>
+          action.description.includes("Wait for explicit human plan approval"),
+        ),
+      ).toBe(true);
+      expect(
+        planGate.actions.every(
+          (action) => !action.description.includes("Launch the configured internal role"),
+        ),
+      ).toBe(true);
+
+      const lifecycleEvents = [
+        ["plan_decision", { decision: "approve", approvedBy: "human" }],
+        [
+          "implementation_result",
+          {
+            summary: "Changed copy",
+            changedFiles: ["onboarding.ts"],
+            verificationCommands: ["bun test"],
+          },
+        ],
+        ["verification_result", { result: "pass", evidence: ["bun test"], residualRisk: [] }],
+        [
+          "outcome_replay",
+          {
+            user: "A new founder",
+            expectations: [
+              {
+                original: "See the next action",
+                originalEvidence: "brief",
+                status: "met",
+                resultEvidence: "QA",
+                gapType: "approved_requirement",
+              },
+            ],
+            needs: [
+              {
+                original: "Complete first action",
+                originalEvidence: "brief",
+                status: "met",
+                resultEvidence: "QA",
+                gapType: "none",
+              },
+            ],
+            wishes: [],
+            steps: [{ expected: "Start", actual: "Started", status: "met", resultEvidence: "QA" }],
+            recommendation: "accept",
+          },
+        ],
+      ] as const;
+      let acceptanceGate:
+        | { milestone: { stage: string }; actions: Array<{ type: string; description: string }> }
+        | undefined;
+      for (const [type, metadata] of lifecycleEvents) {
+        parseJsonOutput(
+          await runRuntime(
+            [
+              "log",
+              "--run",
+              "milestone",
+              "--type",
+              type,
+              "--metadata",
+              JSON.stringify(metadata),
+              "--json",
+            ],
+            homeDir,
+            manifestPath,
+          ),
+        );
+        acceptanceGate = parseJsonOutput(
+          await runRuntime(["advance", "--run", "milestone", "--json"], homeDir, manifestPath),
+        ) as typeof acceptanceGate;
+      }
+      expect(acceptanceGate?.milestone.stage).toBe("awaiting_acceptance");
+      expect(
+        acceptanceGate?.actions.some((action) =>
+          action.description.includes("Wait for explicit human feature acceptance"),
+        ),
+      ).toBe(true);
+      expect(
+        acceptanceGate?.actions.every(
+          (action) => !action.description.includes("Launch the configured internal role"),
+        ),
+      ).toBe(true);
 
       const forced = await runRuntime(
         ["advance", "--run", "milestone", "--to", "implementing", "--force", "--reason", "skip"],

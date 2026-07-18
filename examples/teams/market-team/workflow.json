@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "0.1",
+  "kind": "team",
+  "name": "market-team",
+  "version": "0.1.0",
+  "description": "Coordinate macro, rates, market-structure, sector, and risk specialists into one sourced market-regime brief.",
+  "coordinator": "./skills/market-research",
+  "members": [
+    "../../workflows/macro-analysis",
+    "../../workflows/rates-analysis",
+    "../../workflows/market-structure",
+    "../../workflows/sector-analysis",
+    "../../workflows/risk-analysis"
+  ],
+  "orchestration": {
+    "roles": {
+      "./skills/market-research": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "receive"
+      },
+      "../../workflows/macro-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/rates-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/market-structure": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/sector-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/risk-analysis": {
+        "tier": "deep",
+        "modelRole": "verification",
+        "access": "read-only",
+        "consultation": "request"
+      }
+    },
+    "support": {
+      "explorer": {
+        "tier": "fast",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      }
+    }
+  },
+  "skills": [
+    { "source": "./skills/market-research", "entry": true },
+    { "source": "../../workflows/macro-analysis" },
+    { "source": "../../workflows/rates-analysis" },
+    { "source": "../../workflows/market-structure" },
+    { "source": "../../workflows/sector-analysis" },
+    { "source": "../../workflows/risk-analysis" },
+    { "source": "../../workflows/setup-model-routing/skills/setup-model-routing" }
+  ],
+  "steps": [
+    {
+      "id": "scope",
+      "title": "Approve the market research brief",
+      "skill": "./skills/market-research",
+      "gate": "human_approval"
+    },
+    {
+      "id": "macro",
+      "title": "Analyze macro conditions",
+      "skill": "../../workflows/macro-analysis"
+    },
+    {
+      "id": "rates",
+      "title": "Analyze rates and credit",
+      "skill": "../../workflows/rates-analysis"
+    },
+    {
+      "id": "structure",
+      "title": "Analyze market structure",
+      "skill": "../../workflows/market-structure"
+    },
+    {
+      "id": "sectors",
+      "title": "Analyze sector leadership",
+      "skill": "../../workflows/sector-analysis"
+    },
+    {
+      "id": "risk",
+      "title": "Verify sources and challenge the regime",
+      "skill": "../../workflows/risk-analysis"
+    }
+  ]
+}

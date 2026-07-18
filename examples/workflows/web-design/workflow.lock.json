@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "web-design",
   "workflowVersion": "0.2.0",
-  "generatedAt": "2026-07-16T11:07:33.379Z",
+  "generatedAt": "2026-07-17T16:03:42.991Z",
   "workflows": [
     {
       "id": "workflow:web-design@0.2.0",
@@ -25,29 +25,29 @@
       "source": "emilkowalski:emil-design-eng",
       "resolvedName": "emilkowalski:emil-design-eng",
       "kind": "external",
-      "repo": "emilkowalski/skills",
-      "hash": "sha256:c98e0e85967f367ece5fd23f9b2bcef62c1a9d548579472bb829464c3ebdf461"
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:feb1b26a393cf3aa4ab606b7333dc7cebaa9f107111aa98b6efb70beac4d06f8"
     },
     {
       "source": "emilkowalski:animation-vocabulary",
       "resolvedName": "emilkowalski:animation-vocabulary",
       "kind": "external",
-      "repo": "emilkowalski/skills",
-      "hash": "sha256:17043916f71310aff8b03af847f4cf1280496807113072ff9fb836e64f90f133"
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:2dfcb9f8e96061da95947de644e05344f657aef42494c83bf4912b0473aed22f"
     },
     {
       "source": "emilkowalski:apple-design",
       "resolvedName": "emilkowalski:apple-design",
       "kind": "external",
-      "repo": "emilkowalski/skills",
-      "hash": "sha256:4f2d0e6e554a9b8d313ae3b32a66f9e4f1ba4c9f491e0f050ad077e100eeefa3"
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:57c6e2cb5c1f8681bab63259561e1f7c09e691e116879de45c934edb97b60eb7"
     },
     {
       "source": "emilkowalski:review-animations",
       "resolvedName": "emilkowalski:review-animations",
       "kind": "external",
-      "repo": "emilkowalski/skills",
-      "hash": "sha256:f9266e7cdefa9ceadc60558f201618755382f03b06d5ab37d2ac73bdb7807b98"
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:52a924e51ecf6b189f5fa1cd688195992965409c3cc6d54fc22e784b73e6807d"
     }
   ]
 }

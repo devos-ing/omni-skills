@@ -2,7 +2,7 @@
   "schemaVersion": "0.1",
   "kind": "team",
   "name": "startup-team",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Install a startup team as one goal-oriented Omniskills bundle: a startup-goal coordinator plus CEO, CTO, product manager, web-design lead, engineering manager, founding engineer, and QA lead.",
   "coordinator": "./skills/startup-goal",
   "loop": {
@@ -16,62 +16,71 @@
     "milestone": {
       "coordinator": "./skills/startup-goal",
       "implementer": "mattpocock:implement",
-      "verifier": "catalog:qa-lead"
+      "verifier": "../../workflows/qa-lead"
     }
   },
   "members": [
-    "catalog:ceo",
-    "catalog:cto",
-    "catalog:product-manager",
-    "catalog:web-design",
-    "catalog:engineering-manager",
-    "catalog:founding-engineer",
-    "catalog:qa-lead"
+    "../../workflows/ceo",
+    "../../workflows/cto",
+    "../../workflows/product-manager",
+    "../../workflows/web-design",
+    "../../workflows/engineering-manager",
+    "../../workflows/founding-engineer",
+    "../../workflows/qa-lead"
   ],
   "orchestration": {
     "roles": {
       "./skills/startup-goal": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "receive"
       },
-      "catalog:ceo": {
+      "../../workflows/ceo": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:cto": {
+      "../../workflows/cto": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:product-manager": {
+      "../../workflows/product-manager": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:web-design": {
+      "../../workflows/web-design": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:engineering-manager": {
+      "../../workflows/engineering-manager": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:founding-engineer": {
+      "../../workflows/founding-engineer": {
         "tier": "deep",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       },
-      "catalog:qa-lead": {
+      "../../workflows/qa-lead": {
         "tier": "deep",
+        "modelRole": "verification",
         "access": "read-only",
         "consultation": "request"
       },
       "mattpocock:implement": {
         "tier": "standard",
+        "modelRole": "implementation",
         "access": "workspace-write",
         "consultation": "request"
       }
@@ -79,6 +88,7 @@
     "support": {
       "explorer": {
         "tier": "fast",
+        "modelRole": "planning",
         "access": "read-only",
         "consultation": "request"
       }
@@ -90,33 +100,36 @@
       "entry": true
     },
     {
-      "source": "catalog:ceo"
+      "source": "../../workflows/ceo"
     },
     {
-      "source": "catalog:cto"
+      "source": "../../workflows/cto"
     },
     {
-      "source": "catalog:product-manager"
+      "source": "../../workflows/product-manager"
     },
     {
-      "source": "catalog:web-design"
+      "source": "../../workflows/web-design"
     },
     {
-      "source": "catalog:engineering-manager"
+      "source": "../../workflows/engineering-manager"
     },
     {
-      "source": "catalog:founding-engineer"
+      "source": "../../workflows/founding-engineer"
     },
     {
-      "source": "catalog:qa-lead"
+      "source": "../../workflows/qa-lead"
     },
     {
       "source": "superpowers:brainstorming",
-      "repo": "obra/superpowers"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
     },
     {
       "source": "mattpocock:implement",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3"
+    },
+    {
+      "source": "../../workflows/setup-model-routing/skills/setup-model-routing"
     }
   ],
   "steps": [
@@ -124,13 +137,13 @@
       "id": "preparing",
       "title": "Prepare the goal tunnel and feature milestones",
       "skill": "./skills/startup-goal",
-      "instruction": "Clarify the goal tunnel, decompose it into ordered feature milestones, select the smallest accountable role set, and prepare manual input packets without launching any role."
+      "instruction": "Clarify the Goal Tunnel, decompose it into ordered feature milestones, select the smallest accountable role set, and create bounded stage-specific Input Packets."
     },
     {
       "id": "planning",
       "title": "Collect and validate the milestone plan",
       "skill": "./skills/startup-goal",
-      "instruction": "Accept completed expert outputs supplied by the user, validate their output packets and evidence ledgers, preserve material disagreements, and assemble the active milestone plan without rewriting expert conclusions."
+      "instruction": "Launch selected installed planning profiles as internal subagents when the host capability is available, wait for their Output Packets, validate evidence, preserve material disagreements, and assemble the active milestone plan without rewriting expert conclusions; otherwise emit an honest Prepared, not executed fallback."
     },
     {
       "id": "awaiting_plan_approval",
@@ -144,26 +157,26 @@
       "title": "Implement the approved milestone",
       "skill": "mattpocock:implement",
       "phase": "implementation",
-      "instruction": "Prepare and manually execute only the separately approved implementation handoff; remain inside the approved plan and record the changed artifacts and verification evidence."
+      "instruction": "After plan approval, launch only the configured internal implement profile with the approved plan projection, wait for its result, remain inside the approved plan, and record changed artifacts and verification evidence; otherwise emit an honest Prepared, not executed fallback."
     },
     {
       "id": "rework",
       "title": "Repair the approved milestone implementation",
       "skill": "mattpocock:implement",
       "phase": "implementation",
-      "instruction": "Apply one bounded repair for verification failures that remain inside the approved plan; return newly discovered requirements to planning instead of expanding scope."
+      "instruction": "Launch the configured internal implement profile for one bounded repair when verification failures remain inside the approved plan; wait for its result and return newly discovered requirements to planning instead of expanding scope."
     },
     {
       "id": "verifying",
       "title": "Verify the milestone result",
-      "skill": "catalog:qa-lead",
-      "instruction": "Prepare the QA handoff, accept the completed QA output supplied by the user, and record acceptance, regression, release-risk, and verification evidence without claiming an automatic role launch."
+      "skill": "../../workflows/qa-lead",
+      "instruction": "After implementation, launch the configured internal QA profile with the approved acceptance criteria and changed-artifact evidence, wait for its Output Packet, and record acceptance, regression, release-risk, and verification evidence; otherwise emit an honest Prepared, not executed fallback."
     },
     {
       "id": "evaluating",
       "title": "Replay the verified user outcome",
       "skill": "./skills/startup-goal",
-      "instruction": "After QA, prepare the accountable outcome role handoff for a User Outcome Replay; validate the returned expectations, needs, wishes, journey steps, evidence, and acceptance recommendation without performing the role's content analysis."
+      "instruction": "After QA passes, launch the installed profile for the accountable outcome role with original requirements and verified result evidence, wait for its User Outcome Replay, and validate expectations, needs, wishes, journey steps, evidence, and acceptance recommendation without performing the role's content analysis; otherwise emit an honest Prepared, not executed fallback."
     },
     {
       "id": "awaiting_acceptance",

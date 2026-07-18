@@ -6,10 +6,12 @@ import {
   createCatalogOrchestrationConfig,
   DEFAULT_ORCHESTRATION_CONFIG,
   hashAgentProfileContent,
+  LEGACY_DEFAULT_ORCHESTRATION_CONFIG,
   type OrchestrationConfig,
   OrchestrationConfigSchema,
   orchestrationConfigFileName,
   type PlannedAgentProfile,
+  toEffectiveOrchestrationConfig,
   validateCodexOrchestrationConfig,
   type WorkflowInstallAgentProfileArtifact,
 } from "../runtimes/omniskill";
@@ -42,6 +44,13 @@ export type PlannedAgentProfileWrite =
   | PlannedDesiredAgentProfileWrite
   | PlannedObsoleteAgentProfileWrite;
 
+export interface PlannedWorkflowRecordWrite {
+  workflowName: string;
+  path: string;
+  status: "unchanged" | "update";
+  content: string;
+}
+
 export async function loadOrchestrationConfigPlan(input: {
   homeDir: string;
   codexCatalog?: readonly CodexModelCapability[];
@@ -52,7 +61,7 @@ export async function loadOrchestrationConfigPlan(input: {
   content: string;
 }> {
   const path = join(input.homeDir, ".omniskills", orchestrationConfigFileName);
-  const legacyContent = `${JSON.stringify(DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
+  const legacyContent = `${JSON.stringify(LEGACY_DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
   const generatedConfig = input.codexCatalog
     ? createCatalogOrchestrationConfig(input.codexCatalog)
     : DEFAULT_ORCHESTRATION_CONFIG;
@@ -75,13 +84,14 @@ export async function loadOrchestrationConfigPlan(input: {
     };
   }
   const config = OrchestrationConfigSchema.parse(JSON.parse(content) as unknown);
+  const effectiveConfig = toEffectiveOrchestrationConfig(config);
   if (input.codexCatalog) {
-    validateCodexOrchestrationConfig(config, input.codexCatalog);
+    validateCodexOrchestrationConfig(effectiveConfig, input.codexCatalog);
   }
   return {
     path,
     status: "unchanged",
-    config,
+    config: effectiveConfig,
     content,
   };
 }
@@ -139,6 +149,7 @@ export async function preflightAgentProfiles(input: {
         contentHash: profile.contentHash,
         taskClass: profile.taskClass,
         tier: profile.tier,
+        ...(profile.modelRole ? { modelRole: profile.modelRole } : {}),
         model: profile.model,
         effort: profile.effort,
         access: profile.access,
@@ -156,6 +167,7 @@ export async function preflightAgentProfiles(input: {
 export async function executeAgentProfilePlan(input: {
   profiles: PlannedAgentProfileWrite[];
   config?: { path: string; status: "create" | "update" | "unchanged"; content: string };
+  records?: PlannedWorkflowRecordWrite[];
 }): Promise<AgentProfileArtifact[]> {
   const conflict = input.profiles.find(({ status }) => status === "conflict");
   if (conflict) {
@@ -190,6 +202,16 @@ export async function executeAgentProfilePlan(input: {
       await writeFile(temporary, planned.profile.content);
       await rename(temporary, destination);
       changed.push({ path: destination, previous });
+    }
+
+    for (const record of input.records ?? []) {
+      if (record.status === "unchanged") continue;
+      const previous = existsSync(record.path) ? await readFile(record.path, "utf8") : null;
+      await mkdir(dirname(record.path), { recursive: true });
+      const temporary = `${record.path}.omniskills-tmp`;
+      await writeFile(temporary, record.content);
+      await rename(temporary, record.path);
+      changed.push({ path: record.path, previous });
     }
   } catch (error) {
     for (const entry of changed.reverse()) {

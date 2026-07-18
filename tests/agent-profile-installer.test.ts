@@ -10,9 +10,12 @@ import {
 } from "../src/plugins/agent-profile-installer";
 import {
   type CodexModelCapability,
+  createModelRoleOrchestrationConfig,
   DEFAULT_ORCHESTRATION_CONFIG,
+  LEGACY_DEFAULT_ORCHESTRATION_CONFIG,
   OrchestrationConfigSchema,
   type PlannedAgentProfile,
+  toEffectiveOrchestrationConfig,
 } from "../src/runtimes/omniskill/orchestration";
 
 const codexCatalog = [
@@ -84,10 +87,47 @@ describe("agent profile installer", () => {
     }
   });
 
+  test("plans GPT-5.6 tier defaults ahead of GPT-5.5 catalog priority", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "orchestration-preferred-config-"));
+    const preferredCatalog = [
+      ...codexCatalog,
+      {
+        slug: "gpt-5.6-sol",
+        visibility: "list",
+        priority: 1,
+        supportedReasoningEfforts: ["medium", "high"],
+      },
+      {
+        slug: "gpt-5.6-terra",
+        visibility: "list",
+        priority: 2,
+        supportedReasoningEfforts: ["low"],
+      },
+    ] satisfies CodexModelCapability[];
+    try {
+      const plan = await loadOrchestrationConfigPlan({
+        homeDir,
+        codexCatalog: preferredCatalog,
+      });
+
+      expect(plan.config.tiers.deep.codex).toEqual([
+        { model: "gpt-5.6-sol", reasoningEffort: "high" },
+      ]);
+      expect(plan.config.tiers.standard.codex).toEqual([
+        { model: "gpt-5.6-sol", reasoningEffort: "medium" },
+      ]);
+      expect(plan.config.tiers.fast.codex).toEqual([
+        { model: "gpt-5.6-terra", reasoningEffort: "low" },
+      ]);
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("plans migration only for the exact legacy generated config", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-legacy-config-"));
     const configPath = join(homeDir, ".omniskills", "orchestration.json");
-    const legacyContent = `${JSON.stringify(DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
+    const legacyContent = `${JSON.stringify(LEGACY_DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
     try {
       await mkdir(join(homeDir, ".omniskills"), { recursive: true });
       await writeFile(configPath, legacyContent);
@@ -106,18 +146,18 @@ describe("agent profile installer", () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-custom-config-"));
     const configPath = join(homeDir, ".omniskills", "orchestration.json");
     const customConfig = OrchestrationConfigSchema.parse({
-      ...DEFAULT_ORCHESTRATION_CONFIG,
+      ...LEGACY_DEFAULT_ORCHESTRATION_CONFIG,
       tiers: {
         deep: {
-          ...DEFAULT_ORCHESTRATION_CONFIG.tiers.deep,
+          ...LEGACY_DEFAULT_ORCHESTRATION_CONFIG.tiers.deep,
           codex: [{ model: "gpt-5.5", reasoningEffort: "high" }],
         },
         standard: {
-          ...DEFAULT_ORCHESTRATION_CONFIG.tiers.standard,
+          ...LEGACY_DEFAULT_ORCHESTRATION_CONFIG.tiers.standard,
           codex: [{ model: "gpt-5.5", reasoningEffort: "medium" }],
         },
         fast: {
-          ...DEFAULT_ORCHESTRATION_CONFIG.tiers.fast,
+          ...LEGACY_DEFAULT_ORCHESTRATION_CONFIG.tiers.fast,
           codex: [{ model: "gpt-5.5", reasoningEffort: "low" }],
         },
       },
@@ -131,6 +171,7 @@ describe("agent profile installer", () => {
 
       expect(plan.status).toBe("unchanged");
       expect(plan.content).toBe(customContent);
+      expect(plan.config).toEqual(toEffectiveOrchestrationConfig(customConfig));
       expect(await readFile(configPath, "utf8")).toBe(customContent);
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -141,7 +182,14 @@ describe("agent profile installer", () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-invalid-custom-config-"));
     const configPath = join(homeDir, ".omniskills", "orchestration.json");
     const customConfig = OrchestrationConfigSchema.parse({
-      ...DEFAULT_ORCHESTRATION_CONFIG,
+      ...createModelRoleOrchestrationConfig({
+        config: DEFAULT_ORCHESTRATION_CONFIG,
+        selections: {
+          planning: { model: "gpt-5.5", reasoningEffort: "high" },
+          implementation: { model: "gpt-5.5", reasoningEffort: "medium" },
+          verification: { model: "gpt-5.5", reasoningEffort: "high" },
+        },
+      }),
       tiers: {
         ...DEFAULT_ORCHESTRATION_CONFIG.tiers,
         deep: {
@@ -167,7 +215,7 @@ describe("agent profile installer", () => {
   test("executes a planned legacy config migration", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-config-update-"));
     const configPath = join(homeDir, ".omniskills", "orchestration.json");
-    const legacyContent = `${JSON.stringify(DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
+    const legacyContent = `${JSON.stringify(LEGACY_DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
     try {
       await mkdir(join(homeDir, ".omniskills"), { recursive: true });
       await writeFile(configPath, legacyContent);
@@ -185,7 +233,7 @@ describe("agent profile installer", () => {
   test("restores migrated config when a later profile write fails", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "orchestration-config-rollback-"));
     const configPath = join(homeDir, ".omniskills", "orchestration.json");
-    const legacyContent = `${JSON.stringify(DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
+    const legacyContent = `${JSON.stringify(LEGACY_DEFAULT_ORCHESTRATION_CONFIG, null, 2)}\n`;
     const blockedParent = join(homeDir, "blocked-parent");
     const blockedProfile = {
       ...profile(homeDir),

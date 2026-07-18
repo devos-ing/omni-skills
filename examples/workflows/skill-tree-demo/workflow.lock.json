@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "skill-tree-demo",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-14T07:48:54.368Z",
+  "generatedAt": "2026-07-17T16:24:40.257Z",
   "workflows": [
     {
       "id": "workflow:skill-tree-demo@0.1.0",
@@ -13,9 +13,9 @@
       }
     },
     {
-      "id": "workflow:cto@0.1.1",
+      "id": "workflow:cto@0.2.0",
       "name": "cto",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "source": {
         "kind": "local",
         "path": "../cto"
@@ -25,7 +25,7 @@
   "edges": [
     {
       "from": "workflow:skill-tree-demo@0.1.0",
-      "to": "workflow:cto@0.1.1"
+      "to": "workflow:cto@0.2.0"
     }
   ],
   "skills": [
@@ -39,35 +39,35 @@
       "source": "../cto/skills/cto",
       "resolvedName": "cto",
       "kind": "local",
-      "hash": "sha256:537d4753b34622b969200709611d0751263e807a0500f02a1b35a5157b60320b"
+      "hash": "sha256:4f7e793578f2d1e014653bae4430cf659cbcef89ce003bcb565b5c610164f11b"
     },
     {
       "source": "mattpocock:codebase-design",
       "resolvedName": "codebase-design",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:452bfb044551a8177528b7df68e204e6a77b8a7f89daa741ef659f652c441376"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:45f1f27c670c4065170eb689a04235e84982f87f133f537f55b12329ff5fec1a"
     },
     {
       "source": "mattpocock:domain-modeling",
       "resolvedName": "domain-modeling",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:f01e41e3fdaf3c4d4c20ddea9eb00e8330003d91bb564ef4518aaee856d4bf69"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0573fd6a60918e5280ce20409cdcb30eed03ec64550404c28dc1f825b3b43276"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
       "resolvedName": "diagnosing-bugs",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0ce16c85852384eae72203418ea0d45145b86b8a04bb6a9d3693def451e08b89"
     },
     {
       "source": "mattpocock:code-review",
       "resolvedName": "code-review",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:4281a8bb8667c7c46ca512cc19782af9606876d9bab13d306688829783ebfa13"
     }
   ]
 }

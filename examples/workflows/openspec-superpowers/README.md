@@ -64,6 +64,13 @@ bun run dev -- skills install mattpocock/skills
 
 ## Try It
 
+With the repository CLI, `openspec-delivery` is the canonical alias and
+`openspec-superpowers` remains a compatibility alias:
+
+```bash
+bun run dev -- install openspec-delivery
+```
+
 Validate this Omniskills workflow from the repo root:
 
 ```bash

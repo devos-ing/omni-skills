@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "bun test tests",
     "check": "bun run test && bun run typecheck && bun run build"
   },
   "dependencies": {
     "boring-avatars": "2.0.4",
+    "geist": "^1.7.2",
     "lucide-react": "0.487.0",
     "next": "16.2.0",
     "react": "19.2.7",

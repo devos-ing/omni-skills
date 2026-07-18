@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "0.1",
+  "kind": "team",
+  "name": "finance-team",
+  "version": "0.1.0",
+  "description": "Coordinate company, financial, valuation, and risk specialists into one sourced public-company research brief.",
+  "coordinator": "./skills/finance-research",
+  "members": [
+    "../../workflows/company-analysis",
+    "../../workflows/financial-analysis",
+    "../../workflows/valuation-analysis",
+    "../../workflows/risk-analysis"
+  ],
+  "orchestration": {
+    "roles": {
+      "./skills/finance-research": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "receive"
+      },
+      "../../workflows/company-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/financial-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/valuation-analysis": {
+        "tier": "deep",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      },
+      "../../workflows/risk-analysis": {
+        "tier": "deep",
+        "modelRole": "verification",
+        "access": "read-only",
+        "consultation": "request"
+      }
+    },
+    "support": {
+      "explorer": {
+        "tier": "fast",
+        "modelRole": "planning",
+        "access": "read-only",
+        "consultation": "request"
+      }
+    }
+  },
+  "skills": [
+    { "source": "./skills/finance-research", "entry": true },
+    { "source": "../../workflows/company-analysis" },
+    { "source": "../../workflows/financial-analysis" },
+    { "source": "../../workflows/valuation-analysis" },
+    { "source": "../../workflows/risk-analysis" },
+    { "source": "../../workflows/setup-model-routing/skills/setup-model-routing" }
+  ],
+  "steps": [
+    {
+      "id": "scope",
+      "title": "Approve the finance research brief",
+      "skill": "./skills/finance-research",
+      "gate": "human_approval"
+    },
+    {
+      "id": "company",
+      "title": "Analyze the company",
+      "skill": "../../workflows/company-analysis"
+    },
+    {
+      "id": "financials",
+      "title": "Analyze the financials",
+      "skill": "../../workflows/financial-analysis"
+    },
+    {
+      "id": "valuation",
+      "title": "Analyze valuation scenarios",
+      "skill": "../../workflows/valuation-analysis"
+    },
+    {
+      "id": "risk",
+      "title": "Verify sources and challenge the thesis",
+      "skill": "../../workflows/risk-analysis"
+    }
+  ]
+}

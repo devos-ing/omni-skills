@@ -6,18 +6,18 @@
   "skills": [
     {
       "source": "superpowers:brainstorming",
-      "repo": "obra/superpowers"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
     },
     {
       "source": "./skills/release-risk-review"
     },
     {
       "source": "superpowers:writing-plans",
-      "repo": "obra/superpowers"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
     },
     {
       "source": "superpowers:verification-before-completion",
-      "repo": "obra/superpowers"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
     }
   ],
   "steps": [

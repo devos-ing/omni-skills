@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "0.1",
+  "name": "setup-model-routing",
+  "version": "0.1.0",
+  "description": "Configure global Codex model and reasoning-effort routing for planning, implementation, and verification.",
+  "skills": [
+    {
+      "source": "./skills/setup-model-routing",
+      "entry": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "configure",
+      "title": "Configure global Codex model routing",
+      "skill": "./skills/setup-model-routing",
+      "gate": "human_approval"
+    }
+  ]
+}

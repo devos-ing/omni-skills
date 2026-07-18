@@ -3,6 +3,7 @@ import { join } from "node:path";
 import {
   type CodexModelCapability,
   createCatalogOrchestrationConfig,
+  createModelRoleOrchestrationConfig,
   DEFAULT_ORCHESTRATION_CONFIG,
   OrchestrationConfigSchema,
   OrchestrationModelCompatibilityError,
@@ -172,6 +173,44 @@ describe("orchestration configuration", () => {
     });
   });
 
+  test("prefers GPT-5.6 tier defaults over higher-priority GPT-5.5", () => {
+    const catalog = [
+      {
+        slug: "gpt-5.5",
+        visibility: "list",
+        priority: 0,
+        supportedReasoningEfforts: ["low", "medium", "high"],
+      },
+      {
+        slug: "gpt-5.6-sol",
+        visibility: "list",
+        priority: 1,
+        supportedReasoningEfforts: ["medium", "high"],
+      },
+      {
+        slug: "gpt-5.6-terra",
+        visibility: "list",
+        priority: 2,
+        supportedReasoningEfforts: ["low"],
+      },
+    ] satisfies CodexModelCapability[];
+
+    expect(createCatalogOrchestrationConfig(catalog).tiers).toEqual({
+      deep: {
+        codex: [{ model: "gpt-5.6-sol", reasoningEffort: "high" }],
+        claude: DEFAULT_ORCHESTRATION_CONFIG.tiers.deep.claude,
+      },
+      standard: {
+        codex: [{ model: "gpt-5.6-sol", reasoningEffort: "medium" }],
+        claude: DEFAULT_ORCHESTRATION_CONFIG.tiers.standard.claude,
+      },
+      fast: {
+        codex: [{ model: "gpt-5.6-terra", reasoningEffort: "low" }],
+        claude: DEFAULT_ORCHESTRATION_CONFIG.tiers.fast.claude,
+      },
+    });
+  });
+
   test("reports when no visible model supports a required tier effort", () => {
     try {
       createCatalogOrchestrationConfig([
@@ -223,7 +262,7 @@ describe("orchestration configuration", () => {
     try {
       validateCodexOrchestrationConfig(DEFAULT_ORCHESTRATION_CONFIG, [
         {
-          slug: "gpt-5.6",
+          slug: "gpt-5.6-sol",
           visibility: "list",
           priority: 0,
           supportedReasoningEfforts: ["low", "medium"],
@@ -239,7 +278,7 @@ describe("orchestration configuration", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(OrchestrationModelCompatibilityError);
       expect((error as OrchestrationModelCompatibilityError).code).toBe("effort_unsupported");
-      expect((error as Error).message).toContain("gpt-5.6 does not support effort high");
+      expect((error as Error).message).toContain("gpt-5.6-sol does not support effort high");
     }
   });
 
@@ -263,7 +302,7 @@ describe("orchestration configuration", () => {
       { profileId: "omniskills-test-team-implement", target: "codex", tier: "standard" },
     ]);
     expect(profiles.find(({ target }) => target === "codex")?.content).toContain(
-      'model = "gpt-5.6"',
+      'model = "gpt-5.6-sol"',
     );
     expect(profiles.find(({ target }) => target === "claude")?.content).toContain("model: opus");
     expect(profiles.find(({ source }) => source === "catalog:cto")?.content).toContain(
@@ -307,6 +346,101 @@ describe("orchestration configuration", () => {
     expect(profiles.find(({ target }) => target === "codex")?.destination).toBe(
       join("/tmp/orchestration-home", ".codex", "agents", "omniskills-test-team-coordinator.toml"),
     );
+  });
+
+  test("routes labeled Codex profiles through model roles", () => {
+    const labeled = WorkflowBundleManifestSchema.parse({
+      ...manifest,
+      orchestration: {
+        ...manifest.orchestration,
+        roles: Object.fromEntries(
+          Object.entries(manifest.orchestration?.roles ?? {}).map(([source, assignment]) => [
+            source,
+            {
+              ...assignment,
+              modelRole: source === "mattpocock:implement" ? "implementation" : "planning",
+            },
+          ]),
+        ),
+      },
+    });
+    const config = createModelRoleOrchestrationConfig({
+      config: DEFAULT_ORCHESTRATION_CONFIG,
+      selections: {
+        planning: { model: "planner", reasoningEffort: "high" },
+        implementation: { model: "builder", reasoningEffort: "medium" },
+        verification: { model: "verifier", reasoningEffort: "high" },
+      },
+    });
+
+    const profiles = planAgentProfiles({
+      manifest: labeled,
+      config,
+      homeDir: "/tmp/orchestration-home",
+      targets: ["codex"],
+      roleSkillNames,
+    });
+
+    expect(profiles.find(({ source }) => source === "catalog:cto")).toMatchObject({
+      modelRole: "planning",
+      model: "planner",
+      effort: "high",
+    });
+    expect(profiles.find(({ source }) => source === "mattpocock:implement")).toMatchObject({
+      modelRole: "implementation",
+      model: "builder",
+      effort: "medium",
+    });
+  });
+
+  test("uses model roles only for Codex profiles", () => {
+    const labeled = WorkflowBundleManifestSchema.parse({
+      ...manifest,
+      orchestration: {
+        ...manifest.orchestration,
+        roles: {
+          ...manifest.orchestration?.roles,
+          "catalog:cto": {
+            tier: "deep",
+            modelRole: "planning",
+            access: "read-only",
+            consultation: "request",
+          },
+        },
+      },
+    });
+    const config = createModelRoleOrchestrationConfig({
+      config: DEFAULT_ORCHESTRATION_CONFIG,
+      selections: {
+        planning: { model: "planner", reasoningEffort: "high" },
+        implementation: { model: "builder", reasoningEffort: "medium" },
+        verification: { model: "verifier", reasoningEffort: "high" },
+      },
+    });
+
+    const profiles = planAgentProfiles({
+      manifest: labeled,
+      config,
+      homeDir: "/tmp/orchestration-home",
+      targets: ["codex", "claude"],
+      roleSkillNames,
+    });
+    const codexProfile = profiles.find(
+      ({ source, target }) => source === "catalog:cto" && target === "codex",
+    );
+    const claudeProfile = profiles.find(
+      ({ source, target }) => source === "catalog:cto" && target === "claude",
+    );
+
+    expect(codexProfile).toMatchObject({
+      modelRole: "planning",
+      model: "planner",
+      effort: "high",
+    });
+    expect(codexProfile?.instructions).toContain("Model role: planning.");
+    expect(claudeProfile).toMatchObject({ model: "opus", effort: "high" });
+    expect(claudeProfile).not.toHaveProperty("modelRole");
+    expect(claudeProfile?.instructions).not.toContain("Model role:");
   });
 
   test("renders ordered same-tier fallback profiles", () => {

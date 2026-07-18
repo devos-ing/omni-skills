@@ -4,7 +4,11 @@ import { join } from "node:path";
 import {
   type CatalogEntryContent,
   catalogEntries,
+  financeTeam,
+  marketTeam,
+  orchestrationCases,
   startupTeam,
+  teams,
   workflows,
 } from "../landing/lib/landing-content";
 import { buildSkillHubEntries } from "../landing/lib/skill-hub";
@@ -16,14 +20,20 @@ function manifestPath(entry: CatalogEntryContent) {
   return join(repoRoot, "examples", folder, entry.slug, "workflow.json");
 }
 
-function lockPath(entry: CatalogEntryContent) {
-  const folder = entry.kind === "team" ? "teams" : "workflows";
-  return join(repoRoot, "examples", folder, entry.slug, "workflow.lock.json");
-}
-
 function displayName(source: string) {
   if (source.startsWith("./skills/")) return source.slice("./skills/".length);
   if (source.startsWith("catalog:")) return source.slice("catalog:".length);
+  const localSkillMarker = "/skills/";
+  const localSkillIndex = source.lastIndexOf(localSkillMarker);
+  if (localSkillIndex >= 0) return source.slice(localSkillIndex + localSkillMarker.length);
+  const localWorkflowMarker = "/workflows/";
+  const localWorkflowIndex = source.lastIndexOf(localWorkflowMarker);
+  if (localWorkflowIndex >= 0) {
+    const [workflowName] = source
+      .slice(localWorkflowIndex + localWorkflowMarker.length)
+      .split("/", 1);
+    return workflowName ?? source;
+  }
   return source;
 }
 
@@ -45,19 +55,8 @@ describe("landing teams and skill hub data", () => {
     expect(catalogEntries[0]).toBe(startupTeam);
   });
 
-  test("mirrors workflow manifests and the expanded team lock roster", () => {
+  test("mirrors workflow manifests and the pre-publication team roster", () => {
     for (const entry of catalogEntries) {
-      if (entry.kind === "team") {
-        const lock = JSON.parse(readFileSync(lockPath(entry), "utf8")) as {
-          skills: Array<{ source: string; resolvedName: string; kind: "local" | "external" }>;
-        };
-        expect(entry.skills.map(({ name }) => name).sort()).toEqual(
-          lock.skills
-            .map(({ source, resolvedName, kind }) => (kind === "external" ? source : resolvedName))
-            .sort(),
-        );
-        continue;
-      }
       const manifest = JSON.parse(readFileSync(manifestPath(entry), "utf8")) as {
         skills: Array<{ source: string }>;
       };
@@ -76,6 +75,38 @@ describe("landing teams and skill hub data", () => {
     expect(startupTeam.members.map(({ skill }) => skill)).toEqual(
       manifest.members.map((source) => displayName(source)),
     );
+  });
+
+  test("models all featured teams from their real manifests", () => {
+    expect(teams.map(({ slug }) => slug)).toEqual(["startup-team", "finance-team", "market-team"]);
+    for (const team of teams) {
+      const manifest = JSON.parse(readFileSync(manifestPath(team), "utf8")) as {
+        coordinator: string;
+        members: string[];
+      };
+      expect(team.coordinator.skill).toBe(displayName(manifest.coordinator));
+      expect(team.members.map(({ skill }) => skill)).toEqual(
+        manifest.members.map((source) => displayName(source)),
+      );
+      expect(workflows.some(({ slug }) => slug === team.slug)).toBe(false);
+    }
+    expect(financeTeam.entrySkill).toBe("finance-research");
+    expect(marketTeam.entrySkill).toBe("market-research");
+  });
+
+  test("maps every orchestration case to a real featured team", () => {
+    expect(orchestrationCases.map(({ teamSlug }) => teamSlug)).toEqual([
+      "startup-team",
+      "finance-team",
+      "market-team",
+    ]);
+    for (const orchestrationCase of orchestrationCases) {
+      const team = teams.find(({ slug }) => slug === orchestrationCase.teamSlug);
+      expect(team).toBeDefined();
+      if (!team) throw new Error(`Missing team ${orchestrationCase.teamSlug}`);
+      expect(orchestrationCase.installCommand).toBe(team.installCommand);
+      expect(orchestrationCase.previewLabel).toBe("Example run · hardcoded preview");
+    }
   });
 
   test("deduplicates skills by canonical source and records package use", () => {

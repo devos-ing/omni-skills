@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { Command } from "commander";
 import {
   configureOmniskillCommand,
@@ -10,6 +10,7 @@ import {
   type OmniskillOnboardCommand,
 } from "../src/omniskill";
 import {
+  installAgentSkill,
   MissingMattPocockSkillError,
   MissingSuperpowersSkillError,
   type SkillInstallResult,
@@ -17,13 +18,20 @@ import {
 } from "../src/plugins";
 import type { WorkflowGitCommand } from "../src/runtimes/omniskill/workflow-bundles";
 
-const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
+const mattPocockV1_1Repo =
+  "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3";
 const testCodexModelCatalog = async () => [
   {
     slug: "gpt-5.5",
     visibility: "list",
     priority: 0,
     supportedReasoningEfforts: ["low", "medium", "high"] as const,
+  },
+  {
+    slug: "codex-auto-review",
+    visibility: "hidden",
+    priority: 1,
+    supportedReasoningEfforts: ["high"] as const,
   },
 ];
 
@@ -32,6 +40,8 @@ function fakeSkillInstallResult(input: {
   skillName: string;
   destination: string;
   artifactPaths?: string[];
+  status?: "installed" | "updated" | "already_present";
+  createdByBootstrap?: boolean;
 }): SkillInstallResult {
   return {
     skillName: input.skillName,
@@ -46,7 +56,8 @@ function fakeSkillInstallResult(input: {
         agent: "codex",
         destination: input.destination,
         artifactPaths: input.artifactPaths ?? [input.destination],
-        status: "installed",
+        status: input.status ?? "installed",
+        ...(input.createdByBootstrap ? { createdByBootstrap: true } : {}),
       },
     ],
   };
@@ -215,6 +226,141 @@ async function writeGitWorkflowFixture(checkoutDir: string): Promise<void> {
 }
 
 describe("omniskill command module", () => {
+  test("setup-model-routing lists models as JSON", async () => {
+    const program = new Command();
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...values: unknown[]) => logs.push(values.join(" "));
+    try {
+      configureOmniskillCommand(program, {
+        rootDir: "/tmp/project",
+        installSkill: async () => {
+          throw new Error("not used");
+        },
+        printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
+      });
+
+      await program.parseAsync(["setup-model-routing", "--list-models", "--json"], {
+        from: "user",
+      });
+
+      expect(JSON.parse(logs.join("\n"))).toEqual({
+        models: [
+          {
+            slug: "gpt-5.5",
+            visibility: "list",
+            priority: 0,
+            supportedReasoningEfforts: ["low", "medium", "high"],
+          },
+        ],
+      });
+      expect(logs.join("\n")).not.toContain("codex-auto-review");
+    } finally {
+      console.log = originalLog;
+    }
+  });
+
+  test("setup-model-routing applies the exact confirmed selections", async () => {
+    const program = new Command();
+    const rootDir = await mkdtemp(join(tmpdir(), "setup-model-routing-command-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+    let executed = false;
+    console.log = (...values: unknown[]) => logs.push(values.join(" "));
+    try {
+      configureOmniskillCommand(program, {
+        rootDir,
+        installSkill: async () => {
+          throw new Error("not used");
+        },
+        printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
+        planModelRoutingSetup: async (input) => {
+          expect(input.selections).toEqual({
+            planning: { model: "gpt-5.5", reasoningEffort: "high" },
+            implementation: { model: "gpt-5.5", reasoningEffort: "medium" },
+            verification: { model: "gpt-5.5", reasoningEffort: "high" },
+          });
+          return {
+            config: {
+              path: join(rootDir, ".omniskills", "orchestration.json"),
+              status: "update",
+              config: {
+                schemaVersion: "0.2",
+                tiers: {
+                  deep: {
+                    codex: [{ model: "gpt-5.5", reasoningEffort: "high" }],
+                    claude: [{ model: "opus", effort: "high" }],
+                  },
+                  standard: {
+                    codex: [{ model: "gpt-5.5", reasoningEffort: "medium" }],
+                    claude: [{ model: "sonnet", effort: "medium" }],
+                  },
+                  fast: {
+                    codex: [{ model: "gpt-5.5", reasoningEffort: "low" }],
+                    claude: [{ model: "haiku", effort: "low" }],
+                  },
+                },
+                modelRoles: {
+                  planning: { codex: [{ model: "gpt-5.5", reasoningEffort: "high" }] },
+                  implementation: { codex: [{ model: "gpt-5.5", reasoningEffort: "medium" }] },
+                  verification: { codex: [{ model: "gpt-5.5", reasoningEffort: "high" }] },
+                },
+                limits: {
+                  retryPerCandidate: 1,
+                  reassignmentPerWorkItem: 1,
+                  consultationsPerAgent: 2,
+                },
+                policy: {
+                  sameTierFallback: "automatic_disclosed",
+                  lowerTierFallback: "human_approval",
+                },
+              },
+              content: "{}\n",
+            },
+            profileWrites: [],
+            recordWrites: [],
+            affectedWorkflows: ["startup-team"],
+          };
+        },
+        executeModelRoutingSetup: async () => {
+          executed = true;
+        },
+      });
+
+      await program.parseAsync(
+        [
+          "setup-model-routing",
+          "--planning-model",
+          "gpt-5.5",
+          "--planning-effort",
+          "high",
+          "--implementation-model",
+          "gpt-5.5",
+          "--implementation-effort",
+          "medium",
+          "--verification-model",
+          "gpt-5.5",
+          "--verification-effort",
+          "high",
+          "--apply",
+          "--json",
+        ],
+        { from: "user" },
+      );
+
+      expect(executed).toBe(true);
+      expect(JSON.parse(logs.join("\n"))).toMatchObject({
+        status: "applied",
+        affectedWorkflows: ["startup-team"],
+      });
+    } finally {
+      console.log = originalLog;
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("registers Omniskills commands and dependency aliases", () => {
     const program = new Command();
 
@@ -235,6 +381,7 @@ describe("omniskill command module", () => {
       "remove",
       "deps",
       "onboard",
+      "setup-model-routing",
       "loop",
       "bundle",
       "workflow",
@@ -619,6 +766,10 @@ describe("omniskill command module", () => {
       const installed = JSON.parse(
         await readFile(join(homeDir, ".omniskills", "workflows", "git-team.json"), "utf8"),
       );
+      expect(installed.installedRoleSkillNames).toEqual({
+        "./skills/git-entry": "git-entry",
+        "./member-workflow": "actual-git-extra",
+      });
       expect(installed.installArtifacts).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -633,9 +784,12 @@ describe("omniskill command module", () => {
           }),
         ]),
       );
-      expect(await readFile(join(homeDir, ".omniskills", "orchestration.json"), "utf8")).toContain(
-        '"schemaVersion": "0.1"',
+      const orchestrationConfig = await readFile(
+        join(homeDir, ".omniskills", "orchestration.json"),
+        "utf8",
       );
+      expect(orchestrationConfig).toContain('"schemaVersion": "0.2"');
+      expect(orchestrationConfig).toContain('"modelRoles"');
       await expect(
         readFile(join(homeDir, ".codex", "agents", "omniskills-git-team-git-entry.toml"), "utf8"),
       ).resolves.toContain('model = "gpt-5.5"');
@@ -939,7 +1093,7 @@ describe("omniskill command module", () => {
       {
         source: join(bundleDir, "skills", "git-extra"),
         force: false,
-        refreshExisting: true,
+        refreshExisting: false,
       },
     ]);
     const installed = JSON.parse(
@@ -949,6 +1103,129 @@ describe("omniskill command module", () => {
 
     await rm(rootDir, { recursive: true, force: true });
     await rm(homeDir, { recursive: true, force: true });
+  });
+
+  test("installs and same-version refreshes Finance Team children from one local checkout", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-team-checkout-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-team-checkout-home-"));
+    const examplesDir = join(rootDir, "examples");
+    const teamDir = join(examplesDir, "teams", "finance-team");
+    const companySource = join(
+      examplesDir,
+      "workflows",
+      "company-analysis",
+      "skills",
+      "company-analysis",
+      "SKILL.md",
+    );
+    const companyInstalled = join(homeDir, ".agents", "skills", "company-analysis", "SKILL.md");
+    const riskCollision = join(homeDir, ".agents", "skills", "risk-analysis", "SKILL.md");
+    const program = new Command();
+    const installSources: string[] = [];
+
+    try {
+      await cp(join(import.meta.dir, "..", "examples"), examplesDir, { recursive: true });
+      await mkdir(join(homeDir, ".agents", "skills", "risk-analysis"), { recursive: true });
+      await writeFile(riskCollision, "user-owned collision\n");
+
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async (input) => {
+          installSources.push(input.source);
+          return { skillInstall: await installAgentSkill(input) };
+        },
+        printSkillInstallResult: () => {},
+        codexModelCatalog: testCodexModelCatalog,
+      });
+
+      await program.parseAsync(["install", teamDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      expect(installSources).toContain(dirname(companySource));
+      expect(installSources.every((source) => source.startsWith(rootDir))).toBe(true);
+      expect(await readFile(companyInstalled, "utf8")).toBe(await readFile(companySource, "utf8"));
+      expect(await readFile(riskCollision, "utf8")).toBe("user-owned collision\n");
+
+      const recordPath = join(homeDir, ".omniskills", "workflows", "finance-team.json");
+      const firstRecord = JSON.parse(await readFile(recordPath, "utf8"));
+      expect(firstRecord.installedRoleSkillNames["../../workflows/company-analysis"]).toBe(
+        "company-analysis",
+      );
+      expect(firstRecord.installArtifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "agent_profile",
+            source: "../../workflows/company-analysis",
+            instructions: expect.stringContaining("installed `$company-analysis` skill"),
+          }),
+        ]),
+      );
+
+      const legacyRoleSources = new Map(
+        Object.entries(firstRecord.installedRoleSkillNames as Record<string, string>)
+          .filter(([source]) => source.startsWith("../../workflows/"))
+          .map(([source, skillName]) => [source, `catalog:${skillName}`]),
+      );
+      await writeFile(
+        recordPath,
+        JSON.stringify(
+          {
+            ...firstRecord,
+            installedRoleSkillNames: undefined,
+            installArtifacts: firstRecord.installArtifacts.map(
+              (artifact: { kind?: string; source: string; skillName?: string }) => ({
+                ...artifact,
+                source:
+                  legacyRoleSources.get(artifact.source) ??
+                  (artifact.kind !== "agent_profile" &&
+                  artifact.skillName &&
+                  [...legacyRoleSources.values()].includes(`catalog:${artifact.skillName}`)
+                    ? join("/legacy-catalog", artifact.skillName, "skills", artifact.skillName)
+                    : artifact.source),
+              }),
+            ),
+          },
+          null,
+          2,
+        ),
+      );
+
+      await writeFile(
+        companySource,
+        `${await readFile(companySource, "utf8")}\nSame-version refresh.\n`,
+      );
+      installSources.length = 0;
+      await program.parseAsync(["install", teamDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      expect(installSources).toContain(dirname(companySource));
+      expect(await readFile(companyInstalled, "utf8")).toContain("Same-version refresh.");
+      expect(await readFile(riskCollision, "utf8")).toBe("user-owned collision\n");
+      const upgradedRecord = JSON.parse(await readFile(recordPath, "utf8"));
+      expect(upgradedRecord.installedRoleSkillNames["../../workflows/company-analysis"]).toBe(
+        "company-analysis",
+      );
+      expect(upgradedRecord.installArtifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            source: dirname(companySource),
+            skillName: "company-analysis",
+            status: "installed",
+          }),
+          expect.objectContaining({
+            source: join(examplesDir, "workflows", "risk-analysis", "skills", "risk-analysis"),
+            skillName: "risk-analysis",
+            status: "skipped_exists",
+          }),
+        ]),
+      );
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
   });
 
   test("install persists exact skill artifact paths in the workflow record", async () => {
@@ -992,6 +1269,210 @@ describe("omniskill command module", () => {
           paths: [primary, mirror],
         },
       ]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("recovers ownership created before a failed install without claiming pre-existing skills", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-install-retry-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-install-retry-home-"));
+    const bundleDir = join(rootDir, "git-workflow");
+    const entryPath = join(homeDir, ".agents", "skills", "git-entry");
+    const existingPath = join(homeDir, ".agents", "skills", "git-extra");
+    const program = new Command();
+    let failExtraOnce = true;
+    let entryInstallCount = 0;
+
+    try {
+      await writeGitWorkflowFixtureAt(bundleDir, { extraSkill: true });
+      await mkdir(existingPath, { recursive: true });
+      await writeFile(join(existingPath, "SKILL.md"), "pre-existing skill\n");
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async (input) => {
+          const isExtra = input.source.endsWith("git-extra");
+          if (isExtra && failExtraOnce) {
+            failExtraOnce = false;
+            throw new Error("injected dependency failure");
+          }
+          const skillName = isExtra ? "git-extra" : "git-entry";
+          const destination = join(homeDir, ".agents", "skills", skillName);
+          if (!isExtra) {
+            entryInstallCount += 1;
+            await mkdir(destination, { recursive: true });
+            await writeFile(join(destination, "SKILL.md"), "install-owned skill\n");
+          }
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName,
+              destination,
+              status: isExtra || entryInstallCount > 1 ? "already_present" : "installed",
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+      });
+
+      await expect(
+        program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+          from: "user",
+        }),
+      ).rejects.toThrow("injected dependency failure");
+
+      await program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex"], {
+        from: "user",
+      });
+
+      const installed = JSON.parse(
+        await readFile(join(homeDir, ".omniskills", "workflows", "git-workflow.json"), "utf8"),
+      );
+      expect(installed.installArtifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ skillName: "git-entry", status: "installed" }),
+          expect.objectContaining({ skillName: "git-extra", status: "already_present" }),
+        ]),
+      );
+
+      await program.parseAsync(["remove", "git-workflow", "--home", homeDir, "--yes"], {
+        from: "user",
+      });
+
+      await expect(stat(entryPath)).rejects.toThrow();
+      await expect(stat(existingPath)).resolves.toBeTruthy();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("records only external-bootstrap targets that a retry reports as updated", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "omniskill-bootstrap-journal-root-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-bootstrap-journal-home-"));
+    const bundleDir = join(rootDir, "bootstrap-workflow");
+    const codexEntryPath = join(homeDir, ".agents", "skills", "tdd");
+    const claudeEntryPath = join(homeDir, ".claude", "skills", "tdd");
+    const journalPath = join(
+      homeDir,
+      ".omniskills",
+      "workflow-installs",
+      "bootstrap-workflow.json",
+    );
+    const program = new Command();
+    let failExtraOnce = true;
+    let entryBootstrapped = false;
+    let entryAttempts = 0;
+
+    try {
+      await mkdir(bundleDir, { recursive: true });
+      await writeFile(
+        join(bundleDir, "workflow.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            name: "bootstrap-workflow",
+            version: "0.1.0",
+            description: "Exercises ownership after external bootstrap.",
+            skills: [{ source: "mattpocock:tdd" }, { source: "later-dependency" }],
+            steps: [
+              { id: "tdd", title: "Bootstrap TDD", skill: "mattpocock:tdd" },
+              { id: "later", title: "Later dependency", skill: "later-dependency" },
+            ],
+          },
+          null,
+          2,
+        ),
+      );
+      await mkdir(claudeEntryPath, { recursive: true });
+      await writeFile(join(claudeEntryPath, "SKILL.md"), "pre-existing Claude skill\n");
+      configureOmniskillCommand(program, {
+        rootDir,
+        installPrompt: { confirmInstall: async () => true },
+        installSkill: async (input) => {
+          if (input.source === "later-dependency" && failExtraOnce) {
+            failExtraOnce = false;
+            throw new Error("later dependency failure");
+          }
+          if (input.source === "mattpocock:tdd" && !entryBootstrapped) {
+            throw new MissingMattPocockSkillError({ skillName: "tdd", homeDir });
+          }
+          if (input.source === "mattpocock:tdd") {
+            entryAttempts += 1;
+            return {
+              skillInstall: {
+                skillName: "tdd",
+                source: { kind: "path", name: "tdd", path: codexEntryPath },
+                dryRun: false,
+                targets: [
+                  {
+                    agent: "codex",
+                    destination: codexEntryPath,
+                    artifactPaths: [codexEntryPath],
+                    status: entryAttempts === 1 ? "updated" : "already_present",
+                  },
+                  {
+                    agent: "claude",
+                    destination: claudeEntryPath,
+                    artifactPaths: [claudeEntryPath],
+                    status: "updated",
+                  },
+                ],
+              },
+            };
+          }
+          return {
+            skillInstall: fakeSkillInstallResult({
+              source: input.source,
+              skillName: "later-dependency",
+              destination: join(homeDir, ".agents", "skills", "later-dependency"),
+            }),
+          };
+        },
+        printSkillInstallResult: () => {},
+        installExternalSkillDependency: async () => {
+          await mkdir(codexEntryPath, { recursive: true });
+          await writeFile(join(codexEntryPath, "SKILL.md"), "bootstrap-created\n");
+          entryBootstrapped = true;
+        },
+      });
+
+      await expect(
+        program.parseAsync(["install", bundleDir, "--home", homeDir, "--agents", "codex,claude"], {
+          from: "user",
+        }),
+      ).rejects.toThrow("later dependency failure");
+      await expect(stat(journalPath)).resolves.toBeTruthy();
+
+      await program.parseAsync(
+        ["install", bundleDir, "--home", homeDir, "--agents", "codex,claude"],
+        { from: "user" },
+      );
+      const installed = JSON.parse(
+        await readFile(
+          join(homeDir, ".omniskills", "workflows", "bootstrap-workflow.json"),
+          "utf8",
+        ),
+      );
+      expect(installed.installArtifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ skillName: "tdd", agent: "codex", status: "updated" }),
+          expect.objectContaining({ skillName: "tdd", agent: "claude", status: "updated" }),
+        ]),
+      );
+      await expect(stat(journalPath)).rejects.toThrow();
+
+      await program.parseAsync(["remove", "bootstrap-workflow", "--home", homeDir, "--yes"], {
+        from: "user",
+      });
+      await expect(stat(codexEntryPath)).rejects.toThrow();
+      await expect(stat(claudeEntryPath)).resolves.toBeTruthy();
+      await expect(stat(journalPath)).rejects.toThrow();
+      await expect(
+        stat(join(homeDir, ".omniskills", "workflows", "bootstrap-workflow.json")),
+      ).rejects.toThrow();
     } finally {
       await rm(rootDir, { recursive: true, force: true });
       await rm(homeDir, { recursive: true, force: true });

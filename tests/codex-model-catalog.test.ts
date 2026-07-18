@@ -41,7 +41,7 @@ async function expectCatalogError(
 }
 
 describe("Codex model catalog", () => {
-  test("runs the documented command and normalizes only orchestration fields", async () => {
+  test("runs the documented command and returns only visible orchestration fields", async () => {
     const commands: unknown[] = [];
     const provider = createCodexModelCatalogProvider(async (command) => {
       commands.push(command);
@@ -54,12 +54,6 @@ describe("Codex model catalog", () => {
         visibility: "list",
         priority: 0,
         supportedReasoningEfforts: ["low", "medium", "high"],
-      },
-      {
-        slug: "hidden-model",
-        visibility: "hidden",
-        priority: 1,
-        supportedReasoningEfforts: ["high"],
       },
     ]);
     expect(commands).toEqual([

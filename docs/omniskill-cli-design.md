@@ -114,7 +114,7 @@ Install and author workflow skill trees for agent work.
 Start:
   omniskill init release-review
   omniskill validate ./release-review
-  omniskill install openspec-superpowers
+  omniskill install openspec-delivery
   omniskill install ./release-review
 
 Inspect:

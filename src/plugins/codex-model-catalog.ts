@@ -36,6 +36,12 @@ export class CodexModelCatalogError extends Error {
   }
 }
 
+export function getVisibleCodexModels(
+  catalog: readonly CodexModelCapability[],
+): CodexModelCapability[] {
+  return catalog.filter(({ visibility }) => visibility === "list");
+}
+
 export function createCodexModelCatalogProvider(
   runCommand: CodexModelCatalogCommandRunner,
 ): CodexModelCatalogProvider {
@@ -68,13 +74,15 @@ export function createCodexModelCatalogProvider(
       );
     }
 
-    const catalog = parsed.models.map((model) => ({
-      slug: model.slug,
-      visibility: model.visibility,
-      priority: model.priority,
-      supportedReasoningEfforts: model.supported_reasoning_levels.map(({ effort }) => effort),
-    }));
-    if (!catalog.some(({ visibility }) => visibility === "list")) {
+    const catalog = getVisibleCodexModels(
+      parsed.models.map((model) => ({
+        slug: model.slug,
+        visibility: model.visibility,
+        priority: model.priority,
+        supportedReasoningEfforts: model.supported_reasoning_levels.map(({ effort }) => effort),
+      })),
+    );
+    if (catalog.length === 0) {
       throw new CodexModelCatalogError(
         "empty_visible_catalog",
         "Codex exposes no visible models. Update Codex or authenticate the intended identity.",

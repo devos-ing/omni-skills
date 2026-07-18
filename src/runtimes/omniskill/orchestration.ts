@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { basename, resolve, sep } from "node:path";
 import { z } from "zod";
-import type { WorkflowBundleManifest } from "./workflow-bundles";
+import type { ModelRole, WorkflowBundleManifest } from "./workflow-bundles";
 
 export const orchestrationConfigFileName = "orchestration.json";
 export const orchestrationTiers = ["deep", "standard", "fast"] as const;
@@ -41,7 +41,7 @@ export class OrchestrationModelCompatibilityError extends Error {
   }
 }
 
-const CodexCandidateSchema = z
+export const CodexCandidateSchema = z
   .object({
     model: z.string().min(1),
     reasoningEffort: CodexReasoningEffortSchema,
@@ -62,9 +62,14 @@ const TierCandidatesSchema = z
   })
   .strict();
 
-export const OrchestrationConfigSchema = z
+const ModelRoleCandidatesSchema = z
   .object({
-    schemaVersion: z.literal("0.1"),
+    codex: z.array(CodexCandidateSchema).min(1),
+  })
+  .strict();
+
+const OrchestrationConfigCoreSchema = z
+  .object({
     tiers: z
       .object({
         deep: TierCandidatesSchema,
@@ -86,7 +91,25 @@ export const OrchestrationConfigSchema = z
       })
       .strict(),
   })
-  .strict()
+  .strict();
+
+export const OrchestrationConfigV1Schema = OrchestrationConfigCoreSchema.extend({
+  schemaVersion: z.literal("0.1"),
+}).strict();
+
+export const OrchestrationConfigV2Schema = OrchestrationConfigCoreSchema.extend({
+  schemaVersion: z.literal("0.2"),
+  modelRoles: z
+    .object({
+      planning: ModelRoleCandidatesSchema,
+      implementation: ModelRoleCandidatesSchema,
+      verification: ModelRoleCandidatesSchema,
+    })
+    .strict(),
+}).strict();
+
+export const OrchestrationConfigSchema = z
+  .union([OrchestrationConfigV1Schema, OrchestrationConfigV2Schema])
   .superRefine((config, context) => {
     for (const tier of orchestrationTiers) {
       for (const target of ["codex", "claude"] as const) {
@@ -106,23 +129,46 @@ export const OrchestrationConfigSchema = z
         }
       }
     }
+    if (config.schemaVersion === "0.2") {
+      for (const role of ["planning", "implementation", "verification"] as const) {
+        const seen = new Set<string>();
+        for (const [index, candidate] of config.modelRoles[role].codex.entries()) {
+          const identity = `${candidate.model}/${candidate.reasoningEffort}`;
+          if (seen.has(identity)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicate ${role} codex model-role candidate: ${identity}`,
+              path: ["modelRoles", role, "codex", index],
+            });
+          }
+          seen.add(identity);
+        }
+      }
+    }
   });
 
 export type OrchestrationConfig = z.infer<typeof OrchestrationConfigSchema>;
+export type EffectiveOrchestrationConfig = z.infer<typeof OrchestrationConfigV2Schema>;
 
-export const DEFAULT_ORCHESTRATION_CONFIG: OrchestrationConfig = {
+const defaultCodexModels = {
+  deep: "gpt-5.6-sol",
+  standard: "gpt-5.6-sol",
+  fast: "gpt-5.6-terra",
+} as const satisfies Record<OrchestrationTier, string>;
+
+export const LEGACY_DEFAULT_ORCHESTRATION_CONFIG: OrchestrationConfig = {
   schemaVersion: "0.1",
   tiers: {
     deep: {
-      codex: [{ model: "gpt-5.6", reasoningEffort: "high" }],
+      codex: [{ model: defaultCodexModels.deep, reasoningEffort: "high" }],
       claude: [{ model: "opus", effort: "high" }],
     },
     standard: {
-      codex: [{ model: "gpt-5.6", reasoningEffort: "medium" }],
+      codex: [{ model: defaultCodexModels.standard, reasoningEffort: "medium" }],
       claude: [{ model: "sonnet", effort: "medium" }],
     },
     fast: {
-      codex: [{ model: "gpt-5.6-terra", reasoningEffort: "low" }],
+      codex: [{ model: defaultCodexModels.fast, reasoningEffort: "low" }],
       claude: [{ model: "haiku", effort: "low" }],
     },
   },
@@ -136,6 +182,40 @@ export const DEFAULT_ORCHESTRATION_CONFIG: OrchestrationConfig = {
     lowerTierFallback: "human_approval",
   },
 };
+
+export function toEffectiveOrchestrationConfig(
+  input: OrchestrationConfig,
+): EffectiveOrchestrationConfig {
+  const config = OrchestrationConfigSchema.parse(input);
+  if (config.schemaVersion === "0.2") return config;
+  return OrchestrationConfigV2Schema.parse({
+    ...config,
+    schemaVersion: "0.2",
+    modelRoles: {
+      planning: { codex: config.tiers.deep.codex },
+      implementation: { codex: config.tiers.standard.codex },
+      verification: { codex: config.tiers.deep.codex },
+    },
+  });
+}
+
+export const DEFAULT_ORCHESTRATION_CONFIG: EffectiveOrchestrationConfig =
+  toEffectiveOrchestrationConfig(LEGACY_DEFAULT_ORCHESTRATION_CONFIG);
+
+export function createModelRoleOrchestrationConfig(input: {
+  config: OrchestrationConfig;
+  selections: Record<ModelRole, z.infer<typeof CodexCandidateSchema>>;
+}): EffectiveOrchestrationConfig {
+  const effective = toEffectiveOrchestrationConfig(input.config);
+  return OrchestrationConfigV2Schema.parse({
+    ...effective,
+    modelRoles: {
+      planning: { codex: [input.selections.planning] },
+      implementation: { codex: [input.selections.implementation] },
+      verification: { codex: [input.selections.verification] },
+    },
+  });
+}
 
 const codexTierEffort = {
   deep: "high",
@@ -154,7 +234,11 @@ function selectCodexModel(
         model.visibility === "list" && model.supportedReasoningEfforts.includes(reasoningEffort),
     )
     .sort(
-      (left, right) => left.priority - right.priority || left.slug.localeCompare(right.slug),
+      (left, right) =>
+        Number(left.slug !== defaultCodexModels[tier]) -
+          Number(right.slug !== defaultCodexModels[tier]) ||
+        left.priority - right.priority ||
+        left.slug.localeCompare(right.slug),
     )[0];
   if (!selected) {
     throw new OrchestrationModelCompatibilityError(
@@ -167,7 +251,7 @@ function selectCodexModel(
 
 export function createCatalogOrchestrationConfig(
   catalog: readonly CodexModelCapability[],
-): OrchestrationConfig {
+): EffectiveOrchestrationConfig {
   return OrchestrationConfigSchema.parse({
     ...DEFAULT_ORCHESTRATION_CONFIG,
     tiers: Object.fromEntries(
@@ -179,29 +263,41 @@ export function createCatalogOrchestrationConfig(
         },
       ]),
     ),
-  });
+    modelRoles: {
+      planning: { codex: [selectCodexModel("deep", catalog)] },
+      implementation: { codex: [selectCodexModel("standard", catalog)] },
+      verification: { codex: [selectCodexModel("deep", catalog)] },
+    },
+  }) as EffectiveOrchestrationConfig;
 }
 
 export function validateCodexOrchestrationConfig(
   config: OrchestrationConfig,
   catalog: readonly CodexModelCapability[],
 ): void {
+  const effective = toEffectiveOrchestrationConfig(config);
   const visibleBySlug = new Map(
     catalog.filter(({ visibility }) => visibility === "list").map((model) => [model.slug, model]),
   );
-  for (const tier of orchestrationTiers) {
-    for (const candidate of config.tiers[tier].codex) {
+  const candidateGroups = [
+    ...orchestrationTiers.map((tier) => [`${tier} Codex`, effective.tiers[tier].codex] as const),
+    ...(["planning", "implementation", "verification"] as const).map(
+      (role) => [`${role} model-role`, effective.modelRoles[role].codex] as const,
+    ),
+  ];
+  for (const [label, candidates] of candidateGroups) {
+    for (const candidate of candidates) {
       const model = visibleBySlug.get(candidate.model);
       if (!model) {
         throw new OrchestrationModelCompatibilityError(
           "model_unavailable",
-          `${tier} Codex model ${candidate.model} is unavailable. Edit the custom orchestration configuration or authenticate the intended identity.`,
+          `${label} model ${candidate.model} is unavailable. Edit the custom orchestration configuration or authenticate the intended identity.`,
         );
       }
       if (!model.supportedReasoningEfforts.includes(candidate.reasoningEffort)) {
         throw new OrchestrationModelCompatibilityError(
           "effort_unsupported",
-          `${tier} Codex model ${candidate.model} does not support effort ${candidate.reasoningEffort}. Edit the custom orchestration configuration.`,
+          `${label} model ${candidate.model} does not support effort ${candidate.reasoningEffort}. Edit the custom orchestration configuration.`,
         );
       }
     }
@@ -214,6 +310,7 @@ export interface PlannedAgentProfile {
   profileId: string;
   target: AgentProfileTarget;
   tier: OrchestrationTier;
+  modelRole?: ModelRole;
   model: string;
   effort: string;
   access: "read-only" | "workspace-write";
@@ -251,6 +348,7 @@ function instructions(input: {
   taskClass: "role" | "support";
   skillName: string | undefined;
   tier: OrchestrationTier;
+  modelRole?: ModelRole;
   access: "read-only" | "workspace-write";
   consultation: "receive" | "request" | "none";
   limits: OrchestrationConfig["limits"];
@@ -264,6 +362,7 @@ function instructions(input: {
       ? "Workspace-write tools are authorized only while executing an explicitly assigned implementation step."
       : "Operate read-only; do not create, edit, move, or delete workspace files.",
     `Capability tier: ${input.tier}. Stay within the assigned runtime vendor.`,
+    ...(input.modelRole ? [`Model role: ${input.modelRole}.`] : []),
     `Retry each model candidate at most ${input.limits.retryPerCandidate} time(s).`,
     `Reassign a work item at most ${input.limits.reassignmentPerWorkItem} time(s).`,
     `Consult at most ${input.limits.consultationsPerAgent} time(s), only for ambiguity, requirement_conflict, elevated_risk, or failed_verification.`,
@@ -274,6 +373,20 @@ function instructions(input: {
     "Never expand scope, bypass an approval gate, change permissions, or downgrade a tier without human approval.",
     `Consultation mode: ${input.consultation}.`,
   ].join("\n");
+}
+
+function assignmentCandidates(input: {
+  config: EffectiveOrchestrationConfig;
+  assignment: {
+    tier: OrchestrationTier;
+    modelRole?: ModelRole;
+  };
+  target: AgentProfileTarget;
+}) {
+  if (input.target === "codex" && input.assignment.modelRole) {
+    return input.config.modelRoles[input.assignment.modelRole].codex;
+  }
+  return input.config.tiers[input.assignment.tier][input.target];
 }
 
 function renderCodex(input: {
@@ -337,7 +450,7 @@ export function planAgentProfiles(input: {
   roleSkillNames: Record<string, string>;
 }): PlannedAgentProfile[] {
   if (!input.manifest.orchestration) return [];
-  const config = OrchestrationConfigSchema.parse(input.config);
+  const config = toEffectiveOrchestrationConfig(input.config);
   assertSafeProfileIdentity(input.manifest.name);
   const assignments = [
     ...Object.entries(input.manifest.orchestration.roles).map(([source, assignment]) => ({
@@ -372,7 +485,15 @@ export function planAgentProfiles(input: {
     }
     if (skillName) assertSafeProfileIdentity(skillName);
     for (const target of input.targets) {
-      const candidates = config.tiers[assignment.tier][target];
+      const modelRole = target === "codex" ? assignment.modelRole : undefined;
+      const candidates = assignmentCandidates({
+        config,
+        assignment: {
+          tier: assignment.tier,
+          ...(modelRole ? { modelRole } : {}),
+        },
+        target,
+      });
       for (const [candidateIndex, candidate] of candidates.entries()) {
         const baseId = `omniskills-${input.manifest.name}-${sourceId(source)}`;
         const profileId =
@@ -383,6 +504,7 @@ export function planAgentProfiles(input: {
           taskClass,
           skillName,
           tier: assignment.tier,
+          ...(modelRole ? { modelRole } : {}),
           access: assignment.access,
           consultation: assignment.consultation,
           limits: config.limits,
@@ -422,6 +544,7 @@ export function planAgentProfiles(input: {
           profileId,
           target,
           tier: assignment.tier,
+          ...(modelRole ? { modelRole } : {}),
           model,
           effort,
           access: assignment.access,

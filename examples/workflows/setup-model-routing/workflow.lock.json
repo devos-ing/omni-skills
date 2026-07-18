@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.2",
+  "workflow": "setup-model-routing",
+  "workflowVersion": "0.1.0",
+  "generatedAt": "2026-07-15T07:56:36.280Z",
+  "workflows": [
+    {
+      "id": "workflow:setup-model-routing@0.1.0",
+      "name": "setup-model-routing",
+      "version": "0.1.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
+  "skills": [
+    {
+      "source": "./skills/setup-model-routing",
+      "resolvedName": "setup-model-routing",
+      "kind": "local",
+      "hash": "sha256:15d8a5fdc19f62423f83425b5cae0917e7b560817f4fda359c4e30e0c68f4a22"
+    }
+  ]
+}

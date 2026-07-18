@@ -6,9 +6,10 @@ role skills for CEO, CTO, product manager, web-design lead, engineering manager,
 founding engineer, and QA lead, with the companion skills those roles expect.
 
 The flow starts with `superpowers:brainstorming` as a one-question-at-a-time
-requirements interview. The coordinator prepares role handoffs only after the
-user approves the requirement brief, so vague startup asks become clear goals,
-constraints, success criteria, and manual briefs before execution.
+requirements interview. The coordinator launches selected internal subagents
+only after the requirement brief is approved, so vague startup asks become
+clear goals, constraints, success criteria, and bounded role packets before
+execution.
 
 Install it from the repo root:
 
@@ -22,7 +23,9 @@ Validate it while authoring:
 bun run dev -- validate examples/teams/startup-team
 ```
 
-Refresh the checked skill fingerprints after editing the bundled role skills:
+The checked-in `workflow.lock.json` fingerprints the complete local child graph
+and every external locator. Refresh it whenever the coordinator, a child
+workflow, or an external locator changes:
 
 ```bash
 bun run dev -- lock examples/teams/startup-team
@@ -42,7 +45,7 @@ milestones. For example:
     "outcome": "The founder completes the first useful action",
     "scope": ["onboarding"],
     "nonGoals": ["billing"],
-    "constraints": ["manual role execution"],
+    "constraints": ["internal role execution requires a capable host"],
     "successCriteria": ["the first action is explicit and verified"],
     "assumptions": []
   },
@@ -68,17 +71,58 @@ omniskill loop log examples/teams/startup-team --run <run-id> --type <expected-e
 omniskill loop advance examples/teams/startup-team --run <run-id> --json
 ```
 
-The coordinator prepares manual handoffs marked `Prepared, not executed`; these
-commands do not launch a role. The user explicitly approves the evidence-backed
-plan before implementation and accepts the feature after QA. Between those two
-gates, the accountable outcome role reconstructs the original expectations,
+The loop commands remain action-only; they inspect and persist lifecycle state
+but do not launch a process. On a capable host, `$startup-goal` consumes the
+action by launching selected installed profiles as internal subagents with
+bounded stage packets. The user explicitly stops at plan approval before
+implementation and feature acceptance after QA and evaluation. Between those
+two gates, the accountable outcome role reconstructs the original expectations,
 needs, wishes, and journey steps in a post-QA User Outcome Replay.
 
 ## Model orchestration
 
 The default install compiles the team's vendor-neutral `deep`, `standard`, and
-`fast` assignments into global Codex and Claude profiles. Override model
-candidates in `~/.omniskills/orchestration.json`.
+`fast` assignments into global profiles. The checked-in team also labels each
+assignment with one of three model roles:
+
+- `planning` for `$startup-goal`, strategy, product, design, architecture,
+  management, founding-engineer framing, and support exploration.
+- `implementation` for `mattpocock:implement` workspace-write execution.
+- `verification` for `catalog:qa-lead`.
+
+Use `$setup-model-routing` to configure global Codex CLI model and effort
+selections for those labels. The skill drives these deterministic commands:
+
+```bash
+omniskill setup-model-routing --list-models --json
+omniskill setup-model-routing \
+  --planning-model <slug> --planning-effort <effort> \
+  --implementation-model <slug> --implementation-effort <effort> \
+  --verification-model <slug> --verification-effort <effort> \
+  --dry-run --json
+omniskill setup-model-routing \
+  --planning-model <slug> --planning-effort <effort> \
+  --implementation-model <slug> --implementation-effort <effort> \
+  --verification-model <slug> --verification-effort <effort> \
+  --apply --json
+```
+
+`--list-models` prints only Codex models that the signed-in identity exposes as
+visible choices; hidden catalog entries are not valid setup candidates.
+
+`startup-team` installs that setup skill from the checked-out repository via
+`../../workflows/setup-model-routing/skills/setup-model-routing`, so local
+dependency and install smoke tests do not require the public
+`setup-model-routing` workflow alias to exist yet. The public
+`setup-model-routing` workflow remains independently installable from
+`examples/workflows/setup-model-routing`.
+
+The setup command updates `~/.omniskills/orchestration.json`, managed Codex
+profiles for installed labeled teams, and the matching installed workflow
+records in one rollback-protected transaction. Schema `0.1` config files remain
+valid; schema `0.2` stores the global `planning`, `implementation`, and
+`verification` Codex selections. Codex profiles use those model-role selections;
+Claude profiles continue to use their configured tiers.
 
 Preview every skill and profile destination without writing:
 
@@ -86,14 +130,16 @@ Preview every skill and profile destination without writing:
 bun run dev -- install examples/teams/startup-team --dry-run
 ```
 
-Automatic role launch is disabled. The coordinator selects roles and prepares
-manual briefs labeled `Prepared, not executed`, then stops. Run those briefs in
-separate user-controlled tasks and return completed outputs to `$startup-goal`
-for combination.
+When the host's agent-launch capability and the requested installed profile are
+available, the coordinator launches the smallest selected role set as internal
+subagents in the current task, waits for their Output Packets, and validates
+evidence without prescribing their methods or conclusions. If either capability
+is unavailable, it returns the same bounded brief labeled
+`Prepared, not executed` and stops without claiming the role ran.
 
 Installation still creates managed Codex and Claude profiles and preserves
-model-role configuration. Profile generation does not launch a role or create
-run state.
+model-role configuration. Profile generation does not itself launch a role or
+create run state, and the removed public CLI dispatch path stays disabled.
 
 Profiles are namespaced with `omniskills-startup-team-`. Reinstall updates only
 unchanged managed profiles; removal keeps user-modified profiles and always

@@ -1,35 +1,46 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "grilled-product-dev",
   "workflowVersion": "0.1.2",
-  "generatedAt": "2026-07-11T16:11:48.581Z",
+  "generatedAt": "2026-07-17T16:23:46.328Z",
+  "workflows": [
+    {
+      "id": "workflow:grilled-product-dev@0.1.2",
+      "name": "grilled-product-dev",
+      "version": "0.1.2",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/grilled-product-dev",
       "resolvedName": "grilled-product-dev",
       "kind": "local",
-      "hash": "sha256:374785d718acfc9ce66d1ba379e43423c7e6d9fb516ec791448db56ee6edb687"
+      "hash": "sha256:c298928f5b99eae7273c8a03264ca6cab69803c826cdfa63c77cf632130c31e8"
     },
     {
       "source": "mattpocock:grilling",
       "resolvedName": "grilling",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:aa3e5613d9b9eed882b2ea58e54d18a2476f771cde066073d524f6befeef1228"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:ace2c1149f8451f00b1cfa9eb2f1f04b40604fbbaa523fe53255b47093ffe600"
     },
     {
       "source": "superpowers:brainstorming",
       "resolvedName": "superpowers-brainstorming",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:1c1eba0a93ff82e0d3af1e040cbbabae5ba7f8aa1ea3f9f92b10db759ffa1087"
     },
     {
       "source": "superpowers:writing-plans",
       "resolvedName": "superpowers-writing-plans",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
     }
   ]
 }

@@ -1,14 +1,25 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "workflow": "haaland",
   "workflowVersion": "0.1.0",
-  "generatedAt": "2026-07-08T14:15:19.041Z",
+  "generatedAt": "2026-07-17T16:24:40.314Z",
+  "workflows": [
+    {
+      "id": "workflow:haaland@0.1.0",
+      "name": "haaland",
+      "version": "0.1.0",
+      "source": {
+        "kind": "root"
+      }
+    }
+  ],
+  "edges": [],
   "skills": [
     {
       "source": "./skills/haaland",
       "resolvedName": "haaland",
       "kind": "local",
-      "hash": "sha256:d10bf16eca98054b3a23bbe0aac21ccb00e7f904c5f3b1c3480bb1009c575583"
+      "hash": "sha256:0159fb5a53ae698552ad1c50b68baba8992f4e9f3655d839d1513743d40c8682"
     }
   ]
 }

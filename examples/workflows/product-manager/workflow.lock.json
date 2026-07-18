@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "product-manager",
   "workflowVersion": "0.2.0",
-  "generatedAt": "2026-07-16T11:07:29.406Z",
+  "generatedAt": "2026-07-17T16:23:46.294Z",
   "workflows": [
     {
       "id": "workflow:product-manager@0.2.0",
@@ -25,29 +25,29 @@
       "source": "superpowers:brainstorming",
       "resolvedName": "superpowers-brainstorming",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:a688fac4f89e4b3481c2a2804c54872ef5186ee8ab50103b5ac9777737234387"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:1c1eba0a93ff82e0d3af1e040cbbabae5ba7f8aa1ea3f9f92b10db759ffa1087"
     },
     {
       "source": "mattpocock:to-spec",
       "resolvedName": "to-spec",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:1cf05443c48f01b135983e7382cbb1cfed1b54b0caf5bd400067632355f15726"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:ca71d81c69e99abad7d3e730d3cdc87e90ac4efac1edae94ee82e16890fb8b84"
     },
     {
       "source": "mattpocock:to-tickets",
       "resolvedName": "to-tickets",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:49679c184e8970591136c431ba4fa00a4890aff23a2701c194465f79007a23c9"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:5d9c9aa0dc2ed6b52784fd50a9bd5c9355d0ef64312c49d506e18449893c76a2"
     },
     {
       "source": "superpowers:writing-plans",
       "resolvedName": "superpowers-writing-plans",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
     }
   ]
 }

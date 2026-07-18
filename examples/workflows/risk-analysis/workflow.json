@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "name": "risk-analysis",
+  "version": "0.1.0",
+  "description": "Challenge a synthesized research draft for contradictory evidence, missing sources, failure modes, triggers, and invalidation.",
+  "skills": [{ "source": "./skills/risk-analysis", "entry": true }],
+  "steps": [
+    {
+      "id": "analyze",
+      "title": "Run risk-analysis",
+      "skill": "./skills/risk-analysis"
+    }
+  ]
+}

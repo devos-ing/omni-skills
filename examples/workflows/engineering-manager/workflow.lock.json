@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "workflow": "engineering-manager",
   "workflowVersion": "0.2.0",
-  "generatedAt": "2026-07-16T11:07:41.182Z",
+  "generatedAt": "2026-07-17T16:23:46.248Z",
   "workflows": [
     {
       "id": "workflow:engineering-manager@0.2.0",
@@ -25,29 +25,29 @@
       "source": "superpowers:writing-plans",
       "resolvedName": "superpowers-writing-plans",
       "kind": "external",
-      "repo": "obra/superpowers",
-      "hash": "sha256:af085fb88831241d778d94c43b0f2b8ecdddfa250851dc08a977233d031dede6"
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
     },
     {
       "source": "mattpocock:tdd",
       "resolvedName": "tdd",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:e845c35d776277cb08cbf3b68ea32b28e181069620c4a6b9d9642871184105f8"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:eab427de166cfaf4270e836894e605677fccf1a8d6db9c249fb3c800bcda40d7"
     },
     {
       "source": "mattpocock:diagnosing-bugs",
       "resolvedName": "diagnosing-bugs",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:8148a4181f76442579999629563f08f31fa3784955584e781a190b64d65a1501"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0ce16c85852384eae72203418ea0d45145b86b8a04bb6a9d3693def451e08b89"
     },
     {
       "source": "mattpocock:code-review",
       "resolvedName": "code-review",
       "kind": "external",
-      "repo": "https://github.com/mattpocock/skills/tree/v1.1.0",
-      "hash": "sha256:913b01e36a6d3e28173b68e3147295754dd1ff2b91dbc23ebb1161cc687c91e6"
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:4281a8bb8667c7c46ca512cc19782af9606876d9bab13d306688829783ebfa13"
     }
   ]
 }

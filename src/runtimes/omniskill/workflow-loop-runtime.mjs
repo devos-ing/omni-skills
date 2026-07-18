@@ -371,6 +371,19 @@ function buildGoalPayload(context) {
   };
 }
 
+function milestoneRunPhaseDescription(stage) {
+  if (stage === "preparing") {
+    return "Prepare the bounded stage packet without launching a role.";
+  }
+  if (stage === "awaiting_plan_approval") {
+    return "Wait for explicit human plan approval; do not launch an internal role.";
+  }
+  if (stage === "awaiting_acceptance") {
+    return "Wait for explicit human feature acceptance; do not launch an internal role.";
+  }
+  return "Launch the configured internal role with the bounded stage packet and wait for its Output Packet. If internal launch or the role profile is unavailable, return a Prepared, not executed fallback.";
+}
+
 function buildActions(context, state) {
   const step = getCurrentStep(context, state);
   if (!step) {
@@ -397,7 +410,7 @@ function buildActions(context, state) {
       skill: step.skill,
       instruction: step.instruction ?? "",
       description: state.milestone
-        ? "Prepared, not executed. Perform this phase in a user-controlled task."
+        ? milestoneRunPhaseDescription(getMilestoneView(state.milestone).stage)
         : "Use the named skill and perform the phase work yourself.",
     },
     {

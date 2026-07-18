@@ -1,8 +1,9 @@
 # Founding Engineer Omniskills Workflow
 
 Use this workflow when an agent should act as a startup founding engineer:
-implement the plan, keep tests close to the change, debug failures, and verify
-before handoff.
+prepare a read-only implementation frame, identify affected seams and valuable
+tests, surface technical risk, and hand the approved frame to a separate
+implementer. It does not edit files or run implementation commands.
 
 Install it from the repo root:
 

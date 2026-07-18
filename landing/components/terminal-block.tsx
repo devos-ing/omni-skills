@@ -2,6 +2,7 @@
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { copyText as writeClipboardText } from "../lib/clipboard";
 
 interface TerminalLine {
   prefix?: string;
@@ -17,14 +18,21 @@ interface TerminalBlockProps {
 }
 
 export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: TerminalBlockProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
 
-  function handleCopy() {
+  async function handleCopy() {
     if (!copyText) return;
-    void navigator.clipboard.writeText(copyText);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+    const copied = await writeClipboardText(copyText, navigator.clipboard);
+    setCopyStatus(copied ? "copied" : "failed");
+    if (copied) window.setTimeout(() => setCopyStatus("idle"), 1600);
   }
+
+  const copyStatusLabel =
+    copyStatus === "copied"
+      ? "Copied"
+      : copyStatus === "failed"
+        ? "Select and copy command"
+        : "Copy";
 
   const linesContent = (
     <div className="min-w-0 space-y-1.5">
@@ -57,8 +65,12 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
           </div>
           {copyText ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--body)] transition-colors group-hover:text-[var(--ink)]">
-              {copied ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
-              {copied ? "Copied" : "Copy"}
+              {copyStatus === "copied" ? (
+                <Check size={12} className="text-emerald-300" />
+              ) : (
+                <Copy size={12} />
+              )}
+              {copyStatusLabel}
             </span>
           ) : null}
         </div>
@@ -68,8 +80,12 @@ export function TerminalBlock({ lines, copyText, copyLabel, compact = false }: T
           {linesContent}
           {copyText ? (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--rule)] px-2 py-1 font-sans text-xs font-medium text-[var(--body)] transition-colors group-hover:text-[var(--ink)]">
-              {copied ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
-              {copied ? "Copied" : "Copy"}
+              {copyStatus === "copied" ? (
+                <Check size={12} className="text-emerald-300" />
+              ) : (
+                <Copy size={12} />
+              )}
+              {copyStatusLabel}
             </span>
           ) : null}
         </div>

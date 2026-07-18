@@ -137,6 +137,7 @@ describe("cli", () => {
       "remove",
       "deps",
       "onboard",
+      "setup-model-routing",
       "loop",
       "bundle",
       "workflow",
@@ -609,6 +610,7 @@ describe("cli", () => {
   test("skills install and update help list supported agent target aliases", () => {
     const program = buildProgram();
     const skillsCommand = program.commands.find((command) => command.name() === "skills");
+    const installCommand = program.commands.find((command) => command.name() === "install");
 
     for (const commandName of ["install", "update"]) {
       const command = skillsCommand?.commands.find(
@@ -616,9 +618,43 @@ describe("cli", () => {
       );
       const help = stripAnsi(command?.helpInformation() ?? "");
 
-      expect(help).toContain("claude,copilot,codex,cursor,opencode");
+      expect(help).toContain("claude,copilot,codex,cursor,hermes,openclaw,opencode");
       expect(help).toContain("github-copilot");
       expect(help).toContain("opencodex");
+    }
+
+    const installHelp = stripAnsi(installCommand?.helpInformation() ?? "");
+    expect(installHelp).toContain("codex,claude,cursor,copilot,hermes,openclaw,opencode");
+  });
+
+  test("skills install dry-runs Hermes and OpenClaw destinations", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "omniskill-cli-home-"));
+    const logs: string[] = [];
+    const originalLog = console.log;
+
+    console.log = (...values: unknown[]) => {
+      logs.push(values.join(" "));
+    };
+
+    try {
+      await buildProgram({ cwd: homeDir }).parseAsync(
+        [
+          "skills",
+          "install",
+          "writing-workflow-skills",
+          "--agents",
+          "hermes,openclaw",
+          "--home",
+          homeDir,
+          "--dry-run",
+        ],
+        { from: "user" },
+      );
+      expect(logs.some((line) => line.includes("hermes: would install"))).toBe(true);
+      expect(logs.some((line) => line.includes("openclaw: would install"))).toBe(true);
+    } finally {
+      console.log = originalLog;
+      await rm(homeDir, { recursive: true, force: true });
     }
   });
 

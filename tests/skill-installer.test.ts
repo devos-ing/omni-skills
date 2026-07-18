@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   installAgentSkill,
   parseSkillInstallAgents,
@@ -10,7 +10,15 @@ import {
   type SkillInstallAgent,
 } from "../src/plugins/skill-installer";
 
-const allAgents: SkillInstallAgent[] = ["claude", "copilot", "codex", "cursor"];
+const allAgents: SkillInstallAgent[] = [
+  "claude",
+  "copilot",
+  "codex",
+  "cursor",
+  "hermes",
+  "openclaw",
+  "opencode",
+];
 
 async function writeSuperpowersSkill(
   path: string,
@@ -163,12 +171,12 @@ describe("skill installer", () => {
     }
   });
 
-  test("parses opencode, opencodex, and GitHub Copilot agent aliases", () => {
+  test("parses every canonical skill target and existing aliases", () => {
     expect(
       parseSkillInstallAgents(
-        "Claude,codex,cursor,opencode,opencodex,github-copilot,GitHub Copilot,githubcopilot",
+        "Claude,codex,cursor,opencode,opencodex,hermes,openclaw,github-copilot,GitHub Copilot,githubcopilot",
       ),
-    ).toEqual(["claude", "codex", "cursor", "opencode", "copilot"]);
+    ).toEqual(["claude", "codex", "cursor", "opencode", "hermes", "openclaw", "copilot"]);
   });
 
   test("rejects unknown agent targets even when mixed with supported aliases", () => {
@@ -332,7 +340,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:brainstorming", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: omniskill skills install superpowers:brainstorming --agents codex,claude,cursor,copilot,opencode --home ~",
+        "Superpowers brainstorming skill not found. Install or enable the Superpowers plugin, then run: omniskill skills install superpowers:brainstorming --agents codex,claude,cursor,copilot,hermes,openclaw,opencode --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -346,7 +354,7 @@ describe("skill installer", () => {
       await expect(
         resolveInstallSkillSource("superpowers:writing-plans", { homeDir }),
       ).rejects.toThrow(
-        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: omniskill skills install superpowers:writing-plans --agents codex,claude,cursor,copilot,opencode --home ~",
+        "Superpowers writing-plans skill not found. Install or enable the Superpowers plugin, then run: omniskill skills install superpowers:writing-plans --agents codex,claude,cursor,copilot,hermes,openclaw,opencode --home ~",
       );
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -464,6 +472,78 @@ describe("skill installer", () => {
     }
   });
 
+  test("does not refresh a mixed owned and unowned mirror set", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "skill-installer-source-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(rootDir, "mixed-ownership");
+    const primary = join(homeDir, ".agents", "skills", "mixed-ownership", "SKILL.md");
+    const mirror = join(homeDir, ".codex", "skills", "mixed-ownership", "SKILL.md");
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "mixed-ownership",
+        description: "Updated source.",
+      });
+      await mkdir(join(homeDir, ".agents", "skills", "mixed-ownership"), { recursive: true });
+      await mkdir(join(homeDir, ".codex", "skills", "mixed-ownership"), { recursive: true });
+      await writeFile(primary, "previously managed\n");
+      await writeFile(mirror, "user-owned mirror\n");
+
+      const result = await installAgentSkill({
+        source: sourceDir,
+        homeDir,
+        agents: ["codex"],
+        refreshExisting: true,
+        refreshExistingArtifactPaths: [dirname(primary)],
+      });
+
+      expect(result.targets).toMatchObject([{ agent: "codex", status: "skipped_exists" }]);
+      expect(await readFile(primary, "utf8")).toBe("previously managed\n");
+      expect(await readFile(mirror, "utf8")).toBe("user-owned mirror\n");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("does not let a shared primary target bypass Codex mirror ownership", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "skill-installer-source-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sourceDir = join(rootDir, "shared-ownership");
+    const primaryDir = join(homeDir, ".agents", "skills", "shared-ownership");
+    const primary = join(primaryDir, "SKILL.md");
+    const mirror = join(homeDir, ".codex", "skills", "shared-ownership", "SKILL.md");
+
+    try {
+      await writeSuperpowersSkill(sourceDir, {
+        name: "shared-ownership",
+        description: "Updated source.",
+      });
+      await mkdir(primaryDir, { recursive: true });
+      await mkdir(dirname(mirror), { recursive: true });
+      await writeFile(primary, "previously managed\n");
+      await writeFile(mirror, "user-owned mirror\n");
+
+      const result = await installAgentSkill({
+        source: sourceDir,
+        homeDir,
+        agents: ["openclaw", "codex"],
+        refreshExisting: true,
+        refreshExistingArtifactPaths: [primaryDir],
+      });
+
+      expect(result.targets).toMatchObject([
+        { agent: "openclaw", status: "updated" },
+        { agent: "codex", status: "skipped_exists" },
+      ]);
+      expect(await readFile(primary, "utf8")).toContain("Updated source.");
+      expect(await readFile(mirror, "utf8")).toBe("user-owned mirror\n");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   test("explains how to install mattpocock skills when they are missing", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
@@ -564,18 +644,20 @@ describe("skill installer", () => {
     }
   });
 
-  test("installs a bundled skill into Claude, Copilot/shared, Codex, Cursor, and opencode targets", async () => {
+  test("installs a bundled skill into all canonical skill targets", async () => {
     const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
 
     try {
       const result = await installAgentSkill({
         source: "writing-workflow-skills",
         homeDir,
-        agents: [...allAgents, "opencode"],
+        agents: allAgents,
       });
 
       expect(result.skillName).toBe("writing-workflow-skills");
       expect(result.targets.map((target) => target.status)).toEqual([
+        "installed",
+        "installed",
         "installed",
         "installed",
         "installed",
@@ -611,6 +693,18 @@ describe("skill installer", () => {
           status: "installed",
         }),
         expect.objectContaining({
+          agent: "hermes",
+          destination: join(homeDir, ".hermes", "skills", "writing-workflow-skills"),
+          artifactPaths: [join(homeDir, ".hermes", "skills", "writing-workflow-skills")],
+          status: "installed",
+        }),
+        expect.objectContaining({
+          agent: "openclaw",
+          destination: join(homeDir, ".agents", "skills", "writing-workflow-skills"),
+          artifactPaths: [join(homeDir, ".agents", "skills", "writing-workflow-skills")],
+          status: "installed",
+        }),
+        expect.objectContaining({
           agent: "opencode",
           destination: join(homeDir, ".agents", "skills", "writing-workflow-skills"),
           artifactPaths: [join(homeDir, ".agents", "skills", "writing-workflow-skills")],
@@ -627,9 +721,49 @@ describe("skill installer", () => {
       await expect(
         stat(join(homeDir, ".codex", "skills", "writing-workflow-skills", "SKILL.md")),
       ).resolves.toBeTruthy();
+      await expect(
+        stat(join(homeDir, ".hermes", "skills", "writing-workflow-skills", "SKILL.md")),
+      ).resolves.toBeTruthy();
       const cursorRulePath = join(homeDir, ".cursor", "rules", "writing-workflow-skills.mdc");
       await expect(stat(cursorRulePath)).resolves.toBeTruthy();
       expect(await readFile(cursorRulePath, "utf8")).toContain("name: writing-workflow-skills");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("updates Hermes and shared OpenClaw skill targets", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "skill-installer-home-"));
+    const sharedSkill = join(homeDir, ".agents", "skills", "writing-workflow-skills", "SKILL.md");
+    const hermesSkill = join(homeDir, ".hermes", "skills", "writing-workflow-skills", "SKILL.md");
+
+    try {
+      await installAgentSkill({
+        source: "writing-workflow-skills",
+        homeDir,
+        agents: ["openclaw", "hermes"],
+      });
+      await writeFile(sharedSkill, "stale shared skill");
+      await writeFile(hermesSkill, "stale Hermes skill");
+
+      const dryRun = await installAgentSkill({
+        source: "writing-workflow-skills",
+        homeDir,
+        agents: ["openclaw", "hermes"],
+        operation: "update",
+        dryRun: true,
+      });
+      expect(dryRun.targets.map(({ status }) => status)).toEqual(["would_update", "would_update"]);
+
+      const updated = await installAgentSkill({
+        source: "writing-workflow-skills",
+        homeDir,
+        agents: ["openclaw", "hermes"],
+        operation: "update",
+      });
+      expect(updated.targets.map(({ status }) => status)).toEqual(["updated", "updated"]);
+      expect(await readFile(sharedSkill, "utf8")).toContain("name: writing-workflow-skills");
+      expect(await readFile(hermesSkill, "utf8")).toContain("name: writing-workflow-skills");
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }

@@ -44,6 +44,7 @@ export const DispatchFailureCodeSchema = z.enum([
   "consultation_limit_exceeded",
   "consultation_repeated_evidence",
   "human_escalation_required",
+  "model_role_runtime_unsupported",
   "model_unavailable",
   "retry_exhausted",
   "runtime_failed",
@@ -52,6 +53,7 @@ export const DispatchFailureCodeSchema = z.enum([
 ]);
 
 const DispatchTierSchema = z.enum(["deep", "standard", "fast"]);
+const DispatchModelRoleSchema = z.enum(["planning", "implementation", "verification"]);
 const DispatchAccessSchema = z.enum(["read-only", "workspace-write"]);
 const DispatchStatusSchema = z.enum(["planned", "completed", "failed", "consultation_required"]);
 const AttemptStatusSchema = z.enum(["completed", "failed", "consultation_required"]);
@@ -87,6 +89,7 @@ export const DispatchPlanSchema = z
     profileHash: z.string().min(1),
     runtime: DispatchRuntimeSchema,
     tier: DispatchTierSchema,
+    modelRole: DispatchModelRoleSchema.optional(),
     model: z.string().min(1),
     effort: z.string().min(1),
     access: DispatchAccessSchema,
@@ -114,6 +117,7 @@ export const DispatchAttemptSchema = z
     plan: DispatchPlanSchema,
     attemptNumber: z.number().int().positive(),
     candidateIndex: z.number().int().nonnegative(),
+    modelRole: DispatchModelRoleSchema.optional(),
     profileId: z.string().min(1),
     model: z.string().min(1),
     status: AttemptStatusSchema,
@@ -139,6 +143,7 @@ export const DispatchReceiptSchema = z
     profileHash: z.string().min(1),
     runtime: DispatchRuntimeSchema,
     tier: DispatchTierSchema,
+    modelRole: DispatchModelRoleSchema.optional(),
     model: z.string().min(1),
     effort: z.string().min(1),
     access: DispatchAccessSchema,
@@ -179,6 +184,7 @@ export type OrchestrationDispatchErrorCode =
   | "profile_drifted"
   | "profile_missing_dispatch_metadata"
   | "runtime_unavailable"
+  | "model_role_runtime_unsupported"
   | "approval_required"
   | "task_too_large";
 
@@ -213,6 +219,7 @@ export function hasRepeatedConsultationEvidence(
 interface DispatchableProfileArtifact extends WorkflowInstallAgentProfileArtifact {
   taskClass: "role" | "support";
   tier: "deep" | "standard" | "fast";
+  modelRole?: "planning" | "implementation" | "verification";
   model: string;
   effort: string;
   access: "read-only" | "workspace-write";
@@ -277,6 +284,12 @@ export async function planOrchestrationDispatch(input: {
       `Installed workflow ${input.workflow.name} does not declare orchestration role: ${input.role}`,
     );
   }
+  if (assignment.modelRole && input.runtime !== "codex") {
+    dispatchError(
+      "model_role_runtime_unsupported",
+      `Model-role routing supports Codex CLI only: ${input.role}`,
+    );
+  }
   const matches = (input.workflow.installArtifacts ?? []).filter(
     (artifact): artifact is WorkflowInstallAgentProfileArtifact =>
       artifact.kind === "agent_profile" &&
@@ -331,6 +344,7 @@ export async function planOrchestrationDispatch(input: {
     }
     if (
       artifact.tier !== assignment.tier ||
+      artifact.modelRole !== assignment.modelRole ||
       artifact.access !== assignment.access ||
       artifact.consultation !== assignment.consultation
     ) {
@@ -356,6 +370,7 @@ export async function planOrchestrationDispatch(input: {
       profileHash: artifact.contentHash,
       runtime: input.runtime,
       tier: artifact.tier,
+      ...(artifact.modelRole ? { modelRole: artifact.modelRole } : {}),
       model: artifact.model,
       effort: artifact.effort,
       access: artifact.access,

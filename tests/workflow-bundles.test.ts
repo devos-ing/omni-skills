@@ -5,12 +5,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  appendWorkflowInstallJournal,
   createWorkflowBundleScaffold,
   createWorkflowLockFile,
   createWorkflowLoopMetadata,
   createWorkflowRemovalPlan,
   executeWorkflowRemovalPlan,
   getPreparedWorkflowSkillInstallDependencies,
+  getWorkflowInstallJournalPath,
   getWorkflowInvocationSkillName,
   getWorkflowSkillInstallDependencies,
   getWorkflowSkillInstallSources,
@@ -44,6 +46,11 @@ const startupRoleContracts = [
     role: "web-design",
     phrases: ["information hierarchy", "responsive", "accessibility", "motion changed"],
   },
+] as const;
+
+const manualHandoffContracts = [
+  { team: "finance-team", skill: "finance-research" },
+  { team: "market-team", skill: "market-research" },
 ] as const;
 
 const readStartupRoleSkill = (role: string) =>
@@ -189,6 +196,84 @@ describe("workflow bundles", () => {
 
     expect(typeof runtime.loadWorkflowBundle).toBe("function");
     expect(typeof runtime.getPreparedWorkflowSkillInstallDependencies).toBe("function");
+  });
+
+  test("accepts explicit orchestration model roles", () => {
+    const manifest = WorkflowBundleManifestSchema.parse({
+      ...validTeamManifest,
+      orchestration: {
+        roles: {
+          "./skills/coordinator": {
+            tier: "deep",
+            modelRole: "planning",
+            access: "read-only",
+            consultation: "receive",
+          },
+          "catalog:member-workflow": {
+            tier: "deep",
+            modelRole: "planning",
+            access: "read-only",
+            consultation: "request",
+          },
+          "external-review": {
+            tier: "standard",
+            modelRole: "implementation",
+            access: "workspace-write",
+            consultation: "request",
+          },
+        },
+        support: {
+          explorer: {
+            tier: "fast",
+            modelRole: "planning",
+            access: "read-only",
+            consultation: "request",
+          },
+        },
+      },
+    });
+
+    expect(manifest.orchestration?.roles["external-review"]?.modelRole).toBe("implementation");
+  });
+
+  test("rejects model roles that conflict with policy", () => {
+    const workspaceWritePlanning = {
+      ...validTeamManifest,
+      orchestration: {
+        ...validTeamManifest.orchestration,
+        roles: {
+          ...validTeamManifest.orchestration.roles,
+          "external-review": {
+            tier: "standard",
+            modelRole: "planning",
+            access: "workspace-write",
+            consultation: "request",
+          },
+        },
+      },
+    };
+    expect(() => WorkflowBundleManifestSchema.parse(workspaceWritePlanning)).toThrow(
+      "Workspace-write orchestration must use modelRole implementation",
+    );
+
+    const nonPlanningCoordinator = {
+      ...validTeamManifest,
+      orchestration: {
+        ...validTeamManifest.orchestration,
+        roles: {
+          ...validTeamManifest.orchestration.roles,
+          "./skills/coordinator": {
+            tier: "deep",
+            modelRole: "verification",
+            access: "read-only",
+            consultation: "receive",
+          },
+        },
+      },
+    };
+    expect(() => WorkflowBundleManifestSchema.parse(nonPlanningCoordinator)).toThrow(
+      "Team coordinator must use modelRole planning",
+    );
   });
 
   test("rejects a copied local skill as a team member", async () => {
@@ -425,7 +510,18 @@ describe("workflow bundles", () => {
 
   test("validates a transitive lock with transport-independent root identity", async () => {
     const repositoryUrl = pathToFileURL(join(import.meta.dir, "..")).toString();
-    const bundle = await loadWorkflowBundle(`${repositoryUrl}#examples/workflows/skill-tree-demo`);
+    const bundle = await loadWorkflowBundle(`${repositoryUrl}#examples/workflows/skill-tree-demo`, {
+      runGitCommand: async (command) => {
+        if (command.args[0] === "clone") {
+          const checkoutDir = command.args.at(-1) ?? "";
+          await cp(join(import.meta.dir, "..", "examples"), join(checkoutDir, "examples"), {
+            recursive: true,
+          });
+          return { stdout: "", stderr: "", exitCode: 0 };
+        }
+        return { stdout: "fixture-commit\n", stderr: "", exitCode: 0 };
+      },
+    });
 
     try {
       const graph = await resolveWorkflowDependencyGraph({ bundle });
@@ -545,7 +641,7 @@ describe("workflow bundles", () => {
           { source: "./child" },
           {
             source: "mattpocock:implement",
-            repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+            repo: "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
           },
         ],
         steps: [{ id: "run", title: "Run", skill: "mattpocock:implement" }],
@@ -559,7 +655,7 @@ describe("workflow bundles", () => {
       expect(graph.dependencies).toEqual([
         {
           source: "mattpocock:implement",
-          repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+          repo: "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
         },
       ]);
     } finally {
@@ -1600,6 +1696,7 @@ describe("workflow bundles", () => {
       "founding-engineer",
       "qa-lead",
       "web-design",
+      "setup-model-routing",
       "haaland",
     ];
 
@@ -1624,65 +1721,285 @@ describe("workflow bundles", () => {
       roles: {
         "./skills/startup-goal": {
           tier: "deep",
+          modelRole: "planning",
           access: "read-only",
           consultation: "receive",
         },
-        "catalog:ceo": { tier: "deep", access: "read-only", consultation: "request" },
-        "catalog:cto": { tier: "deep", access: "read-only", consultation: "request" },
-        "catalog:product-manager": {
+        "../../workflows/ceo": {
           tier: "deep",
+          modelRole: "planning",
           access: "read-only",
           consultation: "request",
         },
-        "catalog:web-design": {
+        "../../workflows/cto": {
           tier: "deep",
+          modelRole: "planning",
           access: "read-only",
           consultation: "request",
         },
-        "catalog:engineering-manager": {
+        "../../workflows/product-manager": {
           tier: "deep",
+          modelRole: "planning",
           access: "read-only",
           consultation: "request",
         },
-        "catalog:founding-engineer": {
+        "../../workflows/web-design": {
           tier: "deep",
+          modelRole: "planning",
           access: "read-only",
           consultation: "request",
         },
-        "catalog:qa-lead": {
+        "../../workflows/engineering-manager": {
           tier: "deep",
+          modelRole: "planning",
+          access: "read-only",
+          consultation: "request",
+        },
+        "../../workflows/founding-engineer": {
+          tier: "deep",
+          modelRole: "planning",
+          access: "read-only",
+          consultation: "request",
+        },
+        "../../workflows/qa-lead": {
+          tier: "deep",
+          modelRole: "verification",
           access: "read-only",
           consultation: "request",
         },
         "mattpocock:implement": {
           tier: "standard",
+          modelRole: "implementation",
           access: "workspace-write",
           consultation: "request",
         },
       },
       support: {
-        explorer: { tier: "fast", access: "read-only", consultation: "request" },
+        explorer: {
+          tier: "fast",
+          modelRole: "planning",
+          access: "read-only",
+          consultation: "request",
+        },
       },
     });
-    expect(startupTeam.lock?.workflow).toBe("startup-team");
+    expect(startupTeam.manifest.skills).toContainEqual({
+      source: "../../workflows/setup-model-routing/skills/setup-model-routing",
+    });
+    expect(startupTeam.manifest.members).not.toContain(
+      "../../workflows/setup-model-routing/skills/setup-model-routing",
+    );
     expect(startupTeam.lock?.schemaVersion).toBe("0.2");
-    if (startupTeam.lock?.schemaVersion === "0.2") {
-      expect(startupTeam.lock.workflows.map(({ name }) => name)).toEqual([
-        "startup-team",
-        "ceo",
-        "cto",
-        "product-manager",
-        "web-design",
-        "engineering-manager",
-        "founding-engineer",
-        "qa-lead",
-      ]);
-      expect(startupTeam.lock.edges).toHaveLength(7);
-      expect(startupTeam.lock.skills.map((skill) => skill.source)).toContain(
-        "workflow:ceo@0.1.1#./skills/ceo",
-      );
-    }
     expect(startupTeam.manifest.skills.map((skill) => skill.source)).not.toContain("pony-trail");
+  });
+
+  test("ships Finance Team and Market Team as same-checkout composed teams", async () => {
+    const cases = [
+      {
+        name: "finance-team",
+        coordinator: "./skills/finance-research",
+        members: [
+          "../../workflows/company-analysis",
+          "../../workflows/financial-analysis",
+          "../../workflows/valuation-analysis",
+          "../../workflows/risk-analysis",
+        ],
+        planning: [
+          "../../workflows/company-analysis",
+          "../../workflows/financial-analysis",
+          "../../workflows/valuation-analysis",
+        ],
+      },
+      {
+        name: "market-team",
+        coordinator: "./skills/market-research",
+        members: [
+          "../../workflows/macro-analysis",
+          "../../workflows/rates-analysis",
+          "../../workflows/market-structure",
+          "../../workflows/sector-analysis",
+          "../../workflows/risk-analysis",
+        ],
+        planning: [
+          "../../workflows/macro-analysis",
+          "../../workflows/rates-analysis",
+          "../../workflows/market-structure",
+          "../../workflows/sector-analysis",
+        ],
+      },
+    ] as const;
+
+    for (const expected of cases) {
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "teams", expected.name),
+      );
+      expect(bundle.manifest).toMatchObject({
+        kind: "team",
+        name: expected.name,
+        coordinator: expected.coordinator,
+        members: [...expected.members],
+      });
+      expect(bundle.manifest.skills).toContainEqual({
+        source: expected.coordinator,
+        entry: true,
+      });
+      expect(bundle.lock).toBeUndefined();
+      expect(bundle.manifest.orchestration?.roles[expected.coordinator]).toMatchObject({
+        tier: "deep",
+        modelRole: "planning",
+        access: "read-only",
+        consultation: "receive",
+      });
+      for (const member of expected.planning) {
+        expect(bundle.manifest.orchestration?.roles[member]).toMatchObject({
+          tier: "deep",
+          modelRole: "planning",
+          access: "read-only",
+          consultation: "request",
+        });
+      }
+      expect(bundle.manifest.orchestration?.roles["../../workflows/risk-analysis"]).toMatchObject({
+        tier: "deep",
+        modelRole: "verification",
+        access: "read-only",
+        consultation: "request",
+      });
+      expect(
+        Object.values(bundle.manifest.orchestration?.roles ?? {}).some(
+          ({ access }) => access === "workspace-write",
+        ),
+      ).toBe(false);
+    }
+  });
+
+  test("team coordinators prepare manual handoffs without spawning roles", async () => {
+    for (const contract of manualHandoffContracts) {
+      const skill = await readFile(
+        join(
+          import.meta.dir,
+          "..",
+          "examples",
+          "teams",
+          contract.team,
+          "skills",
+          contract.skill,
+          "SKILL.md",
+        ),
+        "utf8",
+      );
+
+      expect(skill).toContain("Automatic role launch is disabled");
+      expect(skill).toContain("Prepared, not executed");
+      expect(skill).toMatch(/Stop after presenting\s+the handoffs\./);
+      expect(skill).not.toContain("omniskill dispatch");
+      expect(skill).not.toContain("dispatch resume");
+      expect(skill).not.toContain("spawn_agent");
+      expect(skill).not.toContain("launch_configured");
+      expect(skill).not.toContain("verified specialist dispatch");
+      expect(skill).not.toContain("dispatching any specialist");
+    }
+  });
+
+  test("startup coordinator launches bounded internal roles with a manual fallback", async () => {
+    const skill = await readFile(
+      join(
+        import.meta.dir,
+        "..",
+        "examples",
+        "teams",
+        "startup-team",
+        "skills",
+        "startup-goal",
+        "SKILL.md",
+      ),
+      "utf8",
+    );
+
+    for (const contract of [
+      "## Internal role execution policy",
+      "internal agent-launch capability",
+      "smallest safe role set",
+      "bounded Input Packet",
+      "wait for its completed Output Packet",
+      "Prepared, not executed",
+      "plan approval",
+      "feature acceptance",
+    ]) {
+      expect(skill).toContain(contract);
+    }
+    expect(skill).not.toContain("Automatic role launch is disabled");
+    expect(skill).not.toContain("Stop after presenting the handoffs");
+    expect(skill).not.toContain("omniskill dispatch");
+    expect(skill).not.toContain("dispatch resume");
+  });
+
+  test("ships focused research specialist workflows", async () => {
+    const names = [
+      "company-analysis",
+      "financial-analysis",
+      "valuation-analysis",
+      "risk-analysis",
+      "macro-analysis",
+      "rates-analysis",
+      "market-structure",
+      "sector-analysis",
+    ];
+    for (const name of names) {
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "workflows", name),
+      );
+      expect(bundle.manifest).toMatchObject({ name, version: "0.1.0" });
+      expect(bundle.manifest.skills).toEqual([{ source: `./skills/${name}`, entry: true }]);
+      expect(bundle.manifest.steps).toEqual([
+        { id: "analyze", title: `Run ${name}`, skill: `./skills/${name}` },
+      ]);
+    }
+  });
+
+  test("resolves every team member graph from the same checkout", async () => {
+    const cases = [
+      {
+        name: "startup-team",
+        members: [
+          "ceo",
+          "cto",
+          "product-manager",
+          "web-design",
+          "engineering-manager",
+          "founding-engineer",
+          "qa-lead",
+        ],
+      },
+      {
+        name: "finance-team",
+        members: ["company-analysis", "financial-analysis", "valuation-analysis", "risk-analysis"],
+      },
+      {
+        name: "market-team",
+        members: [
+          "macro-analysis",
+          "rates-analysis",
+          "market-structure",
+          "sector-analysis",
+          "risk-analysis",
+        ],
+      },
+    ];
+
+    for (const expected of cases) {
+      const bundle = await loadWorkflowBundle(
+        join(import.meta.dir, "..", "examples", "teams", expected.name),
+      );
+      const graph = await resolveWorkflowDependencyGraph({
+        bundle,
+        ignoreLockValidation: true,
+      });
+
+      expect(graph.workflows.map(({ name }) => name)).toEqual([expected.name, ...expected.members]);
+      expect(graph.edges).toHaveLength(expected.members.length);
+      expect(graph.workflows.every(({ source }) => source.kind === "local")).toBe(true);
+      await graph.cleanup?.();
+    }
   });
 
   test("pins every Matt Pocock example dependency to the v1.1.0 catalog", async () => {
@@ -1698,7 +2015,8 @@ describe("workflow bundles", () => {
       "qa-lead",
       "real-engineering",
     ] as const;
-    const mattPocockV1_1Repo = "https://github.com/mattpocock/skills/tree/v1.1.0";
+    const mattPocockV1_1Repo =
+      "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3";
     const retiredMattPocockSources = [
       "mattpocock:decision-mapping",
       "mattpocock:to-prd",
@@ -1752,17 +2070,73 @@ describe("workflow bundles", () => {
     );
   });
 
+  test("example portfolio uses immutable external sources and explicit lock exceptions", async () => {
+    const exampleRoots = [
+      join(import.meta.dir, "..", "examples", "workflows"),
+      join(import.meta.dir, "..", "examples", "teams"),
+    ];
+    const prepublicationLockExceptions = new Set([
+      "company-analysis",
+      "finance-team",
+      "financial-analysis",
+      "macro-analysis",
+      "market-structure",
+      "market-team",
+      "rates-analysis",
+      "risk-analysis",
+      "sector-analysis",
+      "valuation-analysis",
+    ]);
+    const immutableGitHubSource = /^https:\/\/github\.com\/[^/]+\/[^/]+\/tree\/[0-9a-f]{40}$/;
+    const approvedExternalRepositories = {
+      emilkowalski:
+        "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      superpowers:
+        "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+    } as const;
+    const manifestNames = new Set<string>();
+
+    for (const root of exampleRoots) {
+      const entries = await readdir(root, { withFileTypes: true });
+      for (const entry of entries.filter((candidate) => candidate.isDirectory())) {
+        const workflowDir = join(root, entry.name);
+        const bundle = await loadWorkflowBundle(workflowDir);
+        await expect(stat(join(workflowDir, "README.md"))).resolves.toBeDefined();
+        expect(manifestNames.has(bundle.manifest.name)).toBe(false);
+        manifestNames.add(bundle.manifest.name);
+
+        for (const skill of bundle.manifest.skills) {
+          if (skill.repo) {
+            expect(skill.repo).toMatch(immutableGitHubSource);
+            const provider = skill.source.split(":", 1)[0];
+            if (provider === "emilkowalski" || provider === "superpowers") {
+              expect(skill.repo).toBe(approvedExternalRepositories[provider]);
+            }
+          }
+        }
+
+        if (prepublicationLockExceptions.has(bundle.manifest.name)) {
+          expect(bundle.lock).toBeUndefined();
+        } else {
+          expect(bundle.lock?.schemaVersion).toBe("0.2");
+        }
+      }
+    }
+  });
+
   test("web design workflow uses Emil Kowalski design and animation reviews", async () => {
     const workflowDir = join(import.meta.dir, "..", "examples", "workflows", "web-design");
     const bundle = await loadWorkflowBundle(workflowDir);
     const skill = await readFile(join(workflowDir, "skills", "web-design", "SKILL.md"), "utf8");
+    const emilKowalskiCommit =
+      "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6";
 
     expect(bundle.manifest.skills).toEqual([
       { source: "./skills/web-design", entry: true },
-      { source: "emilkowalski:emil-design-eng", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:animation-vocabulary", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:apple-design", repo: "emilkowalski/skills" },
-      { source: "emilkowalski:review-animations", repo: "emilkowalski/skills" },
+      { source: "emilkowalski:emil-design-eng", repo: emilKowalskiCommit },
+      { source: "emilkowalski:animation-vocabulary", repo: emilKowalskiCommit },
+      { source: "emilkowalski:apple-design", repo: emilKowalskiCommit },
+      { source: "emilkowalski:review-animations", repo: emilKowalskiCommit },
     ]);
     expect(bundle.manifest.version).toBe("0.2.0");
     expect(bundle.manifest.steps.map((step) => step.skill)).toEqual(["./skills/web-design"]);
@@ -1781,13 +2155,13 @@ describe("workflow bundles", () => {
 
   test("startup team entry skill stages evidence-backed feature milestones", async () => {
     const canonicalMembers = [
-      "catalog:ceo",
-      "catalog:cto",
-      "catalog:product-manager",
-      "catalog:web-design",
-      "catalog:engineering-manager",
-      "catalog:founding-engineer",
-      "catalog:qa-lead",
+      "../../workflows/ceo",
+      "../../workflows/cto",
+      "../../workflows/product-manager",
+      "../../workflows/web-design",
+      "../../workflows/engineering-manager",
+      "../../workflows/founding-engineer",
+      "../../workflows/qa-lead",
     ];
     const bundle = await loadWorkflowBundle(
       join(import.meta.dir, "..", "examples", "teams", "startup-team"),
@@ -1809,7 +2183,7 @@ describe("workflow bundles", () => {
     expect(bundle.manifest).toMatchObject({
       kind: "team",
       name: "startup-team",
-      version: "0.5.0",
+      version: "0.6.0",
       coordinator: "./skills/startup-goal",
       members: canonicalMembers,
       loop: {
@@ -1818,14 +2192,14 @@ describe("workflow bundles", () => {
         milestone: {
           coordinator: "./skills/startup-goal",
           implementer: "mattpocock:implement",
-          verifier: "catalog:qa-lead",
+          verifier: "../../workflows/qa-lead",
         },
       },
     });
     expect(
       bundle.manifest.skills.find((candidate) => candidate.source === bundle.manifest.coordinator),
     ).toEqual({ source: "./skills/startup-goal", entry: true });
-    expect(bundle.lock).toBeUndefined();
+    expect(bundle.lock?.schemaVersion).toBe("0.2");
 
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill, step.gate ?? null])).toEqual([
       ["preparing", "./skills/startup-goal", null],
@@ -1833,45 +2207,39 @@ describe("workflow bundles", () => {
       ["awaiting_plan_approval", "./skills/startup-goal", "human_approval"],
       ["implementing", "mattpocock:implement", null],
       ["rework", "mattpocock:implement", null],
-      ["verifying", "catalog:qa-lead", null],
+      ["verifying", "../../workflows/qa-lead", null],
       ["evaluating", "./skills/startup-goal", null],
       ["awaiting_acceptance", "./skills/startup-goal", "human_approval"],
     ]);
     expect(bundle.manifest.steps.every((step) => Boolean(step.instruction))).toBe(true);
     expect(bundle.manifest.steps.find((step) => step.id === "evaluating")?.instruction).toContain(
-      "prepare the accountable outcome role handoff",
+      "launch the installed profile for the accountable outcome role",
     );
     expect(bundle.manifest.skills).toEqual([
       { source: "./skills/startup-goal", entry: true },
       ...canonicalMembers.map((source) => ({ source })),
-      { source: "superpowers:brainstorming", repo: "obra/superpowers" },
+      {
+        source: "superpowers:brainstorming",
+        repo: "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      },
       {
         source: "mattpocock:implement",
-        repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+        repo: "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
       },
+      { source: "../../workflows/setup-model-routing/skills/setup-model-routing" },
     ]);
     expect(bundle.manifest.skills).not.toContainEqual({ source: "implement" });
 
     const graph = await resolveWorkflowDependencyGraph({
       bundle,
       ignoreLockValidation: true,
-      runGitCommand: async (command) => {
-        if (command.args[0] === "clone") {
-          const checkoutDir = command.args.at(-1) ?? "";
-          await cp(join(import.meta.dir, "..", "examples"), join(checkoutDir, "examples"), {
-            recursive: true,
-          });
-          return { stdout: "", stderr: "", exitCode: 0 };
-        }
-        return { stdout: "fixture-commit\n", stderr: "", exitCode: 0 };
-      },
     });
     expect(graph.workflows.map(({ name }) => name)).toEqual([
       "startup-team",
-      ...canonicalMembers.map((source) => source.slice("catalog:".length)),
+      ...canonicalMembers.map((source) => source.slice("../../workflows/".length)),
     ]);
     expect(graph.edges).toHaveLength(7);
-    for (const role of canonicalMembers.map((source) => source.slice("catalog:".length))) {
+    for (const role of canonicalMembers.map((source) => source.slice("../../workflows/".length))) {
       expect(
         graph.dependencies.filter(({ source }) => source.endsWith(`/skills/${role}`)),
       ).toHaveLength(1);
@@ -1883,21 +2251,26 @@ describe("workflow bundles", () => {
     expect(graph.dependencies.filter(({ source }) => source === "mattpocock:implement")).toEqual([
       {
         source: "mattpocock:implement",
-        repo: "https://github.com/mattpocock/skills/tree/v1.1.0",
+        repo: "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
       },
     ]);
+    expect(
+      graph.dependencies.filter(({ source }) =>
+        source.endsWith("/examples/workflows/setup-model-routing/skills/setup-model-routing"),
+      ),
+    ).toHaveLength(1);
     await graph.cleanup?.();
     expect(skill).toContain("name: startup-goal");
     for (const heading of [
       "## 1. Clarify and approve the goal tunnel",
       "## 2. Decompose feature milestones",
-      "## 3. Prepare role input packets",
+      "## 3. Execute roles through bounded packets",
       "## 4. Validate role output packets",
       "## 5. Enforce evidence and approval gates",
-      "## 6. Prepare implementation and QA handoffs",
+      "## 6. Execute implementation and QA roles",
       "## 7. Reconstruct and evaluate the user outcome",
       "## 8. Carry accepted context forward",
-      "## Manual execution policy",
+      "## Internal role execution policy",
       "## Loop limits",
     ]) {
       expect(skill).toContain(heading);
@@ -1915,12 +2288,12 @@ describe("workflow bundles", () => {
       expect(skill).toContain(contract);
     }
     expect(skill).toContain("must not prescribe");
+    expect(skill).toContain("internal agent-launch capability");
     expect(skill).toContain("Prepared, not executed");
-    expect(skill).toContain("Automatic role launch is disabled");
+    expect(skill).not.toContain("Automatic role launch is disabled");
     expect(skill).toContain("one repair");
     expect(skill).toContain("one targeted review");
     expect(skill).not.toContain("omniskill dispatch");
-    expect(skill).not.toContain("spawn_agent");
 
     for (const { role } of startupRoleContracts) {
       const roleSkill = await readStartupRoleSkill(role);
@@ -2670,6 +3043,44 @@ describe("workflow bundles", () => {
     }
   });
 
+  test("removes journal-owned artifacts when an interrupted install has no final record", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-journal-"));
+    const workflowName = "interrupted-workflow";
+    const artifactPath = join(rootDir, ".agents", "skills", "journal-owned");
+
+    try {
+      await mkdir(artifactPath, { recursive: true });
+      await writeFile(join(artifactPath, "SKILL.md"), "journal-owned skill");
+      await appendWorkflowInstallJournal({
+        rootDir,
+        workflowName,
+        artifacts: [
+          {
+            source: "./skills/journal-owned",
+            skillName: "journal-owned",
+            agent: "codex",
+            status: "installed",
+            paths: [artifactPath],
+          },
+        ],
+      });
+
+      const plan = await createWorkflowRemovalPlan({ rootDir, homeDir: rootDir, workflowName });
+
+      expect(plan.incomplete).toBe(true);
+      expect(plan.artifactsToRemove.map((artifact) => artifact.path)).toEqual([artifactPath]);
+
+      await executeWorkflowRemovalPlan(plan);
+
+      await expect(stat(artifactPath)).rejects.toThrow();
+      await expect(
+        stat(getWorkflowInstallJournalPath({ rootDir, workflowName })),
+      ).rejects.toThrow();
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   test("infers legacy removal artifacts and skips unmappable legacy sources", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "workflow-remove-legacy-"));
     const workflowDir = join(rootDir, ".omniskills", "workflows");
@@ -2829,10 +3240,22 @@ describe("workflow bundles", () => {
         .filter((skill) => skill.source.includes(":"))
         .map((skill) => [skill.source, skill.repo]),
     ).toEqual([
-      ["superpowers:brainstorming", "obra/superpowers"],
-      ["superpowers:writing-plans", "obra/superpowers"],
-      ["mattpocock:tdd", "https://github.com/mattpocock/skills/tree/v1.1.0"],
-      ["superpowers:verification-before-completion", "obra/superpowers"],
+      [
+        "superpowers:brainstorming",
+        "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      ],
+      [
+        "superpowers:writing-plans",
+        "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      ],
+      [
+        "mattpocock:tdd",
+        "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      ],
+      [
+        "superpowers:verification-before-completion",
+        "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      ],
     ]);
     expect(bundle.manifest.steps.map((step) => [step.id, step.skill])).toEqual([
       ["opsx-propose", "./skills/opsx-handoff-review"],
@@ -2919,93 +3342,94 @@ describe("workflow bundles", () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  test("loads a workflow alias from the canonical examples catalog", async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), "workflow-bundle-alias-"));
-    const source = "openspec-superpowers";
-    const canonicalUrl =
-      "https://github.com/devos-ing/omni-skills.git#examples/workflows/openspec-superpowers";
-    const commands: WorkflowGitCommand[] = [];
-    let checkoutDir = "";
+  for (const source of ["openspec-delivery", "openspec-superpowers"]) {
+    test(`loads the OpenSpec alias ${source} through its compatibility catalog path`, async () => {
+      const tempDir = await mkdtemp(join(tmpdir(), "workflow-bundle-alias-"));
+      const canonicalUrl =
+        "https://github.com/devos-ing/omni-skills.git#examples/workflows/openspec-superpowers";
+      const commands: WorkflowGitCommand[] = [];
+      let checkoutDir = "";
 
-    const bundle = await loadWorkflowBundle(source, {
-      tempDir,
-      runGitCommand: async (command) => {
-        commands.push(command);
-        if (command.args[0] === "clone") {
-          checkoutDir = command.args.at(-1) ?? "";
-          const workflowDir = join(checkoutDir, "examples", "workflows", "openspec-superpowers");
-          await mkdir(join(workflowDir, "skills", "openspec-delivery"), {
-            recursive: true,
-          });
-          await writeFile(
-            join(workflowDir, "skills", "openspec-delivery", "SKILL.md"),
-            [
-              "---",
-              "name: openspec-delivery",
-              'description: "Entry skill from the examples catalog."',
-              "---",
-              "",
-              "# openspec-delivery",
-            ].join("\n"),
-          );
-          await writeFile(
-            join(workflowDir, "workflow.json"),
-            JSON.stringify(
-              {
-                schemaVersion: "0.1",
-                name: "openspec-delivery",
-                version: "0.1.0",
-                description: "Installs from the examples catalog.",
-                skills: [{ source: "./skills/openspec-delivery" }],
-                steps: [
-                  {
-                    id: "entry",
-                    title: "Run OpenSpec delivery",
-                    skill: "./skills/openspec-delivery",
-                  },
-                ],
-              },
-              null,
-              2,
-            ),
-          );
-          return { stdout: "", stderr: "", exitCode: 0 };
-        }
+      const bundle = await loadWorkflowBundle(source, {
+        tempDir,
+        runGitCommand: async (command) => {
+          commands.push(command);
+          if (command.args[0] === "clone") {
+            checkoutDir = command.args.at(-1) ?? "";
+            const workflowDir = join(checkoutDir, "examples", "workflows", "openspec-superpowers");
+            await mkdir(join(workflowDir, "skills", "openspec-delivery"), {
+              recursive: true,
+            });
+            await writeFile(
+              join(workflowDir, "skills", "openspec-delivery", "SKILL.md"),
+              [
+                "---",
+                "name: openspec-delivery",
+                'description: "Entry skill from the examples catalog."',
+                "---",
+                "",
+                "# openspec-delivery",
+              ].join("\n"),
+            );
+            await writeFile(
+              join(workflowDir, "workflow.json"),
+              JSON.stringify(
+                {
+                  schemaVersion: "0.1",
+                  name: "openspec-delivery",
+                  version: "0.1.0",
+                  description: "Installs from the examples catalog.",
+                  skills: [{ source: "./skills/openspec-delivery" }],
+                  steps: [
+                    {
+                      id: "entry",
+                      title: "Run OpenSpec delivery",
+                      skill: "./skills/openspec-delivery",
+                    },
+                  ],
+                },
+                null,
+                2,
+              ),
+            );
+            return { stdout: "", stderr: "", exitCode: 0 };
+          }
 
-        return { stdout: "abc123\n", stderr: "", exitCode: 0 };
-      },
-    });
+          return { stdout: "abc123\n", stderr: "", exitCode: 0 };
+        },
+      });
 
-    expect(commands.map((command) => command.args[0])).toEqual(["clone", "rev-parse"]);
-    expect(commands[0]?.args).toEqual([
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/devos-ing/omni-skills.git",
-      checkoutDir,
-    ]);
-    expect(bundle.manifest.name).toBe("openspec-delivery");
-    expect(bundle.source).toEqual({
-      kind: "git",
-      url: canonicalUrl,
-      commit: "abc123",
-      subdirectory: "examples/workflows/openspec-superpowers",
-    });
-    expect(getWorkflowSkillInstallSources(bundle)).toEqual([
-      join(
+      expect(commands.map((command) => command.args[0])).toEqual(["clone", "rev-parse"]);
+      expect(commands[0]?.args).toEqual([
+        "clone",
+        "--depth",
+        "1",
+        "https://github.com/devos-ing/omni-skills.git",
         checkoutDir,
-        "examples",
-        "workflows",
-        "openspec-superpowers",
-        "skills",
-        "openspec-delivery",
-      ),
-    ]);
+      ]);
+      expect(bundle.manifest.name).toBe("openspec-delivery");
+      expect(bundle.source).toEqual({
+        kind: "git",
+        url: canonicalUrl,
+        commit: "abc123",
+        subdirectory: "examples/workflows/openspec-superpowers",
+      });
+      expect(getWorkflowSkillInstallSources(bundle)).toEqual([
+        join(
+          checkoutDir,
+          "examples",
+          "workflows",
+          "openspec-superpowers",
+          "skills",
+          "openspec-delivery",
+        ),
+      ]);
 
-    await bundle.cleanup?.();
-    await expect(stat(checkoutDir)).rejects.toThrow();
-    await rm(tempDir, { recursive: true, force: true });
-  });
+      await bundle.cleanup?.();
+      await expect(stat(checkoutDir)).rejects.toThrow();
+      await rm(tempDir, { recursive: true, force: true });
+    });
+  }
 
   test("resolves team aliases from examples/teams and retains team metadata", async () => {
     const tempDir = await mkdtemp(join(tmpdir(), "workflow-team-alias-"));

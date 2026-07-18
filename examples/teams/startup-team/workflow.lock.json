@@ -1,0 +1,284 @@
+{
+  "schemaVersion": "0.2",
+  "workflow": "startup-team",
+  "workflowVersion": "0.6.0",
+  "generatedAt": "2026-07-17T16:23:49.371Z",
+  "workflows": [
+    {
+      "id": "workflow:startup-team@0.6.0",
+      "name": "startup-team",
+      "version": "0.6.0",
+      "source": {
+        "kind": "root"
+      }
+    },
+    {
+      "id": "workflow:ceo@0.2.0",
+      "name": "ceo",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/ceo"
+      }
+    },
+    {
+      "id": "workflow:cto@0.2.0",
+      "name": "cto",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/cto"
+      }
+    },
+    {
+      "id": "workflow:product-manager@0.2.0",
+      "name": "product-manager",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/product-manager"
+      }
+    },
+    {
+      "id": "workflow:web-design@0.2.0",
+      "name": "web-design",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/web-design"
+      }
+    },
+    {
+      "id": "workflow:engineering-manager@0.2.0",
+      "name": "engineering-manager",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/engineering-manager"
+      }
+    },
+    {
+      "id": "workflow:founding-engineer@0.2.0",
+      "name": "founding-engineer",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/founding-engineer"
+      }
+    },
+    {
+      "id": "workflow:qa-lead@0.2.0",
+      "name": "qa-lead",
+      "version": "0.2.0",
+      "source": {
+        "kind": "local",
+        "path": "../../workflows/qa-lead"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:ceo@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:cto@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:product-manager@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:web-design@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:engineering-manager@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:founding-engineer@0.2.0"
+    },
+    {
+      "from": "workflow:startup-team@0.6.0",
+      "to": "workflow:qa-lead@0.2.0"
+    }
+  ],
+  "skills": [
+    {
+      "source": "./skills/startup-goal",
+      "resolvedName": "startup-goal",
+      "kind": "local",
+      "hash": "sha256:95fcae8e87213b001404c2c20731f1b5dc99058e887bfc1f590363860e49fff1"
+    },
+    {
+      "source": "../../workflows/ceo/skills/ceo",
+      "resolvedName": "ceo",
+      "kind": "local",
+      "hash": "sha256:a82229ee95b5a664d8035acc8117c60bce44cc9204db1df067f15bbd13fb3e7d"
+    },
+    {
+      "source": "mattpocock:wayfinder",
+      "resolvedName": "wayfinder",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:76fbb585ccb89c21ab7d6f8e044515b28a903f2a811b248221bf34b8b1ad79e0"
+    },
+    {
+      "source": "mattpocock:grill-with-docs",
+      "resolvedName": "grill-with-docs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:e66c375b2cfede6816c802ae0b8d8bf8c02f5e40a6f0bdb8737c8fff19636c17"
+    },
+    {
+      "source": "../../workflows/cto/skills/cto",
+      "resolvedName": "cto",
+      "kind": "local",
+      "hash": "sha256:4f7e793578f2d1e014653bae4430cf659cbcef89ce003bcb565b5c610164f11b"
+    },
+    {
+      "source": "mattpocock:codebase-design",
+      "resolvedName": "codebase-design",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:45f1f27c670c4065170eb689a04235e84982f87f133f537f55b12329ff5fec1a"
+    },
+    {
+      "source": "mattpocock:domain-modeling",
+      "resolvedName": "domain-modeling",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0573fd6a60918e5280ce20409cdcb30eed03ec64550404c28dc1f825b3b43276"
+    },
+    {
+      "source": "mattpocock:diagnosing-bugs",
+      "resolvedName": "diagnosing-bugs",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:0ce16c85852384eae72203418ea0d45145b86b8a04bb6a9d3693def451e08b89"
+    },
+    {
+      "source": "mattpocock:code-review",
+      "resolvedName": "code-review",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:4281a8bb8667c7c46ca512cc19782af9606876d9bab13d306688829783ebfa13"
+    },
+    {
+      "source": "../../workflows/product-manager/skills/product-manager",
+      "resolvedName": "product-manager",
+      "kind": "local",
+      "hash": "sha256:35b234429d541940ac942f1f631e76b573a97a29ce8200c57776b68dd6eae6e2"
+    },
+    {
+      "source": "superpowers:brainstorming",
+      "resolvedName": "superpowers-brainstorming",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:1c1eba0a93ff82e0d3af1e040cbbabae5ba7f8aa1ea3f9f92b10db759ffa1087"
+    },
+    {
+      "source": "mattpocock:to-spec",
+      "resolvedName": "to-spec",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:ca71d81c69e99abad7d3e730d3cdc87e90ac4efac1edae94ee82e16890fb8b84"
+    },
+    {
+      "source": "mattpocock:to-tickets",
+      "resolvedName": "to-tickets",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:5d9c9aa0dc2ed6b52784fd50a9bd5c9355d0ef64312c49d506e18449893c76a2"
+    },
+    {
+      "source": "superpowers:writing-plans",
+      "resolvedName": "superpowers-writing-plans",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:bc3ff0415b4d0afce51a65123f5f1d079e34a436121fead087ee296d29af861d"
+    },
+    {
+      "source": "../../workflows/web-design/skills/web-design",
+      "resolvedName": "web-design",
+      "kind": "local",
+      "hash": "sha256:7c430fd13ca1f01841f4da9dac4e62402c2db432b27909475d5f11adff588488"
+    },
+    {
+      "source": "emilkowalski:emil-design-eng",
+      "resolvedName": "emilkowalski:emil-design-eng",
+      "kind": "external",
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:feb1b26a393cf3aa4ab606b7333dc7cebaa9f107111aa98b6efb70beac4d06f8"
+    },
+    {
+      "source": "emilkowalski:animation-vocabulary",
+      "resolvedName": "emilkowalski:animation-vocabulary",
+      "kind": "external",
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:2dfcb9f8e96061da95947de644e05344f657aef42494c83bf4912b0473aed22f"
+    },
+    {
+      "source": "emilkowalski:apple-design",
+      "resolvedName": "emilkowalski:apple-design",
+      "kind": "external",
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:57c6e2cb5c1f8681bab63259561e1f7c09e691e116879de45c934edb97b60eb7"
+    },
+    {
+      "source": "emilkowalski:review-animations",
+      "resolvedName": "emilkowalski:review-animations",
+      "kind": "external",
+      "repo": "https://github.com/emilkowalski/skills/tree/6bf24434f7730ad169077756cf9c7cd7bd675fc6",
+      "hash": "sha256:52a924e51ecf6b189f5fa1cd688195992965409c3cc6d54fc22e784b73e6807d"
+    },
+    {
+      "source": "../../workflows/engineering-manager/skills/engineering-manager",
+      "resolvedName": "engineering-manager",
+      "kind": "local",
+      "hash": "sha256:131b5b93a8e804064c8a2e9784cbf2f034f42be2bc380b57251d7d99924d1928"
+    },
+    {
+      "source": "mattpocock:tdd",
+      "resolvedName": "tdd",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:eab427de166cfaf4270e836894e605677fccf1a8d6db9c249fb3c800bcda40d7"
+    },
+    {
+      "source": "../../workflows/founding-engineer/skills/founding-engineer",
+      "resolvedName": "founding-engineer",
+      "kind": "local",
+      "hash": "sha256:105be4fb3dd371d6c9b1c6c207b29291493899fd64ccb34a4651ffa2fd421f83"
+    },
+    {
+      "source": "superpowers:verification-before-completion",
+      "resolvedName": "superpowers-verification-before-completion",
+      "kind": "external",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99",
+      "hash": "sha256:c18b038bea9b9d89b95f4779ee98e44d1b14360b5b818b40d4b2cce8a5ad1b35"
+    },
+    {
+      "source": "../../workflows/qa-lead/skills/qa-lead",
+      "resolvedName": "qa-lead",
+      "kind": "local",
+      "hash": "sha256:7560f9837f16a770f47b2520a30d1d69d8aa8e37d47019698a70b35887da8297"
+    },
+    {
+      "source": "mattpocock:implement",
+      "resolvedName": "implement",
+      "kind": "external",
+      "repo": "https://github.com/mattpocock/skills/tree/d574778f94cf620fcc8ce741584093bc650a61d3",
+      "hash": "sha256:62933cc0179d730078cd1e284e965c43ed04bac7910aee05a1d47506e56c1d7c"
+    },
+    {
+      "source": "../../workflows/setup-model-routing/skills/setup-model-routing",
+      "resolvedName": "setup-model-routing",
+      "kind": "local",
+      "hash": "sha256:15d8a5fdc19f62423f83425b5cae0917e7b560817f4fda359c4e30e0c68f4a22"
+    }
+  ]
+}

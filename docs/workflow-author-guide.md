@@ -113,9 +113,15 @@ Example:
   "description": "Clarify, review, plan, and preserve evidence for support fixes.",
   "skills": [
     { "source": "./skills/support-triage" },
-    { "source": "superpowers:brainstorming", "repo": "obra/superpowers" },
+    {
+      "source": "superpowers:brainstorming",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
+    },
     { "source": "./skills/support-review" },
-    { "source": "superpowers:writing-plans", "repo": "obra/superpowers" }
+    {
+      "source": "superpowers:writing-plans",
+      "repo": "https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99"
+    }
   ],
   "steps": [
     {
@@ -143,8 +149,10 @@ Keep every `steps[].skill` value exactly equal to one of the `skills[].source`
 values.
 
 For a skill installed from the Skills CLI, keep `source` as the original skill
-name used by workflow steps, and set `repo` to the package passed to
-`npx skills add`, such as `obra/superpowers` or `mattpocock/skills`.
+name used by workflow steps. Set `repo` to an exact commit
+URL accepted by `npx skills add`, such as
+`https://github.com/obra/superpowers/tree/d884ae04edebef577e82ff7c4e143debd0bbec99`. Do not publish a workflow
+with a floating branch or bare repository reference.
 
 The entry skill itself belongs in `skills[]`, but it does not need its own step.
 It is the callable wrapper that instructs the agent to run the declared steps.
@@ -158,9 +166,11 @@ file:
 bun run dev -- lock examples/workflows/support-triage
 ```
 
-The lock file records deterministic hashes for local skill contents and stable
-fingerprints for external skill sources. Commit it with the workflow so reviewers
-can see when the skill tree changed.
+The lock file records deterministic hashes for local skill contents and the
+declared locator for external skills. It does not snapshot a moving upstream
+branch, so external `repo` values must already point at exact commits. Commit
+the lock with the workflow so reviewers can see when the skill
+tree changed.
 
 ### Optional Loop Runtime
 
@@ -386,6 +396,7 @@ Before sharing, check:
 - The workflow name is lowercase and hyphenated.
 - `workflow.lock.json` exists and was regenerated after the latest skill edit.
 - `workflow.json` passes `omniskill validate`.
+- Every external `repo` points at an exact commit.
 - The entry skill exists at `skills/<workflow-name>/SKILL.md`.
 - The entry skill lists required sub-skills in step order.
 - Every step references a declared skill source.
